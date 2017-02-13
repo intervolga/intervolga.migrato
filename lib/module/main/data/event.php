@@ -9,6 +9,7 @@ class Event extends DataWithUfXmlId
 	public function getFromDatabase()
 	{
 		$result = array();
+		$eventType = new EventType();
 		$by = "ID";
 		$order = "ASC";
 		$getList = \CEventMessage::getList($by, $order);
@@ -37,7 +38,7 @@ class Event extends DataWithUfXmlId
 			));
 			while ($type = $eventTypeGetList->fetch())
 			{
-				$typeXmlIds[] = EventType::getXmlId($type);
+				$typeXmlIds[] = $eventType->getXmlId($type["ID"]);
 			}
 			if ($typeXmlIds)
 			{
