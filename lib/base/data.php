@@ -7,9 +7,42 @@ use Intervolga\Migrato\Tool\DataRecord;
 abstract class Data
 {
 	/**
+	 * @return array|DataRecord[]
+	 */
+	abstract public function getFromDatabase();
+	/**
+	 * @param int|string $id
+	 * @param string $xmlId
+	 *
+	 * @return bool
+	 */
+	abstract public function setXmlId($id, $xmlId);
+
+	/**
+	 * @param int|string $id
+	 *
 	 * @return string
 	 */
-	public static function getModule()
+	abstract public function getXmlId($id);
+
+	/**
+	 * @param DataRecord $record
+	 */
+	abstract protected function update(DataRecord $record);
+
+	/**
+	 * @param DataRecord $record
+	 */
+	abstract protected function create(DataRecord $record);
+
+	/**
+	 * @param $xmlId
+	 */
+	abstract protected function delete($xmlId);
+	/**
+	 * @return string
+	 */
+	public function getModule()
 	{
 		$class = get_called_class();
 		$tmp = str_replace("Intervolga\\Migrato\\Module\\", "", $class);
@@ -22,7 +55,7 @@ abstract class Data
 	/**
 	 * @return string
 	 */
-	public static function getEntityName()
+	public function getEntityName()
 	{
 		$class = get_called_class();
 		$tmp = substr($class, strrpos($class, "\\") + 1);
@@ -34,7 +67,7 @@ abstract class Data
 	/**
 	 * @return bool
 	 */
-	public static function isXmlIdFieldExists()
+	public function isXmlIdFieldExists()
 	{
 		return true;
 	}
@@ -42,26 +75,18 @@ abstract class Data
 	/**
 	 * @return bool
 	 */
-	public static function createXmlIdField()
+	public function createXmlIdField()
 	{
 		return true;
 	}
 
 	/**
-	 * @return array|DataRecord[]
-	 */
-	public static function getFromDatabase()
-	{
-		return array();
-	}
-
-	/**
 	 * @return array|string[]
 	 */
-	public static function getXmlIdsFromDatabase()
+	public function getXmlIdsFromDatabase()
 	{
 		$result = array();
-		$records = static::getFromDatabase();
+		$records = $this->getFromDatabase();
 		foreach ($records as $record)
 		{
 			if ($record->getXmlId())
@@ -76,10 +101,10 @@ abstract class Data
 	/**
 	 * @return array|string[]
 	 */
-	public static function validateXmlIds()
+	public function validateXmlIds()
 	{
 		$errors = array();
-		$records = static::getFromDatabase();
+		$records = $this->getFromDatabase();
 		$xmlIds[] = array();
 		foreach ($records as $record)
 		{
@@ -113,28 +138,28 @@ abstract class Data
 	/**
 	 * @param array $errors
 	 */
-	public static function fixErrors(array $errors)
+	public function fixErrors(array $errors)
 	{
 		foreach ($errors["empty"] as $localId => $message)
 		{
-			static::setXmlId($localId, static::makeXmlId());
+			$this->setXmlId($localId, $this->makeXmlId());
 		}
 		foreach ($errors["invalid"] as $localId => $message)
 		{
-			$xmlId = static::getXmlId($localId);
+			$xmlId = $this->getXmlId($localId);
 			$xmlId = preg_replace("/[^a-z0-9\-_]/", "-", $xmlId);
-			static::setXmlId($localId, $xmlId);
+			$this->setXmlId($localId, $xmlId);
 		}
 		foreach ($errors["repeat"] as $localId => $message)
 		{
-			static::setXmlId($localId, static::makeXmlId());
+			$this->setXmlId($localId, $this->makeXmlId());
 		}
 	}
 
 	/**
 	 * @return string
 	 */
-	protected static function makeXmlId()
+	protected function makeXmlId()
 	{
 		$xmlid = uniqid("", true);
 		$xmlid = str_replace(".", "", $xmlid);
@@ -143,34 +168,13 @@ abstract class Data
 		return $xmlid;
 	}
 
-	/**
-	 * @param int|string $id
-	 * @param string $xmlId
-	 *
-	 * @return bool
-	 */
-	public static function setXmlId($id, $xmlId)
+	public function exportToFile()
 	{
-		return false;
-	}
-
-	/**
-	 * @param int|string $id
-	 *
-	 * @return string
-	 */
-	public static function getXmlId($id)
-	{
-		return "";
-	}
-
-	public static function exportToFile()
-	{
-		$path = INTERVOLGA_MIGRATO_DIRECTORY . static::getModule() . "/" . static::getEntityName() . "/";
+		$path = INTERVOLGA_MIGRATO_DIRECTORY . $this->getModule() . "/" . $this->getEntityName() . "/";
 		Directory::deleteDirectory($path);
 		checkDirPath($path);
 
-		$records = static::getFromDatabase();
+		$records = $this->getFromDatabase();
 		foreach ($records as $record)
 		{
 			DataFileViewXml::writeToFileSystem($record, $path);
@@ -180,11 +184,11 @@ abstract class Data
 	/**
 	 * @return array|\Intervolga\Migrato\Tool\DataRecord[]
 	 */
-	public static function importFromFile()
+	public function importFromFile()
 	{
-		$path = INTERVOLGA_MIGRATO_DIRECTORY . static::getModule() . "/" . static::getEntityName() . "/";
+		$path = INTERVOLGA_MIGRATO_DIRECTORY . $this->getModule() . "/" . $this->getEntityName() . "/";
 
-		$localXmlIds = static::getXmlIdsFromDatabase();
+		$localXmlIds = $this->getXmlIdsFromDatabase();
 		$fileRecords = DataFileViewXml::readFromFileSystem($path);
 		$fileXmlIds = array();
 		foreach ($fileRecords as $fileRecord)
@@ -192,36 +196,21 @@ abstract class Data
 			$fileXmlIds[] = $fileRecord->getXmlId();
 			if (in_array($fileRecord->getXmlId(), $localXmlIds))
 			{
-				static::update($fileRecord);
+				$this->update($fileRecord);
 			}
 			else
 			{
-				static::create($fileRecord);
+				$this->create($fileRecord);
 			}
 		}
 		foreach ($localXmlIds as $localXmlId)
 		{
 			if (!in_array($localXmlId, $fileXmlIds))
 			{
-				static::delete($localXmlId);
+				$this->delete($localXmlId);
 			}
 		}
 
 		return DataFileViewXml::readFromFileSystem($path);
-	}
-
-	protected static function update(DataRecord $record)
-	{
-		// todo
-	}
-
-	protected static function create(DataRecord $record)
-	{
-		// todo
-	}
-
-	protected static function delete($xmlId)
-	{
-		// todo
 	}
 }
