@@ -6,6 +6,20 @@ use Intervolga\Migrato\Tool\DataRecord;
 
 abstract class Data
 {
+	protected static $instances = array();
+
+	/**
+	 * @return static
+	 */
+	public static function getInstance()
+	{
+		if (!static::$instances[get_called_class()])
+		{
+			static::$instances[get_called_class()] = new static();
+		}
+
+		return static::$instances[get_called_class()];
+	}
 	/**
 	 * @return array|DataRecord[]
 	 */
