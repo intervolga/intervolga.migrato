@@ -43,7 +43,7 @@ class DataRecord
 	}
 
 	/**
-	 * @param array $dependencies
+	 * @param array|\Intervolga\Migrato\Tool\Dependency[] $dependencies
 	 */
 	public function setDependencies(array $dependencies)
 	{
@@ -51,7 +51,16 @@ class DataRecord
 	}
 
 	/**
-	 * @return array
+	 * @param string $key
+	 * @param \Intervolga\Migrato\Tool\Dependency $dependency
+	 */
+	public function addDependency($key, Dependency $dependency)
+	{
+		$this->dependencies[$key] = $dependency;
+	}
+
+	/**
+	 * @return array|\Intervolga\Migrato\Tool\Dependency[]
 	 */
 	public function getDependencies()
 	{
