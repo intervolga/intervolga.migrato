@@ -184,33 +184,16 @@ abstract class Data
 	/**
 	 * @return array|\Intervolga\Migrato\Tool\DataRecord[]
 	 */
-	public function importFromFile()
+	public function readFromFile()
 	{
 		$path = INTERVOLGA_MIGRATO_DIRECTORY . $this->getModule() . "/" . $this->getEntityName() . "/";
 
-		$localXmlIds = $this->getXmlIdsFromDatabase();
-		$fileRecords = DataFileViewXml::readFromFileSystem($path);
-		$fileXmlIds = array();
-		foreach ($fileRecords as $fileRecord)
+		$data = DataFileViewXml::readFromFileSystem($path);
+		foreach ($data as $i => $dataItem)
 		{
-			$fileXmlIds[] = $fileRecord->getXmlId();
-			if (in_array($fileRecord->getXmlId(), $localXmlIds))
-			{
-				$this->update($fileRecord);
-			}
-			else
-			{
-				$this->create($fileRecord);
-			}
-		}
-		foreach ($localXmlIds as $localXmlId)
-		{
-			if (!in_array($localXmlId, $fileXmlIds))
-			{
-				$this->delete($localXmlId);
-			}
+			$data[$i]->setData($this);
 		}
 
-		return DataFileViewXml::readFromFileSystem($path);
+		return $data;
 	}
 }

@@ -1,6 +1,7 @@
 <?namespace Intervolga\Migrato;
 
 use Intervolga\Migrato\Tool\Config;
+use Intervolga\Migrato\Tool\DataRecord;
 use Intervolga\Migrato\Tool\OptionFileViewXml;
 
 class Migrato
@@ -29,10 +30,33 @@ class Migrato
 
 	public static function importData()
 	{
+		$dataRecords = array();
 		foreach (Config::getInstance()->getDataClasses() as $data)
 		{
-			$data->importFromFile();
+			$dataRecords = array_merge($dataRecords, $data->readFromFile());
 		}
+		$dataArray = array();
+		foreach ($dataRecords as $dataRecord)
+		{
+			$data = array();
+			/**
+			 * @var DataRecord $dataRecord
+			 */
+			$data["XML_ID"] = $dataRecord->getXmlId();
+			$data["DEPENDENCIES"] = $dataRecord->getDependencies();
+			$data["DATA"] = $dataRecord->getData();
+			$dataArray[] = $data;
+		}
+		/*foreach (Foo::getResolvedDependencyData() as $dataPack)
+		{
+			foreach ($dataPack as $data)
+			{
+				Foo::save($data);
+			}
+			Foo::updateDependencies();
+		}*/
+		// create references
+		return $dataArray;
 	}
 
 	public static function exportOptions()
