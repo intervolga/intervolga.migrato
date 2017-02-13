@@ -1,7 +1,7 @@
 <?namespace Intervolga\Migrato;
 
 use Intervolga\Migrato\Tool\Config;
-use Intervolga\Migrato\Tool\DataRecord;
+use Intervolga\Migrato\Tool\DataRecordsResolveList;
 use Intervolga\Migrato\Tool\OptionFileViewXml;
 
 class Migrato
@@ -30,33 +30,30 @@ class Migrato
 
 	public static function importData()
 	{
-		$dataRecords = array();
+		$list = new DataRecordsResolveList();
 		foreach (Config::getInstance()->getDataClasses() as $data)
 		{
-			$dataRecords = array_merge($dataRecords, $data->readFromFile());
+			$list->addDataRecords($data->readFromFile());
 		}
-		$dataArray = array();
-		foreach ($dataRecords as $dataRecord)
+
+		for ($i = 0; $i < count(Config::getInstance()->getDataClasses()) * 2; $i++)
 		{
-			$data = array();
-			/**
-			 * @var DataRecord $dataRecord
-			 */
-			$data["XML_ID"] = $dataRecord->getXmlId();
-			$data["DEPENDENCIES"] = $dataRecord->getDependencies();
-			$data["DATA"] = $dataRecord->getData();
-			$dataArray[] = $data;
-		}
-		/*foreach (Foo::getResolvedDependencyData() as $dataPack)
-		{
-			foreach ($dataPack as $data)
+			$creatableDataRecords = $list->getCreatableDataRecords();
+			if ($creatableDataRecords)
 			{
-				Foo::save($data);
+				foreach ($creatableDataRecords as $dataRecord)
+				{
+					// TODO real resolve
+					$list->setCreated($dataRecord);
+				}
 			}
-			Foo::updateDependencies();
-		}*/
-		// create references
-		return $dataArray;
+			else
+			{
+				break;
+			}
+		}
+
+		// TODO delete old records
 	}
 
 	public static function exportOptions()
