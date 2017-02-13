@@ -3,13 +3,13 @@
 use Bitrix\Main\Mail\Internal\EventTypeTable;
 use Intervolga\Migrato\Base\DataWithUfXmlId;
 use Intervolga\Migrato\Tool\DataRecord;
+use Intervolga\Migrato\Tool\Dependency;
 
 class Event extends DataWithUfXmlId
 {
 	public function getFromDatabase()
 	{
 		$result = array();
-		$eventType = new EventType();
 		$by = "ID";
 		$order = "ASC";
 		$getList = \CEventMessage::getList($by, $order);
@@ -29,7 +29,7 @@ class Event extends DataWithUfXmlId
 				"SITE_TEMPLATE_ID" => $message["SITE_TEMPLATE_ID"],
 			));
 
-			$typeXmlIds = array();
+			// TODO getlist в цикле
 			$eventTypeGetList = EventTypeTable::getList(array(
 				"filter" => array(
 					"=EVENT_NAME" => $message["EVENT_NAME"],
@@ -38,13 +38,15 @@ class Event extends DataWithUfXmlId
 			));
 			while ($type = $eventTypeGetList->fetch())
 			{
-				$typeXmlIds[] = $eventType->getXmlId($type["ID"]);
+				$dependency = new Dependency(
+					EventType::getInstance(),
+					EventType::getInstance()->getXmlId($type["ID"]),
+					"EVENT_NAME"
+				);
+				$record->addDependency("EVENT_NAME", $dependency);
 			}
-			if ($typeXmlIds)
+			if ($record->getDependencies())
 			{
-				$record->setDependencies(array(
-					"EVENT_NAME" => $typeXmlIds,
-				));
 				$result[$message["ID"]] = $record;
 			}
 		}
