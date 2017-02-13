@@ -1,11 +1,14 @@
 <?namespace Intervolga\Migrato\Tool;
 
+use Intervolga\Migrato\Base\Data;
+
 class DataRecord
 {
 	protected $xmlId = "";
 	protected $localDbId = "";
 	protected $fields = array();
 	protected $dependencies = array();
+	protected $data = null;
 
 	/**
 	 * @param string $xmlId
@@ -69,5 +72,21 @@ class DataRecord
 	public function getLocalDbId()
 	{
 		return $this->localDbId;
+	}
+
+	/**
+	 * @param Data $dataObject
+	 */
+	public function setData(Data $dataObject)
+	{
+		$this->data = $dataObject;
+	}
+
+	/**
+	 * @return Data
+	 */
+	public function getData()
+	{
+		return $this->data;
 	}
 }
