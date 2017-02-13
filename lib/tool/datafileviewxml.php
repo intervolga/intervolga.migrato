@@ -158,7 +158,23 @@ class DataFileViewXml
 		$dependencies = array();
 		foreach ($xmlArray["data"]["#"]["dependency"] as $dependency)
 		{
-			$dependencies[$dependency["#"]["name"][0]["#"]] = $dependency["#"]["value"][0]["#"];
+			foreach ($dependency["#"]["value"] as $valueItem)
+			{
+				if ($dependencies[$dependency["#"]["name"][0]["#"]])
+				{
+					if (!is_array($dependencies[$dependency["#"]["name"][0]["#"]]))
+					{
+						$dependencies[$dependency["#"]["name"][0]["#"]] = array(
+							$dependencies[$dependency["#"]["name"][0]["#"]]
+						);
+					}
+					$dependencies[$dependency["#"]["name"][0]["#"]][] = $valueItem["#"];
+				}
+				else
+				{
+					$dependencies[$dependency["#"]["name"][0]["#"]] = $valueItem["#"];
+				}
+			}
 		}
 		$record->setDependencies($dependencies);
 
