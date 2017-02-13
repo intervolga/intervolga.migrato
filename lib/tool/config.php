@@ -80,7 +80,10 @@ class Config
 				$name = "\\Intervolga\\Migrato\\Module\\" . $moduleName . "\\Data\\" . $className;
 				if (class_exists($name))
 				{
-					$entities[] = new $name();
+					/**
+					 * @var Data $name
+					 */
+					$entities[] = $name::getInstance();
 				}
 			}
 		}
