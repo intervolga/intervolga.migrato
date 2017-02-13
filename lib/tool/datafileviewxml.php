@@ -18,7 +18,10 @@ class DataFileViewXml
 		$content .= "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
 		$content .= "<data>\n";
 		$content .= "\t<xml_id>" . $data->getXmlId() . "</xml_id>\n";
-		$content .= static::dependencyToXml($data->getDependencies());
+		if ($data->getDependencies())
+		{
+			$content .= static::dependencyToXml($data->getDependencies());
+		}
 		$content .= static::fieldToXml($data->getFields());
 		$content .= "</data>";
 
@@ -28,35 +31,18 @@ class DataFileViewXml
 	}
 
 	/**
-	 * @param array $dependencies
+	 * @param array|\Intervolga\Migrato\Tool\Dependency[] $dependencies
 	 * @return string
 	 */
 	protected static function dependencyToXml(array $dependencies)
 	{
-		return static::mapToXml("dependency", $dependencies);
-	}
-
-	/**
-	 * @param string $tag
-	 * @param array $map
-	 * @return string
-	 */
-	protected static function mapToXml($tag, array $map)
-	{
 		$content = "";
-		foreach ($map as $name => $value)
+		foreach ($dependencies as $name => $dependency)
 		{
-			$content .= "\t<{$tag}>\n";
+			$content .= "\t<dependency>\n";
 			$content .= "\t\t<name>" . htmlspecialchars($name) . "</name>\n";
-			if (!is_array($value))
-			{
-				$value = array($value);
-			}
-			foreach ($value as $valueItem)
-			{
-				$content .= static::valueToXml(2, $valueItem);
-			}
-			$content .= "\t</{$tag}>\n";
+			$content .= static::valueToXml(2, $dependency->getXmlId());
+			$content .= "\t</dependency>\n";
 		}
 
 		return $content;
@@ -89,7 +75,23 @@ class DataFileViewXml
 	 */
 	protected static function fieldToXml(array $fields)
 	{
-		return static::mapToXml("field", $fields);
+		$content = "";
+		foreach ($fields as $name => $value)
+		{
+			$content .= "\t<field>\n";
+			$content .= "\t\t<name>" . htmlspecialchars($name) . "</name>\n";
+			if (!is_array($value))
+			{
+				$value = array($value);
+			}
+			foreach ($value as $valueItem)
+			{
+				$content .= static::valueToXml(2, $valueItem);
+			}
+			$content .= "\t</field>\n";
+		}
+
+		return $content;
 	}
 
 	/**
