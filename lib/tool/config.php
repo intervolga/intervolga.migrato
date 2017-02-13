@@ -1,5 +1,7 @@
 <? namespace Intervolga\Migrato\Tool;
 
+use Intervolga\Migrato\Base\Data;
+
 class Config
 {
 	protected static $configArray = array();
@@ -61,5 +63,28 @@ class Config
 		}
 
 		return $options;
+	}
+
+	/**
+	 * @return array|Data[]
+	 */
+	public function getDataClasses()
+	{
+		$entities = array();
+		foreach (static::$configArray["config"]["#"]["module"] as $moduleArray)
+		{
+			$moduleName = $moduleArray["#"]["name"][0]["#"];
+			foreach ($moduleArray["#"]["entities"][0]["#"]["name"] as $entityArray)
+			{
+				$className = $entityArray["#"];
+				$name = "\\Intervolga\\Migrato\\Module\\" . $moduleName . "\\Data\\" . $className;
+				if (class_exists($name))
+				{
+					$entities[] = new $name();
+				}
+			}
+		}
+
+		return $entities;
 	}
 }

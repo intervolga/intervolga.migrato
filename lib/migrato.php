@@ -1,17 +1,13 @@
 <?namespace Intervolga\Migrato;
 
-use Intervolga\Migrato\Base\Data;
-use Intervolga\Migrato\Module\Main\Data\Event;
-use Intervolga\Migrato\Module\Main\Data\EventType;
 use Intervolga\Migrato\Tool\Config;
-use Intervolga\Migrato\Module\Main\Data\Group;
 use Intervolga\Migrato\Tool\OptionFileViewXml;
 
 class Migrato
 {
 	public static function exportData()
 	{
-		foreach (static::getEntities() as $data)
+		foreach (Config::getInstance()->getDataClasses() as $data)
 		{
 			if (!$data->isXmlIdFieldExists())
 			{
@@ -31,27 +27,9 @@ class Migrato
 		}
 	}
 
-	/**
-	 * @return array|Data[]
-	 */
-	public static function getEntities()
-	{
-		static $entites = array();
-		if (!$entites)
-		{
-			$entites = array(
-				new Group(),
-				new EventType(),
-				new Event()
-			);
-		}
-
-		return $entites;
-	}
-
 	public static function importData()
 	{
-		foreach (static::getEntities() as $data)
+		foreach (Config::getInstance()->getDataClasses() as $data)
 		{
 			$data->importFromFile();
 		}
