@@ -7,6 +7,8 @@ use Intervolga\Migrato\Tool\Dependency;
 
 class Event extends DataWithUfXmlId
 {
+	const DEPENDENCY_EVENT_NAME = "EVENT_NAME";
+
 	public function getFromDatabase()
 	{
 		$result = array();
@@ -43,7 +45,7 @@ class Event extends DataWithUfXmlId
 					EventType::getInstance()->getXmlId($type["ID"]),
 					"EVENT_NAME"
 				);
-				$record->addDependency("EVENT_NAME", $dependency);
+				$record->addDependency(static::DEPENDENCY_EVENT_NAME, $dependency);
 			}
 			if ($record->getDependencies())
 			{
@@ -51,6 +53,23 @@ class Event extends DataWithUfXmlId
 			}
 		}
 		return array_values($result);
+	}
+
+	protected function restoreDependenciesFromFile(array $dependencies)
+	{
+		/**
+		 * @var array|Dependency[] $dependencies
+		 */
+		foreach ($dependencies as $key => $dependency)
+		{
+			if ($key == static::DEPENDENCY_EVENT_NAME)
+			{
+				$dependencies[$key]->setTargetData(EventType::getInstance());
+				$dependencies[$key]->setToCustomField("EVENT_NAME");
+			}
+		}
+
+		return $dependencies;
 	}
 
 	/**

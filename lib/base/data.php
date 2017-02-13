@@ -3,6 +3,7 @@
 use Bitrix\Main\IO\Directory;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Tool\DataRecord;
+use Intervolga\Migrato\Tool\Dependency;
 
 abstract class Data
 {
@@ -206,8 +207,23 @@ abstract class Data
 		foreach ($data as $i => $dataItem)
 		{
 			$data[$i]->setData($this);
+			if ($dependencies = $data[$i]->getDependencies())
+			{
+				$dependencies = $this->restoreDependenciesFromFile($dependencies);
+				$data[$i]->setDependencies($dependencies);
+			}
 		}
 
 		return $data;
+	}
+
+	/**
+	 * @param array|Dependency[] $dependencies
+	 *
+	 * @return array|Dependency[]
+	 */
+	protected function restoreDependenciesFromFile(array $dependencies)
+	{
+		return array();
 	}
 }

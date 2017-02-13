@@ -1,7 +1,5 @@
 <?namespace Intervolga\Migrato\Tool;
 
-use Intervolga\Migrato\Base\Data;
-
 class Dependency
 {
 	protected $targetData = null;
@@ -13,11 +11,19 @@ class Dependency
 	 * @param string $xmlId
 	 * @param string $toCustomField
 	 */
-	public function __construct(Data $target, $xmlId, $toCustomField = "")
+	public function __construct($target, $xmlId, $toCustomField = "")
 	{
 		$this->targetData = $target;
 		$this->xmlId = $xmlId;
 		$this->toCustomField = $toCustomField;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Base\Data $tragetData
+	 */
+	public function setTargetData($tragetData)
+	{
+		$this->targetData = $tragetData;
 	}
 
 	/**
@@ -34,6 +40,14 @@ class Dependency
 	public function getXmlId()
 	{
 		return $this->xmlId;
+	}
+
+	/**
+	 * @param string $toCustomField
+	 */
+	public function setToCustomField($toCustomField)
+	{
+		$this->toCustomField = $toCustomField;
 	}
 
 	/**
