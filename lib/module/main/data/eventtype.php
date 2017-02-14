@@ -1,11 +1,17 @@
 <? namespace Intervolga\Migrato\Module\Main\Data;
 
-use Intervolga\Migrato\Base\DataWithUfXmlId;
+use Intervolga\Migrato\Base\Data;
 use Intervolga\Migrato\Tool\DataRecord;
 use Intervolga\Migrato\Tool\DataRecordId;
+use Intervolga\Migrato\Tool\XmlIdProviders\UfXmlIdProvider;
 
-class EventType extends DataWithUfXmlId
+class EventType extends Data
 {
+	public function __construct()
+	{
+		$this->xmlIdProvider = new UfXmlIdProvider($this);
+	}
+
 	public function getFromDatabase()
 	{
 		$result = array();
@@ -14,7 +20,7 @@ class EventType extends DataWithUfXmlId
 		{
 			$record = new DataRecord();
 			$id = DataRecordId::createNumericId($type["ID"]);
-			$record->setXmlId($this->getXmlId($id));
+			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 			$record->setId($id);
 			$record->setFields(array(
 				"LID" => $type["LID"],

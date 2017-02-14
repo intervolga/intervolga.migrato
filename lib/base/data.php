@@ -3,13 +3,14 @@
 use Bitrix\Main\IO\Directory;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Tool\DataRecord;
-use Intervolga\Migrato\Tool\DataRecordId;
 use Intervolga\Migrato\Tool\Dependency;
+use Intervolga\Migrato\Tool\XmlIdProviders\BaseXmlIdProvider;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 abstract class Data
 {
 	protected static $instances = array();
+	protected $xmlIdProvider = null;
 
 	/**
 	 * @return static
@@ -27,20 +28,6 @@ abstract class Data
 	 * @return array|DataRecord[]
 	 */
 	abstract public function getFromDatabase();
-	/**
-	 * @param DataRecordId $id
-	 * @param string $xmlId
-	 *
-	 * @return bool
-	 */
-	abstract public function setXmlId($id, $xmlId);
-
-	/**
-	 * @param DataRecordId $id
-	 *
-	 * @return string
-	 */
-	abstract public function getXmlId($id);
 
 	/**
 	 * @param DataRecord $record
@@ -79,40 +66,6 @@ abstract class Data
 		$tmp = strtolower($tmp);
 
 		return $tmp;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function isXmlIdFieldExists()
-	{
-		return true;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function createXmlIdField()
-	{
-		return true;
-	}
-
-	/**
-	 * @return array|string[]
-	 */
-	public function getXmlIdsFromDatabase()
-	{
-		$result = array();
-		$records = $this->getFromDatabase();
-		foreach ($records as $record)
-		{
-			if ($record->getXmlId())
-			{
-				$result[$record->getXmlId()] = $record->getXmlId();
-			}
-		}
-
-		return array_values($result);
 	}
 
 	/**
@@ -167,31 +120,19 @@ abstract class Data
 		{
 			if ($error->getType() == XmlIdValidateError::TYPE_EMPTY)
 			{
-				$this->setXmlId($error->getId(), $this->makeXmlId());
+				$this->getXmlIdProvider()->generateXmlId($error->getId());
 			}
 			elseif ($error->getType() == XmlIdValidateError::TYPE_INVALID)
 			{
-				$xmlId = $this->getXmlId($error->getId());
+				$xmlId = $this->getXmlIdProvider()->getXmlId($error->getId());
 				$xmlId = preg_replace("/[^a-z0-9\-_]/", "-", $xmlId);
-				$this->setXmlId($error->getId(), $xmlId);
+				$this->getXmlIdProvider()->setXmlId($error->getId(), $xmlId);
 			}
 			elseif ($error->getType() == XmlIdValidateError::TYPE_REPEAT)
 			{
-				$this->setXmlId($error->getId(), $this->makeXmlId());
+				$this->getXmlIdProvider()->generateXmlId($error->getId());
 			}
 		}
-	}
-
-	/**
-	 * @return string
-	 */
-	protected function makeXmlId()
-	{
-		$xmlid = uniqid("", true);
-		$xmlid = str_replace(".", "", $xmlid);
-		$xmlid = str_split($xmlid, 6);
-		$xmlid = implode("-", $xmlid);
-		return $xmlid;
 	}
 
 	public function exportToFile()
@@ -235,5 +176,13 @@ abstract class Data
 	protected function restoreDependenciesFromFile(array $dependencies)
 	{
 		return array();
+	}
+
+	/**
+	 * @return BaseXmlIdProvider
+	 */
+	public function getXmlIdProvider()
+	{
+		return $this->xmlIdProvider;
 	}
 }

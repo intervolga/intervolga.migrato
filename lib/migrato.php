@@ -6,26 +6,42 @@ use Intervolga\Migrato\Tool\OptionFileViewXml;
 
 class Migrato
 {
+	/**
+	 * @return array|string[]
+	 */
 	public static function exportData()
 	{
+		$result = array();
 		foreach (Config::getInstance()->getDataClasses() as $data)
 		{
-			if (!$data->isXmlIdFieldExists())
+			try
 			{
-				$data->createXmlIdField();
-			}
-			$errors = $data->validateXmlIds();
-			if ($errors)
-			{
-				$data->fixErrors($errors);
+				if (!$data->getXmlIdProvider()->isXmlIdFieldExists())
+				{
+					$data->getXmlIdProvider()->createXmlIdField();
+				}
 				$errors = $data->validateXmlIds();
 				if ($errors)
 				{
 					$data->fixErrors($errors);
 				}
+				$errors = $data->validateXmlIds();
+				if (!$errors)
+				{
+					$data->exportToFile();
+					$result[] = "Data " . $data->getModule() . "/" . $data->getEntityName() . " exported to files";
+				}
+				else
+				{
+					$result[] = "Data " . $data->getModule() . "/" . $data->getEntityName() . " exported with errors (" . count($errors) . ")";
+				}
 			}
-			$data->exportToFile();
+			catch (\Exception $exception)
+			{
+				$result[] = "Data " . $data->getModule() . "/" . $data->getEntityName() . " exported with exception: " . $exception->getMessage();
+			}
 		}
+		return $result;
 	}
 
 	public static function importData()

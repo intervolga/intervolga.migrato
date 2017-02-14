@@ -1,11 +1,17 @@
 <? namespace Intervolga\Migrato\Module\Main\Data;
 
 use Intervolga\Migrato\Tool\DataRecord;
-use Intervolga\Migrato\Base\DataWithUfXmlId;
+use Intervolga\Migrato\Base\Data;
 use Intervolga\Migrato\Tool\DataRecordId;
+use Intervolga\Migrato\Tool\XmlIdProviders\UfXmlIdProvider;
 
-class Group extends DataWithUfXmlId
+class Group extends Data
 {
+	public function __construct()
+	{
+		$this->xmlIdProvider = new UfXmlIdProvider($this);
+	}
+
 	public function getFromDatabase()
 	{
 		$result = array();
@@ -16,7 +22,8 @@ class Group extends DataWithUfXmlId
 		{
 			$record = new DataRecord();
 			$id = DataRecordId::createNumericId($group["ID"]);
-			$record->setXmlId($this->getXmlId($id));
+			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
+
 			$record->setId($id);
 			$record->setFields(array(
 				"ACTIVE" => $group["ACTIVE"],

@@ -1,9 +1,9 @@
-<?namespace Intervolga\Migrato\Base;
+<?namespace Intervolga\Migrato\Tool\XmlIdProviders;
 
 use Intervolga\Migrato\Tool\DataRecordId;
 use Intervolga\Migrato\Tool\MigratoDataTable;
 
-abstract class DataWithTableXmlId extends Data
+class TableXmlIdProvider extends BaseXmlIdProvider
 {
 	public function setXmlId($id, $xmlId)
 	{
@@ -15,8 +15,8 @@ abstract class DataWithTableXmlId extends Data
 		else
 		{
 			$add = array(
-				"MODULE_NAME" => $this->getModule(),
-				"ENTITY_NAME" => $this->getEntityName(),
+				"MODULE_NAME" => $this->dataClass->getModule(),
+				"ENTITY_NAME" => $this->dataClass->getEntityName(),
 				"DATA_XML_ID" => $xmlId,
 			);
 			if ($id->getType() == DataRecordId::TYPE_NUMERIC)
@@ -76,8 +76,8 @@ abstract class DataWithTableXmlId extends Data
 	private function makeTableXmlIdFilter()
 	{
 		return array(
-			"=MODULE_NAME" => $this->getModule(),
-			"=ENTITY_NAME" => $this->getEntityName(),
+			"=MODULE_NAME" => $this->dataClass->getModule(),
+			"=ENTITY_NAME" => $this->dataClass->getEntityName(),
 		);
 	}
 

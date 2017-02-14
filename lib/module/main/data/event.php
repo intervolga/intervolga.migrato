@@ -1,14 +1,20 @@
 <? namespace Intervolga\Migrato\Module\Main\Data;
 
 use Bitrix\Main\Mail\Internal\EventTypeTable;
-use Intervolga\Migrato\Base\DataWithUfXmlId;
+use Intervolga\Migrato\Base\Data;
 use Intervolga\Migrato\Tool\DataRecord;
 use Intervolga\Migrato\Tool\DataRecordId;
 use Intervolga\Migrato\Tool\Dependency;
+use Intervolga\Migrato\Tool\XmlIdProviders\UfXmlIdProvider;
 
-class Event extends DataWithUfXmlId
+class Event extends Data
 {
 	const DEPENDENCY_EVENT_NAME = "EVENT_NAME";
+
+	public function __construct()
+	{
+		$this->xmlIdProvider = new UfXmlIdProvider($this);
+	}
 
 	public function getFromDatabase()
 	{
@@ -20,7 +26,7 @@ class Event extends DataWithUfXmlId
 		{
 			$record = new DataRecord();
 			$id = DataRecordId::createNumericId($message["ID"]);
-			$record->setXmlId($this->getXmlId($id));
+			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 			$record->setId($id);
 			$record->setFields(array(
 				"LID" => $message["LID"],
@@ -44,7 +50,7 @@ class Event extends DataWithUfXmlId
 			{
 				$dependency = new Dependency(
 					EventType::getInstance(),
-					EventType::getInstance()->getXmlId(DataRecordId::createNumericId($type["ID"])),
+					EventType::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createNumericId($type["ID"])),
 					"EVENT_NAME"
 				);
 				$record->addDependency(static::DEPENDENCY_EVENT_NAME, $dependency);
