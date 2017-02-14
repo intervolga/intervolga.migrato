@@ -1,8 +1,12 @@
 <?namespace Intervolga\Migrato;
 
+use Bitrix\Main\IO\Directory;
+use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\Config;
+use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Tool\DataRecordsResolveList;
 use Intervolga\Migrato\Tool\OptionFileViewXml;
+use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 class Migrato
 {
@@ -20,15 +24,15 @@ class Migrato
 				{
 					$data->getXmlIdProvider()->createXmlIdField();
 				}
-				$errors = $data->validateXmlIds();
+				$errors = static::validateXmlIds($data);
 				if ($errors)
 				{
-					$data->fixErrors($errors);
+					static::fixErrors($data, $errors);
 				}
-				$errors = $data->validateXmlIds();
+				$errors = static::validateXmlIds($data);
 				if (!$errors)
 				{
-					$data->exportToFile();
+					static::exportToFile($data);
 					$result[] = "Data " . $data->getModule() . "/" . $data->getEntityName() . " exported to files";
 				}
 				else
@@ -44,12 +48,118 @@ class Migrato
 		return $result;
 	}
 
+	/**
+	 * @return array|XmlIdValidateError[]
+	 */
+	protected static function validateXmlIds(BaseData $dataClass)
+	{
+		$errors = array();
+		$records = $dataClass->getFromDatabase();
+		$xmlIds[] = array();
+		foreach ($records as $record)
+		{
+			$errorType = 0;
+			if ($record->getXmlId())
+			{
+				$matches = array();
+				if (preg_match_all("/^[a-z0-9\-_]*$/i", $record->getXmlId(), $matches))
+				{
+					if (!in_array($record->getXmlId(), $xmlIds))
+					{
+						$xmlIds[] = $record->getXmlId();
+					}
+					else
+					{
+						$errorType = XmlIdValidateError::TYPE_REPEAT;
+					}
+				}
+				else
+				{
+					$errorType = XmlIdValidateError::TYPE_INVALID;
+				}
+			}
+			else
+			{
+				$errorType = XmlIdValidateError::TYPE_EMPTY;
+
+			}
+			if ($errorType)
+			{
+				$errors[] = new XmlIdValidateError($errorType, $record->getId(), $record->getXmlId());
+			}
+		}
+		return $errors;
+	}
+
+	/**
+	 * @param array|XmlIdValidateError[] $errors
+	 */
+	protected static function fixErrors(BaseData $dataClass, array $errors)
+	{
+		foreach ($errors as $error)
+		{
+			if ($error->getType() == XmlIdValidateError::TYPE_EMPTY)
+			{
+				$dataClass->getXmlIdProvider()->generateXmlId($error->getId());
+			}
+			elseif ($error->getType() == XmlIdValidateError::TYPE_INVALID)
+			{
+				$xmlId = $dataClass->getXmlIdProvider()->getXmlId($error->getId());
+				$xmlId = preg_replace("/[^a-z0-9\-_]/", "-", $xmlId);
+				$dataClass->getXmlIdProvider()->setXmlId($error->getId(), $xmlId);
+			}
+			elseif ($error->getType() == XmlIdValidateError::TYPE_REPEAT)
+			{
+				$dataClass->getXmlIdProvider()->generateXmlId($error->getId());
+			}
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
+	 */
+	protected static function exportToFile(BaseData $dataClass)
+	{
+		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . "/" . $dataClass->getEntityName() . "/";
+		Directory::deleteDirectory($path);
+		checkDirPath($path);
+
+		$records = $dataClass->getFromDatabase();
+		foreach ($records as $record)
+		{
+			DataFileViewXml::writeToFileSystem($record, $path);
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
+	 *
+	 * @return array|\Intervolga\Migrato\Tool\DataRecord[]
+	 */
+	protected static function readFromFile(BaseData $dataClass)
+	{
+		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . "/" . $dataClass->getEntityName() . "/";
+
+		$data = DataFileViewXml::readFromFileSystem($path);
+		foreach ($data as $i => $dataItem)
+		{
+			$data[$i]->setData($dataClass);
+			if ($dependencies = $data[$i]->getDependencies())
+			{
+				$dependencies = $dataClass->restoreDependenciesFromFile($dependencies);
+				$data[$i]->setDependencies($dependencies);
+			}
+		}
+
+		return $data;
+	}
+
 	public static function importData()
 	{
 		$list = new DataRecordsResolveList();
 		foreach (Config::getInstance()->getDataClasses() as $data)
 		{
-			$list->addDataRecords($data->readFromFile());
+			$list->addDataRecords(static::readFromFile($data));
 		}
 
 		for ($i = 0; $i < count(Config::getInstance()->getDataClasses()) * 2; $i++)

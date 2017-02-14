@@ -63,7 +63,7 @@ class Event extends BaseData
 		return array_values($result);
 	}
 
-	protected function restoreDependenciesFromFile(array $dependencies)
+	public function restoreDependenciesFromFile(array $dependencies)
 	{
 		/**
 		 * @var array|Dependency[] $dependencies
