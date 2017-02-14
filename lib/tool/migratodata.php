@@ -27,4 +27,30 @@ class MigratoDataTable extends DataManager
 			)),
 		);
 	}
+
+	public static function getList(array $parameters = array())
+	{
+		if ($parameters["filter"]["DATA_ID_COMPLEX"])
+		{
+			$parameters["filter"]["DATA_ID_COMPLEX"] = serialize($parameters["filter"]["DATA_ID_COMPLEX"]);
+		}
+		if ($parameters["filter"]["=DATA_ID_COMPLEX"])
+		{
+			$parameters["filter"]["=DATA_ID_COMPLEX"] = serialize($parameters["filter"]["=DATA_ID_COMPLEX"]);
+		}
+		return parent::getList($parameters);
+	}
+
+	public static function getCount(array $filter = array())
+	{
+		if ($filter["DATA_ID_COMPLEX"])
+		{
+			$filter["DATA_ID_COMPLEX"] = serialize($filter["DATA_ID_COMPLEX"]);
+		}
+		if ($filter["=DATA_ID_COMPLEX"])
+		{
+			$filter["=DATA_ID_COMPLEX"] = serialize($filter["=DATA_ID_COMPLEX"]);
+		}
+		return parent::getCount($filter);
+	}
 }
