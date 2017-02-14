@@ -77,7 +77,7 @@ class Config
 			foreach ($moduleArray["#"]["entities"][0]["#"]["name"] as $entityArray)
 			{
 				$className = $entityArray["#"];
-				$name = "\\Intervolga\\Migrato\\Module\\" . $moduleName . "\\Data\\" . $className;
+				$name = "\\Intervolga\\Migrato\\Data\\Module\\" . $moduleName . "\\" . $className;
 				if (class_exists($name))
 				{
 					/**

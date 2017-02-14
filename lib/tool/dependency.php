@@ -7,7 +7,7 @@ class Dependency
 	protected $toCustomField = "";
 
 	/**
-	 * @param \Intervolga\Migrato\Base\Data $target
+	 * @param \Intervolga\Migrato\Data\BaseData $target
 	 * @param string $xmlId
 	 * @param string $toCustomField
 	 */
@@ -19,7 +19,7 @@ class Dependency
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Base\Data $tragetData
+	 * @param \Intervolga\Migrato\Data\BaseData $tragetData
 	 */
 	public function setTargetData($tragetData)
 	{
@@ -27,7 +27,7 @@ class Dependency
 	}
 
 	/**
-	 * @return \Intervolga\Migrato\Base\Data
+	 * @return \Intervolga\Migrato\Data\BaseData
 	 */
 	public function getTargetData()
 	{

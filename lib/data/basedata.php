@@ -1,4 +1,4 @@
-<? namespace Intervolga\Migrato\Base;
+<? namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\IO\Directory;
 use Intervolga\Migrato\Tool\DataFileViewXml;
@@ -7,7 +7,7 @@ use Intervolga\Migrato\Tool\Dependency;
 use Intervolga\Migrato\Tool\XmlIdProviders\BaseXmlIdProvider;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 
-abstract class Data
+abstract class BaseData
 {
 	protected static $instances = array();
 	protected $xmlIdProvider = null;
@@ -49,7 +49,7 @@ abstract class Data
 	public function getModule()
 	{
 		$class = get_called_class();
-		$tmp = str_replace("Intervolga\\Migrato\\Module\\", "", $class);
+		$tmp = str_replace("Intervolga\\Migrato\\Data\\Module\\", "", $class);
 		$tmp = substr($tmp, 0, strpos($tmp, "\\"));
 		$tmp = strtolower($tmp);
 

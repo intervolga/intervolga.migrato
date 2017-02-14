@@ -1,6 +1,6 @@
 <?namespace Intervolga\Migrato\Tool;
 
-use Intervolga\Migrato\Base\Data;
+use Intervolga\Migrato\Data\BaseData;
 
 class DataRecord
 {
@@ -81,15 +81,15 @@ class DataRecord
 	}
 
 	/**
-	 * @param Data $dataObject
+	 * @param BaseData $dataObject
 	 */
-	public function setData(Data $dataObject)
+	public function setData(BaseData $dataObject)
 	{
 		$this->data = $dataObject;
 	}
 
 	/**
-	 * @return Data
+	 * @return BaseData
 	 */
 	public function getData()
 	{

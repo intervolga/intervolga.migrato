@@ -1,13 +1,13 @@
-<? namespace Intervolga\Migrato\Module\Main\Data;
+<? namespace Intervolga\Migrato\Data\Module\Main;
 
 use Bitrix\Main\Mail\Internal\EventTypeTable;
-use Intervolga\Migrato\Base\Data;
+use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\DataRecord;
 use Intervolga\Migrato\Tool\DataRecordId;
 use Intervolga\Migrato\Tool\Dependency;
 use Intervolga\Migrato\Tool\XmlIdProviders\UfXmlIdProvider;
 
-class Event extends Data
+class Event extends BaseData
 {
 	const DEPENDENCY_EVENT_NAME = "EVENT_NAME";
 

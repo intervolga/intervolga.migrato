@@ -1,11 +1,11 @@
-<? namespace Intervolga\Migrato\Module\Main\Data;
+<? namespace Intervolga\Migrato\Data\Module\Main;
 
+use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\DataRecord;
-use Intervolga\Migrato\Base\Data;
 use Intervolga\Migrato\Tool\DataRecordId;
 use Intervolga\Migrato\Tool\XmlIdProviders\UfXmlIdProvider;
 
-class Group extends Data
+class EventType extends BaseData
 {
 	public function __construct()
 	{
@@ -15,21 +15,19 @@ class Group extends Data
 	public function getFromDatabase()
 	{
 		$result = array();
-		$by = "ID";
-		$order = "ASC";
-		$getList = \CGroup::getList($by, $order);
-		while ($group = $getList->fetch())
+		$getList = \CEventType::getList();
+		while ($type = $getList->fetch())
 		{
 			$record = new DataRecord();
-			$id = DataRecordId::createNumericId($group["ID"]);
+			$id = DataRecordId::createNumericId($type["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
-
 			$record->setId($id);
 			$record->setFields(array(
-				"ACTIVE" => $group["ACTIVE"],
-				"NAME" => $group["NAME"],
-				"DESCRIPTION" => $group["DESCRIPTION"],
-				"STRING_ID" => $group["STRING_ID"],
+				"LID" => $type["LID"],
+				"EVENT_NAME" => $type["EVENT_NAME"],
+				"NAME" => $type["NAME"],
+				"DESCRIPTION" => $type["DESCRIPTION"],
+				"SORT" => $type["SORT"],
 			));
 			$result[] = $record;
 		}

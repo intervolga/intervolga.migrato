@@ -1,12 +1,12 @@
 <?namespace Intervolga\Migrato\Tool\XmlIdProviders;
 
-use Intervolga\Migrato\Base\Data;
+use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\DataRecordId;
 
 abstract class BaseXmlIdProvider
 {
 	protected $dataClass = null;
-	public function __construct(Data $dataClass)
+	public function __construct(BaseData $dataClass)
 	{
 		$this->dataClass = $dataClass;
 	}
