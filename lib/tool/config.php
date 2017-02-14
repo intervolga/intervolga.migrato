@@ -1,6 +1,7 @@
 <? namespace Intervolga\Migrato\Tool;
 
-use Intervolga\Migrato\Base\Data;
+
+use Intervolga\Migrato\Data\BaseData;
 
 class Config
 {
@@ -66,7 +67,7 @@ class Config
 	}
 
 	/**
-	 * @return array|Data[]
+	 * @return array|BaseData[]
 	 */
 	public function getDataClasses()
 	{
@@ -81,7 +82,7 @@ class Config
 				if (class_exists($name))
 				{
 					/**
-					 * @var Data $name
+					 * @var BaseData $name
 					 */
 					$entities[] = $name::getInstance();
 				}
