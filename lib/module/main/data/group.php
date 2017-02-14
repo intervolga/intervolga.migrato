@@ -2,6 +2,7 @@
 
 use Intervolga\Migrato\Tool\DataRecord;
 use Intervolga\Migrato\Base\DataWithUfXmlId;
+use Intervolga\Migrato\Tool\DataRecordId;
 
 class Group extends DataWithUfXmlId
 {
@@ -14,8 +15,9 @@ class Group extends DataWithUfXmlId
 		while ($group = $getList->fetch())
 		{
 			$record = new DataRecord();
-			$record->setXmlId($this->getXmlId($group["ID"]));
-			$record->setLocalDbId($group["ID"]);
+			$id = DataRecordId::createNumericId($group["ID"]);
+			$record->setXmlId($this->getXmlId($id));
+			$record->setId($id);
 			$record->setFields(array(
 				"ACTIVE" => $group["ACTIVE"],
 				"NAME" => $group["NAME"],

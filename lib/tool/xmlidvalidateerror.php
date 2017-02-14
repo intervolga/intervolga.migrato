@@ -12,7 +12,7 @@ class XmlIdValidateError
 
 	/**
 	 * @param int $type
-	 * @param string|int $id
+	 * @param DataRecordId $id
 	 * @param string $xmlId
 	 */
 	public function __construct($type, $id, $xmlId)
@@ -39,7 +39,7 @@ class XmlIdValidateError
 	}
 
 	/**
-	 * @return string|int
+	 * @return DataRecordId
 	 */
 	public function getId()
 	{

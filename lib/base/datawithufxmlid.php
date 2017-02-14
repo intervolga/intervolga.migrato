@@ -16,11 +16,11 @@ abstract class DataWithUfXmlId extends Data
 
 	public function setXmlId($id, $xmlId)
 	{
-		return XmlIdUserField::setXmlId(static::getModule(), static::getEntityName(), $id, $xmlId);
+		return XmlIdUserField::setXmlId(static::getModule(), static::getEntityName(), $id->getValue(), $xmlId);
 	}
 
 	public function getXmlId($id)
 	{
-		return XmlIdUserField::getXmlId(static::getModule(), static::getEntityName(), $id);
+		return XmlIdUserField::getXmlId(static::getModule(), static::getEntityName(), $id->getValue());
 	}
 }

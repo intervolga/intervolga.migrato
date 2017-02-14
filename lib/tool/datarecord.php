@@ -5,7 +5,7 @@ use Intervolga\Migrato\Base\Data;
 class DataRecord
 {
 	protected $xmlId = "";
-	protected $localDbId = "";
+	protected $id = null;
 	protected $fields = array();
 	protected $dependencies = array();
 	protected $data = null;
@@ -67,20 +67,17 @@ class DataRecord
 		return $this->dependencies;
 	}
 
-	/**
-	 * @param int|string $id
-	 */
-	public function setLocalDbId($id)
+	public function setId(DataRecordId $id)
 	{
-		$this->localDbId = $id;
+		$this->id = $id;
 	}
 
 	/**
-	 * @return int|string
+	 * @return DataRecordId
 	 */
-	public function getLocalDbId()
+	public function getId()
 	{
-		return $this->localDbId;
+		return $this->id;
 	}
 
 	/**

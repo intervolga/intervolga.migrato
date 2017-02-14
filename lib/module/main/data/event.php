@@ -3,6 +3,7 @@
 use Bitrix\Main\Mail\Internal\EventTypeTable;
 use Intervolga\Migrato\Base\DataWithUfXmlId;
 use Intervolga\Migrato\Tool\DataRecord;
+use Intervolga\Migrato\Tool\DataRecordId;
 use Intervolga\Migrato\Tool\Dependency;
 
 class Event extends DataWithUfXmlId
@@ -18,8 +19,9 @@ class Event extends DataWithUfXmlId
 		while ($message = $getList->fetch())
 		{
 			$record = new DataRecord();
-			$record->setXmlId($this->getXmlId($message["ID"]));
-			$record->setLocalDbId($message["ID"]);
+			$id = DataRecordId::createNumericId($message["ID"]);
+			$record->setXmlId($this->getXmlId($id));
+			$record->setId($id);
 			$record->setFields(array(
 				"LID" => $message["LID"],
 				"ACTIVE" => $message["ACTIVE"],
@@ -42,7 +44,7 @@ class Event extends DataWithUfXmlId
 			{
 				$dependency = new Dependency(
 					EventType::getInstance(),
-					EventType::getInstance()->getXmlId($type["ID"]),
+					EventType::getInstance()->getXmlId(DataRecordId::createNumericId($type["ID"])),
 					"EVENT_NAME"
 				);
 				$record->addDependency(static::DEPENDENCY_EVENT_NAME, $dependency);

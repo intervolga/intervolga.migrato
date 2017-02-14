@@ -3,6 +3,7 @@
 use Bitrix\Main\IO\Directory;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Tool\DataRecord;
+use Intervolga\Migrato\Tool\DataRecordId;
 use Intervolga\Migrato\Tool\Dependency;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 
@@ -27,7 +28,7 @@ abstract class Data
 	 */
 	abstract public function getFromDatabase();
 	/**
-	 * @param int|string $id
+	 * @param DataRecordId $id
 	 * @param string $xmlId
 	 *
 	 * @return bool
@@ -35,7 +36,7 @@ abstract class Data
 	abstract public function setXmlId($id, $xmlId);
 
 	/**
-	 * @param int|string $id
+	 * @param DataRecordId $id
 	 *
 	 * @return string
 	 */
@@ -151,7 +152,7 @@ abstract class Data
 			}
 			if ($errorType)
 			{
-				$errors[] = new XmlIdValidateError($errorType, $record->getLocalDbId(), $record->getXmlId());
+				$errors[] = new XmlIdValidateError($errorType, $record->getId(), $record->getXmlId());
 			}
 		}
 		return $errors;

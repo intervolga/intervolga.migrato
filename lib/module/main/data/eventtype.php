@@ -2,6 +2,7 @@
 
 use Intervolga\Migrato\Base\DataWithUfXmlId;
 use Intervolga\Migrato\Tool\DataRecord;
+use Intervolga\Migrato\Tool\DataRecordId;
 
 class EventType extends DataWithUfXmlId
 {
@@ -12,8 +13,9 @@ class EventType extends DataWithUfXmlId
 		while ($type = $getList->fetch())
 		{
 			$record = new DataRecord();
-			$record->setXmlId($this->getXmlId($type["ID"]));
-			$record->setLocalDbId($type["ID"]);
+			$id = DataRecordId::createNumericId($type["ID"]);
+			$record->setXmlId($this->getXmlId($id));
+			$record->setId($id);
 			$record->setFields(array(
 				"LID" => $type["LID"],
 				"EVENT_NAME" => $type["EVENT_NAME"],
