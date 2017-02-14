@@ -4,6 +4,7 @@ use Bitrix\Main\IO\Directory;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Tool\DataRecord;
 use Intervolga\Migrato\Tool\Dependency;
+use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 abstract class Data
 {
@@ -114,7 +115,7 @@ abstract class Data
 	}
 
 	/**
-	 * @return array|string[]
+	 * @return array|XmlIdValidateError[]
 	 */
 	public function validateXmlIds()
 	{
@@ -123,6 +124,7 @@ abstract class Data
 		$xmlIds[] = array();
 		foreach ($records as $record)
 		{
+			$errorType = 0;
 			if ($record->getXmlId())
 			{
 				$matches = array();
@@ -134,40 +136,48 @@ abstract class Data
 					}
 					else
 					{
-						$errors["repeat"][$record->getLocalDbId()] = "Repeat XML ID: " . $record->getXmlId();
+						$errorType = XmlIdValidateError::TYPE_REPEAT;
 					}
 				}
 				else
 				{
-					$errors["invalid"][$record->getLocalDbId()] = "Invalid XML ID: " . $record->getXmlId();
+					$errorType = XmlIdValidateError::TYPE_INVALID;
 				}
 			}
 			else
 			{
-				$errors["empty"][$record->getLocalDbId()] = "No XML ID (ID=" . $record->getLocalDbId() . ")";
+				$errorType = XmlIdValidateError::TYPE_EMPTY;
+
+			}
+			if ($errorType)
+			{
+				$errors[] = new XmlIdValidateError($errorType, $record->getLocalDbId(), $record->getXmlId());
 			}
 		}
 		return $errors;
 	}
 
 	/**
-	 * @param array $errors
+	 * @param array|XmlIdValidateError[] $errors
 	 */
 	public function fixErrors(array $errors)
 	{
-		foreach ($errors["empty"] as $localId => $message)
+		foreach ($errors as $error)
 		{
-			$this->setXmlId($localId, $this->makeXmlId());
-		}
-		foreach ($errors["invalid"] as $localId => $message)
-		{
-			$xmlId = $this->getXmlId($localId);
-			$xmlId = preg_replace("/[^a-z0-9\-_]/", "-", $xmlId);
-			$this->setXmlId($localId, $xmlId);
-		}
-		foreach ($errors["repeat"] as $localId => $message)
-		{
-			$this->setXmlId($localId, $this->makeXmlId());
+			if ($error->getType() == XmlIdValidateError::TYPE_EMPTY)
+			{
+				$this->setXmlId($error->getId(), $this->makeXmlId());
+			}
+			elseif ($error->getType() == XmlIdValidateError::TYPE_INVALID)
+			{
+				$xmlId = $this->getXmlId($error->getId());
+				$xmlId = preg_replace("/[^a-z0-9\-_]/", "-", $xmlId);
+				$this->setXmlId($error->getId(), $xmlId);
+			}
+			elseif ($error->getType() == XmlIdValidateError::TYPE_REPEAT)
+			{
+				$this->setXmlId($error->getId(), $this->makeXmlId());
+			}
 		}
 	}
 
@@ -219,7 +229,6 @@ abstract class Data
 
 	/**
 	 * @param array|Dependency[] $dependencies
-	 *
 	 * @return array|Dependency[]
 	 */
 	protected function restoreDependenciesFromFile(array $dependencies)
