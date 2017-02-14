@@ -33,6 +33,7 @@ class intervolga_migrato extends CModule
 	{
 		try
 		{
+			$this->installDb();
 			Main\ModuleManager::registerModule($this->MODULE_ID);
 		}
 		catch (\Exception $e)
@@ -46,10 +47,23 @@ class intervolga_migrato extends CModule
 		return true;
 	}
 
+	public function installDb()
+	{
+		global $DB, $DBType;
+		$errors = $DB->RunSQLBatch(__DIR__. "/db/" . strtolower($DBType) . "/install.sql");
+		if ($errors)
+		{
+			throw new \Exception(implode("<br>", $errors));
+		}
+
+		return true;
+	}
+
 	public function doUninstall()
 	{
 		try
 		{
+			$this->unInstallDb();
 			Main\ModuleManager::unRegisterModule($this->MODULE_ID);
 		}
 		catch (\Exception $e)
@@ -58,6 +72,18 @@ class intervolga_migrato extends CModule
 			$APPLICATION->ThrowException($e->getMessage());
 
 			return false;
+		}
+
+		return true;
+	}
+
+	public function unInstallDb()
+	{
+		global $DB, $DBType;
+		$errors = $DB->RunSQLBatch(__DIR__. "/db/" . strtolower($DBType) . "/uninstall.sql");
+		if ($errors)
+		{
+			throw new \Exception(implode("<br>", $errors));
 		}
 
 		return true;
