@@ -1,5 +1,7 @@
 <? namespace Intervolga\Migrato\Tool;
 
+use Bitrix\Main\SystemException;
+
 class XmlIdUserField
 {
 	/**
@@ -28,13 +30,19 @@ class XmlIdUserField
 	 * @param string $entityName
 	 *
 	 * @return bool
+	 * @throws \Bitrix\Main\SystemException
 	 */
 	public static function createField($module, $entityName)
 	{
 		$fields = static::makeField($module, $entityName);
 		$userTypeEntity = new \CUserTypeEntity();
+		if (!$userTypeEntity->add($fields))
+		{
+			global $APPLICATION;
+			throw new SystemException($APPLICATION->getException()->getString());
+		}
 
-		return !!$userTypeEntity->add($fields);
+		return true;
 	}
 
 	/**
