@@ -99,7 +99,7 @@ class Event extends BaseData
 	/**
 	 * @param DataRecord $record
 	 */
-	protected function update(DataRecord $record)
+	public function update(DataRecord $record)
 	{
 		// TODO: Implement update() method.
 	}
@@ -107,7 +107,7 @@ class Event extends BaseData
 	/**
 	 * @param DataRecord $record
 	 */
-	protected function create(DataRecord $record)
+	public function create(DataRecord $record)
 	{
 		// TODO: Implement create() method.
 	}
@@ -115,7 +115,7 @@ class Event extends BaseData
 	/**
 	 * @param $xmlId
 	 */
-	protected function delete($xmlId)
+	public function delete($xmlId)
 	{
 		// TODO: Implement delete() method.
 	}

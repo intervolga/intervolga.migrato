@@ -29,17 +29,17 @@ abstract class BaseData
 	/**
 	 * @param DataRecord $record
 	 */
-	abstract protected function update(DataRecord $record);
+	abstract public function update(DataRecord $record);
 
 	/**
 	 * @param DataRecord $record
 	 */
-	abstract protected function create(DataRecord $record);
+	abstract public function create(DataRecord $record);
 
 	/**
 	 * @param $xmlId
 	 */
-	abstract protected function delete($xmlId);
+	abstract public function delete($xmlId);
 	/**
 	 * @return string
 	 */
