@@ -40,6 +40,23 @@ abstract class BaseData
 	 * @param $xmlId
 	 */
 	abstract public function delete($xmlId);
+
+	/**
+	 * @param \Intervolga\Migrato\Tool\DataRecord $record
+	 *
+	 * @return \Intervolga\Migrato\Tool\DataRecordId|null
+	 */
+	public function findRecord(DataRecord $record)
+	{
+		foreach (static::getFromDatabase() as $dbRecord)
+		{
+			if ($dbRecord->getXmlId() == $record->getXmlId())
+			{
+				return $dbRecord->getId();
+			}
+		}
+		return null;
+	}
 	/**
 	 * @return string
 	 */

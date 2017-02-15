@@ -4,6 +4,7 @@ use Bitrix\Main\IO\Directory;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
+use Intervolga\Migrato\Tool\DataRecord;
 use Intervolga\Migrato\Tool\DataRecordsResolveList;
 use Intervolga\Migrato\Tool\OptionFileViewXml;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
@@ -154,8 +155,12 @@ class Migrato
 		return $data;
 	}
 
+	/**
+	 * @return array|string[]
+	 */
 	public static function importData()
 	{
+		$result = array();
 		$list = new DataRecordsResolveList();
 		foreach (Config::getInstance()->getDataClasses() as $data)
 		{
@@ -169,7 +174,7 @@ class Migrato
 			{
 				foreach ($creatableDataRecords as $dataRecord)
 				{
-					// TODO real resolve
+					$result[] = static::saveDataRecord($dataRecord);
 					$list->setCreated($dataRecord);
 				}
 			}
@@ -180,6 +185,42 @@ class Migrato
 		}
 
 		// TODO delete old records
+		return $result;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
+	 *
+	 * @return string
+	 */
+	protected static function saveDataRecord(DataRecord $dataRecord)
+	{
+		$nameForReport = "Data " . $dataRecord->getData()->getModule() . "/" . $dataRecord->getData()->getEntityName() . " (" . $dataRecord->getXmlId() . ")";
+		if ($dataRecordId = $dataRecord->getData()->findRecord($dataRecord))
+		{
+			try
+			{
+				$dataRecord->setId($dataRecordId);
+				$dataRecord->getData()->update($dataRecord);
+				return $nameForReport . " updated";
+			}
+			catch (\Exception $exception)
+			{
+				return $nameForReport . " update exception: " . $exception->getMessage();
+			}
+		}
+		else
+		{
+			try
+			{
+				$dataRecord->getData()->create($dataRecord);
+				return $nameForReport . " created";
+			}
+			catch (\Exception $exception)
+			{
+				return $nameForReport . " create exception: " . $exception->getMessage();
+			}
+		}
 	}
 
 	public static function exportOptions()
