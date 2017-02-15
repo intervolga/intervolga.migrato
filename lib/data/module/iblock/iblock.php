@@ -4,6 +4,7 @@ use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\DataRecord;
 use Intervolga\Migrato\Tool\DataRecordId;
+use Intervolga\Migrato\Tool\Dependency;
 use Intervolga\Migrato\Tool\XmlIdProviders\IblockXmlIdProvider;
 
 class Iblock extends BaseData
@@ -29,10 +30,16 @@ class Iblock extends BaseData
 			$record->setFields(array(
 				"SITE_ID" => $iblock["SITE_ID"],
 				"CODE" => $iblock["CODE"],
-				"IBLOCK_TYPE_ID" => $iblock["IBLOCK_TYPE_ID"],
 				"NAME" => $iblock["NAME"],
 				"ACTIVE" => $iblock["ACTIVE"],
 			));
+			$record->addDependency(
+				"IBLOCK_TYPE_ID",
+				new Dependency(
+					Type::getInstance(),
+					Type::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createStringId($iblock["IBLOCK_TYPE_ID"]))
+				)
+			);
 			$result[] = $record;
 		}
 
