@@ -43,6 +43,16 @@ class DataRecord
 	}
 
 	/**
+	 * @param string $name
+	 *
+	 * @return mixed
+	 */
+	public function getField($name)
+	{
+		return $this->fields[$name];
+	}
+
+	/**
 	 * @param array|\Intervolga\Migrato\Tool\Dependency[] $dependencies
 	 */
 	public function setDependencies(array $dependencies)

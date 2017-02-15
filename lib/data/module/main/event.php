@@ -1,6 +1,5 @@
 <? namespace Intervolga\Migrato\Data\Module\Main;
 
-use Bitrix\Main\Mail\Internal\EventTypeTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\DataRecord;
 use Intervolga\Migrato\Tool\DataRecordId;
@@ -39,28 +38,45 @@ class Event extends BaseData
 				"SITE_TEMPLATE_ID" => $message["SITE_TEMPLATE_ID"],
 			));
 
-			// TODO getlist в цикле
-			$eventTypeGetList = EventTypeTable::getList(array(
-				"filter" => array(
-					"=EVENT_NAME" => $message["EVENT_NAME"],
-				),
-				"select" => array("ID"),
-			));
-			while ($type = $eventTypeGetList->fetch())
-			{
-				$dependency = new Dependency(
-					EventType::getInstance(),
-					EventType::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createNumericId($type["ID"])),
-					"EVENT_NAME"
-				);
-				$record->addDependency(static::DEPENDENCY_EVENT_NAME, $dependency);
-			}
+			$dependency = new Dependency(
+				EventType::getInstance(),
+				$this->getEventTypeXmlId($message["EVENT_NAME"]),
+				"EVENT_NAME"
+			);
+			$record->addDependency(static::DEPENDENCY_EVENT_NAME, $dependency);
+
 			if ($record->getDependencies())
 			{
 				$result[$message["ID"]] = $record;
 			}
 		}
 		return array_values($result);
+	}
+
+	/**
+	 * @param string $name
+	 *
+	 * @return string
+	 */
+	protected function getEventTypeXmlId($name)
+	{
+		static $eventTypes = array();
+		if (!$eventTypes)
+		{
+			$eventTypes = EventType::getInstance()->getFromDatabase();
+		}
+		foreach ($eventTypes as $eventType)
+		{
+			/**
+			 * @var DataRecord $eventType
+			 */
+			if ($eventType->getField("EVENT_NAME") == $name)
+			{
+				return $eventType->getXmlId();
+			}
+		}
+
+		return "";
 	}
 
 	public function restoreDependenciesFromFile(array $dependencies)
