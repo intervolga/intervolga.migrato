@@ -11,6 +11,8 @@ use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 class Migrato
 {
+	protected static $baseBeforeImport = array();
+	protected static $imported = array();
 	/**
 	 * @return array|string[]
 	 */
@@ -164,6 +166,14 @@ class Migrato
 		$list = new DataRecordsResolveList();
 		foreach (Config::getInstance()->getDataClasses() as $data)
 		{
+			foreach ($data->getFromDatabase() as $dataRecord)
+			{
+				if ($dataRecord->getXmlId())
+				{
+					static::$baseBeforeImport[$data->getModule()][$data->getEntityName()][] = $dataRecord->getXmlId();
+				}
+			}
+
 			$list->addDataRecords(static::readFromFile($data));
 		}
 
@@ -183,8 +193,8 @@ class Migrato
 				break;
 			}
 		}
+		$result = array_merge($result, static::deleteNotImported());
 
-		// TODO delete old records
 		return $result;
 	}
 
@@ -196,12 +206,13 @@ class Migrato
 	protected static function saveDataRecord(DataRecord $dataRecord)
 	{
 		$nameForReport = "Data " . $dataRecord->getData()->getModule() . "/" . $dataRecord->getData()->getEntityName() . " (" . $dataRecord->getXmlId() . ")";
-		if ($dataRecordId = $dataRecord->getData()->findRecord($dataRecord))
+		if ($dataRecordId = $dataRecord->getData()->findRecord($dataRecord->getXmlId()))
 		{
 			try
 			{
 				$dataRecord->setId($dataRecordId);
 				$dataRecord->getData()->update($dataRecord);
+				static::$imported[$dataRecord->getData()->getModule()][$dataRecord->getData()->getEntityName()][] = $dataRecord->getXmlId();
 				return $nameForReport . " updated";
 			}
 			catch (\Exception $exception)
@@ -214,6 +225,7 @@ class Migrato
 			try
 			{
 				$dataRecord->getData()->create($dataRecord);
+				static::$imported[$dataRecord->getData()->getModule()][$dataRecord->getData()->getEntityName()][] = $dataRecord->getXmlId();
 				return $nameForReport . " created";
 			}
 			catch (\Exception $exception)
@@ -221,6 +233,35 @@ class Migrato
 				return $nameForReport . " create exception: " . $exception->getMessage();
 			}
 		}
+	}
+
+	/**
+	 * @return array|string[]
+	 */
+	protected static function deleteNotImported()
+	{
+		$result = array();
+		foreach (Config::getInstance()->getDataClasses() as $data)
+		{
+			foreach (static::$baseBeforeImport[$data->getModule()][$data->getEntityName()] as $xmlId)
+			{
+				$nameForReport = "Data " . $data->getModule() . "/" . $data->getEntityName() . " (" . $xmlId . ")";
+				if (!in_array($xmlId, static::$imported[$data->getModule()][$data->getEntityName()]))
+				{
+					try
+					{
+						$data->delete($xmlId);
+						$result[] = $nameForReport . " deleted";
+					}
+					catch (\Exception $exception)
+					{
+						$result[] = $nameForReport . " delete error: " . $exception->getMessage();
+					}
+				}
+			}
+		}
+
+		return $result;
 	}
 
 	public static function exportOptions()
