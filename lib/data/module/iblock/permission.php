@@ -8,7 +8,7 @@ use Intervolga\Migrato\Tool\DataRecordId;
 use Intervolga\Migrato\Tool\Dependency;
 use Intervolga\Migrato\Tool\XmlIdProviders\TableXmlIdProvider;
 
-class IblockPermission extends BaseData
+class Permission extends BaseData
 {
 	public function __construct()
 	{
