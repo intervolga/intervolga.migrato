@@ -38,18 +38,37 @@ class Group extends BaseData
 
 	/**
 	 * @param DataRecord $record
+	 *
+	 * @throws \Exception
 	 */
 	public function update(DataRecord $record)
 	{
-		// TODO: Implement update() method.
+		$groupObject = new \CGroup();
+		$isUpdated = $groupObject->update($record->getId()->getValue(), $record->getFields());
+		if (!$isUpdated)
+		{
+			throw new \Exception(trim(strip_tags($groupObject->LAST_ERROR)));
+		}
 	}
 
 	/**
 	 * @param DataRecord $record
+	 *
+	 * @throws \Exception
 	 */
 	public function create(DataRecord $record)
 	{
-		// TODO: Implement create() method.
+		$groupObject = new \CGroup();
+		$groupId = $groupObject->add($record->getFields());
+		if ($groupId)
+		{
+			$id = DataRecordId::createNumericId($groupId);
+			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+		}
+		else
+		{
+			throw new \Exception(trim(strip_tags($groupObject->LAST_ERROR)));
+		}
 	}
 
 	/**
