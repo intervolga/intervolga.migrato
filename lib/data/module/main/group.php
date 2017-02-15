@@ -72,10 +72,17 @@ class Group extends BaseData
 	}
 
 	/**
-	 * @param $xmlId
+	 * @param string $xmlId
+	 *
+	 * @throws \Exception
 	 */
 	public function delete($xmlId)
 	{
-		// TODO: Implement delete() method.
+		$id = $this->findRecord($xmlId);
+		$groupObject = new \CGroup();
+		if (!$groupObject->delete($id->getValue()))
+		{
+			throw new \Exception("Unknown error");
+		}
 	}
 }
