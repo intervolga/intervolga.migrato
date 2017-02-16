@@ -21,6 +21,7 @@ abstract class BaseData
 
 		return static::$instances[get_called_class()];
 	}
+
 	/**
 	 * @return array|DataRecord[]
 	 */
@@ -57,6 +58,7 @@ abstract class BaseData
 		}
 		return null;
 	}
+
 	/**
 	 * @return string
 	 */
@@ -80,6 +82,14 @@ abstract class BaseData
 		$tmp = strtolower($tmp);
 
 		return $tmp;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getFilesSubdir()
+	{
+		return "/";
 	}
 
 	/**

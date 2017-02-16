@@ -16,6 +16,11 @@ class TypeLang extends BaseData
 		$this->xmlIdProvider = new TableXmlIdProvider($this);
 	}
 
+	public function getFilesSubdir()
+	{
+		return "/type/";
+	}
+
 	/**
 	 * @return array|DataRecord[]
 	 */

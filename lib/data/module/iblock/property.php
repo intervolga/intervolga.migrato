@@ -16,6 +16,11 @@ class Property extends BaseData
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\PropertyTable");
 	}
 
+	public function getFilesSubdir()
+	{
+		return "/type/iblock/";
+	}
+
 	/**
 	 * @return array|DataRecord[]
 	 */

@@ -123,7 +123,7 @@ class Migrato
 	 */
 	protected static function exportToFile(BaseData $dataClass)
 	{
-		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . "/" . $dataClass->getEntityName() . "/";
+		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . "/";
 		Directory::deleteDirectory($path);
 		checkDirPath($path);
 
@@ -141,7 +141,7 @@ class Migrato
 	 */
 	protected static function readFromFile(BaseData $dataClass)
 	{
-		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . "/" . $dataClass->getEntityName() . "/";
+		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . "/";
 
 		$data = DataFileViewXml::readFromFileSystem($path);
 		foreach ($data as $i => $dataItem)

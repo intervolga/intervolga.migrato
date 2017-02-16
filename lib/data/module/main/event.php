@@ -15,6 +15,11 @@ class Event extends BaseData
 		$this->xmlIdProvider = new UfXmlIdProvider($this);
 	}
 
+	public function getFilesSubdir()
+	{
+		return "/eventtype/";
+	}
+
 	public function getFromDatabase()
 	{
 		$result = array();

@@ -15,6 +15,11 @@ class Iblock extends BaseData
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\IblockTable");
 	}
 
+	public function getFilesSubdir()
+	{
+		return "/type/";
+	}
+
 	/**
 	 * @return array|DataRecord[]
 	 */

@@ -16,6 +16,11 @@ class Permission extends BaseData
 		$this->xmlIdProvider = new TableXmlIdProvider($this);
 	}
 
+	public function getFilesSubdir()
+	{
+		return "/type/iblock/";
+	}
+
 	/**
 	 * @return array|DataRecord[]
 	 */
