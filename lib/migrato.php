@@ -61,7 +61,7 @@ class Migrato
 	protected static function validateXmlIds(BaseData $dataClass, array $filter = array())
 	{
 		$errors = array();
-		$records = $dataClass->getFromDatabase($filter);
+		$records = $dataClass->getList($filter);
 		$xmlIds[] = array();
 		foreach ($records as $record)
 		{
@@ -132,7 +132,7 @@ class Migrato
 		Directory::deleteDirectory($path);
 		checkDirPath($path);
 
-		$records = $dataClass->getFromDatabase($filter);
+		$records = $dataClass->getList($filter);
 		foreach ($records as $record)
 		{
 			DataFileViewXml::writeToFileSystem($record, $path);
@@ -171,7 +171,7 @@ class Migrato
 		$list = new DataRecordsResolveList();
 		foreach (Config::getInstance()->getDataClasses() as $data)
 		{
-			foreach ($data->getFromDatabase() as $dataRecord)
+			foreach ($data->getList() as $dataRecord)
 			{
 				if ($dataRecord->getXmlId())
 				{

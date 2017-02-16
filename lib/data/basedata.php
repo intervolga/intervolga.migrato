@@ -27,7 +27,7 @@ abstract class BaseData
 	 *
 	 * @return array|\Intervolga\Migrato\Tool\DataRecord[]
 	 */
-	abstract public function getFromDatabase(array $filter = array());
+	abstract public function getList(array $filter = array());
 
 	/**
 	 * @param DataRecord $record
@@ -51,7 +51,7 @@ abstract class BaseData
 	 */
 	public function findRecord($xmlId)
 	{
-		foreach (static::getFromDatabase() as $dbRecord)
+		foreach (static::getList() as $dbRecord)
 		{
 			if ($dbRecord->getXmlId() == $xmlId)
 			{

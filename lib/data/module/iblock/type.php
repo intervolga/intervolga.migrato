@@ -14,7 +14,7 @@ class Type extends BaseData
 		$this->xmlIdProvider = new TableXmlIdProvider($this);
 	}
 
-	public function getFromDatabase(array $filter = array())
+	public function getList(array $filter = array())
 	{
 		$result = array();
 		$getList = \CIBlockType::GetList();

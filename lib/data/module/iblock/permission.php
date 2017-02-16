@@ -21,7 +21,7 @@ class Permission extends BaseData
 		return "/type/iblock/";
 	}
 
-	public function getFromDatabase(array $filter = array())
+	public function getList(array $filter = array())
 	{
 		$result = array();
 		foreach ($this->getIblocks() as $iblockId)

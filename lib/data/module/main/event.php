@@ -20,7 +20,7 @@ class Event extends BaseData
 		return "/eventtype/";
 	}
 
-	public function getFromDatabase(array $filter = array())
+	public function getList(array $filter = array())
 	{
 		$result = array();
 		$by = "ID";
@@ -65,7 +65,7 @@ class Event extends BaseData
 		static $eventTypes = array();
 		if (!$eventTypes)
 		{
-			$eventTypes = EventType::getInstance()->getFromDatabase();
+			$eventTypes = EventType::getInstance()->getList();
 		}
 		foreach ($eventTypes as $eventType)
 		{

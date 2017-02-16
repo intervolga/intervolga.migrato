@@ -12,7 +12,7 @@ class EventType extends BaseData
 		$this->xmlIdProvider = new UfXmlIdProvider($this);
 	}
 
-	public function getFromDatabase(array $filter = array())
+	public function getList(array $filter = array())
 	{
 		$result = array();
 		$getList = \CEventType::getList();
