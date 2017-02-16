@@ -53,30 +53,4 @@ class Iblock extends BaseData
 
 		return $result;
 	}
-
-
-
-	/**
-	 * @param DataRecord $record
-	 */
-	public function update(DataRecord $record)
-	{
-		// TODO: Implement update() method.
-	}
-
-	/**
-	 * @param DataRecord $record
-	 */
-	public function create(DataRecord $record)
-	{
-		// TODO: Implement create() method.
-	}
-
-	/**
-	 * @param $xmlId
-	 */
-	public function delete($xmlId)
-	{
-		// TODO: Implement delete() method.
-	}
 }

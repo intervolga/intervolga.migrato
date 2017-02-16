@@ -36,11 +36,6 @@ class Group extends BaseData
 		return $result;
 	}
 
-	/**
-	 * @param DataRecord $record
-	 *
-	 * @throws \Exception
-	 */
 	public function update(DataRecord $record)
 	{
 		$groupObject = new \CGroup();
@@ -51,11 +46,6 @@ class Group extends BaseData
 		}
 	}
 
-	/**
-	 * @param DataRecord $record
-	 *
-	 * @throws \Exception
-	 */
 	public function create(DataRecord $record)
 	{
 		$groupObject = new \CGroup();
@@ -71,11 +61,6 @@ class Group extends BaseData
 		}
 	}
 
-	/**
-	 * @param string $xmlId
-	 *
-	 * @throws \Exception
-	 */
 	public function delete($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
