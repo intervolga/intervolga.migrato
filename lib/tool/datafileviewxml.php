@@ -22,6 +22,10 @@ class DataFileViewXml
 		{
 			$content .= static::dependencyToXml($data->getDependencies());
 		}
+		if ($data->getReferences())
+		{
+			$content .= static::referenceToXml($data->getReferences());
+		}
 		$content .= static::fieldToXml($data->getFields());
 		$content .= "</data>";
 
@@ -31,13 +35,13 @@ class DataFileViewXml
 	}
 
 	/**
-	 * @param array|\Intervolga\Migrato\Tool\Dependency[] $dependencies
+	 * @param array|\Intervolga\Migrato\Tool\DataLink[] $links
 	 * @return string
 	 */
-	protected static function dependencyToXml(array $dependencies)
+	protected static function dependencyToXml(array $links)
 	{
 		$content = "";
-		foreach ($dependencies as $name => $dependency)
+		foreach ($links as $name => $dependency)
 		{
 			$content .= "\t<dependency>\n";
 			$content .= "\t\t<name>" . htmlspecialchars($name) . "</name>\n";
@@ -65,6 +69,24 @@ class DataFileViewXml
 			$content .= "<value/>";
 		}
 		$content .= "\n";
+
+		return $content;
+	}
+
+	/**
+	 * @param array|\Intervolga\Migrato\Tool\DataLink[] $links
+	 * @return string
+	 */
+	protected static function referenceToXml(array $links)
+	{
+		$content = "";
+		foreach ($links as $name => $dependency)
+		{
+			$content .= "\t<reference>\n";
+			$content .= "\t\t<name>" . htmlspecialchars($name) . "</name>\n";
+			$content .= static::valueToXml(2, $dependency->getXmlId());
+			$content .= "\t</reference>\n";
+		}
 
 		return $content;
 	}
@@ -162,7 +184,7 @@ class DataFileViewXml
 		{
 			foreach ($dependency["#"]["value"] as $valueItem)
 			{
-				$dependencies[$dependency["#"]["name"][0]["#"]] = new Dependency(null, $valueItem["#"]);
+				$dependencies[$dependency["#"]["name"][0]["#"]] = new DataLink(null, $valueItem["#"]);
 			}
 		}
 		$record->setDependencies($dependencies);
