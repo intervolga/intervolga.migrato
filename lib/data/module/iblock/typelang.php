@@ -81,19 +81,10 @@ class TypeLang extends BaseData
 		return $result;
 	}
 
-	public function restoreDependenciesFromFile(array $dependencies)
+	public function getDependencies()
 	{
-		/**
-		 * @var array|DataLink[] $dependencies
-		 */
-		foreach ($dependencies as $key => $dependency)
-		{
-			if ($key == "IBLOCK_TYPE_ID")
-			{
-				$dependencies[$key]->setTargetData(Type::getInstance());
-			}
-		}
-
-		return $dependencies;
+		return array(
+			"IBLOCK_TYPE_ID" => new DataLink(Type::getInstance()),
+		);
 	}
 }

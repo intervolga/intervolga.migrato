@@ -4,6 +4,7 @@ use Bitrix\Main\IO\Directory;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
+use Intervolga\Migrato\Tool\DataLink;
 use Intervolga\Migrato\Tool\DataRecord;
 use Intervolga\Migrato\Tool\DataRecordsResolveList;
 use Intervolga\Migrato\Tool\OptionFileViewXml;
@@ -154,12 +155,34 @@ class Migrato
 			$data[$i]->setData($dataClass);
 			if ($dependencies = $data[$i]->getDependencies())
 			{
-				$dependencies = $dataClass->restoreDependenciesFromFile($dependencies);
+				$dependencies = static::restoreDependenciesFromFile($dataClass, $dependencies);
 				$data[$i]->setDependencies($dependencies);
 			}
 		}
 
 		return $data;
+	}
+
+	/**
+	 * @param BaseData $dataClass
+	 * @param DataLink[] $dependencies
+	 * @return DataLink[]
+	 */
+	protected static function restoreDependenciesFromFile(BaseData $dataClass, array $dependencies)
+	{
+		$result = array();
+		foreach ($dependencies as $key => $dependency)
+		{
+			$dependencyModel = $dataClass->getDependency($key);
+			if ($dependencyModel)
+			{
+				$clone = clone $dependencyModel;
+				$clone->setXmlId($dependency->getXmlId());
+				$result[$key] = $clone;
+			}
+		}
+
+		return $result;
 	}
 
 	/**

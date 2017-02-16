@@ -126,15 +126,6 @@ abstract class BaseData
 	}
 
 	/**
-	 * @param array|DataLink[] $dependencies
-	 * @return array|DataLink[]
-	 */
-	public function restoreDependenciesFromFile(array $dependencies)
-	{
-		return array();
-	}
-
-	/**
 	 * @return BaseXmlIdProvider
 	 */
 	public function getXmlIdProvider()

@@ -11,7 +11,7 @@ class DataLink
 	 * @param string $xmlId
 	 * @param string $toCustomField
 	 */
-	public function __construct($target, $xmlId, $toCustomField = "")
+	public function __construct($target, $xmlId = "", $toCustomField = "")
 	{
 		$this->targetData = $target;
 		$this->xmlId = $xmlId;

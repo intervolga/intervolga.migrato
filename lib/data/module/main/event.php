@@ -81,26 +81,6 @@ class Event extends BaseData
 		return "";
 	}
 
-	public function restoreDependenciesFromFile(array $dependencies)
-	{
-		/**
-		 * @var array|DataLink[] $dependencies
-		 */
-		foreach ($dependencies as $key => $dependency)
-		{
-			if ($key == static::DEPENDENCY_EVENT_NAME)
-			{
-				$dependencies[$key]->setTargetData(EventType::getInstance());
-				$dependencies[$key]->setToCustomField("EVENT_NAME");
-			}
-		}
-
-		return $dependencies;
-	}
-
-	/**
-	 * @return array|DataLink[]
-	 */
 	public function getDependencies()
 	{
 		return array(
