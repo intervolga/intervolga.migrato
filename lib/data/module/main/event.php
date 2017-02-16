@@ -43,11 +43,8 @@ class Event extends BaseData
 				"SITE_TEMPLATE_ID" => $message["SITE_TEMPLATE_ID"],
 			));
 
-			$dependency = new DataLink(
-				EventType::getInstance(),
-				$this->getEventTypeXmlId($message["EVENT_NAME"]),
-				"EVENT_NAME"
-			);
+			$dependency = clone $this->getDependency(static::DEPENDENCY_EVENT_NAME);
+			$dependency->setXmlId($this->getEventTypeXmlId($message["EVENT_NAME"]));
 			$record->addDependency(static::DEPENDENCY_EVENT_NAME, $dependency);
 
 			if ($record->getDependencies())
@@ -99,6 +96,20 @@ class Event extends BaseData
 		}
 
 		return $dependencies;
+	}
+
+	/**
+	 * @return array|DataLink[]
+	 */
+	public function getDependencies()
+	{
+		return array(
+			static::DEPENDENCY_EVENT_NAME => new DataLink(
+				EventType::getInstance(),
+				"",
+				"EVENT_NAME"
+			),
+		);
 	}
 
 	/**
