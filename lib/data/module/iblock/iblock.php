@@ -4,15 +4,15 @@ use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\DataRecord;
 use Intervolga\Migrato\Tool\DataRecordId;
-use Intervolga\Migrato\Tool\Dependency;
-use Intervolga\Migrato\Tool\XmlIdProviders\IblockXmlIdProvider;
+use Intervolga\Migrato\Tool\DataLink;
+use Intervolga\Migrato\Tool\XmlIdProviders\OrmXmlIdProvider;
 
 class Iblock extends BaseData
 {
 	protected function __construct()
 	{
 		Loader::includeModule("iblock");
-		$this->xmlIdProvider = new IblockXmlIdProvider($this);
+		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\IblockTable");
 	}
 
 	/**
@@ -35,7 +35,7 @@ class Iblock extends BaseData
 			));
 			$record->addDependency(
 				"IBLOCK_TYPE_ID",
-				new Dependency(
+				new DataLink(
 					Type::getInstance(),
 					Type::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createStringId($iblock["IBLOCK_TYPE_ID"]))
 				)

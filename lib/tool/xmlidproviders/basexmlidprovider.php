@@ -14,8 +14,6 @@ abstract class BaseXmlIdProvider
 	/**
 	 * @param DataRecordId $id
 	 * @param string $xmlId
-	 *
-	 * @return bool
 	 */
 	abstract public function setXmlId($id, $xmlId);
 

@@ -1,7 +1,7 @@
 <? namespace Intervolga\Migrato\Data;
 
 use Intervolga\Migrato\Tool\DataRecord;
-use Intervolga\Migrato\Tool\Dependency;
+use Intervolga\Migrato\Tool\DataLink;
 use Intervolga\Migrato\Tool\XmlIdProviders\BaseXmlIdProvider;
 
 abstract class BaseData
@@ -83,8 +83,8 @@ abstract class BaseData
 	}
 
 	/**
-	 * @param array|Dependency[] $dependencies
-	 * @return array|Dependency[]
+	 * @param array|DataLink[] $dependencies
+	 * @return array|DataLink[]
 	 */
 	public function restoreDependenciesFromFile(array $dependencies)
 	{

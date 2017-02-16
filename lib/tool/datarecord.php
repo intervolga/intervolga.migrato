@@ -8,6 +8,7 @@ class DataRecord
 	protected $id = null;
 	protected $fields = array();
 	protected $dependencies = array();
+	protected $references = array();
 	protected $data = null;
 
 	/**
@@ -53,7 +54,7 @@ class DataRecord
 	}
 
 	/**
-	 * @param array|\Intervolga\Migrato\Tool\Dependency[] $dependencies
+	 * @param array|\Intervolga\Migrato\Tool\DataLink[] $dependencies
 	 */
 	public function setDependencies(array $dependencies)
 	{
@@ -62,19 +63,36 @@ class DataRecord
 
 	/**
 	 * @param string $key
-	 * @param \Intervolga\Migrato\Tool\Dependency $dependency
+	 * @param \Intervolga\Migrato\Tool\DataLink $dependency
 	 */
-	public function addDependency($key, Dependency $dependency)
+	public function addDependency($key, DataLink $dependency)
 	{
 		$this->dependencies[$key] = $dependency;
 	}
 
 	/**
-	 * @return array|\Intervolga\Migrato\Tool\Dependency[]
+	 * @return array|\Intervolga\Migrato\Tool\DataLink[]
 	 */
 	public function getDependencies()
 	{
 		return $this->dependencies;
+	}
+
+	/**
+	 * @param string $key
+	 * @param \Intervolga\Migrato\Tool\DataLink $reference
+	 */
+	public function addReference($key, DataLink $reference)
+	{
+		$this->references[$key] = $reference;
+	}
+
+	/**
+	 * @return array|\Intervolga\Migrato\Tool\DataLink[]
+	 */
+	public function getReferences()
+	{
+		return $this->references;
 	}
 
 	public function setId(DataRecordId $id)

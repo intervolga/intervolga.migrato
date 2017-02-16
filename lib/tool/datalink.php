@@ -1,6 +1,6 @@
 <?namespace Intervolga\Migrato\Tool;
 
-class Dependency
+class DataLink
 {
 	protected $targetData = null;
 	protected $xmlId = "";

@@ -87,11 +87,11 @@ class DataRecordsResolveList
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\Dependency $dependency
+	 * @param \Intervolga\Migrato\Tool\DataLink $dependency
 	 *
 	 * @return bool
 	 */
-	public function isResolved(Dependency $dependency)
+	public function isResolved(DataLink $dependency)
 	{
 		$class = get_class($dependency->getTargetData());
 		$xmlId = $dependency->getXmlId();

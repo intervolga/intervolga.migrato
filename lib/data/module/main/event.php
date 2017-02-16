@@ -3,7 +3,7 @@
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\DataRecord;
 use Intervolga\Migrato\Tool\DataRecordId;
-use Intervolga\Migrato\Tool\Dependency;
+use Intervolga\Migrato\Tool\DataLink;
 use Intervolga\Migrato\Tool\XmlIdProviders\UfXmlIdProvider;
 
 class Event extends BaseData
@@ -38,7 +38,7 @@ class Event extends BaseData
 				"SITE_TEMPLATE_ID" => $message["SITE_TEMPLATE_ID"],
 			));
 
-			$dependency = new Dependency(
+			$dependency = new DataLink(
 				EventType::getInstance(),
 				$this->getEventTypeXmlId($message["EVENT_NAME"]),
 				"EVENT_NAME"
@@ -82,7 +82,7 @@ class Event extends BaseData
 	public function restoreDependenciesFromFile(array $dependencies)
 	{
 		/**
-		 * @var array|Dependency[] $dependencies
+		 * @var array|DataLink[] $dependencies
 		 */
 		foreach ($dependencies as $key => $dependency)
 		{
