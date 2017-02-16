@@ -27,6 +27,14 @@ class DataLink
 	}
 
 	/**
+	 * @param string $xmlId
+	 */
+	public function setXmlId($xmlId)
+	{
+		$this->xmlId = $xmlId;
+	}
+
+	/**
 	 * @return \Intervolga\Migrato\Data\BaseData
 	 */
 	public function getTargetData()

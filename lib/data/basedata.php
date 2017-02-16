@@ -95,6 +95,24 @@ abstract class BaseData
 	}
 
 	/**
+	 * @return array|DataLink[]
+	 */
+	public function getDependencies()
+	{
+		return array();
+	}
+
+	/**
+	 * @param string $name
+	 * @return DataLink
+	 */
+	public function getDependency($name)
+	{
+		$dependencies = $this->getDependencies();
+		return $dependencies[$name];
+	}
+
+	/**
 	 * @param array|DataLink[] $dependencies
 	 * @return array|DataLink[]
 	 */
