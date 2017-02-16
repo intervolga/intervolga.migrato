@@ -21,21 +21,22 @@ class Migrato
 		$result = array();
 		foreach (Config::getInstance()->getDataClasses() as $data)
 		{
+			$filter = Config::getInstance()->getDataClassFilter($data);
 			try
 			{
 				if (!$data->getXmlIdProvider()->isXmlIdFieldExists())
 				{
 					$data->getXmlIdProvider()->createXmlIdField();
 				}
-				$errors = static::validateXmlIds($data);
+				$errors = static::validateXmlIds($data, $filter);
 				if ($errors)
 				{
 					static::fixErrors($data, $errors);
 				}
-				$errors = static::validateXmlIds($data);
+				$errors = static::validateXmlIds($data, $filter);
 				if (!$errors)
 				{
-					static::exportToFile($data);
+					static::exportToFile($data, $filter);
 					$result[] = "Data " . $data->getModule() . "/" . $data->getEntityName() . " exported to files";
 				}
 				else
@@ -52,12 +53,15 @@ class Migrato
 	}
 
 	/**
-	 * @return array|XmlIdValidateError[]
+	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
+	 * @param array|string[] $filter
+	 *
+	 * @return array|\Intervolga\Migrato\Tool\XmlIdValidateError[]
 	 */
-	protected static function validateXmlIds(BaseData $dataClass)
+	protected static function validateXmlIds(BaseData $dataClass, array $filter = array())
 	{
 		$errors = array();
-		$records = $dataClass->getFromDatabase();
+		$records = $dataClass->getFromDatabase($filter);
 		$xmlIds[] = array();
 		foreach ($records as $record)
 		{
@@ -120,14 +124,15 @@ class Migrato
 
 	/**
 	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
+	 * @param array|string[] $filter
 	 */
-	protected static function exportToFile(BaseData $dataClass)
+	protected static function exportToFile(BaseData $dataClass, array $filter = array())
 	{
 		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . "/";
 		Directory::deleteDirectory($path);
 		checkDirPath($path);
 
-		$records = $dataClass->getFromDatabase();
+		$records = $dataClass->getFromDatabase($filter);
 		foreach ($records as $record)
 		{
 			DataFileViewXml::writeToFileSystem($record, $path);

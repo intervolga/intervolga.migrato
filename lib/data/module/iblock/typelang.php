@@ -21,10 +21,7 @@ class TypeLang extends BaseData
 		return "/type/";
 	}
 
-	/**
-	 * @return array|DataRecord[]
-	 */
-	public function getFromDatabase()
+	public function getFromDatabase(array $filter = array())
 	{
 		$result = array();
 		$getList = \CIBlockType::GetList();

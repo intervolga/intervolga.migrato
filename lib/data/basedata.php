@@ -23,9 +23,11 @@ abstract class BaseData
 	}
 
 	/**
-	 * @return array|DataRecord[]
+	 * @param array|string[] $filter
+	 *
+	 * @return array|\Intervolga\Migrato\Tool\DataRecord[]
 	 */
-	abstract public function getFromDatabase();
+	abstract public function getFromDatabase(array $filter = array());
 
 	/**
 	 * @param DataRecord $record

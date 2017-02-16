@@ -20,13 +20,16 @@ class Iblock extends BaseData
 		return "/type/";
 	}
 
-	/**
-	 * @return array|DataRecord[]
-	 */
-	public function getFromDatabase()
+	public function getFromDatabase(array $filter = array())
 	{
 		$result = array();
-		$getList = \CIBlock::GetList();
+		$order = array("ID" => "ASC");
+		$iblockFilter = array();
+		if ($filter)
+		{
+			$iblockFilter["XML_ID"] = $filter;
+		}
+		$getList = \CIBlock::GetList($order, $iblockFilter);
 		while ($iblock = $getList->fetch())
 		{
 			$record = new DataRecord();

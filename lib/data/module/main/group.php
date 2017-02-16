@@ -12,7 +12,7 @@ class Group extends BaseData
 		$this->xmlIdProvider = new UfXmlIdProvider($this);
 	}
 
-	public function getFromDatabase()
+	public function getFromDatabase(array $filter = array())
 	{
 		$result = array();
 		$by = "ID";

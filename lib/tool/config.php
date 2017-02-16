@@ -6,6 +6,7 @@ use Intervolga\Migrato\Data\BaseData;
 class Config
 {
 	protected static $configArray = array();
+	protected static $dataClassesFilter = array();
 	protected static $instance = null;
 
 	/**
@@ -84,11 +85,36 @@ class Config
 					/**
 					 * @var BaseData $name
 					 */
-					$entities[] = $name::getInstance();
+					$dataObject = $name::getInstance();
+					$entities[] = $dataObject;
+					if ($entityArray["#"]["filter"])
+					{
+						foreach ($entityArray["#"]["filter"] as $filterArray)
+						{
+							static::$dataClassesFilter[$dataObject->getModule()][$dataObject->getEntityName()][] = $filterArray["#"];
+						}
+					}
 				}
 			}
 		}
 
 		return $entities;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
+	 *
+	 * @return array|string[]
+	 */
+	public function getDataClassFilter(BaseData $dataClass)
+	{
+		if (static::$dataClassesFilter[$dataClass->getModule()][$dataClass->getEntityName()])
+		{
+			return static::$dataClassesFilter[$dataClass->getModule()][$dataClass->getEntityName()];
+		}
+		else
+		{
+			return array();
+		}
 	}
 }

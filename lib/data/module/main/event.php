@@ -20,7 +20,7 @@ class Event extends BaseData
 		return "/eventtype/";
 	}
 
-	public function getFromDatabase()
+	public function getFromDatabase(array $filter = array())
 	{
 		$result = array();
 		$by = "ID";
