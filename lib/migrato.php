@@ -20,7 +20,9 @@ class Migrato
 	public static function exportData()
 	{
 		$result = array();
-		foreach (Config::getInstance()->getDataClasses() as $data)
+		$configDataClasses = Config::getInstance()->getDataClasses();
+		$dataClasses = static::recursiveGetDependentDataClasses($configDataClasses);
+		foreach ($dataClasses as $data)
 		{
 			$filter = Config::getInstance()->getDataClassFilter($data);
 			try
@@ -35,14 +37,9 @@ class Migrato
 					static::fixErrors($data, $errors);
 				}
 				$errors = static::validateXmlIds($data, $filter);
-				if (!$errors)
+				if ($errors)
 				{
-					static::exportToFile($data, $filter);
-					$result[] = "Data " . $data->getModule() . "/" . $data->getEntityName() . " exported to files";
-				}
-				else
-				{
-					$result[] = "Data " . $data->getModule() . "/" . $data->getEntityName() . " exported with errors (" . count($errors) . ")";
+					throw new \Exception("Validated with errors (" . count($errors) . ")");
 				}
 			}
 			catch (\Exception $exception)
@@ -50,7 +47,45 @@ class Migrato
 				$result[] = "Data " . $data->getModule() . "/" . $data->getEntityName() . " exported with exception: " . $exception->getMessage();
 			}
 		}
+
+		foreach ($configDataClasses as $data)
+		{
+			$filter = Config::getInstance()->getDataClassFilter($data);
+			try
+			{
+				static::exportToFile($data, $filter);
+				$result[] = "Data " . $data->getModule() . "/" . $data->getEntityName() . " exported to files";
+			}
+			catch (\Exception $exception)
+			{
+				$result[] = "Data " . $data->getModule() . "/" . $data->getEntityName() . " exported with exception: " . $exception->getMessage();
+			}
+		}
 		return $result;
+	}
+
+	/**
+	 * @param BaseData[] $dataClasses
+	 * @return BaseData[]
+	 */
+	protected static function recursiveGetDependentDataClasses(array $dataClasses)
+	{
+		foreach ($dataClasses as $dataClass)
+		{
+			$dependencies = $dataClass->getDependencies();
+			if ($dependencies)
+			{
+				foreach ($dependencies as $dependency)
+				{
+					$dependentDataClass = $dependency->getTargetData();
+					if (!in_array($dependentDataClass, $dataClasses))
+					{
+						$dataClasses[] = $dependentDataClass;
+					}
+				}
+			}
+		}
+		return $dataClasses;
 	}
 
 	/**
