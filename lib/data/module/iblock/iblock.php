@@ -43,7 +43,9 @@ class Iblock extends BaseData
 			));
 
 			$dependency = clone $this->getDependency("IBLOCK_TYPE_ID");
-			$dependency->setXmlId(DataRecordId::createStringId($iblock["IBLOCK_TYPE_ID"]));
+			$dependency->setXmlId(
+				Type::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createStringId($iblock["IBLOCK_TYPE_ID"]))
+			);
 			$record->addDependency("IBLOCK_TYPE_ID", $dependency);
 			$result[] = $record;
 		}

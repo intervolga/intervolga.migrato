@@ -40,18 +40,19 @@ class Permission extends BaseData
 				$record->setFields(array(
 					"PERMISSION" => $permission,
 				));
-				$record->addDependency("GROUP_ID",
-					new DataLink(
-						Group::getInstance(),
-						Group::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createNumericId($groupId))
-					)
+
+				$dependency = clone $this->getDependency("GROUP_ID");
+				$dependency->setXmlId(
+					Group::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createNumericId($groupId))
 				);
-				$record->addDependency("IBLOCK_ID",
-					new DataLink(
-						Iblock::getInstance(),
-						Iblock::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createNumericId($iblockId))
-					)
+				$record->addDependency("GROUP_ID", $dependency);
+
+				$dependency = clone $this->getDependency("IBLOCK_ID");
+				$dependency->setXmlId(
+					Iblock::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createNumericId($iblockId))
 				);
+				$record->addDependency("IBLOCK_ID", $dependency);
+
 				$result[] = $record;
 			}
 		}
@@ -72,5 +73,13 @@ class Permission extends BaseData
 		}
 
 		return $result;
+	}
+
+	public function getDependencies()
+	{
+		return array(
+			"GROUP_ID" => new DataLink(Group::getInstance()),
+			"IBLOCK_ID" => new DataLink(Iblock::getInstance()),
+		);
 	}
 }

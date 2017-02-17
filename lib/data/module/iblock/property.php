@@ -51,24 +51,38 @@ class Property extends BaseData
 				"USER_TYPE_SETTINGS" => $property["USER_TYPE_SETTINGS"],
 				"HINT" => $property["HINT"],
 			));
-			$record->addDependency("IBLOCK_ID",
-				new DataLink(
-					Iblock::getInstance(),
-					Iblock::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createNumericId($property["IBLOCK_ID"]))
-				)
+
+			$dependency = clone $this->getDependency("IBLOCK_ID");
+			$dependency->setXmlId(
+				Iblock::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createNumericId($property["IBLOCK_ID"]))
 			);
+			$record->addDependency("IBLOCK_ID", $dependency);
+
 			if ($property["LINK_IBLOCK_ID"])
 			{
-				$record->addReference("LINK_IBLOCK_ID",
-					new DataLink(
-						Iblock::getInstance(),
-						Iblock::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createNumericId($property["LINK_IBLOCK_ID"]))
-					)
+				$reference = clone $this->getReference("LINK_IBLOCK_ID");
+				$reference->setXmlId(
+					Iblock::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createNumericId($property["LINK_IBLOCK_ID"]))
 				);
+				$record->addReference("LINK_IBLOCK_ID", $reference);
 			}
 			$result[] = $record;
 		}
 
 		return $result;
+	}
+
+	public function getDependencies()
+	{
+		return array(
+			"IBLOCK_ID" => new DataLink(Iblock::getInstance()),
+		);
+	}
+
+	public function getReferences()
+	{
+		return array(
+			"LINK_IBLOCK_ID" => new DataLink(Iblock::getInstance()),
+		);
 	}
 }
