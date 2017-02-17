@@ -1,4 +1,4 @@
-<?namespace Intervolga\Migrato;
+<? namespace Intervolga\Migrato;
 
 use Bitrix\Main\IO\Directory;
 use Intervolga\Migrato\Data\BaseData;
@@ -10,34 +10,19 @@ class MigratoExportData extends Migrato
 	public static function run()
 	{
 		$result = array();
-		$configDataClasses = Config::getInstance()->getDataClasses();
-		$dataClasses = static::recursiveGetDependentDataClasses($configDataClasses);
-		foreach ($dataClasses as $data)
+
+		$errors = static::validate();
+		if ($errors)
 		{
-			$filter = Config::getInstance()->getDataClassFilter($data);
-			try
-			{
-				if (!$data->getXmlIdProvider()->isXmlIdFieldExists())
-				{
-					$data->getXmlIdProvider()->createXmlIdField();
-				}
-				$errors = static::validateXmlIds($data, $filter);
-				if ($errors)
-				{
-					static::fixErrors($data, $errors);
-				}
-				$errors = static::validateXmlIds($data, $filter);
-				if ($errors)
-				{
-					throw new \Exception("Validated with errors (" . count($errors) . ")");
-				}
-			}
-			catch (\Exception $exception)
-			{
-				$result[] = "Data " . $data->getModule() . "/" . $data->getEntityName() . " exported with exception: " . $exception->getMessage();
-			}
+			static::fixErrors($errors);
+			$errors = static::validate();
+		}
+		if ($errors)
+		{
+			throw new \Exception("Validated with errors (" . count($errors) . ")");
 		}
 
+		$configDataClasses = Config::getInstance()->getDataClasses();
 		foreach ($configDataClasses as $data)
 		{
 			$filter = Config::getInstance()->getDataClassFilter($data);

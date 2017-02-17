@@ -1,6 +1,7 @@
 <?namespace Intervolga\Migrato;
 
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 class Migrato
@@ -11,6 +12,27 @@ class Migrato
 	public static function run()
 	{
 		return array();
+	}
+
+	/**
+	 * @return Tool\XmlIdValidateError[]
+	 */
+	public static function validate()
+	{
+		$result = array();
+		$configDataClasses = Config::getInstance()->getDataClasses();
+		$dataClasses = static::recursiveGetDependentDataClasses($configDataClasses);
+		foreach ($dataClasses as $data)
+		{
+			$filter = Config::getInstance()->getDataClassFilter($data);
+			if (!$data->getXmlIdProvider()->isXmlIdFieldExists())
+			{
+				$data->getXmlIdProvider()->createXmlIdField();
+			}
+			$result = static::validateData($data, $filter);
+		}
+
+		return $result;
 	}
 
 	/**
@@ -51,11 +73,11 @@ class Migrato
 
 	/**
 	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
-	 * @param array|string[] $filter
+	 * @param string[] $filter
 	 *
-	 * @return array|\Intervolga\Migrato\Tool\XmlIdValidateError[]
+	 * @return \Intervolga\Migrato\Tool\XmlIdValidateError[]
 	 */
-	protected static function validateXmlIds(BaseData $dataClass, array $filter = array())
+	protected static function validateData(BaseData $dataClass, array $filter = array())
 	{
 		$errors = array();
 		$records = $dataClass->getList($filter);
@@ -89,32 +111,32 @@ class Migrato
 			}
 			if ($errorType)
 			{
-				$errors[] = new XmlIdValidateError($errorType, $record->getId(), $record->getXmlId());
+				$errors[] = new XmlIdValidateError($dataClass, $errorType, $record->getId(), $record->getXmlId());
 			}
 		}
 		return $errors;
 	}
 
 	/**
-	 * @param array|XmlIdValidateError[] $errors
+	 * @param XmlIdValidateError[] $errors
 	 */
-	protected static function fixErrors(BaseData $dataClass, array $errors)
+	protected static function fixErrors(array $errors)
 	{
 		foreach ($errors as $error)
 		{
 			if ($error->getType() == XmlIdValidateError::TYPE_EMPTY)
 			{
-				$dataClass->getXmlIdProvider()->generateXmlId($error->getId());
+				$error->getDataClass()->getXmlIdProvider()->generateXmlId($error->getId());
 			}
 			elseif ($error->getType() == XmlIdValidateError::TYPE_INVALID)
 			{
-				$xmlId = $dataClass->getXmlIdProvider()->getXmlId($error->getId());
+				$xmlId = $error->getDataClass()->getXmlIdProvider()->getXmlId($error->getId());
 				$xmlId = preg_replace("/[^a-z0-9\-_]/", "-", $xmlId);
-				$dataClass->getXmlIdProvider()->setXmlId($error->getId(), $xmlId);
+				$error->getDataClass()->getXmlIdProvider()->setXmlId($error->getId(), $xmlId);
 			}
 			elseif ($error->getType() == XmlIdValidateError::TYPE_REPEAT)
 			{
-				$dataClass->getXmlIdProvider()->generateXmlId($error->getId());
+				$error->getDataClass()->getXmlIdProvider()->generateXmlId($error->getId());
 			}
 		}
 	}
