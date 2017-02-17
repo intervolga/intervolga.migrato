@@ -16,20 +16,33 @@ class MigratoImportData extends Migrato
 	{
 		$result = array();
 		$list = new DataRecordsResolveList();
-		foreach (Config::getInstance()->getDataClasses() as $data)
+		$configDataClasses = Config::getInstance()->getDataClasses();
+		$dataClasses = static::recursiveGetDependentDataClasses($configDataClasses);
+		foreach ($dataClasses as $data)
 		{
-			foreach ($data->getList() as $dataRecord)
+			if (in_array($data, $dataClasses) && !in_array($data, $configDataClasses))
 			{
-				if ($dataRecord->getXmlId())
+				$localDataRecords = $data->getList();
+				foreach ($localDataRecords as $localDataRecord)
 				{
-					static::$baseBeforeImport[$data->getModule()][$data->getEntityName()][] = $dataRecord->getXmlId();
+					$list->setCreated($localDataRecord);
 				}
 			}
+			else
+			{
+				foreach ($data->getList() as $dataRecord)
+				{
+					if ($dataRecord->getXmlId())
+					{
+						static::$baseBeforeImport[$data->getModule()][$data->getEntityName()][] = $dataRecord->getXmlId();
+					}
+				}
 
-			$list->addDataRecords(static::readFromFile($data));
+				$list->addDataRecords(static::readFromFile($data));
+			}
 		}
 
-		for ($i = 0; $i < count(Config::getInstance()->getDataClasses()) * 2; $i++)
+		for ($i = 0; $i < count($configDataClasses) * 2; $i++)
 		{
 			$creatableDataRecords = $list->getCreatableDataRecords();
 			if ($creatableDataRecords)

@@ -24,9 +24,9 @@ abstract class BaseData
 	}
 
 	/**
-	 * @param array|string[] $filter
+	 * @param string[] $filter
 	 *
-	 * @return array|\Intervolga\Migrato\Tool\DataRecord[]
+	 * @return \Intervolga\Migrato\Tool\DataRecord[]
 	 */
 	abstract public function getList(array $filter = array());
 
@@ -108,7 +108,7 @@ abstract class BaseData
 	}
 
 	/**
-	 * @return array|DataLink[]
+	 * @return DataLink[]
 	 */
 	public function getDependencies()
 	{
