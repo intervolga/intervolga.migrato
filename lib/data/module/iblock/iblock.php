@@ -41,16 +41,20 @@ class Iblock extends BaseData
 				"NAME" => $iblock["NAME"],
 				"ACTIVE" => $iblock["ACTIVE"],
 			));
-			$record->addDependency(
-				"IBLOCK_TYPE_ID",
-				new DataLink(
-					Type::getInstance(),
-					Type::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createStringId($iblock["IBLOCK_TYPE_ID"]))
-				)
-			);
+
+			$dependency = clone $this->getDependency("IBLOCK_TYPE_ID");
+			$dependency->setXmlId(DataRecordId::createStringId($iblock["IBLOCK_TYPE_ID"]));
+			$record->addDependency("IBLOCK_TYPE_ID", $dependency);
 			$result[] = $record;
 		}
 
 		return $result;
+	}
+
+	public function getDependencies()
+	{
+		return array(
+			"IBLOCK_TYPE_ID" => new DataLink(Type::getInstance()),
+		);
 	}
 }
