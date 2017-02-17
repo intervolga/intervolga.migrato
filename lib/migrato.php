@@ -41,6 +41,7 @@ class Migrato
 	 */
 	protected static function recursiveGetDependentDataClasses(array $dataClasses)
 	{
+		$newClassesAdded = false;
 		foreach ($dataClasses as $dataClass)
 		{
 			$dependencies = $dataClass->getDependencies();
@@ -52,6 +53,7 @@ class Migrato
 					if (!in_array($dependentDataClass, $dataClasses))
 					{
 						$dataClasses[] = $dependentDataClass;
+						$newClassesAdded = true;
 					}
 				}
 			}
@@ -64,11 +66,19 @@ class Migrato
 					if (!in_array($dependentDataClass, $dataClasses))
 					{
 						$dataClasses[] = $dependentDataClass;
+						$newClassesAdded = true;
 					}
 				}
 			}
 		}
-		return $dataClasses;
+		if ($newClassesAdded)
+		{
+			return static::recursiveGetDependentDataClasses($dataClasses);
+		}
+		else
+		{
+			return $dataClasses;
+		}
 	}
 
 	/**
