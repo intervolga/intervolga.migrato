@@ -37,7 +37,7 @@ class TypeLang extends BaseData
 							"LANG" => strval($lang)
 						)
 					);
-					$record = new DataRecord();
+					$record = new DataRecord($this);
 					$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 					$record->setId($id);
 					$record->setFields(array(

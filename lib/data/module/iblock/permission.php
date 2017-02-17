@@ -33,7 +33,7 @@ class Permission extends BaseData
 					"IBLOCK_ID" => intval($iblockId),
 					"GROUP_ID" => intval($groupId),
 				));
-				$record = new DataRecord();
+				$record = new DataRecord($this);
 				$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 				$record->setId($id);
 

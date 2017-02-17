@@ -32,7 +32,7 @@ class Iblock extends BaseData
 		$getList = \CIBlock::GetList($order, $iblockFilter);
 		while ($iblock = $getList->fetch())
 		{
-			$record = new DataRecord();
+			$record = new DataRecord($this);
 			$record->setXmlId($iblock["XML_ID"]);
 			$record->setId(DataRecordId::createNumericId($iblock["ID"]));
 			$record->setFields(array(

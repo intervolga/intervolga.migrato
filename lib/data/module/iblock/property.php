@@ -27,7 +27,7 @@ class Property extends BaseData
 		$getList = PropertyTable::getList();
 		while ($property = $getList->fetch())
 		{
-			$record = new DataRecord();
+			$record = new DataRecord($this);
 			$record->setXmlId($property["XML_ID"]);
 			$record->setId(DataRecordId::createNumericId($property["ID"]));
 			$record->setFields(array(

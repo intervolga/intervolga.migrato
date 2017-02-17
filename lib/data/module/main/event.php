@@ -28,7 +28,7 @@ class Event extends BaseData
 		$getList = \CEventMessage::getList($by, $order);
 		while ($message = $getList->fetch())
 		{
-			$record = new DataRecord();
+			$record = new DataRecord($this);
 			$id = DataRecordId::createNumericId($message["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 			$record->setId($id);

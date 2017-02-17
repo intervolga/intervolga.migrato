@@ -12,6 +12,14 @@ class DataRecord
 	protected $data = null;
 
 	/**
+	 * @param BaseData $data
+	 */
+	public function __construct(BaseData $data = null)
+	{
+		$this->data = $data;
+	}
+
+	/**
 	 * @param string $xmlId
 	 */
 	public function setXmlId($xmlId)

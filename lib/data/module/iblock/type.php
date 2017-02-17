@@ -20,7 +20,7 @@ class Type extends BaseData
 		$getList = \CIBlockType::GetList();
 		while ($type = $getList->fetch())
 		{
-			$record = new DataRecord();
+			$record = new DataRecord($this);
 			$id = DataRecordId::createStringId($type["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 			$record->setId($id);

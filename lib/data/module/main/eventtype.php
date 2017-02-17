@@ -18,7 +18,7 @@ class EventType extends BaseData
 		$getList = \CEventType::getList();
 		while ($type = $getList->fetch())
 		{
-			$record = new DataRecord();
+			$record = new DataRecord($this);
 			$id = DataRecordId::createNumericId($type["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 			$record->setId($id);

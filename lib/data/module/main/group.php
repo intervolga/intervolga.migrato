@@ -20,7 +20,7 @@ class Group extends BaseData
 		$getList = \CGroup::getList($by, $order);
 		while ($group = $getList->fetch())
 		{
-			$record = new DataRecord();
+			$record = new DataRecord($this);
 			$id = DataRecordId::createNumericId($group["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 
