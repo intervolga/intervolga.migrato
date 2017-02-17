@@ -126,6 +126,24 @@ abstract class BaseData
 	}
 
 	/**
+	 * @return DataLink[]
+	 */
+	public function getReferences()
+	{
+		return array();
+	}
+
+	/**
+	 * @param string $name
+	 * @return DataLink
+	 */
+	public function getReference($name)
+	{
+		$references = $this->getReferences();
+		return $references[$name];
+	}
+
+	/**
 	 * @return BaseXmlIdProvider
 	 */
 	public function getXmlIdProvider()

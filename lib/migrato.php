@@ -84,6 +84,18 @@ class Migrato
 					}
 				}
 			}
+			$references = $dataClass->getReferences();
+			if ($references)
+			{
+				foreach ($references as $reference)
+				{
+					$dependentDataClass = $reference->getTargetData();
+					if (!in_array($dependentDataClass, $dataClasses))
+					{
+						$dataClasses[] = $dependentDataClass;
+					}
+				}
+			}
 		}
 		return $dataClasses;
 	}
