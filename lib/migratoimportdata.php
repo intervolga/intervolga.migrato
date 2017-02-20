@@ -122,8 +122,8 @@ class MigratoImportData extends Migrato
 			try
 			{
 				$dataRecord->setId($dataRecordId);
-				$dataRecord->getData()->update($dataRecord);
 				static::$imported[$dataRecord->getData()->getModule()][$dataRecord->getData()->getEntityName()][] = $dataRecord->getXmlId();
+				$dataRecord->getData()->update($dataRecord);
 				return $nameForReport . " updated";
 			}
 			catch (\Exception $exception)
