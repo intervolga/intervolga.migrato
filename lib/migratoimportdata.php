@@ -11,11 +11,28 @@ class MigratoImportData extends Migrato
 {
 	protected static $baseBeforeImport = array();
 	protected static $imported = array();
+	/**
+	 * @var DataRecord[]
+	 */
+	protected static $references = array();
+	/**
+	 * @var DataRecordsResolveList
+	 */
+	protected static $list = null;
 
 	public static function run()
 	{
-		$result = array();
-		$list = new DataRecordsResolveList();
+		static::prepareList();
+		$result = static::importWithDependencies();
+		$result = array_merge($result, static::deleteNotImported());
+		$result = array_merge($result, static::resolveReferences());
+
+		return $result;
+	}
+
+	protected static function prepareList()
+	{
+		static::$list = new DataRecordsResolveList();
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		$dataClasses = static::recursiveGetDependentDataClasses($configDataClasses);
 		foreach ($dataClasses as $data)
@@ -25,7 +42,7 @@ class MigratoImportData extends Migrato
 				$localDataRecords = $data->getList();
 				foreach ($localDataRecords as $localDataRecord)
 				{
-					$list->setCreated($localDataRecord);
+					static::$list->setCreated($localDataRecord);
 				}
 			}
 			else
@@ -38,19 +55,27 @@ class MigratoImportData extends Migrato
 					}
 				}
 
-				$list->addDataRecords(static::readFromFile($data));
+				static::$list->addDataRecords(static::readFromFile($data));
 			}
 		}
+	}
 
+	/**
+	 * @return string[]
+	 */
+	protected static function importWithDependencies()
+	{
+		$result = array();
+		$configDataClasses = Config::getInstance()->getDataClasses();
 		for ($i = 0; $i < count($configDataClasses) * 2; $i++)
 		{
-			$creatableDataRecords = $list->getCreatableDataRecords();
+			$creatableDataRecords = static::$list->getCreatableDataRecords();
 			if ($creatableDataRecords)
 			{
 				foreach ($creatableDataRecords as $dataRecord)
 				{
 					$result[] = static::saveDataRecord($dataRecord);
-					$list->setCreated($dataRecord);
+					static::$list->setCreated($dataRecord);
 				}
 			}
 			else
@@ -58,7 +83,6 @@ class MigratoImportData extends Migrato
 				break;
 			}
 		}
-		$result = array_merge($result, static::deleteNotImported());
 
 		return $result;
 	}
@@ -81,6 +105,11 @@ class MigratoImportData extends Migrato
 			{
 				$dependencies = static::restoreDependenciesFromFile($dataClass, $dependencies);
 				$data[$i]->setDependencies($dependencies);
+			}
+			if ($references = $data[$i]->getReferences())
+			{
+				$references = static::restoreReferencesFromFile($dataClass, $references);
+				$data[$i]->setReferences($references);
 			}
 		}
 
@@ -110,6 +139,28 @@ class MigratoImportData extends Migrato
 	}
 
 	/**
+	 * @param BaseData $dataClass
+	 * @param DataLink[] $references
+	 * @return DataLink[]
+	 */
+	protected static function restoreReferencesFromFile(BaseData $dataClass, array $references)
+	{
+		$result = array();
+		foreach ($references as $key => $reference)
+		{
+			$referenceModel = $dataClass->getReference($key);
+			if ($referenceModel)
+			{
+				$clone = clone $referenceModel;
+				$clone->setXmlId($reference->getXmlId());
+				$result[$key] = $clone;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
 	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
 	 *
 	 * @return string
@@ -117,13 +168,17 @@ class MigratoImportData extends Migrato
 	protected static function saveDataRecord(DataRecord $dataRecord)
 	{
 		$nameForReport = "Data " . $dataRecord->getData()->getModule() . "/" . $dataRecord->getData()->getEntityName() . " (" . $dataRecord->getXmlId() . ")";
+		if ($dataRecord->getReferences())
+		{
+			static::$references[] = $dataRecord;
+		}
 		if ($dataRecordId = $dataRecord->getData()->findRecord($dataRecord->getXmlId()))
 		{
 			try
 			{
 				$dataRecord->setId($dataRecordId);
 				static::$imported[$dataRecord->getData()->getModule()][$dataRecord->getData()->getEntityName()][] = $dataRecord->getXmlId();
-				$dataRecord->getData()->update($dataRecord);
+				$dataRecord->update();
 				return $nameForReport . " updated";
 			}
 			catch (\Exception $exception)
@@ -135,7 +190,8 @@ class MigratoImportData extends Migrato
 		{
 			try
 			{
-				$dataRecord->getData()->create($dataRecord);
+				$id = $dataRecord->create();
+				$dataRecord->setId($id);
 				static::$imported[$dataRecord->getData()->getModule()][$dataRecord->getData()->getEntityName()][] = $dataRecord->getXmlId();
 				return $nameForReport . " created";
 			}
@@ -147,7 +203,7 @@ class MigratoImportData extends Migrato
 	}
 
 	/**
-	 * @return array|string[]
+	 * @return string[]
 	 */
 	protected static function deleteNotImported()
 	{
@@ -170,6 +226,43 @@ class MigratoImportData extends Migrato
 					}
 				}
 			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * @return string[]
+	 */
+	protected static function resolveReferences()
+	{
+		$result = array();
+		foreach (static::$references as $dataRecord)
+		{
+			$clone = clone $dataRecord;
+			$clone->setFields(array());
+			$clone->setDependencies(array());
+			foreach ($clone->getReferences() as $reference)
+			{
+				$id = $reference->getTargetData()->findRecord($reference->getXmlId());
+				if ($id)
+				{
+					$reference->setId($id);
+				}
+			}
+			try
+			{
+				$clone->update();
+			}
+			catch (\Exception $exception)
+			{
+				$nameForReport = "Data " . $dataRecord->getData()->getModule() . "/" . $dataRecord->getData()->getEntityName() . " (" . $clone->getXmlId() . ")";
+				$result[] = $nameForReport . " update reference exception: " . $exception->getMessage();
+			}
+		}
+		if ($result)
+		{
+			array_unshift($result, "-----resolveReferences() fail-----");
 		}
 
 		return $result;
