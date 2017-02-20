@@ -4,6 +4,7 @@ class DataLink
 {
 	protected $targetData = null;
 	protected $xmlId = "";
+	protected $id = null;
 	protected $toCustomField = "";
 
 	/**
@@ -64,5 +65,21 @@ class DataLink
 	public function getToCustomField()
 	{
 		return $this->toCustomField;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Tool\DataRecordId $id
+	 */
+	public function setId(DataRecordId $id)
+	{
+		$this->id = $id;
+	}
+
+	/**
+	 * @return \Intervolga\Migrato\Tool\DataRecordId
+	 */
+	public function getId()
+	{
+		return $this->id;
 	}
 }

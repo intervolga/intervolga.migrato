@@ -54,6 +54,7 @@ class Group extends BaseData
 		{
 			$id = DataRecordId::createNumericId($groupId);
 			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+			return $id;
 		}
 		else
 		{

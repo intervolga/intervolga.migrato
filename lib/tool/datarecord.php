@@ -87,6 +87,14 @@ class DataRecord
 	}
 
 	/**
+	 * @param \Intervolga\Migrato\Tool\DataLink[] $references
+	 */
+	public function setReferences(array $references)
+	{
+		$this->references = $references;
+	}
+
+	/**
 	 * @param string $key
 	 * @param \Intervolga\Migrato\Tool\DataLink $reference
 	 */
@@ -130,5 +138,23 @@ class DataRecord
 	public function getData()
 	{
 		return $this->data;
+	}
+
+	public function update()
+	{
+		$this->getData()->update($this);
+	}
+
+	/**
+	 * @return \Intervolga\Migrato\Tool\DataRecordId
+	 */
+	public function create()
+	{
+		return $this->getData()->create($this);
+	}
+
+	public function delete()
+	{
+		$this->getData()->delete($this->getXmlId());
 	}
 }

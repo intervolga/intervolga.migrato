@@ -189,6 +189,16 @@ class DataFileViewXml
 		}
 		$record->setDependencies($dependencies);
 
+		$references = array();
+		foreach ($xmlArray["data"]["#"]["reference"] as $reference)
+		{
+			foreach ($reference["#"]["value"] as $valueItem)
+			{
+				$references[$reference["#"]["name"][0]["#"]] = new DataLink(null, $valueItem["#"]);
+			}
+		}
+		$record->setReferences($references);
+
 		return $record;
 	}
 }

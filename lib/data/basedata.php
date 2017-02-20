@@ -42,6 +42,8 @@ abstract class BaseData
 	/**
 	 * @param DataRecord $record
 	 * @throws NotImplementedException
+	 *
+	 * @return \Intervolga\Migrato\Tool\DataRecordId
 	 */
 	public function create(DataRecord $record)
 	{
@@ -49,7 +51,7 @@ abstract class BaseData
 	}
 
 	/**
-	 * @param $xmlId
+	 * @param string $xmlId
 	 * @throws NotImplementedException
 	 */
 	public function delete($xmlId)
