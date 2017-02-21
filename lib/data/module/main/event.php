@@ -1,7 +1,7 @@
 <? namespace Intervolga\Migrato\Data\Module\Main;
 
 use Intervolga\Migrato\Data\BaseData;
-use Intervolga\Migrato\Tool\DataRecord;
+use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\DataRecordId;
 use Intervolga\Migrato\Tool\DataLink;
 use Intervolga\Migrato\Tool\XmlIdProviders\UfXmlIdProvider;
@@ -28,7 +28,7 @@ class Event extends BaseData
 		$getList = \CEventMessage::getList($by, $order);
 		while ($message = $getList->fetch())
 		{
-			$record = new DataRecord($this);
+			$record = new Record($this);
 			$id = DataRecordId::createNumericId($message["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 			$record->setId($id);
@@ -70,7 +70,7 @@ class Event extends BaseData
 		foreach ($eventTypes as $eventType)
 		{
 			/**
-			 * @var DataRecord $eventType
+			 * @var Record $eventType
 			 */
 			if ($eventType->getField("EVENT_NAME") == $name)
 			{

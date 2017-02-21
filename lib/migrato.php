@@ -2,7 +2,7 @@
 
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\Config;
-use Intervolga\Migrato\Tool\DataRecord;
+use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 class Migrato
@@ -175,11 +175,11 @@ class Migrato
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
+	 * @param \Intervolga\Migrato\Data\Record $dataRecord
 	 * @param \Exception $exception
 	 * @param string $message
 	 */
-	protected static function reportRecordException(DataRecord $dataRecord, \Exception $exception, $message)
+	protected static function reportRecordException(Record $dataRecord, \Exception $exception, $message)
 	{
 		$report = static::getRecordNameForReport($dataRecord) . " " . $message;
 		if ($exception->getMessage())
@@ -190,11 +190,11 @@ class Migrato
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
+	 * @param \Intervolga\Migrato\Data\Record $dataRecord
 	 *
 	 * @return string
 	 */
-	protected static function getRecordNameForReport(DataRecord $dataRecord)
+	protected static function getRecordNameForReport(Record $dataRecord)
 	{
 		$data = $dataRecord->getData();
 		$recordName = "Record ";
@@ -220,10 +220,10 @@ class Migrato
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
+	 * @param \Intervolga\Migrato\Data\Record $dataRecord
 	 * @param string $message
 	 */
-	protected static function reportRecord(DataRecord $dataRecord, $message)
+	protected static function reportRecord(Record $dataRecord, $message)
 	{
 		static::report(static::getRecordNameForReport($dataRecord) . " " . $message, "ok");
 	}

@@ -4,13 +4,13 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Tool\DataLink;
-use Intervolga\Migrato\Tool\DataRecord;
+use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\ImportList;
 
 class MigratoImportData extends Migrato
 {
 	/**
-	 * @var \Intervolga\Migrato\Tool\DataRecord[]
+	 * @var \Intervolga\Migrato\Data\Record[]
 	 */
 	protected static $recordsWithReferences = array();
 	/**
@@ -99,7 +99,7 @@ class MigratoImportData extends Migrato
 	/**
 	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
 	 *
-	 * @return array|\Intervolga\Migrato\Tool\DataRecord[]
+	 * @return array|\Intervolga\Migrato\Data\Record[]
 	 */
 	protected static function readFromFile(BaseData $dataClass)
 	{
@@ -171,9 +171,9 @@ class MigratoImportData extends Migrato
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
+	 * @param \Intervolga\Migrato\Data\Record $dataRecord
 	 */
-	protected static function saveDataRecord(DataRecord $dataRecord)
+	protected static function saveDataRecord(Record $dataRecord)
 	{
 		if ($dataRecord->getReferences())
 		{

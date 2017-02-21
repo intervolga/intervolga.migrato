@@ -3,7 +3,7 @@
 use Bitrix\Iblock\PropertyTable;
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
-use Intervolga\Migrato\Tool\DataRecord;
+use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\DataRecordId;
 use Intervolga\Migrato\Tool\DataLink;
 use Intervolga\Migrato\Tool\XmlIdProviders\OrmXmlIdProvider;
@@ -27,7 +27,7 @@ class Property extends BaseData
 		$getList = PropertyTable::getList();
 		while ($property = $getList->fetch())
 		{
-			$record = new DataRecord($this);
+			$record = new Record($this);
 			$record->setXmlId($property["XML_ID"]);
 			$record->setId(DataRecordId::createNumericId($property["ID"]));
 			$record->setFields(array(

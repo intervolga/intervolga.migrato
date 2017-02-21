@@ -1,13 +1,15 @@
 <? namespace Intervolga\Migrato\Tool;
 
+use Intervolga\Migrato\Data\Record;
+
 class ImportList
 {
 	/**
-	 * @var \Intervolga\Migrato\Tool\DataRecord[]
+	 * @var \Intervolga\Migrato\Data\Record[]
 	 */
 	protected $existingRecords = array();
 	/**
-	 * @var \Intervolga\Migrato\Tool\DataRecord[]
+	 * @var \Intervolga\Migrato\Data\Record[]
 	 */
 	protected $recordsToImport = array();
 	/**
@@ -16,7 +18,7 @@ class ImportList
 	protected $createdXmlIds = array();
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecord[] $records
+	 * @param \Intervolga\Migrato\Data\Record[] $records
 	 */
 	public function addExistingRecords(array $records)
 	{
@@ -30,7 +32,7 @@ class ImportList
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecord[] $records
+	 * @param \Intervolga\Migrato\Data\Record[] $records
 	 */
 	public function addRecordsToImport(array $records)
 	{
@@ -44,9 +46,9 @@ class ImportList
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
+	 * @param \Intervolga\Migrato\Data\Record $dataRecord
 	 */
-	public function addCreatedRecord(DataRecord $dataRecord)
+	public function addCreatedRecord(Record $dataRecord)
 	{
 		$class = get_class($dataRecord->getData());
 		$xmlId = $dataRecord->getXmlId();
@@ -55,7 +57,7 @@ class ImportList
 	}
 
 	/**
-	 * @return \Intervolga\Migrato\Tool\DataRecord[]
+	 * @return \Intervolga\Migrato\Data\Record[]
 	 */
 	public function getCreatableRecords()
 	{
@@ -75,7 +77,7 @@ class ImportList
 	}
 
 	/**
-	 * @return \Intervolga\Migrato\Tool\DataRecord[]
+	 * @return \Intervolga\Migrato\Data\Record[]
 	 */
 	public function getRecordsToDelete()
 	{
@@ -95,11 +97,11 @@ class ImportList
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
+	 * @param \Intervolga\Migrato\Data\Record $dataRecord
 	 *
 	 * @return bool
 	 */
-	protected function canCreate(DataRecord $dataRecord)
+	protected function canCreate(Record $dataRecord)
 	{
 		$result = false;
 		if (!$this->isCreated($dataRecord))
@@ -114,11 +116,11 @@ class ImportList
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
+	 * @param \Intervolga\Migrato\Data\Record $dataRecord
 	 *
 	 * @return bool
 	 */
-	protected function isAllDependenciesResolved(DataRecord $dataRecord)
+	protected function isAllDependenciesResolved(Record $dataRecord)
 	{
 		$result = true;
 		foreach ($dataRecord->getDependencies() as $dependency)
@@ -133,11 +135,11 @@ class ImportList
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
+	 * @param \Intervolga\Migrato\Data\Record $dataRecord
 	 *
 	 * @return bool
 	 */
-	protected function isCreated(DataRecord $dataRecord)
+	protected function isCreated(Record $dataRecord)
 	{
 		$class = get_class($dataRecord->getData());
 		$xmlId = $dataRecord->getXmlId();

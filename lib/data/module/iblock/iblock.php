@@ -2,7 +2,7 @@
 
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
-use Intervolga\Migrato\Tool\DataRecord;
+use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\DataRecordId;
 use Intervolga\Migrato\Tool\DataLink;
 use Intervolga\Migrato\Tool\XmlIdProviders\OrmXmlIdProvider;
@@ -32,7 +32,7 @@ class Iblock extends BaseData
 		$getList = \CIBlock::GetList($order, $iblockFilter);
 		while ($iblock = $getList->fetch())
 		{
-			$record = new DataRecord($this);
+			$record = new Record($this);
 			$record->setXmlId($iblock["XML_ID"]);
 			$record->setId(DataRecordId::createNumericId($iblock["ID"]));
 			$record->setFields(array(

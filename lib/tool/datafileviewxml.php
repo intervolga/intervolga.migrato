@@ -2,6 +2,7 @@
 
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
+use Intervolga\Migrato\Data\Record;
 
 class DataFileViewXml
 {
@@ -9,10 +10,10 @@ class DataFileViewXml
 	const FILE_EXT = "xml";
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecord $data
+	 * @param \Intervolga\Migrato\Data\Record $data
 	 * @param string $path
 	 */
-	public static function writeToFileSystem(DataRecord $data, $path)
+	public static function writeToFileSystem(Record $data, $path)
 	{
 		$content = "";
 		$content .= "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
@@ -119,7 +120,7 @@ class DataFileViewXml
 	/**
 	 * @param string $path
 	 *
-	 * @return array|DataRecord[]
+	 * @return array|Record[]
 	 * @throws \Bitrix\Main\IO\FileNotFoundException
 	 */
 	public static function readFromFileSystem($path)
@@ -162,14 +163,15 @@ class DataFileViewXml
 
 	/**
 	 * @param File $file
-	 * @return DataRecord
+	 *
+*@return Record
 	 */
 	protected static function parseFile(File $file)
 	{
 		$xmlParser = new \CDataXML();
 		$xmlParser->Load($file->getPath());
 		$xmlArray = $xmlParser->getArray();
-		$record = new DataRecord();
+		$record = new Record();
 		$record->setXmlId($xmlArray["data"]["#"]["xml_id"][0]["#"]);
 
 		$fields = array();

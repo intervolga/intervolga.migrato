@@ -1,7 +1,7 @@
 <? namespace Intervolga\Migrato\Data\Module\Main;
 
 use Intervolga\Migrato\Data\BaseData;
-use Intervolga\Migrato\Tool\DataRecord;
+use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\DataRecordId;
 use Intervolga\Migrato\Tool\XmlIdProviders\UfXmlIdProvider;
 
@@ -20,7 +20,7 @@ class Group extends BaseData
 		$getList = \CGroup::getList($by, $order);
 		while ($group = $getList->fetch())
 		{
-			$record = new DataRecord($this);
+			$record = new Record($this);
 			$id = DataRecordId::createNumericId($group["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 
@@ -36,7 +36,7 @@ class Group extends BaseData
 		return $result;
 	}
 
-	public function update(DataRecord $record)
+	public function update(Record $record)
 	{
 		$groupObject = new \CGroup();
 		$isUpdated = $groupObject->update($record->getId()->getValue(), $record->getFields());
@@ -46,7 +46,7 @@ class Group extends BaseData
 		}
 	}
 
-	public function create(DataRecord $record)
+	public function create(Record $record)
 	{
 		$groupObject = new \CGroup();
 		$groupId = $groupObject->add($record->getFields());

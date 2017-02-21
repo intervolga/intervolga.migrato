@@ -1,7 +1,6 @@
 <? namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\NotImplementedException;
-use Intervolga\Migrato\Tool\DataRecord;
 use Intervolga\Migrato\Tool\DataLink;
 use Intervolga\Migrato\Tool\XmlIdProviders\BaseXmlIdProvider;
 
@@ -26,26 +25,27 @@ abstract class BaseData
 	/**
 	 * @param string[] $filter
 	 *
-	 * @return \Intervolga\Migrato\Tool\DataRecord[]
+	 * @return \Intervolga\Migrato\Data\Record[]
 	 */
 	abstract public function getList(array $filter = array());
 
 	/**
-	 * @param DataRecord $record
-	 * @throws NotImplementedException
+	 * @param Record $record
+	 *
+*@throws NotImplementedException
 	 */
-	public function update(DataRecord $record)
+	public function update(Record $record)
 	{
 		throw new NotImplementedException("Update for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
 	}
 
 	/**
-	 * @param DataRecord $record
+	 * @param Record $record
 	 * @throws NotImplementedException
 	 *
 	 * @return \Intervolga\Migrato\Tool\DataRecordId
 	 */
-	public function create(DataRecord $record)
+	public function create(Record $record)
 	{
 		throw new NotImplementedException("Create for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
 	}

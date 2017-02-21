@@ -3,7 +3,7 @@
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Module\Main\Group;
-use Intervolga\Migrato\Tool\DataRecord;
+use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\DataRecordId;
 use Intervolga\Migrato\Tool\DataLink;
 use Intervolga\Migrato\Tool\XmlIdProviders\TableXmlIdProvider;
@@ -33,7 +33,7 @@ class Permission extends BaseData
 					"IBLOCK_ID" => intval($iblockId),
 					"GROUP_ID" => intval($groupId),
 				));
-				$record = new DataRecord($this);
+				$record = new Record($this);
 				$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 				$record->setId($id);
 

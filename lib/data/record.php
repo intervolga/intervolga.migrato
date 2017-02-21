@@ -1,8 +1,9 @@
-<?namespace Intervolga\Migrato\Tool;
+<?namespace Intervolga\Migrato\Data;
 
-use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Tool\DataLink;
+use Intervolga\Migrato\Tool\DataRecordId;
 
-class DataRecord
+class Record
 {
 	protected $xmlId = "";
 	protected $id = null;
