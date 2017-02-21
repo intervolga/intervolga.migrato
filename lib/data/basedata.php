@@ -41,9 +41,10 @@ abstract class BaseData
 
 	/**
 	 * @param Record $record
-	 * @throws NotImplementedException
 	 *
-	 * @return \Intervolga\Migrato\Tool\DataRecordId
+*@throws NotImplementedException
+	 *
+	 * @return \Intervolga\Migrato\Data\RecordId
 	 */
 	public function create(Record $record)
 	{
@@ -62,7 +63,7 @@ abstract class BaseData
 	/**
 	 * @param string $xmlId
 	 *
-	 * @return \Intervolga\Migrato\Tool\DataRecordId|null
+	 * @return \Intervolga\Migrato\Data\RecordId|null
 	 */
 	public function findRecord($xmlId)
 	{

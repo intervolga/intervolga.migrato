@@ -1,7 +1,6 @@
 <?namespace Intervolga\Migrato\Data;
 
 use Intervolga\Migrato\Tool\DataLink;
-use Intervolga\Migrato\Tool\DataRecordId;
 
 class Record
 {
@@ -112,13 +111,13 @@ class Record
 		return $this->references;
 	}
 
-	public function setId(DataRecordId $id)
+	public function setId(RecordId $id)
 	{
 		$this->id = $id;
 	}
 
 	/**
-	 * @return DataRecordId
+	 * @return RecordId
 	 */
 	public function getId()
 	{
@@ -147,7 +146,7 @@ class Record
 	}
 
 	/**
-	 * @return \Intervolga\Migrato\Tool\DataRecordId
+	 * @return \Intervolga\Migrato\Data\RecordId
 	 */
 	public function create()
 	{

@@ -1,6 +1,7 @@
 <?namespace Intervolga\Migrato\Tool;
 
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\RecordId;
 
 class XmlIdValidateError
 {
@@ -16,7 +17,7 @@ class XmlIdValidateError
 	/**
 	 * @param BaseData $dataClass
 	 * @param int $type
-	 * @param DataRecordId $id
+	 * @param RecordId $id
 	 * @param string $xmlId
 	 */
 	public function __construct(BaseData $dataClass, $type, $id, $xmlId)
@@ -52,7 +53,7 @@ class XmlIdValidateError
 	}
 
 	/**
-	 * @return DataRecordId
+	 * @return RecordId
 	 */
 	public function getId()
 	{

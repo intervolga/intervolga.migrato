@@ -2,7 +2,7 @@
 
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\DataRecordId;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\XmlIdProviders\UfXmlIdProvider;
 
 class Group extends BaseData
@@ -21,7 +21,7 @@ class Group extends BaseData
 		while ($group = $getList->fetch())
 		{
 			$record = new Record($this);
-			$id = DataRecordId::createNumericId($group["ID"]);
+			$id = RecordId::createNumericId($group["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 
 			$record->setId($id);
@@ -52,7 +52,7 @@ class Group extends BaseData
 		$groupId = $groupObject->add($record->getFields());
 		if ($groupId)
 		{
-			$id = DataRecordId::createNumericId($groupId);
+			$id = RecordId::createNumericId($groupId);
 			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
 			return $id;
 		}

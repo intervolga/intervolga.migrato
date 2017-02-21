@@ -3,7 +3,7 @@
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\DataRecordId;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\DataLink;
 use Intervolga\Migrato\Tool\XmlIdProviders\OrmXmlIdProvider;
 
@@ -34,7 +34,7 @@ class Iblock extends BaseData
 		{
 			$record = new Record($this);
 			$record->setXmlId($iblock["XML_ID"]);
-			$record->setId(DataRecordId::createNumericId($iblock["ID"]));
+			$record->setId(RecordId::createNumericId($iblock["ID"]));
 			$record->setFields(array(
 				"SITE_ID" => $iblock["SITE_ID"],
 				"CODE" => $iblock["CODE"],
@@ -44,7 +44,7 @@ class Iblock extends BaseData
 
 			$dependency = clone $this->getDependency("IBLOCK_TYPE_ID");
 			$dependency->setXmlId(
-				Type::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createStringId($iblock["IBLOCK_TYPE_ID"]))
+				Type::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createStringId($iblock["IBLOCK_TYPE_ID"]))
 			);
 			$record->addDependency("IBLOCK_TYPE_ID", $dependency);
 			$result[] = $record;

@@ -3,7 +3,7 @@
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\DataRecordId;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\XmlIdProviders\TableXmlIdProvider;
 
 class Type extends BaseData
@@ -21,7 +21,7 @@ class Type extends BaseData
 		while ($type = $getList->fetch())
 		{
 			$record = new Record($this);
-			$id = DataRecordId::createStringId($type["ID"]);
+			$id = RecordId::createStringId($type["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 			$record->setId($id);
 			$record->setFields(array(

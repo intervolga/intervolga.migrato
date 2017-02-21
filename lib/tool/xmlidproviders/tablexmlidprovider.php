@@ -1,6 +1,6 @@
 <?namespace Intervolga\Migrato\Tool\XmlIdProviders;
 
-use Intervolga\Migrato\Tool\DataRecordId;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\MigratoDataTable;
 
 class TableXmlIdProvider extends BaseXmlIdProvider
@@ -19,15 +19,15 @@ class TableXmlIdProvider extends BaseXmlIdProvider
 				"ENTITY_NAME" => $this->dataClass->getEntityName(),
 				"DATA_XML_ID" => $xmlId,
 			);
-			if ($id->getType() == DataRecordId::TYPE_NUMERIC)
+			if ($id->getType() == RecordId::TYPE_NUMERIC)
 			{
 				$add["DATA_ID_NUM"] = $id->getValue();
 			}
-			if ($id->getType() == DataRecordId::TYPE_STRING)
+			if ($id->getType() == RecordId::TYPE_STRING)
 			{
 				$add["DATA_ID_STR"] = $id->getValue();
 			}
-			if ($id->getType() == DataRecordId::TYPE_COMPLEX)
+			if ($id->getType() == RecordId::TYPE_COMPLEX)
 			{
 				$add["DATA_ID_COMPLEX"] = $id->getValue();
 			}
@@ -36,7 +36,7 @@ class TableXmlIdProvider extends BaseXmlIdProvider
 	}
 
 	/**
-	 * @param DataRecordId $id
+	 * @param RecordId $id
 	 */
 	private function getTableXmlIdRecordId($id)
 	{
@@ -82,22 +82,22 @@ class TableXmlIdProvider extends BaseXmlIdProvider
 	}
 
 	/**
-	 * @param DataRecordId $id
+	 * @param RecordId $id
 	 *
 	 * @return array
 	 */
 	private function makeTableXmlIdFilterWithId($id)
 	{
 		$filter = $this->makeTableXmlIdFilter();
-		if ($id->getType() == DataRecordId::TYPE_NUMERIC)
+		if ($id->getType() == RecordId::TYPE_NUMERIC)
 		{
 			$filter["=DATA_ID_NUM"] = $id->getValue();
 		}
-		if ($id->getType() == DataRecordId::TYPE_STRING)
+		if ($id->getType() == RecordId::TYPE_STRING)
 		{
 			$filter["=DATA_ID_STR"] = $id->getValue();
 		}
-		if ($id->getType() == DataRecordId::TYPE_COMPLEX)
+		if ($id->getType() == RecordId::TYPE_COMPLEX)
 		{
 			$filter["=DATA_ID_COMPLEX"] = $id->getValue();
 		}

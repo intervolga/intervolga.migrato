@@ -1,7 +1,7 @@
 <?namespace Intervolga\Migrato\Tool\XmlIdProviders;
 
 use Intervolga\Migrato\Data\BaseData;
-use Intervolga\Migrato\Tool\DataRecordId;
+use Intervolga\Migrato\Data\RecordId;
 
 abstract class BaseXmlIdProvider
 {
@@ -12,13 +12,13 @@ abstract class BaseXmlIdProvider
 	}
 
 	/**
-	 * @param DataRecordId $id
+	 * @param \Intervolga\Migrato\Data\RecordId $id
 	 * @param string $xmlId
 	 */
 	abstract public function setXmlId($id, $xmlId);
 
 	/**
-	 * @param DataRecordId $id
+	 * @param RecordId $id
 	 *
 	 * @return string
 	 */
@@ -41,7 +41,7 @@ abstract class BaseXmlIdProvider
 	}
 
 	/**
-	 * @param DataRecordId $id
+	 * @param \Intervolga\Migrato\Data\RecordId $id
 	 *
 	 * @return bool
 	 */

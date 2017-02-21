@@ -1,6 +1,6 @@
-<? namespace Intervolga\Migrato\Tool;
+<? namespace Intervolga\Migrato\Data;
 
-class DataRecordId
+class RecordId
 {
 	const TYPE_NUMERIC = 1;
 	const TYPE_STRING = 2;
@@ -75,7 +75,7 @@ class DataRecordId
 		{
 			return $this->complexId;
 		}
-		throw new \Exception("Unknown DataRecordId type");
+		throw new \Exception("Unknown RecordId type");
 	}
 
 	/**

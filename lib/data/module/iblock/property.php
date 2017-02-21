@@ -4,7 +4,7 @@ use Bitrix\Iblock\PropertyTable;
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\DataRecordId;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\DataLink;
 use Intervolga\Migrato\Tool\XmlIdProviders\OrmXmlIdProvider;
 
@@ -29,7 +29,7 @@ class Property extends BaseData
 		{
 			$record = new Record($this);
 			$record->setXmlId($property["XML_ID"]);
-			$record->setId(DataRecordId::createNumericId($property["ID"]));
+			$record->setId(RecordId::createNumericId($property["ID"]));
 			$record->setFields(array(
 				"NAME" => $property["NAME"],
 				"ACTIVE" => $property["ACTIVE"],
@@ -54,7 +54,7 @@ class Property extends BaseData
 
 			$dependency = clone $this->getDependency("IBLOCK_ID");
 			$dependency->setXmlId(
-				Iblock::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createNumericId($property["IBLOCK_ID"]))
+				Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($property["IBLOCK_ID"]))
 			);
 			$record->addDependency("IBLOCK_ID", $dependency);
 
@@ -62,7 +62,7 @@ class Property extends BaseData
 			{
 				$reference = clone $this->getReference("LINK_IBLOCK_ID");
 				$reference->setXmlId(
-					Iblock::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createNumericId($property["LINK_IBLOCK_ID"]))
+					Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($property["LINK_IBLOCK_ID"]))
 				);
 				$record->addReference("LINK_IBLOCK_ID", $reference);
 			}

@@ -4,7 +4,7 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\LanguageTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\DataRecordId;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\DataLink;
 use Intervolga\Migrato\Tool\XmlIdProviders\TableXmlIdProvider;
 
@@ -31,7 +31,7 @@ class TypeLang extends BaseData
 			{
 				if ($typeLang = \CIBlockType::GetByIDLang($type["ID"], $lang))
 				{
-					$id = DataRecordId::createComplexId(
+					$id = RecordId::createComplexId(
 						array(
 							"ID" => strval($typeLang["ID"]),
 							"LANG" => strval($lang)
@@ -50,7 +50,7 @@ class TypeLang extends BaseData
 						"IBLOCK_TYPE_ID",
 						new DataLink(
 							Type::getInstance(),
-							Type::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createStringId($typeLang["IBLOCK_TYPE_ID"]))
+							Type::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createStringId($typeLang["IBLOCK_TYPE_ID"]))
 						)
 					);
 					$result[] = $record;

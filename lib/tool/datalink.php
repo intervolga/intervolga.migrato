@@ -1,5 +1,7 @@
 <?namespace Intervolga\Migrato\Tool;
 
+use Intervolga\Migrato\Data\RecordId;
+
 class DataLink
 {
 	protected $targetData = null;
@@ -68,15 +70,15 @@ class DataLink
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecordId $id
+	 * @param \Intervolga\Migrato\Data\RecordId $id
 	 */
-	public function setId(DataRecordId $id)
+	public function setId(RecordId $id)
 	{
 		$this->id = $id;
 	}
 
 	/**
-	 * @return \Intervolga\Migrato\Tool\DataRecordId
+	 * @return \Intervolga\Migrato\Data\RecordId
 	 */
 	public function getId()
 	{

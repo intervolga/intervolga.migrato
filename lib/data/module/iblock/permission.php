@@ -4,7 +4,7 @@ use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Module\Main\Group;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\DataRecordId;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\DataLink;
 use Intervolga\Migrato\Tool\XmlIdProviders\TableXmlIdProvider;
 
@@ -29,7 +29,7 @@ class Permission extends BaseData
 			$permissions = \CIBlock::GetGroupPermissions($iblockId);
 			foreach ($permissions as $groupId => $permission)
 			{
-				$id = DataRecordId::createComplexId(array(
+				$id = RecordId::createComplexId(array(
 					"IBLOCK_ID" => intval($iblockId),
 					"GROUP_ID" => intval($groupId),
 				));
@@ -43,13 +43,13 @@ class Permission extends BaseData
 
 				$dependency = clone $this->getDependency("GROUP_ID");
 				$dependency->setXmlId(
-					Group::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createNumericId($groupId))
+					Group::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($groupId))
 				);
 				$record->addDependency("GROUP_ID", $dependency);
 
 				$dependency = clone $this->getDependency("IBLOCK_ID");
 				$dependency->setXmlId(
-					Iblock::getInstance()->getXmlIdProvider()->getXmlId(DataRecordId::createNumericId($iblockId))
+					Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($iblockId))
 				);
 				$record->addDependency("IBLOCK_ID", $dependency);
 
