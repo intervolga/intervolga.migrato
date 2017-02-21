@@ -1,4 +1,4 @@
-<?namespace Intervolga\Migrato\Tool\XmlIdProviders;
+<?namespace Intervolga\Migrato\Tool\XmlIdProvider;
 
 use Bitrix\Main\Entity\DataManager;
 use Intervolga\Migrato\Data\BaseData;

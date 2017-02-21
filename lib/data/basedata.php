@@ -1,7 +1,7 @@
 <? namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\NotImplementedException;
-use Intervolga\Migrato\Tool\XmlIdProviders\BaseXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 abstract class BaseData
 {

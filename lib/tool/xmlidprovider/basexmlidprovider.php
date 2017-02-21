@@ -1,4 +1,4 @@
-<?namespace Intervolga\Migrato\Tool\XmlIdProviders;
+<?namespace Intervolga\Migrato\Tool\XmlIdProvider;
 
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\RecordId;

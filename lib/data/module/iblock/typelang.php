@@ -6,7 +6,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
-use Intervolga\Migrato\Tool\XmlIdProviders\TableXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
 
 class TypeLang extends BaseData
 {

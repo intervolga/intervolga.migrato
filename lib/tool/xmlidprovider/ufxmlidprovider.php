@@ -1,4 +1,4 @@
-<?namespace Intervolga\Migrato\Tool\XmlIdProviders;
+<?namespace Intervolga\Migrato\Tool\XmlIdProvider;
 
 class UfXmlIdProvider extends BaseXmlIdProvider
 {
