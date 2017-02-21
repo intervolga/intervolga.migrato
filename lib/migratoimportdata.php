@@ -1,4 +1,4 @@
-<?namespace Intervolga\Migrato;
+<? namespace Intervolga\Migrato;
 
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\Config;
@@ -10,10 +10,6 @@ use Intervolga\Migrato\Tool\ImportList;
 class MigratoImportData extends Migrato
 {
 	/**
-	 * @var string[]
-	 */
-	protected static $reports = array();
-	/**
 	 * @var \Intervolga\Migrato\Tool\DataRecord[]
 	 */
 	protected static $recordsWithReferences = array();
@@ -24,20 +20,18 @@ class MigratoImportData extends Migrato
 
 	public static function run()
 	{
-		static::$reports = array();
+		parent::run();
 
 		static::init();
 		static::importWithDependencies();
 		static::deleteNotImported();
 		static::resolveReferences();
-		static::reportMessage("finishing");
-
-		return static::$reports;
+		static::report("finishing");
 	}
 
 	protected static function init()
 	{
-		static::reportMessage(__FUNCTION__);
+		static::report(__FUNCTION__);
 		static::$list = new ImportList();
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		$dataClasses = static::recursiveGetDependentDataClasses($configDataClasses);
@@ -76,12 +70,12 @@ class MigratoImportData extends Migrato
 
 	protected static function importWithDependencies()
 	{
-		static::reportMessage(__FUNCTION__);
+		static::report(__FUNCTION__);
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		for ($i = 0; $i < count($configDataClasses); $i++)
 		{
 			$creatableDataRecords = static::$list->getCreatableRecords();
-			static::reportMessage("Import depenency step $i, count=" . count($creatableDataRecords) . " record(s)");
+			static::report("Import depenency step $i, count=" . count($creatableDataRecords) . " record(s)");
 			if ($creatableDataRecords)
 			{
 				foreach ($creatableDataRecords as $dataRecord)
@@ -97,7 +91,7 @@ class MigratoImportData extends Migrato
 		}
 		if (static::$list->getCreatableRecords())
 		{
-			static::reportMessage("Not enough import depenency steps!");
+			static::report("Not enough import depenency steps!");
 		}
 	}
 
@@ -133,6 +127,7 @@ class MigratoImportData extends Migrato
 	/**
 	 * @param BaseData $dataClass
 	 * @param DataLink[] $dependencies
+	 *
 	 * @return DataLink[]
 	 */
 	protected static function restoreDependenciesFromFile(BaseData $dataClass, array $dependencies)
@@ -155,6 +150,7 @@ class MigratoImportData extends Migrato
 	/**
 	 * @param BaseData $dataClass
 	 * @param DataLink[] $references
+	 *
 	 * @return DataLink[]
 	 */
 	protected static function restoreReferencesFromFile(BaseData $dataClass, array $references)
@@ -213,7 +209,7 @@ class MigratoImportData extends Migrato
 
 	protected static function deleteNotImported()
 	{
-		static::reportMessage(__FUNCTION__);
+		static::report(__FUNCTION__);
 		foreach (static::$list->getRecordsToDelete() as $dataRecord)
 		{
 			try
@@ -230,7 +226,7 @@ class MigratoImportData extends Migrato
 
 	protected static function resolveReferences()
 	{
-		static::reportMessage(__FUNCTION__);
+		static::report(__FUNCTION__);
 		foreach (static::$recordsWithReferences as $dataRecord)
 		{
 			$clone = clone $dataRecord;
@@ -254,45 +250,5 @@ class MigratoImportData extends Migrato
 				static::reportRecordException($dataRecord, $exception, "update reference");
 			}
 		}
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
-	 * @param \Exception $exception
-	 * @param string $message
-	 */
-	protected static function reportRecordException(DataRecord $dataRecord, \Exception $exception, $message)
-	{
-		static::reportMessage("[fail] " . static::getReportName($dataRecord). " " . $message . " exception: " . $exception->getMessage());
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
-	 *
-	 * @return string
-	 */
-	protected static function getReportName(DataRecord $dataRecord)
-	{
-		return "Data " . $dataRecord->getData()->getModule() . "/" . $dataRecord->getData()->getEntityName() . " record (" . $dataRecord->getXmlId() . ")";
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
-	 * @param string $message
-	 */
-	protected static function reportRecord(DataRecord $dataRecord, $message)
-	{
-		static::reportMessage("[ok] " . static::getReportName($dataRecord) . " " . $message);
-	}
-
-	/**
-	 * @param string $message
-	 */
-	protected static function reportMessage($message)
-	{
-		list($microSec, ) = explode(" ", microtime());
-		$microSec = round($microSec, 3) * 1000;
-		$microSec = str_pad($microSec, 3, "0", STR_PAD_RIGHT);
-		static::$reports[] = date("d.m.Y H:i:s") . ":" . $microSec . " " . $message;
 	}
 }

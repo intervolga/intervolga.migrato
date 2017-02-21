@@ -1,4 +1,4 @@
-<?namespace Intervolga\Migrato;
+<? namespace Intervolga\Migrato;
 
 use Bitrix\Main\Config\Option;
 use Intervolga\Migrato\Tool\Config;
@@ -8,19 +8,20 @@ class MigratoImportOption extends Migrato
 {
 	public static function run()
 	{
-		$result = array();
+		parent::run();
 		$modules = Config::getInstance()->getModules();
 		foreach ($modules as $module)
 		{
 			$path = static::getModuleOptionsDirectory($module);
 			$options = OptionFileViewXml::readFromFileSystem($path);
-			foreach ($options as $name => $value)
+			if ($options)
 			{
-				Option::set($module, $name, $value);
+				foreach ($options as $name => $value)
+				{
+					Option::set($module, $name, $value);
+				}
+				static::report("Module $module options imported");
 			}
-			$result[] = "Module $module options imported";
 		}
-
-		return $result;
 	}
 }

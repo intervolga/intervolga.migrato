@@ -9,7 +9,7 @@ class MigratoExportData extends Migrato
 {
 	public static function run()
 	{
-		$result = array();
+		parent::run();
 
 		$errors = static::validate();
 		if ($errors)
@@ -29,14 +29,13 @@ class MigratoExportData extends Migrato
 			try
 			{
 				static::exportToFile($data, $filter);
-				$result[] = "Data " . $data->getModule() . "/" . $data->getEntityName() . " exported to files";
+				static::reportData($data, "exported");
 			}
 			catch (\Exception $exception)
 			{
-				$result[] = "Data " . $data->getModule() . "/" . $data->getEntityName() . " exported with exception: " . $exception->getMessage();
+				static::reportDataException($data, $exception, "export");
 			}
 		}
-		return $result;
 	}
 
 	/**

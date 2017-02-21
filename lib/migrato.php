@@ -1,17 +1,28 @@
-<?namespace Intervolga\Migrato;
+<? namespace Intervolga\Migrato;
 
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\Config;
+use Intervolga\Migrato\Tool\DataRecord;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 class Migrato
 {
 	/**
-	 * @return string[]
+	 * @var string[]
 	 */
+	protected static $reports = array();
+
 	public static function run()
 	{
-		return array();
+		static::$reports = array();
+	}
+
+	/**
+	 * @return string[]
+	 */
+	public static function getReports()
+	{
+		return static::$reports;
 	}
 
 	/**
@@ -37,6 +48,7 @@ class Migrato
 
 	/**
 	 * @param BaseData[] $dataClasses
+	 *
 	 * @return BaseData[]
 	 */
 	protected static function recursiveGetDependentDataClasses(array $dataClasses)
@@ -124,6 +136,7 @@ class Migrato
 				$errors[] = new XmlIdValidateError($dataClass, $errorType, $record->getId(), $record->getXmlId());
 			}
 		}
+
 		return $errors;
 	}
 
@@ -153,10 +166,119 @@ class Migrato
 
 	/**
 	 * @param string $module
+	 *
 	 * @return string
 	 */
 	protected static function getModuleOptionsDirectory($module)
 	{
 		return INTERVOLGA_MIGRATO_DIRECTORY . $module . "/";
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
+	 * @param \Exception $exception
+	 * @param string $message
+	 */
+	protected static function reportRecordException(DataRecord $dataRecord, \Exception $exception, $message)
+	{
+		$report = static::getRecordNameForReport($dataRecord) . " " . $message;
+		if ($exception->getMessage())
+		{
+			$report .= " exception: " . $exception->getMessage();
+		}
+		static::report($report, "fail");
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
+	 *
+	 * @return string
+	 */
+	protected static function getRecordNameForReport(DataRecord $dataRecord)
+	{
+		$data = $dataRecord->getData();
+		$recordName = "Record ";
+		$recordName .= $data->getModule() . "/" . $data->getEntityName();
+		if ($dataRecord->getXmlId())
+		{
+			$recordName .= " (xmlid: " . $dataRecord->getXmlId() . ")";
+		}
+		elseif ($id = $dataRecord->getId())
+		{
+			$idValue = $id->getValue();
+			if (is_array($idValue))
+			{
+				$recordName .= " (id: [" . implode(",", $idValue) . "])";
+			}
+			else
+			{
+				$recordName .= " (id: " . $idValue . ")";
+			}
+		}
+
+		return $recordName;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Tool\DataRecord $dataRecord
+	 * @param string $message
+	 */
+	protected static function reportRecord(DataRecord $dataRecord, $message)
+	{
+		static::report(static::getRecordNameForReport($dataRecord) . " " . $message, "ok");
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $data
+	 * @param string $message
+	 */
+	protected static function reportData(BaseData $data, $message)
+	{
+		static::report(static::getDataNameForReport($data) . " " . $message, "ok");
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $data
+	 *
+	 * @return string
+	 */
+	protected static function getDataNameForReport(BaseData $data)
+	{
+		$recordName = "Data ";
+		$recordName .= $data->getModule() . "/" . $data->getEntityName();
+
+		return $recordName;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $data
+	 * @param \Exception $exception
+	 * @param string $message
+	 */
+	protected static function reportDataException(BaseData $data, \Exception $exception, $message)
+	{
+		$report = static::getDataNameForReport($data) . " " . $message;
+		if ($exception->getMessage())
+		{
+			$report .= " exception: " . $exception->getMessage();
+		}
+		static::report($report, "fail");
+	}
+
+	/**
+	 * @param string $message
+	 * @param string $type
+	 */
+	protected static function report($message, $type = "")
+	{
+		list($microSec,) = explode(" ", microtime());
+		$microSec = round($microSec, 3)*1000;
+		$microSec = str_pad($microSec, 3, "0", STR_PAD_RIGHT);
+		$type = trim($type);
+		if ($type)
+		{
+			$type = "[" . $type . "] ";
+		}
+		static::$reports[] = date("d.m.Y H:i:s") . ":" . $microSec . " " . $type . $message;
 	}
 }
