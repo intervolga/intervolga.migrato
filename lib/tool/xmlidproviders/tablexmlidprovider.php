@@ -1,7 +1,7 @@
 <?namespace Intervolga\Migrato\Tool\XmlIdProviders;
 
 use Intervolga\Migrato\Data\RecordId;
-use Intervolga\Migrato\Tool\MigratoDataTable;
+use Intervolga\Migrato\Tool\Orm\XmlIdTable;
 
 class TableXmlIdProvider extends BaseXmlIdProvider
 {
@@ -10,7 +10,7 @@ class TableXmlIdProvider extends BaseXmlIdProvider
 		$tableId = $this->getTableXmlIdRecordId($id);
 		if ($tableId)
 		{
-			MigratoDataTable::update($tableId, array("DATA_XML_ID" => $xmlId));
+			XmlIdTable::update($tableId, array("DATA_XML_ID" => $xmlId));
 		}
 		else
 		{
@@ -31,7 +31,7 @@ class TableXmlIdProvider extends BaseXmlIdProvider
 			{
 				$add["DATA_ID_COMPLEX"] = $id->getValue();
 			}
-			MigratoDataTable::add($add);
+			XmlIdTable::add($add);
 		}
 	}
 
@@ -46,7 +46,7 @@ class TableXmlIdProvider extends BaseXmlIdProvider
 			),
 			"filter" => $this->makeTableXmlIdFilterWithId($id),
 		);
-		$record = MigratoDataTable::getList($parameters)->fetch();
+		$record = XmlIdTable::getList($parameters)->fetch();
 		return $record["ID"];
 	}
 
@@ -59,7 +59,7 @@ class TableXmlIdProvider extends BaseXmlIdProvider
 			"filter" => $this->makeTableXmlIdFilterWithId($id),
 			"limit" => 1,
 		);
-		$record = MigratoDataTable::getList($parameters)->fetch();
+		$record = XmlIdTable::getList($parameters)->fetch();
 		if ($record)
 		{
 			return $record["DATA_XML_ID"];

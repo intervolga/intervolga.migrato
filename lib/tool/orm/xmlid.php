@@ -1,10 +1,10 @@
-<?namespace Intervolga\Migrato\Tool;
+<?namespace Intervolga\Migrato\Tool\Orm;
 
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\Entity\IntegerField;
 use Bitrix\Main\Entity\StringField;
 
-class MigratoDataTable extends DataManager
+class XmlIdTable extends DataManager
 {
 	public static function getTableName()
 	{
