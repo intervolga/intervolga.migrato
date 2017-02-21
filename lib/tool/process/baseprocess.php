@@ -1,11 +1,12 @@
-<? namespace Intervolga\Migrato;
+<? namespace Intervolga\Migrato\Tool\Process;
 
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Tool;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 
-class Migrato
+class BaseProcess
 {
 	/**
 	 * @var string[]

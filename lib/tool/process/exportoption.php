@@ -1,10 +1,10 @@
-<? namespace Intervolga\Migrato;
+<? namespace Intervolga\Migrato\Tool\Process;
 
 use Bitrix\Main\Config\Option;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\OptionFileViewXml;
 
-class MigratoExportOption extends Migrato
+class ExportOption extends BaseProcess
 {
 	public static function run()
 	{

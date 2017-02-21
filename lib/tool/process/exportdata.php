@@ -1,11 +1,11 @@
-<? namespace Intervolga\Migrato;
+<? namespace Intervolga\Migrato\Tool\Process;
 
 use Bitrix\Main\IO\Directory;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 
-class MigratoExportData extends Migrato
+class ExportData extends BaseProcess
 {
 	public static function run()
 	{

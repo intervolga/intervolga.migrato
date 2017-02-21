@@ -1,4 +1,4 @@
-<? namespace Intervolga\Migrato;
+<? namespace Intervolga\Migrato\Tool\Process;
 
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\Config;
@@ -7,7 +7,7 @@ use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\ImportList;
 
-class MigratoImportData extends Migrato
+class ImportData extends BaseProcess
 {
 	/**
 	 * @var \Intervolga\Migrato\Data\Record[]
