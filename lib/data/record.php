@@ -1,7 +1,5 @@
 <?namespace Intervolga\Migrato\Data;
 
-use Intervolga\Migrato\Tool\DataLink;
-
 class Record
 {
 	protected $xmlId = "";
@@ -62,7 +60,7 @@ class Record
 	}
 
 	/**
-	 * @param array|\Intervolga\Migrato\Tool\DataLink[] $dependencies
+	 * @param array|\Intervolga\Migrato\Data\Link[] $dependencies
 	 */
 	public function setDependencies(array $dependencies)
 	{
@@ -71,15 +69,15 @@ class Record
 
 	/**
 	 * @param string $key
-	 * @param \Intervolga\Migrato\Tool\DataLink $dependency
+	 * @param \Intervolga\Migrato\Data\Link $dependency
 	 */
-	public function addDependency($key, DataLink $dependency)
+	public function addDependency($key, Link $dependency)
 	{
 		$this->dependencies[$key] = $dependency;
 	}
 
 	/**
-	 * @return array|\Intervolga\Migrato\Tool\DataLink[]
+	 * @return array|\Intervolga\Migrato\Data\Link[]
 	 */
 	public function getDependencies()
 	{
@@ -87,7 +85,7 @@ class Record
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\DataLink[] $references
+	 * @param \Intervolga\Migrato\Data\Link[] $references
 	 */
 	public function setReferences(array $references)
 	{
@@ -96,15 +94,15 @@ class Record
 
 	/**
 	 * @param string $key
-	 * @param \Intervolga\Migrato\Tool\DataLink $reference
+	 * @param \Intervolga\Migrato\Data\Link $reference
 	 */
-	public function addReference($key, DataLink $reference)
+	public function addReference($key, Link $reference)
 	{
 		$this->references[$key] = $reference;
 	}
 
 	/**
-	 * @return array|\Intervolga\Migrato\Tool\DataLink[]
+	 * @return array|\Intervolga\Migrato\Data\Link[]
 	 */
 	public function getReferences()
 	{

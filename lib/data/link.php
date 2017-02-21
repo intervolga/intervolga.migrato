@@ -1,8 +1,6 @@
-<?namespace Intervolga\Migrato\Tool;
+<?namespace Intervolga\Migrato\Data;
 
-use Intervolga\Migrato\Data\RecordId;
-
-class DataLink
+class Link
 {
 	protected $targetData = null;
 	protected $xmlId = "";

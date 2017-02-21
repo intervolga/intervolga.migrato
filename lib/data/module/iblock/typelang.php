@@ -5,7 +5,7 @@ use Bitrix\Main\Localization\LanguageTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
-use Intervolga\Migrato\Tool\DataLink;
+use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Tool\XmlIdProviders\TableXmlIdProvider;
 
 class TypeLang extends BaseData
@@ -48,7 +48,7 @@ class TypeLang extends BaseData
 					));
 					$record->addDependency(
 						"IBLOCK_TYPE_ID",
-						new DataLink(
+						new Link(
 							Type::getInstance(),
 							Type::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createStringId($typeLang["IBLOCK_TYPE_ID"]))
 						)
@@ -84,7 +84,7 @@ class TypeLang extends BaseData
 	public function getDependencies()
 	{
 		return array(
-			"IBLOCK_TYPE_ID" => new DataLink(Type::getInstance()),
+			"IBLOCK_TYPE_ID" => new Link(Type::getInstance()),
 		);
 	}
 }

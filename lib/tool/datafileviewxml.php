@@ -2,6 +2,7 @@
 
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
+use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 
 class DataFileViewXml
@@ -36,8 +37,9 @@ class DataFileViewXml
 	}
 
 	/**
-	 * @param array|\Intervolga\Migrato\Tool\DataLink[] $links
-	 * @return string
+	 * @param array|\Intervolga\Migrato\Data\Link[] $links
+	 *
+*@return string
 	 */
 	protected static function dependencyToXml(array $links)
 	{
@@ -75,8 +77,9 @@ class DataFileViewXml
 	}
 
 	/**
-	 * @param array|\Intervolga\Migrato\Tool\DataLink[] $links
-	 * @return string
+	 * @param array|\Intervolga\Migrato\Data\Link[] $links
+	 *
+*@return string
 	 */
 	protected static function referenceToXml(array $links)
 	{
@@ -186,7 +189,7 @@ class DataFileViewXml
 		{
 			foreach ($dependency["#"]["value"] as $valueItem)
 			{
-				$dependencies[$dependency["#"]["name"][0]["#"]] = new DataLink(null, $valueItem["#"]);
+				$dependencies[$dependency["#"]["name"][0]["#"]] = new Link(null, $valueItem["#"]);
 			}
 		}
 		$record->setDependencies($dependencies);
@@ -196,7 +199,7 @@ class DataFileViewXml
 		{
 			foreach ($reference["#"]["value"] as $valueItem)
 			{
-				$references[$reference["#"]["name"][0]["#"]] = new DataLink(null, $valueItem["#"]);
+				$references[$reference["#"]["name"][0]["#"]] = new Link(null, $valueItem["#"]);
 			}
 		}
 		$record->setReferences($references);

@@ -3,7 +3,7 @@
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
-use Intervolga\Migrato\Tool\DataLink;
+use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\ImportList;
 
@@ -126,9 +126,9 @@ class MigratoImportData extends Migrato
 
 	/**
 	 * @param BaseData $dataClass
-	 * @param DataLink[] $dependencies
+	 * @param \Intervolga\Migrato\Data\Link[] $dependencies
 	 *
-	 * @return DataLink[]
+	 * @return Link[]
 	 */
 	protected static function restoreDependenciesFromFile(BaseData $dataClass, array $dependencies)
 	{
@@ -149,9 +149,9 @@ class MigratoImportData extends Migrato
 
 	/**
 	 * @param BaseData $dataClass
-	 * @param DataLink[] $references
+	 * @param Link[] $references
 	 *
-	 * @return DataLink[]
+	 * @return Link[]
 	 */
 	protected static function restoreReferencesFromFile(BaseData $dataClass, array $references)
 	{

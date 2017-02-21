@@ -1,7 +1,6 @@
 <? namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\NotImplementedException;
-use Intervolga\Migrato\Tool\DataLink;
 use Intervolga\Migrato\Tool\XmlIdProviders\BaseXmlIdProvider;
 
 abstract class BaseData
@@ -111,7 +110,7 @@ abstract class BaseData
 	}
 
 	/**
-	 * @return DataLink[]
+	 * @return Link[]
 	 */
 	public function getDependencies()
 	{
@@ -120,7 +119,8 @@ abstract class BaseData
 
 	/**
 	 * @param string $name
-	 * @return DataLink
+	 *
+*@return Link
 	 */
 	public function getDependency($name)
 	{
@@ -129,7 +129,7 @@ abstract class BaseData
 	}
 
 	/**
-	 * @return DataLink[]
+	 * @return Link[]
 	 */
 	public function getReferences()
 	{
@@ -138,7 +138,8 @@ abstract class BaseData
 
 	/**
 	 * @param string $name
-	 * @return DataLink
+	 *
+*@return Link
 	 */
 	public function getReference($name)
 	{

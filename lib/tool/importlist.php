@@ -1,5 +1,6 @@
 <? namespace Intervolga\Migrato\Tool;
 
+use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 
 class ImportList
@@ -148,11 +149,11 @@ class ImportList
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Tool\DataLink $dependency
+	 * @param \Intervolga\Migrato\Data\Link $dependency
 	 *
 	 * @return bool
 	 */
-	protected function isResolved(DataLink $dependency)
+	protected function isResolved(Link $dependency)
 	{
 		$class = get_class($dependency->getTargetData());
 		$xmlId = $dependency->getXmlId();

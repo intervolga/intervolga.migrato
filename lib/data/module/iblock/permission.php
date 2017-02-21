@@ -5,7 +5,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Module\Main\Group;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
-use Intervolga\Migrato\Tool\DataLink;
+use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Tool\XmlIdProviders\TableXmlIdProvider;
 
 class Permission extends BaseData
@@ -78,8 +78,8 @@ class Permission extends BaseData
 	public function getDependencies()
 	{
 		return array(
-			"GROUP_ID" => new DataLink(Group::getInstance()),
-			"IBLOCK_ID" => new DataLink(Iblock::getInstance()),
+			"GROUP_ID" => new Link(Group::getInstance()),
+			"IBLOCK_ID" => new Link(Iblock::getInstance()),
 		);
 	}
 }

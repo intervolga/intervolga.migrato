@@ -3,7 +3,7 @@
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
-use Intervolga\Migrato\Tool\DataLink;
+use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Tool\XmlIdProviders\UfXmlIdProvider;
 
 class Event extends BaseData
@@ -84,7 +84,7 @@ class Event extends BaseData
 	public function getDependencies()
 	{
 		return array(
-			static::DEPENDENCY_EVENT_NAME => new DataLink(
+			static::DEPENDENCY_EVENT_NAME => new Link(
 				EventType::getInstance(),
 				"",
 				"EVENT_NAME"

@@ -5,7 +5,7 @@ use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
-use Intervolga\Migrato\Tool\DataLink;
+use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Tool\XmlIdProviders\OrmXmlIdProvider;
 
 class Property extends BaseData
@@ -75,14 +75,14 @@ class Property extends BaseData
 	public function getDependencies()
 	{
 		return array(
-			"IBLOCK_ID" => new DataLink(Iblock::getInstance()),
+			"IBLOCK_ID" => new Link(Iblock::getInstance()),
 		);
 	}
 
 	public function getReferences()
 	{
 		return array(
-			"LINK_IBLOCK_ID" => new DataLink(Iblock::getInstance()),
+			"LINK_IBLOCK_ID" => new Link(Iblock::getInstance()),
 		);
 	}
 }
