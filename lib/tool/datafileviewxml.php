@@ -29,6 +29,14 @@ class DataFileViewXml
 			$content .= static::referenceToXml($data->getReferences());
 		}
 		$content .= static::fieldToXml($data->getFields());
+		foreach ($data->getRuntimes() as $name => $runtime)
+		{
+			$content .= "\t<runtime>\n";
+			$content .= "\t\t<name>" . $name . "</name>\n";
+			$content .= static::fieldToXml($runtime->getFields(), 2);
+			$content .= "\t</runtime>\n";
+		}
+
 		$content .= "</data>";
 
 		$filePath = $path . static::FILE_PREFIX . $data->getXmlId() . "." . static::FILE_EXT;
@@ -97,24 +105,25 @@ class DataFileViewXml
 
 	/**
 	 * @param array $fields
+	 * @param int $level
 	 * @return string
 	 */
-	protected static function fieldToXml(array $fields)
+	protected static function fieldToXml(array $fields, $level = 1)
 	{
 		$content = "";
 		foreach ($fields as $name => $value)
 		{
-			$content .= "\t<field>\n";
-			$content .= "\t\t<name>" . htmlspecialchars($name) . "</name>\n";
+			$content .= str_repeat("\t", $level) . "<field>\n";
+			$content .= str_repeat("\t", $level + 1) ."<name>" . htmlspecialchars($name) . "</name>\n";
 			if (!is_array($value))
 			{
 				$value = array($value);
 			}
 			foreach ($value as $valueItem)
 			{
-				$content .= static::valueToXml(2, $valueItem);
+				$content .= static::valueToXml($level + 1, $valueItem);
 			}
-			$content .= "\t</field>\n";
+			$content .= str_repeat("\t", $level)."</field>\n";
 		}
 
 		return $content;

@@ -7,7 +7,11 @@ class Record
 	protected $fields = array();
 	protected $dependencies = array();
 	protected $references = array();
-	protected $data = null;
+	protected $data;
+	/**
+	 * @var Runtime[]
+	 */
+	protected $runtimes = array();
 
 	/**
 	 * @param BaseData $data
@@ -154,5 +158,31 @@ class Record
 	public function delete()
 	{
 		$this->getData()->delete($this->getXmlId());
+	}
+
+	/**
+	 * @param string $name
+	 * @param Runtime $runtime
+	 */
+	public function setRuntime($name, Runtime $runtime)
+	{
+		$this->runtimes[$name] = $runtime;
+	}
+
+	/**
+	 * @param string $name
+	 * @return Runtime
+	 */
+	public function getRuntime($name)
+	{
+		return $this->runtimes[$name];
+	}
+
+	/**
+	 * @return Runtime[]
+	 */
+	public function getRuntimes()
+	{
+		return $this->runtimes;
 	}
 }
