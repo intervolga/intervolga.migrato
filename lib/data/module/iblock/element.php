@@ -6,6 +6,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
+use Intervolga\Migrato\Data\Runtime;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 class Element extends BaseData
@@ -25,23 +26,25 @@ class Element extends BaseData
 	{
 		$result = array();
 		$getList = ElementTable::getList();
-		while ($property = $getList->fetch())
+		while ($element = $getList->fetch())
 		{
 			$record = new Record($this);
-			$record->setXmlId($property["XML_ID"]);
-			$record->setId(RecordId::createNumericId($property["ID"]));
+			$record->setXmlId($element["XML_ID"]);
+			$record->setId(RecordId::createNumericId($element["ID"]));
 			$record->setFields(array(
-				"NAME" => $property["NAME"],
-				"ACTIVE" => $property["ACTIVE"],
-				"SORT" => $property["SORT"],
-				"CODE" => $property["CODE"],
+				"NAME" => $element["NAME"],
+				"ACTIVE" => $element["ACTIVE"],
+				"SORT" => $element["SORT"],
+				"CODE" => $element["CODE"],
 			));
 
 			$dependency = clone $this->getDependency("IBLOCK_ID");
 			$dependency->setXmlId(
-				Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($property["IBLOCK_ID"]))
+				Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($element["IBLOCK_ID"]))
 			);
 			$record->addDependency("IBLOCK_ID", $dependency);
+
+			$this->addRuntime($record, $element);
 
 			$result[] = $record;
 		}
@@ -54,5 +57,25 @@ class Element extends BaseData
 		return array(
 			"IBLOCK_ID" => new Link(Iblock::getInstance()),
 		);
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @param array $element
+	 */
+	protected function addRuntime(Record $record, array $element)
+	{
+		$runtimeFields = array();
+		$properties = \CIBlockElement::GetProperty($element["IBLOCK_ID"], $element["ID"]);
+		while ($property = $properties->fetch())
+		{
+			$runtimeFields[$property["XML_ID"]] = $property["VALUE"];
+		}
+		if ($runtimeFields)
+		{
+			$runtime = new Runtime();
+			$runtime->setFields($runtimeFields);
+			$record->setRuntime("PROPERTY", $runtime);
+		}
 	}
 }
