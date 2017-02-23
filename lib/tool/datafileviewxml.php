@@ -229,7 +229,7 @@ class DataFileViewXml
 	 */
 	protected static function tag($tag, $value = "", $level = 0)
 	{
-		if (strlen($value))
+		if (!strlen($value))
 		{
 			return str_repeat("\t", $level) ."<$tag/>\n";
 		}
