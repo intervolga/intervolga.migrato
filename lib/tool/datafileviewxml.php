@@ -9,6 +9,8 @@ class DataFileViewXml
 {
 	const FILE_PREFIX = "data-";
 	const FILE_EXT = "xml";
+	const TABS_LENGTH = 4;
+	const MAX_LENGTH_BEFORE_LINE_BREAK_TAG = 80;
 
 	/**
 	 * @param string $path
@@ -42,7 +44,7 @@ class DataFileViewXml
 		$content = "";
 		$content .= "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
 		$content .= "<data>\n";
-		$content .= "\t<xml_id>" . $data->getXmlId() . "</xml_id>\n";
+		$content .= static::tag("xml_id", $data->getXmlId(), 1);
 		if ($data->getDependencies())
 		{
 			$content .= static::dependencyToXml($data->getDependencies());
@@ -55,7 +57,7 @@ class DataFileViewXml
 		foreach ($data->getRuntimes() as $name => $runtime)
 		{
 			$content .= "\t<runtime>\n";
-			$content .= "\t\t<name>" . $name . "</name>\n";
+			$content .= static::tag("name", $name, 2);
 			$content .= static::fieldToXml($runtime->getFields(), 2);
 			$content .= "\t</runtime>\n";
 		}
@@ -78,31 +80,10 @@ class DataFileViewXml
 		foreach ($links as $name => $dependency)
 		{
 			$content .= "\t<dependency>\n";
-			$content .= "\t\t<name>" . htmlspecialchars($name) . "</name>\n";
-			$content .= static::valueToXml(2, $dependency->getXmlId());
+			$content .= static::tag("name", $name, 2);
+			$content .= static::tag("value", $dependency->getXmlId(), 2);
 			$content .= "\t</dependency>\n";
 		}
-
-		return $content;
-	}
-
-	/**
-	 * @param int $level
-	 * @param string $value
-	 * @return string
-	 */
-	protected static function valueToXml($level, $value)
-	{
-		$content = str_repeat("\t", $level);
-		if (strlen($value))
-		{
-			$content .= "<value>" . htmlspecialchars($value) . "</value>";
-		}
-		else
-		{
-			$content .= "<value/>";
-		}
-		$content .= "\n";
 
 		return $content;
 	}
@@ -118,8 +99,8 @@ class DataFileViewXml
 		foreach ($links as $name => $dependency)
 		{
 			$content .= "\t<reference>\n";
-			$content .= "\t\t<name>" . htmlspecialchars($name) . "</name>\n";
-			$content .= static::valueToXml(2, $dependency->getXmlId());
+			$content .= static::tag("name", $name, 2);
+			$content .= static::tag("value", $dependency->getXmlId(), 2);
 			$content .= "\t</reference>\n";
 		}
 
@@ -137,14 +118,14 @@ class DataFileViewXml
 		foreach ($fields as $name => $value)
 		{
 			$content .= str_repeat("\t", $level) . "<field>\n";
-			$content .= str_repeat("\t", $level + 1) ."<name>" . htmlspecialchars($name) . "</name>\n";
+			$content .= static::tag("name", $name, $level + 1);
 			if (!is_array($value))
 			{
 				$value = array($value);
 			}
 			foreach ($value as $valueItem)
 			{
-				$content .= static::valueToXml($level + 1, $valueItem);
+				$content .= static::tag("value", $valueItem, $level + 1);
 			}
 			$content .= str_repeat("\t", $level)."</field>\n";
 		}
@@ -237,5 +218,42 @@ class DataFileViewXml
 		$record->setReferences($references);
 
 		return $record;
+	}
+
+	/**
+	 * @param string $tag
+	 * @param string $value
+	 * @param int $level
+	 *
+	 * @return string
+	 */
+	protected static function tag($tag, $value = "", $level = 0)
+	{
+		if (strlen($value))
+		{
+			return str_repeat("\t", $level) ."<$tag/>\n";
+		}
+		else
+		{
+			$tagsSymbolsLength = 5;
+			$inlineLength = $level*static::TABS_LENGTH
+				+ $tagsSymbolsLength
+				+ strlen($tag)*2
+				+ strlen(htmlspecialchars($value));
+			if ($inlineLength > static::MAX_LENGTH_BEFORE_LINE_BREAK_TAG)
+			{
+				return str_repeat("\t", $level)
+				. "<$tag>\n"
+				. str_repeat("\t", $level + 1)
+				. htmlspecialchars($value)
+				. "\n"
+				. str_repeat("\t", $level)
+				. "</$tag>\n";
+			}
+			else
+			{
+				return str_repeat("\t", $level) ."<$tag>" . htmlspecialchars($value) . "</$tag>\n";
+			}
+		}
 	}
 }
