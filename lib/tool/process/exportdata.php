@@ -1,6 +1,5 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
-use Bitrix\Main\IO\Directory;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
@@ -25,33 +24,33 @@ class ExportData extends BaseProcess
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		foreach ($configDataClasses as $data)
 		{
-			$filter = Config::getInstance()->getDataClassFilter($data);
-			try
-			{
-				static::exportToFile($data, $filter);
-				static::reportData($data, "exported");
-			}
-			catch (\Exception $exception)
-			{
-				static::reportDataException($data, $exception, "export");
-			}
+			static::exportData($data);
 		}
 	}
 
 	/**
 	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
-	 * @param array|string[] $filter
 	 */
-	protected static function exportToFile(BaseData $dataClass, array $filter = array())
+	protected static function exportData(BaseData $dataClass)
 	{
-		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . "/";
-		Directory::deleteDirectory($path);
-		checkDirPath($path);
-
-		$records = $dataClass->getList($filter);
-		foreach ($records as $record)
+		try
 		{
-			DataFileViewXml::writeToFileSystem($record, $path);
+			$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . "/";
+			checkDirPath($path);
+			DataFileViewXml::markDataDeleted($path);
+
+			$filter = Config::getInstance()->getDataClassFilter($dataClass);
+			$records = $dataClass->getList($filter);
+			foreach ($records as $record)
+			{
+				DataFileViewXml::writeToFileSystem($record, $path);
+			}
+
+			static::reportData($dataClass, "exported");
+		}
+		catch (\Exception $exception)
+		{
+			static::reportDataException($dataClass, $exception, "export");
 		}
 	}
 }

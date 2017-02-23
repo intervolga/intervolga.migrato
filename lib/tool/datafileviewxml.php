@@ -11,6 +11,29 @@ class DataFileViewXml
 	const FILE_EXT = "xml";
 
 	/**
+	 * @param string $path
+	 */
+	public static function markDataDeleted($path)
+	{
+		foreach (static::getFiles($path) as $file)
+		{
+			static::markDataFileDeleted($file);
+		}
+	}
+
+	/**
+	 * @param \Bitrix\Main\IO\File $file
+	 *
+	 * @throws \Bitrix\Main\IO\FileNotFoundException
+	 */
+	protected static function markDataFileDeleted(File $file)
+	{
+		$content = $file->getContents();
+		$content = str_replace("<data>", "<data deleted=\"true\">", $content);
+		$file->putContents($content);
+	}
+
+	/**
 	 * @param \Intervolga\Migrato\Data\Record $data
 	 * @param string $path
 	 */
@@ -148,7 +171,7 @@ class DataFileViewXml
 
 	/**
 	 * @param string $path
-	 * @return array|File[]
+	 * @return File[]
 	 */
 	protected static function getFiles($path)
 	{
