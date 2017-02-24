@@ -59,11 +59,22 @@ class DataFileViewXml
 		$content .= static::fieldToXml($data->getFields(), 1);
 		foreach ($data->getRuntimes() as $name => $runtime)
 		{
-			if ($runtime->getFields())
+			if ($runtime->getFields() || $runtime->getReferences() || $runtime->getDependencies())
 			{
 				$content .= "\t<runtime>\n";
 				$content .= static::tag("name", $name, 2);
-				$content .= static::valuesToXml($runtime->getFields(), 2);
+				if ($runtime->getFields())
+				{
+					$content .= static::valuesToXml($runtime->getFields(), "field", 2);
+				}
+				if ($runtime->getReferences())
+				{
+					$content .= static::valuesToXml($runtime->getReferences(), "reference", 2);
+				}
+				if ($runtime->getDependencies())
+				{
+					$content .= static::valuesToXml($runtime->getDependencies(), "dependency", 2);
+				}
 				$content .= "\t</runtime>\n";
 			}
 		}
@@ -142,11 +153,12 @@ class DataFileViewXml
 
 	/**
 	 * @param \Intervolga\Migrato\Data\Values[] $fieldsValues
+	 * @param string $type
 	 * @param int $level
 	 *
 	 * @return string
 	 */
-	protected static function valuesToXml(array $fieldsValues, $level = 0)
+	protected static function valuesToXml(array $fieldsValues, $type = "field", $level = 0)
 	{
 		$content = "";
 		foreach ($fieldsValues as $name => $fieldValues)
@@ -155,14 +167,14 @@ class DataFileViewXml
 			{
 				if (strlen($value->getValue()))
 				{
-					$content .= str_repeat("\t", $level) . "<field>\n";
+					$content .= str_repeat("\t", $level) . "<$type>\n";
 					$content .= static::tag("name", $name, $level + 1);
 					$content .= static::tag("value", $value->getValue(), $level + 1);
 					if ($value->getDescription())
 					{
 						$content .= static::tag("description", $value->getDescription(), $level + 1);
 					}
-					$content .= str_repeat("\t", $level) . "</field>\n";
+					$content .= str_repeat("\t", $level) . "</$type>\n";
 				}
 			}
 		}
