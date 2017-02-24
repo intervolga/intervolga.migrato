@@ -252,8 +252,11 @@ class DataFileViewXml
 		}
 		$record->setReferences($references);
 
-		$runtimes = static::parseReferences($xmlArray["data"]["#"]["runtime"]);
-		$record->setRuntimes($runtimes);
+		if ($xmlArray["data"]["#"]["runtime"])
+		{
+			$runtimes = static::parseReferences($xmlArray["data"]["#"]["runtime"]);
+			$record->setRuntimes($runtimes);
+		}
 
 		return $record;
 	}
