@@ -61,6 +61,13 @@ class Element extends BaseData
 		);
 	}
 
+	public function getRuntimes()
+	{
+		return array(
+			"PROPERTY" => new Runtime(Property::getInstance()),
+		);
+	}
+
 	/**
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @param array $element
@@ -77,7 +84,7 @@ class Element extends BaseData
 		}
 		if ($runtimeFields)
 		{
-			$runtime = new Runtime();
+			$runtime = clone $this->getRuntime("PROPERTY");
 			$runtime->setFields($runtimeFields);
 			$record->setRuntime("PROPERTY", $runtime);
 		}

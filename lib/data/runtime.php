@@ -3,9 +3,21 @@
 class Runtime
 {
 	/**
+	 * @var \Intervolga\Migrato\Data\BaseData
+	 */
+	protected $dataClass;
+	/**
 	 * @var \Intervolga\Migrato\Data\Values[]
 	 */
 	protected $fields = array();
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
+	 */
+	public function __construct(BaseData $dataClass = null)
+	{
+		$this->dataClass = $dataClass;
+	}
 
 	/**
 	 * @param \Intervolga\Migrato\Data\Values[] $fields
@@ -40,5 +52,13 @@ class Runtime
 	public function getField($name)
 	{
 		return $this->fields[$name];
+	}
+
+	/**
+	 * @return \Intervolga\Migrato\Data\BaseData
+	 */
+	public function getData()
+	{
+		return $this->dataClass;
 	}
 }

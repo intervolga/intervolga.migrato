@@ -110,6 +110,25 @@ abstract class BaseData
 	}
 
 	/**
+	 * @return \Intervolga\Migrato\Data\Runtime[]
+	 */
+	public function getRuntimes()
+	{
+		return array();
+	}
+
+	/**
+	 * @param string $name
+	 *
+	 * @return \Intervolga\Migrato\Data\Runtime
+	 */
+	public function getRuntime($name)
+	{
+		$runtimes = $this->getRuntimes();
+		return $runtimes[$name];
+	}
+
+	/**
 	 * @return Link[]
 	 */
 	public function getDependencies()
