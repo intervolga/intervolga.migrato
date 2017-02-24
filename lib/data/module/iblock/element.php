@@ -7,6 +7,8 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Runtime;
+use Intervolga\Migrato\Data\Value;
+use Intervolga\Migrato\Data\Values;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 class Element extends BaseData
@@ -69,7 +71,9 @@ class Element extends BaseData
 		$properties = \CIBlockElement::GetProperty($element["IBLOCK_ID"], $element["ID"]);
 		while ($property = $properties->fetch())
 		{
-			$runtimeFields[$property["XML_ID"]] = $property["VALUE"];
+			$value = new Value($property["VALUE"]);
+			$value->setDescription($property["DESCRIPTION"]);
+			$runtimeFields[$property["XML_ID"]] = new Values($value);
 		}
 		if ($runtimeFields)
 		{

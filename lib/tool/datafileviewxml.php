@@ -4,6 +4,9 @@ use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\Runtime;
+use Intervolga\Migrato\Data\Value;
+use Intervolga\Migrato\Data\Values;
 
 class DataFileViewXml
 {
@@ -53,12 +56,12 @@ class DataFileViewXml
 		{
 			$content .= static::referenceToXml($data->getReferences());
 		}
-		$content .= static::fieldToXml($data->getFields());
+		$content .= static::fieldToXml($data->getFields(), 1);
 		foreach ($data->getRuntimes() as $name => $runtime)
 		{
 			$content .= "\t<runtime>\n";
 			$content .= static::tag("name", $name, 2);
-			$content .= static::fieldToXml($runtime->getFields(), 2);
+			$content .= static::valuesToXml($runtime->getFields(), 2);
 			$content .= "\t</runtime>\n";
 		}
 
@@ -70,9 +73,9 @@ class DataFileViewXml
 	}
 
 	/**
-	 * @param array|\Intervolga\Migrato\Data\Link[] $links
+	 * @param \Intervolga\Migrato\Data\Link[] $links
 	 *
-*@return string
+	 * @return string
 	 */
 	protected static function dependencyToXml(array $links)
 	{
@@ -89,9 +92,9 @@ class DataFileViewXml
 	}
 
 	/**
-	 * @param array|\Intervolga\Migrato\Data\Link[] $links
+	 * @param \Intervolga\Migrato\Data\Link[] $links
 	 *
-*@return string
+	 * @return string
 	 */
 	protected static function referenceToXml(array $links)
 	{
@@ -110,9 +113,10 @@ class DataFileViewXml
 	/**
 	 * @param array $fields
 	 * @param int $level
+	 *
 	 * @return string
 	 */
-	protected static function fieldToXml(array $fields, $level = 1)
+	protected static function fieldToXml(array $fields, $level = 0)
 	{
 		$content = "";
 		foreach ($fields as $name => $value)
@@ -127,7 +131,37 @@ class DataFileViewXml
 			{
 				$content .= static::tag("value", $valueItem, $level + 1);
 			}
-			$content .= str_repeat("\t", $level)."</field>\n";
+			$content .= str_repeat("\t", $level) . "</field>\n";
+		}
+
+		return $content;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Values[] $fieldsValues
+	 * @param int $level
+	 *
+	 * @return string
+	 */
+	protected static function valuesToXml(array $fieldsValues, $level = 0)
+	{
+		$content = "";
+		foreach ($fieldsValues as $name => $fieldValues)
+		{
+			foreach ($fieldValues->getValues() as $value)
+			{
+				if (strlen($value->getValue()))
+				{
+					$content .= str_repeat("\t", $level) . "<field>\n";
+					$content .= static::tag("name", $name, $level + 1);
+					$content .= static::tag("value", $value->getValue(), $level + 1);
+					if ($value->getDescription())
+					{
+						$content .= static::tag("description", $value->getDescription(), $level + 1);
+					}
+					$content .= str_repeat("\t", $level) . "</field>\n";
+				}
+			}
 		}
 
 		return $content;
@@ -136,7 +170,7 @@ class DataFileViewXml
 	/**
 	 * @param string $path
 	 *
-	 * @return array|Record[]
+	 * @return \Intervolga\Migrato\Data\Record[]
 	 * @throws \Bitrix\Main\IO\FileNotFoundException
 	 */
 	public static function readFromFileSystem($path)
@@ -152,7 +186,8 @@ class DataFileViewXml
 
 	/**
 	 * @param string $path
-	 * @return File[]
+	 *
+	 * @return \Bitrix\Main\IO\File[]
 	 */
 	protected static function getFiles($path)
 	{
@@ -178,9 +213,9 @@ class DataFileViewXml
 	}
 
 	/**
-	 * @param File $file
+	 * @param \Bitrix\Main\IO\File $file
 	 *
-*@return Record
+	 * @return \Intervolga\Migrato\Data\Record
 	 */
 	protected static function parseFile(File $file)
 	{
@@ -217,7 +252,37 @@ class DataFileViewXml
 		}
 		$record->setReferences($references);
 
+		$runtimes = static::parseReferences($xmlArray["data"]["#"]["runtime"]);
+		$record->setRuntimes($runtimes);
+
 		return $record;
+	}
+
+	/**
+	 * @param array $referenceNodes
+	 *
+	 * @return \Intervolga\Migrato\Data\Runtime[]
+	 */
+	protected static function parseReferences(array $referenceNodes)
+	{
+		$result = array();
+		foreach ($referenceNodes as $referenceNode)
+		{
+			$runtime = new Runtime();
+			$runtimeName = $referenceNode["#"]["name"][0]["#"];
+			foreach ($referenceNode["#"]["field"] as $fieldNode)
+			{
+				$name = $fieldNode["#"]["name"][0]["#"];
+				$value = $fieldNode["#"]["value"][0]["#"];
+				$description = $fieldNode["#"]["description"][0]["#"];
+				$valueObject = new Value($value);
+				$valueObject->setDescription($description);
+				$runtime->setField($name, new Values($valueObject));
+			}
+			$result[$runtimeName] = $runtime;
+		}
+
+		return $result;
 	}
 
 	/**
@@ -231,7 +296,7 @@ class DataFileViewXml
 	{
 		if (!strlen($value))
 		{
-			return str_repeat("\t", $level) ."<$tag/>\n";
+			return str_repeat("\t", $level) . "<$tag/>\n";
 		}
 		else
 		{
@@ -252,7 +317,7 @@ class DataFileViewXml
 			}
 			else
 			{
-				return str_repeat("\t", $level) ."<$tag>" . htmlspecialchars($value) . "</$tag>\n";
+				return str_repeat("\t", $level) . "<$tag>" . htmlspecialchars($value) . "</$tag>\n";
 			}
 		}
 	}
