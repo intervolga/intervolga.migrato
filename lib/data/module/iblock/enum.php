@@ -51,7 +51,7 @@ class Enum extends BaseData
 	public function getDependencies()
 	{
 		return array(
-			"PROPERTY_ID" => new Link(Iblock::getInstance()),
+			"PROPERTY_ID" => new Link(Property::getInstance()),
 		);
 	}
 }
