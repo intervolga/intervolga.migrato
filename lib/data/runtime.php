@@ -2,10 +2,13 @@
 
 class Runtime
 {
+	/**
+	 * @var \Intervolga\Migrato\Data\Values[]
+	 */
 	protected $fields = array();
 
 	/**
-	 * @param array $fields
+	 * @param \Intervolga\Migrato\Data\Values[] $fields
 	 */
 	public function setFields(array $fields)
 	{
@@ -13,7 +16,16 @@ class Runtime
 	}
 
 	/**
-	 * @return array
+	 * @param string $name
+	 * @param \Intervolga\Migrato\Data\Values $values
+	 */
+	public function setField($name, Values $values)
+	{
+		$this->fields[$name] = $values;
+	}
+
+	/**
+	 * @return \Intervolga\Migrato\Data\Values[]
 	 */
 	public function getFields()
 	{
@@ -23,7 +35,7 @@ class Runtime
 	/**
 	 * @param string $name
 	 *
-	 * @return mixed
+	 * @return \Intervolga\Migrato\Data\Values
 	 */
 	public function getField($name)
 	{

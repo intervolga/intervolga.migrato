@@ -170,6 +170,14 @@ class Record
 	}
 
 	/**
+	 * @param \Intervolga\Migrato\Data\Runtime[] $runtimes
+	 */
+	public function setRuntimes(array $runtimes)
+	{
+		$this->runtimes = $runtimes;
+	}
+
+	/**
 	 * @param string $name
 	 * @return Runtime
 	 */
