@@ -78,9 +78,12 @@ class Element extends BaseData
 		$properties = \CIBlockElement::GetProperty($element["IBLOCK_ID"], $element["ID"]);
 		while ($property = $properties->fetch())
 		{
-			$value = new Value($property["VALUE"]);
-			$value->setDescription($property["DESCRIPTION"]);
-			$runtimeFields[$property["XML_ID"]] = new Values($value);
+			if (strlen($property["VALUE"]))
+			{
+				$value = new Value($property["VALUE"]);
+				$value->setDescription($property["DESCRIPTION"]);
+				$runtimeFields[$property["XML_ID"]] = new Values($value);
+			}
 		}
 		if ($runtimeFields)
 		{

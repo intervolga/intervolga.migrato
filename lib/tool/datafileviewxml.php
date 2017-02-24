@@ -59,10 +59,13 @@ class DataFileViewXml
 		$content .= static::fieldToXml($data->getFields(), 1);
 		foreach ($data->getRuntimes() as $name => $runtime)
 		{
-			$content .= "\t<runtime>\n";
-			$content .= static::tag("name", $name, 2);
-			$content .= static::valuesToXml($runtime->getFields(), 2);
-			$content .= "\t</runtime>\n";
+			if ($runtime->getFields())
+			{
+				$content .= "\t<runtime>\n";
+				$content .= static::tag("name", $name, 2);
+				$content .= static::valuesToXml($runtime->getFields(), 2);
+				$content .= "\t</runtime>\n";
+			}
 		}
 
 		$content .= "</data>";
