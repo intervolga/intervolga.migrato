@@ -119,6 +119,21 @@ class ImportData extends BaseProcess
 				$references = static::restoreReferencesFromFile($dataClass, $references);
 				$data[$i]->setReferences($references);
 			}
+			if ($runtimes = $data[$i]->getRuntimes())
+			{
+				$runtimes = static::restoreRuntimesFromFile($dataClass, $runtimes);
+				$data[$i]->setRuntimes($runtimes);
+				foreach ($runtimes as $name => $runtime)
+				{
+					if ($runtime->getData())
+					{
+						foreach ($runtime->getFields() as $runtimeFieldName => $runtimeFieldValues)
+						{
+							$data[$i]->addDependency("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
+						}
+					}
+				}
+			}
 		}
 
 		return $data;
@@ -163,6 +178,29 @@ class ImportData extends BaseProcess
 			{
 				$clone = clone $referenceModel;
 				$clone->setXmlId($reference->getXmlId());
+				$result[$key] = $clone;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
+	 * @param \Intervolga\Migrato\Data\Runtime[] $runtimes
+	 *
+	 * @return \Intervolga\Migrato\Data\Runtime[]
+	 */
+	protected static function restoreRuntimesFromFile(BaseData $dataClass, array $runtimes)
+	{
+		$result = array();
+		foreach ($runtimes as $key => $runtime)
+		{
+			$runtimeModel = $dataClass->getRuntime($key);
+			if ($runtimeModel)
+			{
+				$clone = clone $runtimeModel;
+				$clone->setFields($runtime->getFields());
 				$result[$key] = $clone;
 			}
 		}
