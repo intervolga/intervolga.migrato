@@ -82,4 +82,25 @@ class Element extends BaseData
 			$record->setRuntime("PROPERTY", $runtime);
 		}
 	}
+
+	public function findRecord($xmlId)
+	{
+		$parameters = array(
+			"select" => array(
+				"ID",
+			),
+			"filter" => array(
+				"=XML_ID" => $xmlId,
+			),
+		);
+		$element = ElementTable::getList($parameters)->fetch();
+		if ($element["ID"])
+		{
+			return RecordId::createNumericId($element["ID"]);
+		}
+		else
+		{
+			return null;
+		}
+	}
 }
