@@ -44,7 +44,7 @@ class Event extends BaseData
 			));
 
 			$dependency = clone $this->getDependency(static::DEPENDENCY_EVENT_NAME);
-			$dependency->setXmlId($this->getEventTypeXmlId($message["EVENT_NAME"]));
+			$dependency->setValue($this->getEventTypeXmlId($message["EVENT_NAME"]));
 			$record->addDependency(static::DEPENDENCY_EVENT_NAME, $dependency);
 
 			if ($record->getDependencies())

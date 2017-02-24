@@ -1,9 +1,8 @@
 <?namespace Intervolga\Migrato\Data;
 
-class Link
+class Link extends Value
 {
 	protected $targetData = null;
-	protected $xmlId = "";
 	protected $id = null;
 	protected $toCustomField = "";
 
@@ -14,8 +13,8 @@ class Link
 	 */
 	public function __construct($target, $xmlId = "", $toCustomField = "")
 	{
+		parent::__construct($xmlId);
 		$this->targetData = $target;
-		$this->xmlId = $xmlId;
 		$this->toCustomField = $toCustomField;
 	}
 
@@ -28,27 +27,11 @@ class Link
 	}
 
 	/**
-	 * @param string $xmlId
-	 */
-	public function setXmlId($xmlId)
-	{
-		$this->xmlId = $xmlId;
-	}
-
-	/**
 	 * @return \Intervolga\Migrato\Data\BaseData
 	 */
 	public function getTargetData()
 	{
 		return $this->targetData;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getXmlId()
-	{
-		return $this->xmlId;
 	}
 
 	/**

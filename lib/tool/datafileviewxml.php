@@ -87,7 +87,7 @@ class DataFileViewXml
 		{
 			$content .= "\t<dependency>\n";
 			$content .= static::tag("name", $name, 2);
-			$content .= static::tag("value", $dependency->getXmlId(), 2);
+			$content .= static::tag("value", $dependency->getValue(), 2);
 			$content .= "\t</dependency>\n";
 		}
 
@@ -106,7 +106,7 @@ class DataFileViewXml
 		{
 			$content .= "\t<reference>\n";
 			$content .= static::tag("name", $name, 2);
-			$content .= static::tag("value", $dependency->getXmlId(), 2);
+			$content .= static::tag("value", $dependency->getValue(), 2);
 			$content .= "\t</reference>\n";
 		}
 

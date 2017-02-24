@@ -37,7 +37,7 @@ class Enum extends BaseData
 			));
 
 			$dependency = clone $this->getDependency("PROPERTY_ID");
-			$dependency->setXmlId(
+			$dependency->setValue(
 				Property::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($enum["PROPERTY_ID"]))
 			);
 			$record->addDependency("PROPERTY_ID", $dependency);

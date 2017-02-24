@@ -42,13 +42,13 @@ class Permission extends BaseData
 				));
 
 				$dependency = clone $this->getDependency("GROUP_ID");
-				$dependency->setXmlId(
+				$dependency->setValue(
 					Group::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($groupId))
 				);
 				$record->addDependency("GROUP_ID", $dependency);
 
 				$dependency = clone $this->getDependency("IBLOCK_ID");
-				$dependency->setXmlId(
+				$dependency->setValue(
 					Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($iblockId))
 				);
 				$record->addDependency("IBLOCK_ID", $dependency);

@@ -154,7 +154,7 @@ class ImportData extends BaseProcess
 			if ($dependencyModel)
 			{
 				$clone = clone $dependencyModel;
-				$clone->setXmlId($dependency->getXmlId());
+				$clone->setValue($dependency->getValue());
 				$result[$key] = $clone;
 			}
 		}
@@ -177,7 +177,7 @@ class ImportData extends BaseProcess
 			if ($referenceModel)
 			{
 				$clone = clone $referenceModel;
-				$clone->setXmlId($reference->getXmlId());
+				$clone->setValue($reference->getValue());
 				$result[$key] = $clone;
 			}
 		}
@@ -272,7 +272,7 @@ class ImportData extends BaseProcess
 			$clone->setDependencies(array());
 			foreach ($clone->getReferences() as $reference)
 			{
-				$id = $reference->getTargetData()->findRecord($reference->getXmlId());
+				$id = $reference->getTargetData()->findRecord($reference->getValue());
 				if ($id)
 				{
 					$reference->setId($id);

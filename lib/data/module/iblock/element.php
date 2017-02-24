@@ -41,7 +41,7 @@ class Element extends BaseData
 			));
 
 			$dependency = clone $this->getDependency("IBLOCK_ID");
-			$dependency->setXmlId(
+			$dependency->setValue(
 				Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($element["IBLOCK_ID"]))
 			);
 			$record->addDependency("IBLOCK_ID", $dependency);
