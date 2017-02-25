@@ -1,9 +1,12 @@
-<?namespace Intervolga\Migrato\Data;
+<? namespace Intervolga\Migrato\Data;
 
 class Record
 {
 	protected $xmlId = "";
 	protected $id = null;
+	/**
+	 * @var Value[]
+	 */
 	protected $fields = array();
 	protected $dependencies = array();
 	protected $references = array();
@@ -38,15 +41,34 @@ class Record
 	}
 
 	/**
-	 * @param Values[] $fields
+	 * @param array $fields string[] or string[][]
 	 */
 	public function setFields(array $fields)
 	{
-		$this->fields = $fields;
+		foreach ($fields as $name => $field)
+		{
+			$this->setField($name, $field);
+		}
 	}
 
 	/**
-	 * @return Values[]
+	 * @param string $name
+	 * @param string|string[] $field
+	 */
+	public function setField($name, $field)
+	{
+		if (is_array($field))
+		{
+			$this->fields[$name] = Value::createMultiple($field);
+		}
+		else
+		{
+			$this->fields[$name] = new Value($field);
+		}
+	}
+
+	/**
+	 * @return Value[]
 	 */
 	public function getFields()
 	{
@@ -54,9 +76,30 @@ class Record
 	}
 
 	/**
+	 * @return string[]
+	 */
+	public function getFieldsStrings()
+	{
+		$result = array();
+		foreach ($this->fields as $name => $field)
+		{
+			if ($field->isMultiple())
+			{
+				$result[$name] = $field->getValues();
+			}
+			else
+			{
+				$result[$name] = $field->getValue();
+			}
+		}
+
+		return $result;
+	}
+
+	/**
 	 * @param string $name
 	 *
-	 * @return Values
+	 * @return Value
 	 */
 	public function getField($name)
 	{
@@ -179,6 +222,7 @@ class Record
 
 	/**
 	 * @param string $name
+	 *
 	 * @return Runtime
 	 */
 	public function getRuntime($name)

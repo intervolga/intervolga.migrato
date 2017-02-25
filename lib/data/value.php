@@ -1,30 +1,43 @@
-<?namespace Intervolga\Migrato\Data;
+<? namespace Intervolga\Migrato\Data;
 
 class Value
 {
 	/**
-	 * @var string
+	 * @var string[]
 	 */
-	protected $value;
+	protected $values;
 	/**
-	 * @var string
+	 * @var string[]
 	 */
-	protected $description;
+	protected $descriptions;
+	/**
+	 * @var bool
+	 */
+	protected $multiple = false;
+	/**
+	 * @var bool
+	 */
+	protected $descriptionIsSet = false;
+
+	/**
+	 * @param string[] $values
+	 *
+	 * @return static
+	 */
+	public static function createMultiple(array $values)
+	{
+		$object = new static();
+		$object->setValues($values);
+
+		return $object;
+	}
 
 	/**
 	 * @param string $value
 	 */
 	public function __construct($value = "")
 	{
-		$this->value = $value;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getValue()
-	{
-		return $this->value;
+		$this->setValue($value);
 	}
 
 	/**
@@ -32,22 +45,117 @@ class Value
 	 */
 	public function setValue($value)
 	{
-		$this->value = $value;
+		$this->values[0] = $value;
+		$this->multiple = false;
 	}
 
 	/**
 	 * @return string
+	 * @throws \Exception
 	 */
-	public function getDescription()
+	public function getValue()
 	{
-		return $this->description;
+		if ($this->multiple)
+		{
+			throw new \Exception("Use getValues() for getting multiple Value values");
+		}
+		else
+		{
+			return $this->values[0];
+		}
 	}
 
 	/**
-	 * @param string $description
+	 * @param array $values
+	 */
+	public function setValues(array $values)
+	{
+		$this->values = $values;
+		$this->multiple = true;
+	}
+
+	/**
+	 * @return \string[]
+	 * @throws \Exception
+	 */
+	public function getValues()
+	{
+		if ($this->multiple)
+		{
+			return $this->values;
+		}
+		else
+		{
+			throw new \Exception("Use getValue() for getting single Value value");
+		}
+	}
+
+	/**
+	 * @param string|string[] $description
 	 */
 	public function setDescription($description)
 	{
-		$this->description = $description;
+		$this->descriptions[0] = $description;
+		$this->multiple = false;
+		$this->descriptionIsSet = true;
+	}
+
+
+	/**
+	 * @return string
+	 * @throws \Exception
+	 */
+	public function getDescription()
+	{
+		if ($this->multiple)
+		{
+			throw new \Exception("Use getDescriptions() for getting multiple Value descriptions");
+		}
+		else
+		{
+			return $this->descriptions[0];
+		}
+	}
+
+	/**
+	 * @param string[] $descriptions
+	 */
+	public function setDescriptions(array $descriptions)
+	{
+		$this->descriptions = $descriptions;
+		$this->multiple = true;
+		$this->descriptionIsSet = true;
+	}
+
+	/**
+	 * @return \string[]
+	 * @throws \Exception
+	 */
+	public function getDescriptions()
+	{
+		if ($this->multiple)
+		{
+			return $this->descriptions;
+		}
+		else
+		{
+			throw new \Exception("Use getDescription() for getting single Value description");
+		}
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isMultiple()
+	{
+		return $this->multiple;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isDescriptionSet()
+	{
+		return $this->descriptionIsSet;
 	}
 }

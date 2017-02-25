@@ -125,7 +125,7 @@ class DataFileViewXml
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\Values[] $fieldsValues
+	 * @param \Intervolga\Migrato\Data\Value[] $fieldsValues
 	 * @param string $type
 	 * @param int $level
 	 *
@@ -134,26 +134,43 @@ class DataFileViewXml
 	protected static function valuesToXml(array $fieldsValues, $type = "field", $level = 0)
 	{
 		$content = "";
-		foreach ($fieldsValues as $name => $fieldValues)
+		foreach ($fieldsValues as $name => $fieldValue)
 		{
-			foreach ($fieldValues->getValues() as $value)
+			if ($fieldValue->isMultiple())
 			{
-				if (strlen($value->getValue()))
+				$descriptions = $fieldValue->getDescriptions();
+				foreach ($fieldValue->getValues() as $i => $value)
 				{
 					$content .= str_repeat("\t", $level) . "<$type>\n";
-					if ($value instanceof Link)
+					if ($fieldValue instanceof Link)
 					{
-						$content .= static::tag("module", $value->getTargetData()->getModule(), $level + 1);
-						$content .= static::tag("entity", $value->getTargetData()->getEntityName(), $level + 1);
+						$content .= static::tag("module", $fieldValue->getTargetData()->getModule(), $level + 1);
+						$content .= static::tag("entity", $fieldValue->getTargetData()->getEntityName(), $level + 1);
 					}
-					$content .= static::tag("name", $name, $level + 1);
-					$content .= static::tag("value", $value->getValue(), $level + 1);
-					if ($value->getDescription())
+					$content .= static::tag("name", $name . "[]", $level + 1);
+					$content .= static::tag("value", $value, $level + 1);
+					if (array_key_exists($i, $descriptions))
 					{
-						$content .= static::tag("description", $value->getDescription(), $level + 1);
+						$content .= static::tag("description", $descriptions[$i], $level + 1);
 					}
 					$content .= str_repeat("\t", $level) . "</$type>\n";
 				}
+			}
+			else
+			{
+				$content .= str_repeat("\t", $level) . "<$type>\n";
+				if ($fieldValue instanceof Link)
+				{
+					$content .= static::tag("module", $fieldValue->getTargetData()->getModule(), $level + 1);
+					$content .= static::tag("entity", $fieldValue->getTargetData()->getEntityName(), $level + 1);
+				}
+				$content .= static::tag("name", $name, $level + 1);
+				$content .= static::tag("value", $fieldValue->getValue(), $level + 1);
+				if ($fieldValue->isDescriptionSet())
+				{
+					$content .= static::tag("description", $fieldValue->getDescription(), $level + 1);
+				}
+				$content .= str_repeat("\t", $level) . "</$type>\n";
 			}
 		}
 

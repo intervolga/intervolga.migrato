@@ -3,8 +3,6 @@
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
-use Intervolga\Migrato\Data\Value;
-use Intervolga\Migrato\Data\Values;
 use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
 
 class Group extends BaseData
@@ -28,21 +26,21 @@ class Group extends BaseData
 
 			$record->setId($id);
 			$record->setFields(array(
-				"ACTIVE" => new Values(new Value($group["ACTIVE"])),
-				"NAME" => new Values(new Value($group["NAME"])),
-				"DESCRIPTION" => new Values(new Value($group["DESCRIPTION"])),
-				"STRING_ID" => new Values(new Value($group["STRING_ID"])),
+				"ACTIVE" => $group["ACTIVE"],
+				"NAME" => $group["NAME"],
+				"DESCRIPTION" => $group["DESCRIPTION"],
+				"STRING_ID" => $group["STRING_ID"],
 			));
-			;
 			$result[] = $record;
 		}
+
 		return $result;
 	}
 
 	public function update(Record $record)
 	{
 		$groupObject = new \CGroup();
-		$isUpdated = $groupObject->update($record->getId()->getValue(), $record->getFields());
+		$isUpdated = $groupObject->update($record->getId()->getValue(), $record->getFieldsStrings());
 		if (!$isUpdated)
 		{
 			throw new \Exception(trim(strip_tags($groupObject->LAST_ERROR)));
@@ -52,11 +50,12 @@ class Group extends BaseData
 	public function create(Record $record)
 	{
 		$groupObject = new \CGroup();
-		$groupId = $groupObject->add($record->getFields());
+		$groupId = $groupObject->add($record->getFieldsStrings());
 		if ($groupId)
 		{
 			$id = RecordId::createNumericId($groupId);
 			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+
 			return $id;
 		}
 		else
