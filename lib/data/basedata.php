@@ -31,7 +31,7 @@ abstract class BaseData
 	/**
 	 * @param Record $record
 	 *
-*@throws NotImplementedException
+	 * @throws NotImplementedException
 	 */
 	public function update(Record $record)
 	{
@@ -41,7 +41,7 @@ abstract class BaseData
 	/**
 	 * @param Record $record
 	 *
-*@throws NotImplementedException
+	 * @throws NotImplementedException
 	 *
 	 * @return \Intervolga\Migrato\Data\RecordId
 	 */
@@ -52,6 +52,7 @@ abstract class BaseData
 
 	/**
 	 * @param string $xmlId
+	 *
 	 * @throws NotImplementedException
 	 */
 	public function delete($xmlId)
@@ -73,6 +74,7 @@ abstract class BaseData
 				return $dbRecord->getId();
 			}
 		}
+
 		return null;
 	}
 
@@ -125,6 +127,7 @@ abstract class BaseData
 	public function getRuntime($name)
 	{
 		$runtimes = $this->getRuntimes();
+
 		return $runtimes[$name];
 	}
 
@@ -139,11 +142,12 @@ abstract class BaseData
 	/**
 	 * @param string $name
 	 *
-*@return Link
+	 * @return Link
 	 */
 	public function getDependency($name)
 	{
 		$dependencies = $this->getDependencies();
+
 		return $dependencies[$name];
 	}
 
@@ -158,11 +162,12 @@ abstract class BaseData
 	/**
 	 * @param string $name
 	 *
-*@return Link
+	 * @return Link
 	 */
 	public function getReference($name)
 	{
 		$references = $this->getReferences();
+
 		return $references[$name];
 	}
 

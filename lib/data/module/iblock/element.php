@@ -1,4 +1,4 @@
-<?namespace Intervolga\Migrato\Data\Module\Iblock;
+<? namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Iblock\ElementTable;
 use Bitrix\Main\Loader;
@@ -75,20 +75,44 @@ class Element extends BaseData
 	protected function addRuntime(Record $record, array $element)
 	{
 		$runtimeFields = array();
+		$runtimeReferences = array();
 		$properties = \CIBlockElement::GetProperty($element["IBLOCK_ID"], $element["ID"]);
 		while ($property = $properties->fetch())
 		{
 			if (strlen($property["VALUE"]))
 			{
-				$value = new Value($property["VALUE"]);
-				$value->setDescription($property["DESCRIPTION"]);
-				$runtimeFields[$property["XML_ID"]] = new Values($value);
+				if ($property["PROPERTY_TYPE"] == "F")
+				{
+					continue;
+				}
+				elseif ($property["PROPERTY_TYPE"] == "L")
+				{
+					$link = new Link(Enum::getInstance(), $property["VALUE_XML_ID"]);
+					$link->setDescription($property["DESCRIPTION"]);
+					$runtimeReferences[$property["XML_ID"]] = new Values($link);
+				}
+				elseif ($property["PROPERTY_TYPE"] == "E")
+				{
+					$valueElementId = RecordId::createNumericId($property["VALUE"]);
+					$valueElementXmlId = Element::getInstance()->getXmlIdProvider()->getXmlId($valueElementId);
+
+					$link = new Link(Element::getInstance(), $valueElementXmlId);
+					$link->setDescription($property["DESCRIPTION"]);
+					$runtimeReferences[$property["XML_ID"]] = new Values($link);
+				}
+				else
+				{
+					$value = new Value($property["VALUE"]);
+					$value->setDescription($property["DESCRIPTION"]);
+					$runtimeFields[$property["XML_ID"]] = new Values($value);
+				}
 			}
 		}
-		if ($runtimeFields)
+		if ($runtimeFields || $runtimeReferences)
 		{
 			$runtime = clone $this->getRuntime("PROPERTY");
 			$runtime->setFields($runtimeFields);
+			$runtime->setReferences($runtimeReferences);
 			$record->setRuntime("PROPERTY", $runtime);
 		}
 	}

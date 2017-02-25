@@ -168,6 +168,11 @@ class DataFileViewXml
 				if (strlen($value->getValue()))
 				{
 					$content .= str_repeat("\t", $level) . "<$type>\n";
+					if ($value instanceof Link)
+					{
+						$content .= static::tag("module", $value->getTargetData()->getModule(), $level + 1);
+						$content .= static::tag("entity", $value->getTargetData()->getEntityName(), $level + 1);
+					}
 					$content .= static::tag("name", $name, $level + 1);
 					$content .= static::tag("value", $value->getValue(), $level + 1);
 					if ($value->getDescription())
@@ -269,7 +274,7 @@ class DataFileViewXml
 
 		if ($xmlArray["data"]["#"]["runtime"])
 		{
-			$runtimes = static::parseReferences($xmlArray["data"]["#"]["runtime"]);
+			$runtimes = static::parseRuntimes($xmlArray["data"]["#"]["runtime"]);
 			$record->setRuntimes($runtimes);
 		}
 
@@ -277,18 +282,18 @@ class DataFileViewXml
 	}
 
 	/**
-	 * @param array $referenceNodes
+	 * @param array $runtimeNodes
 	 *
 	 * @return \Intervolga\Migrato\Data\Runtime[]
 	 */
-	protected static function parseReferences(array $referenceNodes)
+	protected static function parseRuntimes(array $runtimeNodes)
 	{
 		$result = array();
-		foreach ($referenceNodes as $referenceNode)
+		foreach ($runtimeNodes as $runtimeNode)
 		{
 			$runtime = new Runtime();
-			$runtimeName = $referenceNode["#"]["name"][0]["#"];
-			foreach ($referenceNode["#"]["field"] as $fieldNode)
+			$runtimeName = $runtimeNode["#"]["name"][0]["#"];
+			foreach ($runtimeNode["#"]["field"] as $fieldNode)
 			{
 				$name = $fieldNode["#"]["name"][0]["#"];
 				$value = $fieldNode["#"]["value"][0]["#"];
@@ -297,10 +302,59 @@ class DataFileViewXml
 				$valueObject->setDescription($description);
 				$runtime->setField($name, new Values($valueObject));
 			}
+			foreach ($runtimeNode["#"]["reference"] as $referenceNode)
+			{
+				$module = $referenceNode["#"]["module"][0]["#"];
+				$entity = $referenceNode["#"]["entity"][0]["#"];
+				$name = $referenceNode["#"]["name"][0]["#"];
+				$value = $referenceNode["#"]["value"][0]["#"];
+				$description = $referenceNode["#"]["description"][0]["#"];
+				$data = static::getDataClass($module, $entity);
+				if ($data && strlen($value))
+				{
+					$link = new Link($data, $value);
+					$link->setDescription($description);
+					$runtime->setReference($name, new Values($link));
+				}
+			}
+			foreach ($runtimeNode["#"]["dependency"] as $dependencyNode)
+			{
+				$module = $dependencyNode["#"]["module"][0]["#"];
+				$entity = $dependencyNode["#"]["entity"][0]["#"];
+				$name = $dependencyNode["#"]["name"][0]["#"];
+				$value = $dependencyNode["#"]["value"][0]["#"];
+				$description = $dependencyNode["#"]["description"][0]["#"];
+				$data = static::getDataClass($module, $entity);
+				if ($data && strlen($value))
+				{
+					$link = new Link($data, $value);
+					$link->setDescription($description);
+					$runtime->setDependency($name, new Values($link));
+				}
+			}
 			$result[$runtimeName] = $runtime;
 		}
 
 		return $result;
+	}
+
+	/**
+	 * @param string $module
+	 * @param string $entity
+	 *
+	 * @return null|\Intervolga\Migrato\Data\BaseData
+	 */
+	protected static function getDataClass($module, $entity)
+	{
+		$name = "\\Intervolga\\Migrato\\Data\\Module\\" . $module . "\\" . $entity;
+		if (class_exists($name))
+		{
+			/**
+			 * @var \Intervolga\Migrato\Data\BaseData $name
+			 */
+			return $name::getInstance();
+		}
+		return null;
 	}
 
 	/**

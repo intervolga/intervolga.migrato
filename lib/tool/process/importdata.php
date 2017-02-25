@@ -131,6 +131,24 @@ class ImportData extends BaseProcess
 						{
 							$data[$i]->addDependency("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
 						}
+						foreach ($runtime->getReferences() as $runtimeFieldName => $runtimeFieldValues)
+						{
+							$data[$i]->addDependency("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
+							$links = $runtimeFieldValues->getValues();
+							if ($links[0] instanceof Link)
+							{
+								$data[$i]->addReference("RUNTIME.$name." . $runtimeFieldName, $links[0]);
+							}
+						}
+						foreach ($runtime->getDependencies() as $runtimeFieldName => $runtimeFieldValues)
+						{
+							$data[$i]->addDependency("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
+							$links = $runtimeFieldValues->getValues();
+							if ($links[0] instanceof Link)
+							{
+								$data[$i]->addDependency("RUNTIME.$name." . $runtimeFieldName, $links[0]);
+							}
+						}
 					}
 				}
 			}
@@ -201,6 +219,8 @@ class ImportData extends BaseProcess
 			{
 				$clone = clone $runtimeModel;
 				$clone->setFields($runtime->getFields());
+				$clone->setDependencies($runtime->getDependencies());
+				$clone->setReferences($runtime->getReferences());
 				$result[$key] = $clone;
 			}
 		}
