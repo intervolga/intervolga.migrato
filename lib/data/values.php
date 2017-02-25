@@ -6,6 +6,7 @@ class Values
 	 * @var \Intervolga\Migrato\Data\Value[]
 	 */
 	protected $values = array();
+	protected $isMultiple = false;
 
 	/**
 	 * @param \Intervolga\Migrato\Data\Value $value
@@ -24,6 +25,10 @@ class Values
 	protected function addValue(Value $value)
 	{
 		$this->values[] = $value;
+		if (count($this->values) > 1)
+		{
+			$this->isMultiple = true;
+		}
 	}
 
 	/**
@@ -32,5 +37,28 @@ class Values
 	public function getValues()
 	{
 		return $this->values;
+	}
+
+	/**
+	 * @param bool $isMultiple
+	 */
+	public function setIsMultiple($isMultiple)
+	{
+		if (count($this->values) > 1)
+		{
+			$this->isMultiple = true;
+		}
+		else
+		{
+			$this->isMultiple = $isMultiple;
+		}
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function getIsMultiple()
+	{
+		return $this->isMultiple;
 	}
 }

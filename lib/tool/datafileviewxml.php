@@ -56,7 +56,7 @@ class DataFileViewXml
 		{
 			$content .= static::referenceToXml($data->getReferences());
 		}
-		$content .= static::fieldToXml($data->getFields(), 1);
+		$content .= static::valuesToXml($data->getFields(), "field", 1);
 		foreach ($data->getRuntimes() as $name => $runtime)
 		{
 			if ($runtime->getFields() || $runtime->getReferences() || $runtime->getDependencies())
@@ -119,33 +119,6 @@ class DataFileViewXml
 			$content .= static::tag("name", $name, 2);
 			$content .= static::tag("value", $dependency->getValue(), 2);
 			$content .= "\t</reference>\n";
-		}
-
-		return $content;
-	}
-
-	/**
-	 * @param array $fields
-	 * @param int $level
-	 *
-	 * @return string
-	 */
-	protected static function fieldToXml(array $fields, $level = 0)
-	{
-		$content = "";
-		foreach ($fields as $name => $value)
-		{
-			$content .= str_repeat("\t", $level) . "<field>\n";
-			$content .= static::tag("name", $name, $level + 1);
-			if (!is_array($value))
-			{
-				$value = array($value);
-			}
-			foreach ($value as $valueItem)
-			{
-				$content .= static::tag("value", $valueItem, $level + 1);
-			}
-			$content .= str_repeat("\t", $level) . "</field>\n";
 		}
 
 		return $content;

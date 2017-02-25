@@ -38,7 +38,7 @@ class Record
 	}
 
 	/**
-	 * @param array $fields
+	 * @param Values[] $fields
 	 */
 	public function setFields(array $fields)
 	{
@@ -46,7 +46,7 @@ class Record
 	}
 
 	/**
-	 * @return array
+	 * @return Values[]
 	 */
 	public function getFields()
 	{
@@ -56,7 +56,7 @@ class Record
 	/**
 	 * @param string $name
 	 *
-	 * @return mixed
+	 * @return Values
 	 */
 	public function getField($name)
 	{
