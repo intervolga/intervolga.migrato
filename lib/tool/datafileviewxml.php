@@ -46,38 +46,22 @@ class DataFileViewXml
 		$content = "";
 		$content .= "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
 		$content .= "<data>\n";
-		$content .= static::tag("xml_id", $record->getXmlId(), 1);
-		if ($record->getDependencies())
-		{
-			$content .= static::dependencyToXml($record->getDependencies());
-		}
-		if ($record->getReferences())
-		{
-			$content .= static::referenceToXml($record->getReferences());
-		}
+		$content .= static::tagValue("xml_id", $record->getXmlId(), 1);
+		$content .= static::valuesToXml($record->getDependencies(), "dependency", 1, true);
+		$content .= static::valuesToXml($record->getReferences(), "reference", 1, true);
 		$content .= static::valuesToXml($record->getFields(), "field", 1);
 		foreach ($record->getRuntimes() as $name => $runtime)
 		{
 			if ($runtime->getFields() || $runtime->getReferences() || $runtime->getDependencies())
 			{
 				$content .= "\t<runtime>\n";
-				$content .= static::tag("name", $name, 2);
-				if ($runtime->getFields())
-				{
-					$content .= static::valuesToXml($runtime->getFields(), "field", 2);
-				}
-				if ($runtime->getReferences())
-				{
-					$content .= static::valuesToXml($runtime->getReferences(), "reference", 2);
-				}
-				if ($runtime->getDependencies())
-				{
-					$content .= static::valuesToXml($runtime->getDependencies(), "dependency", 2);
-				}
+				$content .= static::tagValue("name", $name, 2);
+				$content .= static::valuesToXml($runtime->getDependencies(), "dependency", 2);
+				$content .= static::valuesToXml($runtime->getReferences(), "reference", 2);
+				$content .= static::valuesToXml($runtime->getFields(), "field", 2);
 				$content .= "\t</runtime>\n";
 			}
 		}
-
 		$content .= "</data>";
 
 		$filePath = $path . static::FILE_PREFIX . $record->getXmlId() . "." . static::FILE_EXT;
@@ -86,90 +70,66 @@ class DataFileViewXml
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\Link[] $links
-	 *
-	 * @return string
-	 */
-	protected static function dependencyToXml(array $links)
-	{
-		$content = "";
-		foreach ($links as $name => $dependency)
-		{
-			$content .= "\t<dependency>\n";
-			$content .= static::tag("name", $name, 2);
-			$content .= static::tag("value", $dependency->getValue(), 2);
-			$content .= "\t</dependency>\n";
-		}
-
-		return $content;
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Link[] $links
-	 *
-	 * @return string
-	 */
-	protected static function referenceToXml(array $links)
-	{
-		$content = "";
-		foreach ($links as $name => $dependency)
-		{
-			$content .= "\t<reference>\n";
-			$content .= static::tag("name", $name, 2);
-			$content .= static::tag("value", $dependency->getValue(), 2);
-			$content .= "\t</reference>\n";
-		}
-
-		return $content;
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Value[] $fieldsValues
-	 * @param string $type
+	 * @param \Intervolga\Migrato\Data\Value[] $values
+	 * @param string $tag
 	 * @param int $level
+	 * @param bool $isSkipLinkExtra
 	 *
 	 * @return string
+	 * @throws \Exception
 	 */
-	protected static function valuesToXml(array $fieldsValues, $type = "field", $level = 0)
+	protected static function valuesToXml(array $values, $tag = "field", $level = 0, $isSkipLinkExtra = false)
 	{
 		$content = "";
-		foreach ($fieldsValues as $name => $fieldValue)
+		if ($values)
 		{
-			if ($fieldValue->isMultiple())
+			foreach ($values as $name => $fieldValue)
 			{
-				$descriptions = $fieldValue->getDescriptions();
-				foreach ($fieldValue->getValues() as $i => $value)
+				if ($fieldValue->isMultiple())
 				{
-					$content .= str_repeat("\t", $level) . "<$type>\n";
-					if ($fieldValue instanceof Link)
+					$descriptions = $fieldValue->getDescriptions();
+					foreach ($fieldValue->getValues() as $i => $value)
 					{
-						$content .= static::tag("module", $fieldValue->getTargetData()->getModule(), $level + 1);
-						$content .= static::tag("entity", $fieldValue->getTargetData()->getEntityName(), $level + 1);
+						$map = array(
+							"name" => $name . "[]",
+							"value" => $value,
+						);
+						if (!$isSkipLinkExtra)
+						{
+							if ($fieldValue instanceof Link)
+							{
+								$map["module"] = $fieldValue->getTargetData()->getModule();
+								$map["entity"] = $fieldValue->getTargetData()->getEntityName();
+							}
+						}
+						if (array_key_exists($i, $descriptions))
+						{
+							$map["description"] = $descriptions[$i];
+						}
+						$content .= static::tagMap($tag, $map, $level);
 					}
-					$content .= static::tag("name", $name . "[]", $level + 1);
-					$content .= static::tag("value", $value, $level + 1);
-					if (array_key_exists($i, $descriptions))
+				}
+				else
+				{
+					$map = array(
+						"name" => $name,
+						"value" => $fieldValue->getValue(),
+					);
+					if ($fieldValue->isDescriptionSet())
 					{
-						$content .= static::tag("description", $descriptions[$i], $level + 1);
+						$map["description"] = $fieldValue->getDescription();
 					}
-					$content .= str_repeat("\t", $level) . "</$type>\n";
+					if (!$isSkipLinkExtra)
+					{
+						if ($fieldValue instanceof Link)
+						{
+							$map["module"] = $fieldValue->getTargetData()->getModule();
+							$map["entity"] = $fieldValue->getTargetData()->getEntityName();
+						}
+					}
+
+					$content .= static::tagMap($tag, $map, $level);
 				}
-			}
-			else
-			{
-				$content .= str_repeat("\t", $level) . "<$type>\n";
-				if ($fieldValue instanceof Link)
-				{
-					$content .= static::tag("module", $fieldValue->getTargetData()->getModule(), $level + 1);
-					$content .= static::tag("entity", $fieldValue->getTargetData()->getEntityName(), $level + 1);
-				}
-				$content .= static::tag("name", $name, $level + 1);
-				$content .= static::tag("value", $fieldValue->getValue(), $level + 1);
-				if ($fieldValue->isDescriptionSet())
-				{
-					$content .= static::tag("description", $fieldValue->getDescription(), $level + 1);
-				}
-				$content .= str_repeat("\t", $level) . "</$type>\n";
 			}
 		}
 
@@ -348,12 +308,38 @@ class DataFileViewXml
 
 	/**
 	 * @param string $tag
+	 * @param array $map
+	 * @param int $level
+	 *
+	 * @return string
+	 */
+	protected static function tagMap($tag, $map = array(), $level = 0)
+	{
+		if (!$map)
+		{
+			return static::tagValue($tag, "", $level);
+		}
+		else
+		{
+			$content = "";
+			$content .= str_repeat("\t", $level) . "<$tag>\n";
+			foreach ($map as $innerTag => $value)
+			{
+				$content .= static::tagValue($innerTag, $value, $level + 1);
+			}
+			$content .= str_repeat("\t", $level) . "</$tag>\n";
+			return $content;
+		}
+	}
+
+	/**
+	 * @param string $tag
 	 * @param string $value
 	 * @param int $level
 	 *
 	 * @return string
 	 */
-	protected static function tag($tag, $value = "", $level = 0)
+	protected static function tagValue($tag, $value = "", $level = 0)
 	{
 		if (!strlen($value))
 		{
