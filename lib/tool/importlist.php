@@ -156,8 +156,22 @@ class ImportList
 	protected function isResolved(Link $dependency)
 	{
 		$class = get_class($dependency->getTargetData());
-		$xmlId = $dependency->getValue();
-
-		return ($this->createdXmlIds[$class][$xmlId] == "Y");
+		$isResolved = true;
+		if ($dependency->isMultiple())
+		{
+			foreach ($dependency->getValues() as $xmlId)
+			{
+				if ($this->createdXmlIds[$class][$xmlId] != "Y")
+				{
+					$isResolved = false;
+				}
+			}
+		}
+		else
+		{
+			$xmlId = $dependency->getValue();
+			$isResolved = ($this->createdXmlIds[$class][$xmlId] == "Y");
+		}
+		return $isResolved;
 	}
 }

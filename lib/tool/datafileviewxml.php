@@ -6,7 +6,6 @@ use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\Runtime;
 use Intervolga\Migrato\Data\Value;
-use Intervolga\Migrato\Data\Values;
 
 class DataFileViewXml
 {
@@ -39,25 +38,25 @@ class DataFileViewXml
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\Record $data
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @param string $path
 	 */
-	public static function writeToFileSystem(Record $data, $path)
+	public static function writeToFileSystem(Record $record, $path)
 	{
 		$content = "";
 		$content .= "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
 		$content .= "<data>\n";
-		$content .= static::tag("xml_id", $data->getXmlId(), 1);
-		if ($data->getDependencies())
+		$content .= static::tag("xml_id", $record->getXmlId(), 1);
+		if ($record->getDependencies())
 		{
-			$content .= static::dependencyToXml($data->getDependencies());
+			$content .= static::dependencyToXml($record->getDependencies());
 		}
-		if ($data->getReferences())
+		if ($record->getReferences())
 		{
-			$content .= static::referenceToXml($data->getReferences());
+			$content .= static::referenceToXml($record->getReferences());
 		}
-		$content .= static::valuesToXml($data->getFields(), "field", 1);
-		foreach ($data->getRuntimes() as $name => $runtime)
+		$content .= static::valuesToXml($record->getFields(), "field", 1);
+		foreach ($record->getRuntimes() as $name => $runtime)
 		{
 			if ($runtime->getFields() || $runtime->getReferences() || $runtime->getDependencies())
 			{
@@ -81,7 +80,7 @@ class DataFileViewXml
 
 		$content .= "</data>";
 
-		$filePath = $path . static::FILE_PREFIX . $data->getXmlId() . "." . static::FILE_EXT;
+		$filePath = $path . static::FILE_PREFIX . $record->getXmlId() . "." . static::FILE_EXT;
 		File::deleteFile($filePath);
 		File::putFileContents($filePath, $content);
 	}
@@ -238,7 +237,7 @@ class DataFileViewXml
 		$fields = array();
 		foreach ($xmlArray["data"]["#"]["field"] as $field)
 		{
-			$fields[$field["#"]["name"][0]["#"]] = $field["#"]["value"][0]["#"];
+			$fields[$field["#"]["name"][0]["#"]] = trim($field["#"]["value"][0]["#"]);
 		}
 		$record->setFields($fields);
 
@@ -290,7 +289,7 @@ class DataFileViewXml
 				$description = $fieldNode["#"]["description"][0]["#"];
 				$valueObject = new Value($value);
 				$valueObject->setDescription($description);
-				$runtime->setField($name, new Values($valueObject));
+				$runtime->setField($name, $valueObject);
 			}
 			foreach ($runtimeNode["#"]["reference"] as $referenceNode)
 			{
@@ -304,7 +303,7 @@ class DataFileViewXml
 				{
 					$link = new Link($data, $value);
 					$link->setDescription($description);
-					$runtime->setReference($name, new Values($link));
+					$runtime->setReference($name, $link);
 				}
 			}
 			foreach ($runtimeNode["#"]["dependency"] as $dependencyNode)
@@ -319,7 +318,7 @@ class DataFileViewXml
 				{
 					$link = new Link($data, $value);
 					$link->setDescription($description);
-					$runtime->setDependency($name, new Values($link));
+					$runtime->setDependency($name, $link);
 				}
 			}
 			$result[$runtimeName] = $runtime;

@@ -8,7 +8,6 @@ use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Runtime;
 use Intervolga\Migrato\Data\Value;
-use Intervolga\Migrato\Data\Values;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 class Element extends BaseData
@@ -89,7 +88,7 @@ class Element extends BaseData
 				{
 					$link = new Link(Enum::getInstance(), $property["VALUE_XML_ID"]);
 					$link->setDescription($property["DESCRIPTION"]);
-					$runtimeReferences[$property["XML_ID"]] = new Values($link);
+					$runtimeReferences[$property["XML_ID"]] = $link;
 				}
 				elseif ($property["PROPERTY_TYPE"] == "E")
 				{
@@ -98,13 +97,13 @@ class Element extends BaseData
 
 					$link = new Link(Element::getInstance(), $valueElementXmlId);
 					$link->setDescription($property["DESCRIPTION"]);
-					$runtimeReferences[$property["XML_ID"]] = new Values($link);
+					$runtimeReferences[$property["XML_ID"]] = $link;
 				}
 				else
 				{
 					$value = new Value($property["VALUE"]);
 					$value->setDescription($property["DESCRIPTION"]);
-					$runtimeFields[$property["XML_ID"]] = new Values($value);
+					$runtimeFields[$property["XML_ID"]] = $value;
 				}
 			}
 		}

@@ -3,13 +3,25 @@
 class Record
 {
 	protected $xmlId = "";
-	protected $id = null;
 	/**
-	 * @var Value[]
+	 * @var \Intervolga\Migrato\Data\RecordId
+	 */
+	protected $id;
+	/**
+	 * @var \Intervolga\Migrato\Data\Value[]
 	 */
 	protected $fields = array();
+	/**
+	 * @var \Intervolga\Migrato\Data\Link[]
+	 */
 	protected $dependencies = array();
+	/**
+	 * @var \Intervolga\Migrato\Data\Link[]
+	 */
 	protected $references = array();
+	/**
+	 * @var \Intervolga\Migrato\Data\BaseData
+	 */
 	protected $data;
 	/**
 	 * @var Runtime[]
@@ -107,7 +119,7 @@ class Record
 	}
 
 	/**
-	 * @param array|\Intervolga\Migrato\Data\Link[] $dependencies
+	 * @param \Intervolga\Migrato\Data\Link[] $dependencies
 	 */
 	public function setDependencies(array $dependencies)
 	{
@@ -124,7 +136,7 @@ class Record
 	}
 
 	/**
-	 * @return array|\Intervolga\Migrato\Data\Link[]
+	 * @return \Intervolga\Migrato\Data\Link[]
 	 */
 	public function getDependencies()
 	{
@@ -149,13 +161,16 @@ class Record
 	}
 
 	/**
-	 * @return array|\Intervolga\Migrato\Data\Link[]
+	 * @return \Intervolga\Migrato\Data\Link[]
 	 */
 	public function getReferences()
 	{
 		return $this->references;
 	}
 
+	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $id
+	 */
 	public function setId(RecordId $id)
 	{
 		$this->id = $id;

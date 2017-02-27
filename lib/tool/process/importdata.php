@@ -127,27 +127,19 @@ class ImportData extends BaseProcess
 				{
 					if ($runtime->getData())
 					{
-						foreach ($runtime->getFields() as $runtimeFieldName => $runtimeFieldValues)
+						foreach ($runtime->getFields() as $runtimeFieldName => $runtimeFieldValue)
 						{
 							$data[$i]->addDependency("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
 						}
-						foreach ($runtime->getReferences() as $runtimeFieldName => $runtimeFieldValues)
+						foreach ($runtime->getReferences() as $runtimeFieldName => $runtimeFieldValue)
 						{
 							$data[$i]->addDependency("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
-							$links = $runtimeFieldValues->getValues();
-							if ($links[0] instanceof Link)
-							{
-								$data[$i]->addReference("RUNTIME.$name." . $runtimeFieldName, $links[0]);
-							}
+							$data[$i]->addReference("RUNTIME.$name." . $runtimeFieldName, $runtimeFieldValue);
 						}
-						foreach ($runtime->getDependencies() as $runtimeFieldName => $runtimeFieldValues)
+						foreach ($runtime->getDependencies() as $runtimeFieldName => $runtimeFieldValue)
 						{
 							$data[$i]->addDependency("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
-							$links = $runtimeFieldValues->getValues();
-							if ($links[0] instanceof Link)
-							{
-								$data[$i]->addDependency("RUNTIME.$name." . $runtimeFieldName, $links[0]);
-							}
+							$data[$i]->addDependency("RUNTIME.$name." . $runtimeFieldName, $runtimeFieldValue);
 						}
 					}
 				}

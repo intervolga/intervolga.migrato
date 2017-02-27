@@ -7,15 +7,15 @@ class Runtime
 	 */
 	protected $dataClass;
 	/**
-	 * @var \Intervolga\Migrato\Data\Values[]
+	 * @var \Intervolga\Migrato\Data\Value[]
 	 */
 	protected $fields = array();
 	/**
-	 * @var \Intervolga\Migrato\Data\Values[]
+	 * @var \Intervolga\Migrato\Data\Link[]
 	 */
 	protected $dependencies = array();
 	/**
-	 * @var \Intervolga\Migrato\Data\Values[]
+	 * @var \Intervolga\Migrato\Data\Link[]
 	 */
 	protected $references = array();
 
@@ -28,7 +28,7 @@ class Runtime
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\Values[] $fields
+	 * @param \Intervolga\Migrato\Data\Value[] $fields
 	 */
 	public function setFields(array $fields)
 	{
@@ -37,15 +37,15 @@ class Runtime
 
 	/**
 	 * @param string $name
-	 * @param \Intervolga\Migrato\Data\Values $values
+	 * @param \Intervolga\Migrato\Data\Value $value
 	 */
-	public function setField($name, Values $values)
+	public function setField($name, Value $value)
 	{
-		$this->fields[$name] = $values;
+		$this->fields[$name] = $value;
 	}
 
 	/**
-	 * @return \Intervolga\Migrato\Data\Values[]
+	 * @return \Intervolga\Migrato\Data\Value[]
 	 */
 	public function getFields()
 	{
@@ -55,7 +55,7 @@ class Runtime
 	/**
 	 * @param string $name
 	 *
-	 * @return \Intervolga\Migrato\Data\Values
+	 * @return \Intervolga\Migrato\Data\Value
 	 */
 	public function getField($name)
 	{
@@ -63,7 +63,7 @@ class Runtime
 	}
 
 	/**
-	 * @param array|\Intervolga\Migrato\Data\Values[] $dependencies
+	 * @param \Intervolga\Migrato\Data\Link[] $dependencies
 	 */
 	public function setDependencies(array $dependencies)
 	{
@@ -72,15 +72,15 @@ class Runtime
 
 	/**
 	 * @param string $key
-	 * @param \Intervolga\Migrato\Data\Values $dependency
+	 * @param \Intervolga\Migrato\Data\Link $dependency
 	 */
-	public function setDependency($key, Values $dependency)
+	public function setDependency($key, Link $dependency)
 	{
 		$this->dependencies[$key] = $dependency;
 	}
 
 	/**
-	 * @return array|\Intervolga\Migrato\Data\Values[]
+	 * @return array|\Intervolga\Migrato\Data\Link[]
 	 */
 	public function getDependencies()
 	{
@@ -88,7 +88,7 @@ class Runtime
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\Values[] $references
+	 * @param \Intervolga\Migrato\Data\Link[] $references
 	 */
 	public function setReferences(array $references)
 	{
@@ -97,15 +97,15 @@ class Runtime
 
 	/**
 	 * @param string $key
-	 * @param \Intervolga\Migrato\Data\Values $reference
+	 * @param \Intervolga\Migrato\Data\Link $reference
 	 */
-	public function setReference($key, Values $reference)
+	public function setReference($key, Link $reference)
 	{
 		$this->references[$key] = $reference;
 	}
 
 	/**
-	 * @return array|\Intervolga\Migrato\Data\Values[]
+	 * @return \Intervolga\Migrato\Data\Link[]
 	 */
 	public function getReferences()
 	{

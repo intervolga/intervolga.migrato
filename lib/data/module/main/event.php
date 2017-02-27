@@ -72,7 +72,7 @@ class Event extends BaseData
 			/**
 			 * @var Record $eventType
 			 */
-			if ($eventType->getField("EVENT_NAME") == $name)
+			if ($eventType->getField("EVENT_NAME")->getValue() == $name)
 			{
 				return $eventType->getXmlId();
 			}
