@@ -41,7 +41,7 @@ class BaseProcess
 			{
 				$data->getXmlIdProvider()->createXmlIdField();
 			}
-			$result = static::validateData($data, $filter);
+			$result = array_merge($result, static::validateData($data, $filter));
 		}
 
 		return $result;
