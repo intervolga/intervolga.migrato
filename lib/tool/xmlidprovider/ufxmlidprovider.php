@@ -1,20 +1,35 @@
 <?namespace Intervolga\Migrato\Tool\XmlIdProvider;
 
+use Intervolga\Migrato\Data\BaseData;
+
 class UfXmlIdProvider extends BaseXmlIdProvider
 {
+	protected $dataName = "";
+
+	/**
+	 * @param BaseData $dataClass
+	 * @param string $dataName
+	 */
+	public function __construct(BaseData $dataClass, $dataName = "")
+	{
+		parent::__construct($dataClass);
+		if (!$dataName)
+		{
+			$dataName = strtoupper($dataClass->getModule() . "_" . $dataClass->getEntityName());
+		}
+		$this->dataName = $dataName;
+	}
+
 	/**
 	 * @return array
 	 */
 	protected function makeField()
 	{
-		$module = strtoupper($this->dataClass->getModule());
-		$entityName = strtoupper($this->dataClass->getEntityName());
-
-		return $fields = array(
-			"ENTITY_ID" => "MGR_{$module}_{$entityName}",
+		return array(
+			"ENTITY_ID" => "MGR_" . $this->dataName,
 			"FIELD_NAME" => "UF_MIGRATO_XML_ID",
 			"USER_TYPE_ID" => "string",
-			"XML_ID" => "MIGRATO_{$module}_{$entityName}.UF_MIGRATO_XML_ID",
+			"XML_ID" => "MIGRATO_" . $this->dataName . ".UF_MIGRATO_XML_ID",
 			"SORT" => "100",
 			"IS_SEARCHABLE" => "N",
 		);
@@ -36,7 +51,10 @@ class UfXmlIdProvider extends BaseXmlIdProvider
 	{
 		$fields = $this->makeField();
 		$userTypeEntity = new \CUserTypeEntity();
-		$userTypeEntity->add($fields);
+		if (!$userTypeEntity->add($fields))
+		{
+			throw new \Exception($fields["ENTITY_ID"] . " was not created");
+		}
 
 		return true;
 	}
