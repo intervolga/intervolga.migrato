@@ -50,8 +50,10 @@ class Type extends BaseData
 
 	public function create(Record $record)
 	{
+		$fields = $record->getFieldsStrings();
+		$fields["LANG"] = array("ru" => array("NAME" => " "), "en" => array("NAME" => " "));
 		$typeObject = new \CIBlockType();
-		$typeId = $typeObject->add($record->getFieldsStrings());
+		$typeId = $typeObject->add($fields);
 		if ($typeId)
 		{
 			$id = RecordId::createNumericId($typeId);
