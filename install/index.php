@@ -1,6 +1,8 @@
 <? if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 
 use Bitrix\Main;
+use Bitrix\Main\IO\Directory;
+use Bitrix\Main\IO\File;
 use Bitrix\Main\Localization\Loc;
 
 Loc::loadMessages(__FILE__);
@@ -34,6 +36,7 @@ class intervolga_migrato extends CModule
 		try
 		{
 			$this->installDb();
+			$this->installFiles();
 			Main\ModuleManager::registerModule($this->MODULE_ID);
 		}
 		catch (\Exception $e)
@@ -59,11 +62,28 @@ class intervolga_migrato extends CModule
 		return true;
 	}
 
+	public function installFiles()
+	{
+		$targetDirectoryPath = Main\Application::getDocumentRoot() . "/bitrix/tools/" . $this->MODULE_ID . "/";
+		checkDirPath($targetDirectoryPath);
+		$toolsDirectory = new Directory(dirname(__DIR__) . "/tools/");
+		foreach ($toolsDirectory->getChildren() as $fileSystemEntry)
+		{
+			if ($fileSystemEntry instanceof File)
+			{
+				$content = "<?php\n";
+				$content .= "require(\$_SERVER[\"DOCUMENT_ROOT\"].\"/local/modules/" . $this->MODULE_ID . "/tools/" . $fileSystemEntry->getName() . "\");";
+				File::putFileContents($targetDirectoryPath . "/" . $fileSystemEntry->getName(), $content);
+			}
+		}
+	}
+
 	public function doUninstall()
 	{
 		try
 		{
 			$this->unInstallDb();
+			$this->unInstallFiles();
 			Main\ModuleManager::unRegisterModule($this->MODULE_ID);
 		}
 		catch (\Exception $e)
@@ -87,5 +107,11 @@ class intervolga_migrato extends CModule
 		}
 
 		return true;
+	}
+
+	public function unInstallFiles()
+	{
+		$targetDirectoryPath = Main\Application::getDocumentRoot() . "/bitrix/tools/" . $this->MODULE_ID . "/";
+		Directory::deleteDirectory($targetDirectoryPath);
 	}
 }
