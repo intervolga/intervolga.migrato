@@ -7,6 +7,19 @@ use Intervolga\Migrato\Tool\XmlIdProvider\UfSelfXmlIdProvider;
 
 abstract class BaseUserField extends BaseData
 {
+	/**
+	 * @return string[]
+	 */
+	protected static function getLangFieldsNames()
+	{
+		return array(
+			"EDIT_FORM_LABEL",
+			"LIST_COLUMN_LABEL",
+			"LIST_FILTER_LABEL",
+			"ERROR_MESSAGE",
+			"HELP_MESSAGE",
+		);
+	}
 	public function __construct()
 	{
 		$this->xmlIdProvider = new UfSelfXmlIdProvider($this);
@@ -18,6 +31,7 @@ abstract class BaseUserField extends BaseData
 		$getList = \CUserTypeEntity::getList();
 		while ($userField = $getList->fetch())
 		{
+			$userField = \CUserTypeEntity::getByID($userField["ID"]);
 			if ($this->isCurrentUserField($userField["ENTITY_ID"]))
 			{
 				$result[] = $this->userFieldToRecord($userField);
@@ -54,6 +68,7 @@ abstract class BaseUserField extends BaseData
 			"IS_SEARCHABLE" => $userField["IS_SEARCHABLE"],
 		);
 		$fields = array_merge($fields, $this->getSettingsFields($userField["SETTINGS"]));
+		$fields = array_merge($fields, $this->getLangFields($userField));
 		$record->setFields($fields);
 		foreach ($this->getSettingsLinks($userField["SETTINGS"]) as $name => $link)
 		{
@@ -76,6 +91,25 @@ abstract class BaseUserField extends BaseData
 			if (!in_array($name, array_keys($this->getSettingsReferences())))
 			{
 				$fields["SETTINGS." . $name] = $setting;
+			}
+		}
+
+		return $fields;
+	}
+
+	/**
+	 * @param array $userField
+	 *
+	 * @return array
+	 */
+	protected function getLangFields(array $userField)
+	{
+		$fields = array();
+		foreach (static::getLangFieldsNames() as $langField)
+		{
+			foreach ($userField[$langField] as $lang => $message)
+			{
+				$fields[$langField . "." . $lang] = $message;
 			}
 		}
 
