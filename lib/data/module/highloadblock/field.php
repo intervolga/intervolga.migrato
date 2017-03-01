@@ -16,7 +16,7 @@ class Field extends BaseUserField
 	 * @param string $userFieldEntityId
 	 * @return int
 	 */
-	protected function isCurrentUserField($userFieldEntityId)
+	public function isCurrentUserField($userFieldEntityId)
 	{
 		return preg_match("/^HLBLOCK_[0-9]+$/", $userFieldEntityId);
 	}
@@ -34,25 +34,10 @@ class Field extends BaseUserField
 	 */
 	protected function userFieldToRecord(array $userField)
 	{
+		$record = parent::userFieldToRecord($userField);
 		$hlBlockId = str_replace("HLBLOCK_", "", $userField["ENTITY_ID"]);
 		$hlBlockRecordId = RecordId::createNumericId($hlBlockId);
 		$hlBlockXmlId = HighloadBlock::getInstance()->getXmlIdProvider()->getXmlId($hlBlockRecordId);
-
-		$record = new Record($this);
-		$id = RecordId::createNumericId($userField["ID"]);
-		$record->setId($id);
-		$record->setXmlId($userField["XML_ID"]);
-		$record->setFields(array(
-			"FIELD_NAME" => $userField["FIELD_NAME"],
-			"USER_TYPE_ID" => $userField["USER_TYPE_ID"],
-			"SORT" => $userField["SORT"],
-			"MULTIPLE" => $userField["MULTIPLE"],
-			"MANDATORY" => $userField["MANDATORY"],
-			"SHOW_FILTER" => $userField["SHOW_FILTER"],
-			"SHOW_IN_LIST" => $userField["SHOW_IN_LIST"],
-			"EDIT_IN_LIST" => $userField["EDIT_IN_LIST"],
-			"IS_SEARCHABLE" => $userField["IS_SEARCHABLE"],
-		));
 
 		$dependency = clone $this->getDependency("HLBLOCK_ID");
 		$dependency->setValue($hlBlockXmlId);
