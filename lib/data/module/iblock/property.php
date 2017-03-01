@@ -90,7 +90,7 @@ class Property extends BaseData
 	{
 		$fields = $record->getFieldsStrings();
 		$dependency = $record->getDependencies();
-		if($dependency = Iblock::getInstance()->findRecord($dependency["IBLOCK_ID"]->getValue()))
+		if($dependency["IBLOCK_ID"] && $dependency = Iblock::getInstance()->findRecord($dependency["IBLOCK_ID"]->getValue()))
 		{
 			$fields["IBLOCK_ID"] = $dependency->getValue();
 
@@ -102,14 +102,14 @@ class Property extends BaseData
 			}
 		}
 		else
-			throw new \Exception("Property " . $fields["CODE"] . "haven`t dependency");
+			throw new \Exception("Property " . $fields["CODE"] . " haven`t dependency");
 	}
 
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
 		$dependency = $record->getDependencies();
-		if($dependency = Iblock::getInstance()->findRecord($dependency["IBLOCK_ID"]->getValue()))
+		if($dependency["IBLOCK_ID"] && $dependency = Iblock::getInstance()->findRecord($dependency["IBLOCK_ID"]->getValue()))
 		{
 			$fields["IBLOCK_ID"] = $dependency->getValue();
 
@@ -128,7 +128,7 @@ class Property extends BaseData
 			}
 		}
 		else
-			throw new \Exception("Property " . $fields["CODE"] . "haven`t dependency");
+			throw new \Exception("Property " . $fields["CODE"] . " haven`t dependency");
 	}
 
 	public function delete($xmlId)
