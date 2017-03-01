@@ -9,6 +9,10 @@ define("STATISTIC_SKIP_ACTIVITY_CHECK", true);
 $isCli = php_sapi_name() == "cli";
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
+if (!$isCli && !$USER->IsAdmin())
+{
+	die("Access denied");
+}
 
 @set_time_limit(0);
 if (\Bitrix\Main\Loader::includeModule("intervolga.migrato"))
