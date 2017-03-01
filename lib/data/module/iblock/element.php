@@ -151,11 +151,8 @@ class Element extends BaseData
 		}
 		foreach($record->getRuntime("PROPERTY")->getReferences() as $xmlId => $arReference)
 		{
-			dump($arReference);
 			if(($property = Property::getInstance()->findRecord($xmlId)))
 			{
-				dump($property->getValue());
-				die();
 				//$properties[$property->getValue()] = $arValue->getValue();
 			}
 		}
