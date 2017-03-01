@@ -144,7 +144,7 @@ class BaseProcess
 	/**
 	 * @param XmlIdValidateError[] $errors
 	 */
-	protected static function fixErrors(array $errors)
+	public static function fixErrors(array $errors)
 	{
 		foreach ($errors as $error)
 		{
