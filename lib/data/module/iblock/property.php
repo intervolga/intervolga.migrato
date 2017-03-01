@@ -85,4 +85,59 @@ class Property extends BaseData
 			"LINK_IBLOCK_ID" => new Link(Iblock::getInstance()),
 		);
 	}
+
+	public function update(Record $record)
+	{
+		$fields = $record->getFieldsStrings();
+		$dependency = $record->getDependencies();
+		if($dependency = Iblock::getInstance()->findRecord($dependency["IBLOCK_ID"]->getValue()))
+		{
+			$fields["IBLOCK_ID"] = $dependency->getValue();
+
+			$propertyObject = new \CIBlockProperty();
+			$isUpdated = $propertyObject->update($record->getId()->getValue(), $fields);
+			if (!$isUpdated)
+			{
+				throw new \Exception(trim(strip_tags($propertyObject->LAST_ERROR)));
+			}
+		}
+		else
+			throw new \Exception("Property " . $fields["CODE"] . "haven`t dependency");
+	}
+
+	public function create(Record $record)
+	{
+		$fields = $record->getFieldsStrings();
+		$dependency = $record->getDependencies();
+		if($dependency = Iblock::getInstance()->findRecord($dependency["IBLOCK_ID"]->getValue()))
+		{
+			$fields["IBLOCK_ID"] = $dependency->getValue();
+
+			$propertyObject = new \CIBlockProperty();
+			$propertyId = $propertyObject->add($fields);
+			if ($propertyId)
+			{
+				$id = RecordId::createNumericId($propertyId);
+				$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+
+				return $id;
+			}
+			else
+			{
+				throw new \Exception(trim(strip_tags($propertyObject->LAST_ERROR)));
+			}
+		}
+		else
+			throw new \Exception("Property " . $fields["CODE"] . "haven`t dependency");
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId);
+		$propertyObject = new \CIBlockProperty();
+		if (!$propertyObject->delete($id->getValue()))
+		{
+			throw new \Exception("Unknown error");
+		}
+	}
 }
