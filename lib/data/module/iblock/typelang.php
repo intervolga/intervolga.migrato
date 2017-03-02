@@ -114,14 +114,13 @@ class TypeLang extends BaseData
 
 	public function update(Record $record)
 	{
-		$dependency = $this->getDependency("IBLOCK_TYPE_ID")->getValue();
+		$dependency = $record->getDependency("IBLOCK_TYPE_ID")->getValue();
 
 		if($typeId = Type::getInstance()->findRecord($dependency)) {
-			$typeId = $typeId->getValue();
-			$arFields = $this->getTypeLanguages($typeId, $record);
+			$arFields = $this->getTypeLanguages($typeId->getValue(), $record);
 
 			$typeObject = new \CIBlockType();
-			$isUpdated = $typeObject->Update($typeId, $arFields);
+			$isUpdated = $typeObject->Update($typeId->getValue(), $arFields);
 			if (!$isUpdated)
 			{
 				throw new \Exception(trim(strip_tags($typeObject->LAST_ERROR)));

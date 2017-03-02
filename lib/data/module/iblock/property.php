@@ -89,8 +89,8 @@ class Property extends BaseData
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$dependency = $record->getDependencies();
-		if($dependency["IBLOCK_ID"] && $dependency = Iblock::getInstance()->findRecord($dependency["IBLOCK_ID"]->getValue()))
+		$dependencyXmlId = $record->getDependency("IBLOCK_ID")->getValue();
+		if($dependency = Iblock::getInstance()->findRecord($dependencyXmlId))
 		{
 			$fields["IBLOCK_ID"] = $dependency->getValue();
 
@@ -108,8 +108,8 @@ class Property extends BaseData
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$dependency = $record->getDependencies();
-		if($dependency["IBLOCK_ID"] && $dependency = Iblock::getInstance()->findRecord($dependency["IBLOCK_ID"]->getValue()))
+		$dependencyXmlId = $record->getDependency("IBLOCK_ID")->getValue();
+		if($dependency = Iblock::getInstance()->findRecord($dependencyXmlId))
 		{
 			$fields["IBLOCK_ID"] = $dependency->getValue();
 

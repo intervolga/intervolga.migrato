@@ -168,10 +168,7 @@ class Element extends BaseData
 	{
 		$dependency = null;
 		$fields = $record->getFieldsStrings();
-		if($dependencies = $record->getDependencies())
-		{
-			$fields["IBLOCK_ID"] = $dependencies["IBLOCK_ID"]->getValue();
-		}
+		$fields["IBLOCK_ID"] = $record->getDependency("IBLOCK_ID")->getValue();
 
 		foreach($record->getRuntime("PROPERTY")->getFields() as $xmlId => $arFiled)
 		{
