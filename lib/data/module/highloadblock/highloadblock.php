@@ -1,4 +1,4 @@
-<?namespace Intervolga\Migrato\Data\Module\Highloadblock;
+<? namespace Intervolga\Migrato\Data\Module\Highloadblock;
 
 use Bitrix\Highloadblock\HighloadBlockTable;
 use Bitrix\Main\Loader;
@@ -19,7 +19,7 @@ class HighloadBlock extends BaseData
 	{
 		$hlBlocks = HighloadBlockTable::getList();
 		$result = array();
-		while($hlBlock = $hlBlocks->fetch())
+		while ($hlBlock = $hlBlocks->fetch())
 		{
 			$record = new Record($this);
 			$id = RecordId::createNumericId($hlBlock["ID"]);

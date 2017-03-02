@@ -1,4 +1,4 @@
-<?namespace Intervolga\Migrato\Data;
+<? namespace Intervolga\Migrato\Data;
 
 use Intervolga\Migrato\Data\Module\Highloadblock\Field;
 use Intervolga\Migrato\Data\Module\Highloadblock\HighloadBlock;
@@ -21,6 +21,7 @@ abstract class BaseUserField extends BaseData
 			"HELP_MESSAGE",
 		);
 	}
+
 	public function __construct()
 	{
 		$this->xmlIdProvider = new UfSelfXmlIdProvider($this);
@@ -41,17 +42,20 @@ abstract class BaseUserField extends BaseData
 				}
 			}
 		}
+
 		return $result;
 	}
 
 	/**
 	 * @param string $userFieldEntityId
+	 *
 	 * @return bool
 	 */
 	abstract public function isCurrentUserField($userFieldEntityId);
 
 	/**
 	 * @param array $userField
+	 *
 	 * @return Record
 	 */
 	protected function userFieldToRecord(array $userField)
@@ -238,6 +242,7 @@ abstract class BaseUserField extends BaseData
 	{
 		$inObject = RecordId::createNumericId($value);
 		$elementXmlId = Element::getInstance()->getXmlIdProvider()->getXmlId($inObject);
+
 		return new Link(Element::getInstance(), $elementXmlId);
 	}
 
@@ -276,6 +281,7 @@ abstract class BaseUserField extends BaseData
 				$hlbElementXmlId = Module\Highloadblock\Element::getInstance()->getXmlIdProvider()->getXmlId($elementIdObject);
 			}
 		}
+
 		return new Link(Module\Highloadblock\Element::getInstance(), $hlbElementXmlId);
 	}
 

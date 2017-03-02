@@ -1,4 +1,4 @@
-<?namespace Intervolga\Migrato\Data\Module\Highloadblock;
+<? namespace Intervolga\Migrato\Data\Module\Highloadblock;
 
 use Intervolga\Migrato\Data\BaseUserField;
 use Intervolga\Migrato\Data\Link;
@@ -14,6 +14,7 @@ class Field extends BaseUserField
 
 	/**
 	 * @param string $userFieldEntityId
+	 *
 	 * @return int
 	 */
 	public function isCurrentUserField($userFieldEntityId)
@@ -30,6 +31,7 @@ class Field extends BaseUserField
 
 	/**
 	 * @param array $userField
+	 *
 	 * @return Record
 	 */
 	protected function userFieldToRecord(array $userField)
@@ -57,6 +59,7 @@ class Field extends BaseUserField
 			$filter["ENTITY_ID"] = "HLBLOCK_" . $filter["HLBLOCK_ID"];
 			unset($filter["HLBLOCK_ID"]);
 		}
+
 		return parent::getList($filter);
 	}
 }

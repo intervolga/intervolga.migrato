@@ -1,4 +1,4 @@
-<?namespace Intervolga\Migrato\Tool\XmlIdProvider;
+<? namespace Intervolga\Migrato\Tool\XmlIdProvider;
 
 use Intervolga\Migrato\Data\BaseData;
 
@@ -34,7 +34,7 @@ class UfXmlIdProvider extends BaseXmlIdProvider
 			"IS_SEARCHABLE" => "N",
 		);
 	}
-	
+
 	public function isXmlIdFieldExists()
 	{
 		$fields = $this->makeField();

@@ -1,4 +1,4 @@
-<?namespace Intervolga\Migrato\Tool\XmlIdProvider;
+<? namespace Intervolga\Migrato\Tool\XmlIdProvider;
 
 class UfSelfXmlIdProvider extends BaseXmlIdProvider
 {
@@ -11,6 +11,7 @@ class UfSelfXmlIdProvider extends BaseXmlIdProvider
 	public function getXmlId($id)
 	{
 		$userField = \CUserTypeEntity::getById($id->getValue());
+
 		return $userField["XML_ID"];
 	}
 }
