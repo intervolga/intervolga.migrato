@@ -144,6 +144,17 @@ class Record
 	}
 
 	/**
+	 * @param $key string
+	 *
+	 * @return \Intervolga\Migrato\Data\Link
+	 */
+	public function getDependency($key)
+	{
+		$dependencies = $this->getDependencies();
+		return $dependencies[$key];
+	}
+
+	/**
 	 * @param \Intervolga\Migrato\Data\Link[] $references
 	 */
 	public function setReferences(array $references)
@@ -166,6 +177,15 @@ class Record
 	public function getReferences()
 	{
 		return $this->references;
+	}
+
+	/**
+	 * @return \Intervolga\Migrato\Data\Link
+	 */
+	public function getReference($key)
+	{
+		$references = $this->getReferences();
+		return $references[$key];
 	}
 
 	/**
