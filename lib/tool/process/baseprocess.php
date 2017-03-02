@@ -27,7 +27,8 @@ class BaseProcess
 	}
 
 	/**
-	 * @return Tool\XmlIdValidateError[]
+	 * @return \Intervolga\Migrato\Tool\XmlIdValidateError[]
+	 * @throws \Exception
 	 */
 	public static function validate()
 	{
@@ -37,6 +38,10 @@ class BaseProcess
 		foreach ($dataClasses as $data)
 		{
 			$filter = Config::getInstance()->getDataClassFilter($data);
+			if (!$data->getXmlIdProvider())
+			{
+				throw new \Exception($data->getModule() . "/" . $data->getEntityName() . " has no xml id provider");
+			}
 			if (!$data->getXmlIdProvider()->isXmlIdFieldExists())
 			{
 				$data->getXmlIdProvider()->createXmlIdField();
