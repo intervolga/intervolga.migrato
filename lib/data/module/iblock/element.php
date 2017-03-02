@@ -200,11 +200,31 @@ class Element extends BaseData
 		return $properties;
 	}
 
+	public function getIBlock(Record $record)
+	{
+		$iblockId = null;
+		if($iblockIdXml = $record->getDependency("IBLOCK_ID"))
+		{
+			$iblockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
+		}
+		else
+		{
+			$rsSection = \CIBlockElement::GetByID($record->getId()->getValue());
+			if($arSection = $rsSection->Fetch())
+				$iblockId = intval($arSection["IBLOCK_ID"]);
+		}
+		if(!$iblockId)
+		{
+			throw new \Exception("Not found IBlock for the element " . $record->getId()->getValue());
+		}
+		return $iblockId;
+
+	}
+
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$IBlockIdXml = $record->getDependency("IBLOCK_ID")->getValue();
-		$IBlockId = Iblock::getInstance()->findRecord($IBlockIdXml)->getValue();
+		$IBlockId = $this->getIBlock($record);
 
 		$properties = array();
 		$rsProperties = \CIBlockElement::GetProperty($IBlockId, $record->getId()->getValue());
@@ -232,8 +252,7 @@ class Element extends BaseData
 	{
 		$fields = $record->getFieldsStrings();
 
-		$IBlockIdXml = $record->getDependency("IBLOCK_ID")->getValue();
-		$fields["IBLOCK_ID"] = Iblock::getInstance()->findRecord($IBlockIdXml)->getValue();
+		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 
 		$properties = array();
 		$properties = $this->getRuntimesFields($properties, $record->getRuntime("PROPERTY"));
