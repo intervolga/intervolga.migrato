@@ -68,11 +68,30 @@ class Section extends BaseData
 		);
 	}
 
+	public function getIBlock(Record $record)
+	{
+		$iblockId = null;
+		if($iblockIdXml = $record->getDependency("IBLOCK_ID"))
+		{
+			$iblockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
+		}
+		else
+		{
+			$rsSection = \CIBlockSection::GetByID($record->getId()->getValue());
+			if($arSection = $rsSection->Fetch())
+				$iblockId = intval($arSection["IBLOCK_ID"]);
+		}
+		if(!$iblockId)
+		{
+			throw new \Exception("Not found IBlock for the section " . $record->getId()->getValue());
+		}
+		return $iblockId;
+	}
+
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$iblockIdXml = $record->getDependency("IBLOCK_ID")->getValue();
-		$fields["IBLOCK_ID"] = Iblock::getInstance()->findRecord($iblockIdXml)->getValue();
+		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 
 		$reference = $record->getReference("IBLOCK_SECTION_ID");
 		$reference = $reference->getValue() ? self::findRecord($reference->getValue())->getValue(): null;
@@ -89,8 +108,7 @@ class Section extends BaseData
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$iblockIdXml = $record->getDependency("IBLOCK_ID")->getValue();
-		$fields["IBLOCK_ID"] = Iblock::getInstance()->findRecord($iblockIdXml)->getValue();
+		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 
 		$reference = $record->getReference("IBLOCK_SECTION_ID")->getValue();
 		$reference = $reference ? intval($reference) : null;
