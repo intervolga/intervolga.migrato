@@ -119,6 +119,44 @@ class Record
 	}
 
 	/**
+	 * @param string $name
+	 *
+	 * @return string
+	 * @throws \Exception
+	 */
+	public function getFieldValue($name)
+	{
+		$field = $this->fields[$name];
+		if ($field)
+		{
+			return $field->getValue();
+		}
+		else
+		{
+			return "";
+		}
+	}
+
+	/**
+	 * @param string $name
+	 *
+	 * @return string[]
+	 * @throws \Exception
+	 */
+	public function getFieldValues($name)
+	{
+		$field = $this->fields[$name];
+		if ($field)
+		{
+			return $field->getValues();
+		}
+		else
+		{
+			return array();
+		}
+	}
+
+	/**
 	 * @param \Intervolga\Migrato\Data\Link[] $dependencies
 	 */
 	public function setDependencies(array $dependencies)
