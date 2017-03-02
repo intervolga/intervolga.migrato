@@ -212,9 +212,7 @@ class Element extends BaseData
 		}
 		else
 		{
-			$rsSection = \CIBlockElement::GetByID($record->getId()->getValue());
-			if($arSection = $rsSection->Fetch())
-				$iblockId = intval($arSection["IBLOCK_ID"]);
+			$iblockId = \CIBlockElement::GetIBlockByID($record->getId()->getValue());
 		}
 		if(!$iblockId)
 		{
@@ -226,10 +224,13 @@ class Element extends BaseData
 	public function generateProperties($iblockId, Record $record)
 	{
 		$properties = array();
-		$rsProperties = \CIBlockElement::GetProperty($iblockId, $record->getId()->getValue());
-		while($arProperty = $rsProperties->Fetch())
+		if($record->getId())
 		{
-			$properties[strval($arProperty["ID"])]= $arProperty["VALUE"];
+			$rsProperties = \CIBlockElement::GetProperty($iblockId, $record->getId()->getValue());
+			while($arProperty = $rsProperties->Fetch())
+			{
+				$properties[strval($arProperty["ID"])]= $arProperty["VALUE"];
+			}
 		}
 
 		$properties = $this->getRuntimesFields($properties, $record->getRuntime("PROPERTY"));
