@@ -34,6 +34,10 @@ class Field extends BaseUserField
 	 */
 	protected function userFieldToRecord(array $userField)
 	{
+		if ($userField["FIELD_NAME"] == "UF_XML_ID")
+		{
+			return null;
+		}
 		$record = parent::userFieldToRecord($userField);
 		$hlBlockId = str_replace("HLBLOCK_", "", $userField["ENTITY_ID"]);
 		$hlBlockRecordId = RecordId::createNumericId($hlBlockId);
@@ -44,5 +48,15 @@ class Field extends BaseUserField
 		$record->addDependency("HLBLOCK_ID", $dependency);
 
 		return $record;
+	}
+
+	public function getList(array $filter = array())
+	{
+		if ($filter["HLBLOCK_ID"])
+		{
+			$filter["ENTITY_ID"] = "HLBLOCK_" . $filter["HLBLOCK_ID"];
+			unset($filter["HLBLOCK_ID"]);
+		}
+		return parent::getList($filter);
 	}
 }
