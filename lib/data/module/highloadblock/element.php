@@ -54,14 +54,45 @@ class Element extends BaseData
 	protected function getRecord(array $element, Record $hlblock)
 	{
 		$record = new Record($this);
-		$record->setId(RecordId::createNumericId($element["ID"]));
+		$idObject = RecordId::createComplexId(array(
+			"ID" => intval($element["ID"]),
+			"HLBLOCK_ID" => intval($hlblock->getId()->getValue()),
+		));
+		$record->setId($idObject);
 		$record->setXmlId($element["UF_XML_ID"]);
 
 		$link = clone $this->getDependency("HLBLOCK_ID");
 		$link->setValue($hlblock->getXmlId());
 		$record->addDependency("HLBLOCK_ID", $link);
 
+		$this->addRuntime($record, $element, $hlblock->getId()->getValue());
+
 		return $record;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @param array $element
+	 * @param int $hlblockId
+	 */
+	protected function addRuntime(Record $record, array $element, $hlblockId)
+	{
+		$runtime = clone $this->getRuntime("FIELD");
+
+		$fields = Field::getInstance()->getList(array("HLBLOCK_ID" => $hlblockId));
+		foreach ($fields as $field)
+		{
+			/**
+			 * @var Record $field
+			 */
+			$fieldName = $field->getFieldValue("FIELD_NAME");
+			Field::getInstance()->fillRuntime($runtime, $field, $element[$fieldName]);
+		}
+
+		if ($runtime->getFields() || $runtime->getDependencies() || $runtime->getReferences())
+		{
+			$record->setRuntime("FIELD", $runtime);
+		}
 	}
 
 	public function getDependencies()
