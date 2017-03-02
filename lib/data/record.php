@@ -119,6 +119,44 @@ class Record
 	}
 
 	/**
+	 * @param string $name
+	 *
+	 * @return string
+	 * @throws \Exception
+	 */
+	public function getFieldValue($name)
+	{
+		$field = $this->fields[$name];
+		if ($field)
+		{
+			return $field->getValue();
+		}
+		else
+		{
+			return "";
+		}
+	}
+
+	/**
+	 * @param string $name
+	 *
+	 * @return string[]
+	 * @throws \Exception
+	 */
+	public function getFieldValues($name)
+	{
+		$field = $this->fields[$name];
+		if ($field)
+		{
+			return $field->getValues();
+		}
+		else
+		{
+			return array();
+		}
+	}
+
+	/**
 	 * @param \Intervolga\Migrato\Data\Link[] $dependencies
 	 */
 	public function setDependencies(array $dependencies)
@@ -144,6 +182,17 @@ class Record
 	}
 
 	/**
+	 * @param $key string
+	 *
+	 * @return \Intervolga\Migrato\Data\Link
+	 */
+	public function getDependency($key)
+	{
+		$dependencies = $this->getDependencies();
+		return $dependencies[$key];
+	}
+
+	/**
 	 * @param \Intervolga\Migrato\Data\Link[] $references
 	 */
 	public function setReferences(array $references)
@@ -166,6 +215,15 @@ class Record
 	public function getReferences()
 	{
 		return $this->references;
+	}
+
+	/**
+	 * @return \Intervolga\Migrato\Data\Link
+	 */
+	public function getReference($key)
+	{
+		$references = $this->getReferences();
+		return $references[$key];
 	}
 
 	/**

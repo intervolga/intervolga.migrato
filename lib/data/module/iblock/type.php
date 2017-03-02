@@ -37,4 +37,43 @@ class Type extends BaseData
 
 		return $result;
 	}
+
+	public function update(Record $record)
+	{
+		$typeObject = new \CIBlockType();
+		$isUpdated = $typeObject->update($record->getId()->getValue(), $record->getFieldsStrings());
+		if (!$isUpdated)
+		{
+			throw new \Exception(trim(strip_tags($typeObject->LAST_ERROR)));
+		}
+	}
+
+	public function create(Record $record)
+	{
+		$fields = $record->getFieldsStrings();
+		$fields["LANG"] = array("ru" => array("NAME" => " "), "en" => array("NAME" => " "));
+		$typeObject = new \CIBlockType();
+		$typeId = $typeObject->add($fields);
+		if ($typeId)
+		{
+			$id = RecordId::createNumericId($typeId);
+			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+
+			return $id;
+		}
+		else
+		{
+			throw new \Exception(trim(strip_tags($typeObject->LAST_ERROR)));
+		}
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId);
+		$typeObject = new \CIBlockType();
+		if (!$typeObject->delete($id->getValue()))
+		{
+			throw new \Exception("Unknown error");
+		}
+	}
 }

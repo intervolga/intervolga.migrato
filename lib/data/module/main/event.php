@@ -91,4 +91,41 @@ class Event extends BaseData
 			),
 		);
 	}
+
+	public function update(Record $record)
+	{
+		$eventMessageObject = new \CEventMessage();
+		$isUpdated = $eventMessageObject->update($record->getId()->getValue(), $record->getFieldsStrings());
+		if (!$isUpdated)
+		{
+			throw new \Exception(trim(strip_tags($eventMessageObject->LAST_ERROR)));
+		}
+	}
+
+	public function create(Record $record)
+	{
+		$eventMessageObject = new \CEventMessage();
+		$eventMessageId = $eventMessageObject->add($record->getFieldsStrings());
+		if ($eventMessageId)
+		{
+			$id = RecordId::createNumericId($eventMessageId);
+			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+
+			return $id;
+		}
+		else
+		{
+			throw new \Exception(trim(strip_tags($eventMessageObject->LAST_ERROR)));
+		}
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId);
+		$eventMessageObject = new \CEventMessage();
+		if (!$eventMessageObject->delete($id->getValue()))
+		{
+			throw new \Exception("Unknown error");
+		}
+	}
 }

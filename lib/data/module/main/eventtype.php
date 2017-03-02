@@ -33,4 +33,46 @@ class EventType extends BaseData
 		}
 		return $result;
 	}
+
+	public function update(Record $record)
+	{
+		$isUpdated = \CEventType::update(array("ID" => $record->getId()->getValue()), $record->getFieldsStrings());
+		if (!$isUpdated)
+		{
+			global $APPLICATION;
+			if($exception = $APPLICATION->GetException())
+			{
+				throw new \Exception(trim(strip_tags($exception->GetString())));
+			}
+		}
+	}
+
+	public function create(Record $record)
+	{
+		$eventTypeId = \CEventType::add($record->getFieldsStrings());
+		if ($eventTypeId)
+		{
+			$id = RecordId::createNumericId($eventTypeId);
+			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+
+			return $id;
+		}
+		else
+		{
+			global $APPLICATION;
+			if($exception = $APPLICATION->GetException())
+			{
+				throw new \Exception(trim(strip_tags($exception->GetString())));
+			}
+		}
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId);
+		if (!\CEventType::delete(array("ID" => $id->getValue())))
+		{
+			throw new \Exception("Unknown error");
+		}
+	}
 }

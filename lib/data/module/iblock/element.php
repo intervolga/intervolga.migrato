@@ -136,4 +136,161 @@ class Element extends BaseData
 			return null;
 		}
 	}
+
+	/**
+	 * @param Runtime $runtime
+	 *
+	 * @return array properties
+	 */
+	private function getRuntimesFields($properties, Runtime $runtime)
+	{
+		foreach($runtime->getFields() as $xmlId => $arField)
+		{
+			if($property = Property::getInstance()->findRecord($xmlId))
+				$properties[$property->getValue()] = $arField->getValue();
+		}
+		return $properties;
+	}
+
+	/**
+	 * @param Runtime $runtime
+	 * @param string $IBlockId
+	 *
+	 * @return array properties
+	 */
+	private function getRuntimesReferences($properties, Runtime $runtime, $IBlockId)
+	{
+		foreach($runtime->getReferences() as $xmlId => $arField)
+		{
+			if($property = Property::getInstance()->findRecord($xmlId))
+			{
+				$rsProperty = \CIBlockProperty::GetByID($property->getValue(), $IBlockId);
+				if($arProperty = $rsProperty->Fetch())
+				{
+					switch($arProperty["PROPERTY_TYPE"])
+					{
+						case "N":
+							$properties[$property->getValue()] = $arField->getValue();
+							break;
+						case "S":
+							if(array_search($arProperty["USER_TYPE"], array("HTML", "video", "DateTime", "map_yandex", "map_google", "FileMan", "ElementXmlID")) !== false)
+							{
+								$properties[$property->getValue()] = $arField->getValue();
+							}
+							break;
+						case "L":
+							if($enumId = (Enum::getInstance()->findRecord($arField->getValue())))
+							{
+								$properties[$property->getValue()] = $enumId->getValue();
+							}
+							break;
+						case "G":
+							if($sectionId = (Section::getInstance()->findRecord($arField->getValue())))
+							{
+								$properties[$property->getValue()] = $sectionId->getValue();
+							}
+							break;
+						case "E":
+							if($elementId = (Element::getInstance()->findRecord($arField->getValue())))
+							{
+								$properties[$property->getValue()] = $elementId->getValue();
+							}
+							break;
+					}
+				}
+			}
+		}
+		return $properties;
+	}
+
+	public function getIBlock(Record $record)
+	{
+		$iblockId = null;
+		if($iblockIdXml = $record->getDependency("IBLOCK_ID"))
+		{
+			$iblockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
+		}
+		else
+		{
+			$iblockId = \CIBlockElement::GetIBlockByID($record->getId()->getValue());
+		}
+		if(!$iblockId)
+		{
+			throw new \Exception("Not found IBlock for the element " . $record->getId()->getValue());
+		}
+		return $iblockId;
+	}
+
+	public function generateProperties($iblockId, Record $record)
+	{
+		$properties = array();
+		if($record->getId())
+		{
+			$rsProperties = \CIBlockElement::GetProperty($iblockId, $record->getId()->getValue());
+			while($arProperty = $rsProperties->Fetch())
+			{
+				$properties[strval($arProperty["ID"])]= $arProperty["VALUE"];
+			}
+		}
+
+		$properties = $this->getRuntimesFields($properties, $record->getRuntime("PROPERTY"));
+
+		$properties = $this->getRuntimesReferences($properties, $record->getRuntime("PROPERTY"), $iblockId);
+
+		return $properties;
+	}
+
+	public function update(Record $record)
+	{
+		$fields = $record->getFieldsStrings();
+		$IBlockId = $this->getIBlock($record);
+
+		$properties = $this->generateProperties($IBlockId, $record);
+
+		if(count($properties))
+			$fields["PROPERTY_VALUES"] = $properties;
+
+		$elementObject = new \CIBlockElement();
+		$isUpdated = $elementObject->Update($record->getId()->getValue(), $fields);
+		if (!$isUpdated)
+		{
+			throw new \Exception(trim(strip_tags($elementObject->LAST_ERROR)));
+		}
+	}
+
+	public function create(Record $record)
+	{
+		$fields = $record->getFieldsStrings();
+
+		$fields["IBLOCK_ID"] = $this->getIBlock($record);
+
+		$properties = $this->generateProperties($fields["IBLOCK_ID"], $record);
+
+		if(count($properties))
+			$fields["PROPERTY_VALUES"] = $properties;
+
+		$elementObject = new \CIBlockElement();
+		$elementId = $elementObject->add($fields);
+		if ($elementId)
+		{
+			$id = RecordId::createNumericId($elementId);
+			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+
+			return $id;
+		}
+		else
+		{
+			throw new \Exception(trim(strip_tags($elementObject->LAST_ERROR)));
+		}
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId);
+		$elementObject = new \CIBlockType();
+		if (!$elementObject->delete($id->getValue()))
+		{
+			throw new \Exception("Unknown error");
+		}
+	}
 }

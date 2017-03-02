@@ -113,6 +113,15 @@ class Runtime
 	}
 
 	/**
+	 * @return \Intervolga\Migrato\Data\Link
+	 */
+	public function getReference($key)
+	{
+		$references = $this->getReferences();
+		return $references[$key];
+	}
+
+	/**
 	 * @return \Intervolga\Migrato\Data\BaseData
 	 */
 	public function getData()

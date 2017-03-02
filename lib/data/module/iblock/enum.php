@@ -54,4 +54,52 @@ class Enum extends BaseData
 			"PROPERTY_ID" => new Link(Property::getInstance()),
 		);
 	}
+
+	public function update(Record $record)
+	{
+		$fields = $record->getFieldsStrings();
+		$dependency = $record->getDependency("PROPERTY_ID");
+		if($propertyId = Property::getInstance()->findRecord($dependency->getValue()))
+		{
+			$fields["PROPERTY_ID"] = $propertyId->getValue();
+			$enumObject = new \CIBlockPropertyEnum();
+			$isUpdated = $enumObject->Update($record->getId()->getValue(), $fields);
+			if (!$isUpdated)
+			{
+				throw new \Exception("Unknown error");
+			}
+		}
+	}
+
+	public function create(Record $record)
+	{
+		$fields = $record->getFieldsStrings();
+		$dependency = $record->getDependency("PROPERTY_ID");
+		if($propertyId = Property::getInstance()->findRecord($dependency->getValue()))
+		{
+			$fields["PROPERTY_ID"] = $propertyId->getValue();
+			$enumObject = new \CIBlockPropertyEnum();
+			$enumId = $enumObject->add($fields);
+			if ($enumId)
+			{
+				$id = RecordId::createNumericId($enumId);
+				$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+
+				return $id;
+			}
+			else
+			{
+				throw new \Exception("Unknown error");
+			}
+		}
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId);
+		if (!\CIBlockPropertyEnum::Delete($id->getValue()))
+		{
+			throw new \Exception("Unknown error");
+		}
+	}
 }

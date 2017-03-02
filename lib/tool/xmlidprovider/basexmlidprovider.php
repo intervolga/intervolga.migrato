@@ -32,12 +32,8 @@ abstract class BaseXmlIdProvider
 		return true;
 	}
 
-	/**
-	 * @return bool
-	 */
 	public function createXmlIdField()
 	{
-		return true;
 	}
 
 	/**
