@@ -185,7 +185,10 @@ class Element extends BaseData
 							}
 							break;
 						case "G":
-							// TODO Section еще не реализован
+							if($sectionId = (Section::getInstance()->findRecord($arField->getValue())))
+							{
+								$properties[$property->getValue()] = $sectionId->getValue();
+							}
 							break;
 						case "E":
 							if($elementId = (Element::getInstance()->findRecord($arField->getValue())))
