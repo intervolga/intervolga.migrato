@@ -55,8 +55,6 @@ class UfXmlIdProvider extends BaseXmlIdProvider
 		{
 			throw new \Exception($fields["ENTITY_ID"] . " was not created");
 		}
-
-		return true;
 	}
 
 	public function setXmlId($id, $xmlId)
