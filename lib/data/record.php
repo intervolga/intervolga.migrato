@@ -151,7 +151,10 @@ class Record
 	public function getDependency($key)
 	{
 		$dependencies = $this->getDependencies();
-		return $dependencies[$key];
+		if($dependencies[$key])
+			return $dependencies[$key];
+		else
+			throw new \Exception("Record haven`t dependency with key " . $key);
 	}
 
 	/**
