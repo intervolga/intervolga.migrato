@@ -235,7 +235,8 @@ class Element extends BaseData
 		$IBlockIdXml = $record->getDependency("IBLOCK_ID")->getValue();
 		$fields["IBLOCK_ID"] = Iblock::getInstance()->findRecord($IBlockIdXml)->getValue();
 
-		$properties = $this->getRuntimesFields(array(), $record->getRuntime("PROPERTY"));
+		$properties = array();
+		$properties = $this->getRuntimesFields($properties, $record->getRuntime("PROPERTY"));
 
 		$properties = $this->getRuntimesReferences($properties, $record->getRuntime("PROPERTY"), $fields["IBLOCK_ID"]);
 
