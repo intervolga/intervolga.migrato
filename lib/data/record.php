@@ -183,6 +183,15 @@ class Record
 	}
 
 	/**
+	 * @return \Intervolga\Migrato\Data\Link
+	 */
+	public function getReference($key)
+	{
+		$references = $this->getReferences();
+		return $references[$key];
+	}
+
+	/**
 	 * @param \Intervolga\Migrato\Data\RecordId $id
 	 */
 	public function setId(RecordId $id)
