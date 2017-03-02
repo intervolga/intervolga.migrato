@@ -221,16 +221,12 @@ class Element extends BaseData
 			throw new \Exception("Not found IBlock for the element " . $record->getId()->getValue());
 		}
 		return $iblockId;
-
 	}
 
-	public function update(Record $record)
+	public function generateProperties($iblockId, Record $record)
 	{
-		$fields = $record->getFieldsStrings();
-		$IBlockId = $this->getIBlock($record);
-
 		$properties = array();
-		$rsProperties = \CIBlockElement::GetProperty($IBlockId, $record->getId()->getValue());
+		$rsProperties = \CIBlockElement::GetProperty($iblockId, $record->getId()->getValue());
 		while($arProperty = $rsProperties->Fetch())
 		{
 			$properties[strval($arProperty["ID"])]= $arProperty["VALUE"];
@@ -238,7 +234,17 @@ class Element extends BaseData
 
 		$properties = $this->getRuntimesFields($properties, $record->getRuntime("PROPERTY"));
 
-		$properties = $this->getRuntimesReferences($properties, $record->getRuntime("PROPERTY"), $IBlockId);
+		$properties = $this->getRuntimesReferences($properties, $record->getRuntime("PROPERTY"), $iblockId);
+
+		return $properties;
+	}
+
+	public function update(Record $record)
+	{
+		$fields = $record->getFieldsStrings();
+		$IBlockId = $this->getIBlock($record);
+
+		$properties = $this->generateProperties($IBlockId, $record);
 
 		if(count($properties))
 			$fields["PROPERTY_VALUES"] = $properties;
@@ -257,10 +263,7 @@ class Element extends BaseData
 
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 
-		$properties = array();
-		$properties = $this->getRuntimesFields($properties, $record->getRuntime("PROPERTY"));
-
-		$properties = $this->getRuntimesReferences($properties, $record->getRuntime("PROPERTY"), $fields["IBLOCK_ID"]);
+		$properties = $this->generateProperties($fields["IBLOCK_ID"], $record);
 
 		if(count($properties))
 			$fields["PROPERTY_VALUES"] = $properties;
