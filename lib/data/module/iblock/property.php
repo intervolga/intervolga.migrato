@@ -86,49 +86,64 @@ class Property extends BaseData
 		);
 	}
 
+	public function getIBlock(Record $record)
+	{
+		$iblockId = null;
+		if($iblockIdXml = $record->getDependency("IBLOCK_ID"))
+		{
+			$iblockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
+		}
+		else
+		{
+			$rsProperty = \CIBlockProperty::GetByID($record->getId()->getValue());
+			if($arProperty = $rsProperty->Fetch())
+				$iblockId = intval($arProperty["IBLOCK_ID"]);
+		}
+		if(!$iblockId)
+		{
+			throw new \Exception("Not found IBlock for the element " . $record->getId()->getValue());
+		}
+		return $iblockId;
+	}
+
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$dependencyXmlId = $record->getDependency("IBLOCK_ID")->getValue();
-		if($dependency = Iblock::getInstance()->findRecord($dependencyXmlId))
-		{
-			$fields["IBLOCK_ID"] = $dependency->getValue();
 
-			$propertyObject = new \CIBlockProperty();
-			$isUpdated = $propertyObject->update($record->getId()->getValue(), $fields);
-			if (!$isUpdated)
-			{
-				throw new \Exception(trim(strip_tags($propertyObject->LAST_ERROR)));
-			}
+		$fields["IBLOCK_ID"] = $this->getIBlock($record);
+
+		if($reference = $record->getReference("LINK_IBLOCK_ID"))
+		{
+			$fields["LINK_IBLOCK_ID"] = Iblock::getInstance()->findRecord($reference->getValue())->getValue();
 		}
-		else
-			throw new \Exception("Property " . $fields["CODE"] . " haven`t dependency");
+
+		$propertyObject = new \CIBlockProperty();
+		$isUpdated = $propertyObject->update($record->getId()->getValue(), $fields);
+		if (!$isUpdated)
+		{
+			throw new \Exception(trim(strip_tags($propertyObject->LAST_ERROR)));
+		}
 	}
 
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$dependencyXmlId = $record->getDependency("IBLOCK_ID")->getValue();
-		if($dependency = Iblock::getInstance()->findRecord($dependencyXmlId))
+
+		$fields["IBLOCK_ID"] = $this->getIBlock($record);
+
+		$propertyObject = new \CIBlockProperty();
+		$propertyId = $propertyObject->add($fields);
+		if ($propertyId)
 		{
-			$fields["IBLOCK_ID"] = $dependency->getValue();
+			$id = RecordId::createNumericId($propertyId);
+			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
 
-			$propertyObject = new \CIBlockProperty();
-			$propertyId = $propertyObject->add($fields);
-			if ($propertyId)
-			{
-				$id = RecordId::createNumericId($propertyId);
-				$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-				return $id;
-			}
-			else
-			{
-				throw new \Exception(trim(strip_tags($propertyObject->LAST_ERROR)));
-			}
+			return $id;
 		}
 		else
-			throw new \Exception("Property " . $fields["CODE"] . " haven`t dependency");
+		{
+			throw new \Exception(trim(strip_tags($propertyObject->LAST_ERROR)));
+		}
 	}
 
 	public function delete($xmlId)

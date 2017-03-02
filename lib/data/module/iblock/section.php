@@ -94,7 +94,7 @@ class Section extends BaseData
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 
 		$reference = $record->getReference("IBLOCK_SECTION_ID");
-		$reference = $reference->getValue() ? self::findRecord($reference->getValue())->getValue(): null;
+		$reference = $reference->getValue() ? self::findRecord($reference->getValue())->getValue() : null;
 		$fields["IBLOCK_SECTION_ID"] = $reference;
 
 		$sectionObject = new \CIBlockSection();
@@ -109,10 +109,6 @@ class Section extends BaseData
 	{
 		$fields = $record->getFieldsStrings();
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
-
-		$reference = $record->getReference("IBLOCK_SECTION_ID")->getValue();
-		$reference = $reference ? intval($reference) : null;
-		$fields["IBLOCK_SECTION_ID"] = $reference;
 
 		$sectionObject = new \CIBlockSection();
 		$sectionId = $sectionObject->add($fields);
