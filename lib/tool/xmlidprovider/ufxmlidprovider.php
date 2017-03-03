@@ -73,7 +73,8 @@ class UfXmlIdProvider extends BaseXmlIdProvider
 		$userTypeEntity = new \CUserTypeEntity();
 		if (!$userTypeEntity->add($fields))
 		{
-			throw new \Exception($fields["ENTITY_ID"] . " was not created");
+			global $APPLICATION;
+			throw new \Exception($fields["ENTITY_ID"] . " was not created: " . $APPLICATION->getException()->getString());
 		}
 	}
 
