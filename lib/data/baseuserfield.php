@@ -12,7 +12,7 @@ abstract class BaseUserField extends BaseData
 	/**
 	 * @return string[]
 	 */
-	protected static function getLangFieldsNames()
+	public static function getLangFieldsNames()
 	{
 		return array(
 			"EDIT_FORM_LABEL",
@@ -112,6 +112,43 @@ abstract class BaseUserField extends BaseData
 		}
 
 		return $fields;
+	}
+
+	/**
+	 * @param array $fields список полей
+	 * @param array $isDelete удалять ли составные настройки
+	 *
+	 * @return array список настроек
+	 */
+	protected function fieldsToArray(&$fields, $cutKey, $isDelete = false)
+	{
+		$settings = array();
+		foreach($fields as $key => $field)
+		{
+			if(strstr($key, $cutKey) !== false)
+			{
+				$workSetting = &$settings;
+				$keys = explode(".", str_replace($cutKey . ".", "", $key));
+				foreach($keys as $pathKey)
+				{
+					if(end($keys) == $pathKey)
+					{
+						$workSetting[$pathKey] = $field;
+					}
+					else
+					{
+						$workSetting[$pathKey] = $workSetting[$pathKey] ? $workSetting[$pathKey] : array();
+						$workSetting = &$workSetting[$pathKey];
+					}
+				}
+
+				if($isDelete)
+				{
+					unset($fields[$key]);
+				}
+			}
+		}
+		return $settings;
 	}
 
 	/**
