@@ -62,28 +62,45 @@ class intervolga_migrato extends CModule
 
 	public function doUninstall()
 	{
-		try
-		{
-			Main\Loader::includeModule("intervolga.migrato");
-			$this->unInstallDb();
-			Main\ModuleManager::unRegisterModule($this->MODULE_ID);
-		}
-		catch (\Exception $e)
-		{
-			global $APPLICATION;
-			$APPLICATION->ThrowException($e->getMessage());
+		global $APPLICATION, $step;
 
-			return false;
+		$step = intval($step);
+		if ($step < 2)
+		{
+			$APPLICATION->includeAdminFile(
+				Loc::getMessage("INTERVOLGA_MIGRATO.UNINSTALL_STEP_N", array("#N#" => 1)),
+				__DIR__ . "/unstep1.php"
+			);
 		}
-
-		return true;
+		elseif ($step == 2)
+		{
+			try
+			{
+				Main\Loader::includeModule("intervolga.migrato");
+				$this->unInstallDb($_REQUEST["savedata"] == "Y");
+				Main\ModuleManager::unRegisterModule($this->MODULE_ID);
+			}
+			catch (\Exception $e)
+			{
+				global $APPLICATION;
+				$APPLICATION->ThrowException($e->getMessage());
+			}
+			$APPLICATION->includeAdminFile(
+				Loc::getMessage("INTERVOLGA_MIGRATO.UNINSTALL_STEP_N", array("#N#" => 2)),
+				__DIR__ . "/unstep2.php"
+			);
+		}
 	}
 
-	public function unInstallDb()
+	public function unInstallDb($saveData = false)
 	{
 		global $DB, $DBType;
-		UfXmlIdProvider::deleteXmlIdFields();
-		$errors = $DB->RunSQLBatch(__DIR__. "/db/" . strtolower($DBType) . "/uninstall.sql");
+		$errors = array();
+		if (!$saveData)
+		{
+			UfXmlIdProvider::deleteXmlIdFields();
+			$errors = $DB->RunSQLBatch(__DIR__. "/db/" . strtolower($DBType) . "/uninstall.sql");
+		}
 		if ($errors)
 		{
 			throw new \Exception(implode("<br>", $errors));
