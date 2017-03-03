@@ -194,32 +194,23 @@ class DataFileViewXml
 		$record = new Record();
 		$record->setXmlId($xmlArray["data"]["#"]["xml_id"][0]["#"]);
 
-		$fields = array();
-		foreach ($xmlArray["data"]["#"]["field"] as $field)
+		if ($xmlArray["data"]["#"]["field"])
 		{
-			$fields[$field["#"]["name"][0]["#"]] = trim($field["#"]["value"][0]["#"]);
+			$fields = static::parseFields($xmlArray["data"]["#"]["field"]);
+			$record->setFields($fields);
 		}
-		$record->setFields($fields);
 
-		$dependencies = array();
-		foreach ($xmlArray["data"]["#"]["dependency"] as $dependency)
+		if ($xmlArray["data"]["#"]["dependency"])
 		{
-			foreach ($dependency["#"]["value"] as $valueItem)
-			{
-				$dependencies[$dependency["#"]["name"][0]["#"]] = new Link(null, $valueItem["#"]);
-			}
+			$links = static::parseLinks($xmlArray["data"]["#"]["dependency"]);
+			$record->setDependencies($links);
 		}
-		$record->setDependencies($dependencies);
 
-		$references = array();
-		foreach ($xmlArray["data"]["#"]["reference"] as $reference)
+		if ($xmlArray["data"]["#"]["reference"])
 		{
-			foreach ($reference["#"]["value"] as $valueItem)
-			{
-				$references[$reference["#"]["name"][0]["#"]] = new Link(null, $valueItem["#"]);
-			}
+			$links = static::parseLinks($xmlArray["data"]["#"]["reference"]);
+			$record->setReferences($links);
 		}
-		$record->setReferences($references);
 
 		if ($xmlArray["data"]["#"]["runtime"])
 		{
@@ -228,6 +219,75 @@ class DataFileViewXml
 		}
 
 		return $record;
+	}
+
+	/**
+	 * @param array $fieldsNodes
+	 * @return array
+	 */
+	protected static function parseFields(array $fieldsNodes)
+	{
+		$fields = array();
+		foreach ($fieldsNodes as $field)
+		{
+			$name = $field["#"]["name"][0]["#"];
+			$isMultiple = false;
+			if (substr_count($name, "[]") == 1)
+			{
+				$name = str_replace("[]", "", $name);
+				$isMultiple = true;
+			}
+			if ($isMultiple)
+			{
+				$fields[$name][] = $field["#"]["value"][0]["#"];
+			}
+			else
+			{
+				$fields[$name] = $field["#"]["value"][0]["#"];
+			}
+		}
+		return $fields;
+	}
+
+	/**
+	 * @param array $linksNodes
+	 * @return Link[]
+	 */
+	protected static function parseLinks(array $linksNodes)
+	{
+		/**
+		 * @var $dependencies Link[]
+		 */
+		$dependencies = array();
+		foreach ($linksNodes as $dependency)
+		{
+			foreach ($dependency["#"]["value"] as $valueItem)
+			{
+				$name = $dependency["#"]["name"][0]["#"];
+				$isMultiple = false;
+				if (substr_count($name, "[]") == 1)
+				{
+					$name = str_replace("[]", "", $name);
+					$isMultiple = true;
+				}
+				if ($isMultiple)
+				{
+					if (!$dependencies[$name])
+					{
+						$dependencies[$name] = Link::createMultiple(array($valueItem["#"]));
+					}
+					else
+					{
+						$dependencies[$name]->addValue($valueItem["#"]);
+					}
+				}
+				else
+				{
+					$dependencies[$name] = new Link(null, $valueItem["#"]);
+				}
+			}
+		}
+		return $dependencies;
 	}
 
 	/**

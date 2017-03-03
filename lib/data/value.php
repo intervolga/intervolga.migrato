@@ -75,6 +75,15 @@ class Value
 	}
 
 	/**
+	 * @param string $value
+	 */
+	public function addValue($value)
+	{
+		$this->values[] = $value;
+		$this->multiple = true;
+	}
+
+	/**
 	 * @return \string[]
 	 * @throws \Exception
 	 */

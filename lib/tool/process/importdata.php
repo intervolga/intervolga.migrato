@@ -164,7 +164,14 @@ class ImportData extends BaseProcess
 			if ($dependencyModel)
 			{
 				$clone = clone $dependencyModel;
-				$clone->setValue($dependency->getValue());
+				if ($dependency->isMultiple())
+				{
+					$clone->setValues($dependency->getValues());
+				}
+				else
+				{
+					$clone->setValue($dependency->getValue());
+				}
 				$result[$key] = $clone;
 			}
 		}
@@ -187,7 +194,14 @@ class ImportData extends BaseProcess
 			if ($referenceModel)
 			{
 				$clone = clone $referenceModel;
-				$clone->setValue($reference->getValue());
+				if ($reference->isMultiple())
+				{
+					$clone->setValues($reference->getValues());
+				}
+				else
+				{
+					$clone->setValue($reference->getValue());
+				}
 				$result[$key] = $clone;
 			}
 		}
