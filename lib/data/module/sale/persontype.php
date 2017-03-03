@@ -16,11 +16,6 @@ class PersonType extends BaseData
 		$this->xmlIdProvider = new UfXmlIdProvider($this);
 	}
 
-	/**
-	 * @param string[] $filter
-	 *
-	 * @return \Intervolga\Migrato\Data\Record[]
-	 */
 	public function getList(array $filter = array())
 	{
 		$result = array();

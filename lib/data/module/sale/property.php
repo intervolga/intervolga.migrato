@@ -29,11 +29,6 @@ class Property extends BaseData
 		);
 	}
 
-	/**
-	 * @param string[] $filter
-	 *
-	 * @return \Intervolga\Migrato\Data\Record[]
-	 */
 	public function getList(array $filter = array())
 	{
 		$result = array();
