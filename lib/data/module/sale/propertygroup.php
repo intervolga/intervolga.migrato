@@ -8,12 +8,12 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
 
-class PropGroup extends BaseData
+class PropertyGroup extends BaseData
 {
 	public function __construct()
 	{
 		Loader::includeModule("sale");
-		$this->xmlIdProvider = new UfXmlIdProvider($this);
+		$this->xmlIdProvider = new UfXmlIdProvider($this, "ORDERPROPGROUP");
 	}
 
 	public function getFilesSubdir()
