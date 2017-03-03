@@ -6,6 +6,26 @@ class UfXmlIdProvider extends BaseXmlIdProvider
 {
 	protected $dataName = "";
 
+	public static function deleteXmlIdFields()
+	{
+		$filter = array(
+			"FIELD_NAME" => "UF_MIGRATO_XML_ID",
+		);
+		$getList = \CUserTypeEntity::getList(array(), $filter);
+		$userTypeEntity = new \CUserTypeEntity();
+		while ($userField = $getList->fetch())
+		{
+			if (strpos($userField["ENTITY_ID"], "MGR_") === 0)
+			{
+				if (!$userTypeEntity->delete($userField["ID"]))
+				{
+					global $APPLICATION;
+					throw new \Exception($APPLICATION->getException()->getString());
+				}
+			}
+		}
+	}
+
 	/**
 	 * @param BaseData $dataClass
 	 * @param string $dataName
