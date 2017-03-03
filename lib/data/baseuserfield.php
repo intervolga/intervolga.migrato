@@ -91,14 +91,22 @@ abstract class BaseUserField extends BaseData
 	 *
 	 * @return array
 	 */
-	protected function getSettingsFields(array $settings)
+	protected function getSettingsFields(array $settings, $fullname = "")
 	{
 		$fields = array();
 		foreach ($settings as $name => $setting)
 		{
+			$name = $fullname ? $fullname . "." . $name : $name;
 			if (!in_array($name, array_keys($this->getSettingsReferences())))
 			{
-				$fields["SETTINGS." . $name] = $setting;
+				if(!is_array($setting))
+				{
+					$fields["SETTINGS." . $name] = $setting;
+				}
+				else
+				{
+					$fields = array_merge($fields, $this->getSettingsFields($setting, $name));
+				}
 			}
 		}
 
