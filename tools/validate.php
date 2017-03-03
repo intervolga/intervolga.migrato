@@ -6,19 +6,15 @@ define("NO_KEEP_STATISTIC", true);
 define("NOT_CHECK_PERMISSIONS",true);
 define('NO_AGENT_CHECK', true);
 define("STATISTIC_SKIP_ACTIVITY_CHECK", true);
-$isCli = php_sapi_name() == "cli";
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
-if (!$isCli && !$USER->IsAdmin())
-{
-	die("Access denied");
-}
 
 @set_time_limit(0);
 if (\Bitrix\Main\Loader::includeModule("intervolga.migrato"))
 {
 	try
 	{
+		\Intervolga\Migrato\Tool\Page::checkRights();
 		$report = array();
 		foreach (\Intervolga\Migrato\Tool\Process\BaseProcess::validate() as $error)
 		{
@@ -44,22 +40,12 @@ if (\Bitrix\Main\Loader::includeModule("intervolga.migrato"))
 	}
 	catch (\Exception $exception)
 	{
-		$report = array(
-			"EXCEPTION (Class: " . get_class($exception) . ")",
-			"Message: " . $exception->getMessage() . " (Code: " . $exception->getCode() . ")",
-			"Location: " . $exception->getFile() . ":" . $exception->getLine()
-		);
+		$report = \Intervolga\Migrato\Tool\Page::handleException($exception);
 	}
+	\Intervolga\Migrato\Tool\Page::showReport($report);
 }
 else
 {
-	$report = array("Module intervolga.migrato not installed");
+	echo "Module intervolga.migrato not installed";
 }
-if ($isCli)
-{
-	echo implode("\r\n", $report)."\r\n";
-}
-else
-{
-	echo "<pre>" . implode("<br>", $report) . "</pre>";
-}
+require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");
