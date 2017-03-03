@@ -310,4 +310,61 @@ class Record
 	{
 		return $this->runtimes;
 	}
+
+	/**
+	 * @return array
+	 */
+	public function info()
+	{
+		$info = array(
+			"data" => $this->getData()->getModule() . ":" . $this->getData()->getEntityName(),
+			"xmlId" => $this->getXmlId(),
+			"id" => $this->getId() ? $this->getId()->getValue() : false,
+			"fields" => $this->getFieldsStrings(),
+		);
+		if ($this->getDependencies())
+		{
+			$info["dependencies"] = $this->infoLinks($this->getDependencies());
+		}
+		if ($this->getReferences())
+		{
+			$info["references"] = $this->infoLinks($this->getReferences());
+		}
+		return $info;
+	}
+
+	/**
+	 * @param Link[] $links
+	 * @return array
+	 */
+	protected function infoLinks(array $links)
+	{
+		$info = array();
+		if ($links)
+		{
+			foreach ($links as $name => $dependency)
+			{
+				if ($dependency->getTargetData())
+				{
+					$data = $dependency->getTargetData()->getModule() . ":" . $dependency->getTargetData()->getEntityName();
+				}
+				else
+				{
+					$data = false;
+				}
+				$info[$name]["data"] = $data;
+
+				if ($dependency->isMultiple())
+				{
+					$info[$name] += $dependency->getValues();
+				}
+				else
+				{
+					$info[$name][] = $dependency->getValue();
+				}
+			}
+		}
+
+		return $info;
+	}
 }
