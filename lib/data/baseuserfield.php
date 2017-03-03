@@ -4,6 +4,7 @@ use Intervolga\Migrato\Data\Module\Highloadblock\Field;
 use Intervolga\Migrato\Data\Module\Highloadblock\HighloadBlock;
 use Intervolga\Migrato\Data\Module\Iblock\Element;
 use Intervolga\Migrato\Data\Module\Iblock\Iblock;
+use Intervolga\Migrato\Data\Module\Iblock\Section;
 use Intervolga\Migrato\Tool\XmlIdProvider\UfSelfXmlIdProvider;
 
 abstract class BaseUserField extends BaseData
@@ -261,7 +262,10 @@ abstract class BaseUserField extends BaseData
 	 */
 	protected function getIblockSectionLink($value)
 	{
-		// todo
+		$inObject = RecordId::createNumericId($value);
+		$sectionXmlId = Section::getInstance()->getXmlIdProvider()->getXmlId($inObject);
+
+		return new Link(Section::getInstance(), $sectionXmlId);
 	}
 
 	/**
