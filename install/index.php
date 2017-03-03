@@ -2,6 +2,7 @@
 
 use Bitrix\Main;
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
 
@@ -63,6 +64,7 @@ class intervolga_migrato extends CModule
 	{
 		try
 		{
+			Main\Loader::includeModule("intervolga.migrato");
 			$this->unInstallDb();
 			Main\ModuleManager::unRegisterModule($this->MODULE_ID);
 		}
@@ -80,6 +82,7 @@ class intervolga_migrato extends CModule
 	public function unInstallDb()
 	{
 		global $DB, $DBType;
+		UfXmlIdProvider::deleteXmlIdFields();
 		$errors = $DB->RunSQLBatch(__DIR__. "/db/" . strtolower($DBType) . "/uninstall.sql");
 		if ($errors)
 		{

@@ -1,11 +1,18 @@
 <?namespace Intervolga\Migrato\Tool\XmlIdProvider;
 
+use Bitrix\Main\NotImplementedException;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\RecordId;
 
 abstract class BaseXmlIdProvider
 {
 	protected $dataClass = null;
+
+	public static function deleteXmlIdFields()
+	{
+		throw new NotImplementedException(__FUNCTION__ . " is not yet implemented");
+	}
+
 	public function __construct(BaseData $dataClass)
 	{
 		$this->dataClass = $dataClass;
