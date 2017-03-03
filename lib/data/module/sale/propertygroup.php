@@ -34,7 +34,7 @@ class PropertyGroup extends BaseData
 		$getList = OrderPropsGroupTable::getList();
 		while ($propGroup = $getList->fetch())
 		{
-			$record = new Record();
+			$record = new Record($this);
 			$id = RecordId::createNumericId($propGroup["ID"]);
 			$record->setId($id);
 			$record->setXmlId(

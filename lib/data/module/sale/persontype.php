@@ -23,7 +23,7 @@ class PersonType extends BaseData
 		$getList = PersonTypeTable::getList();
 		while ($personType = $getList->fetch())
 		{
-			$record = new Record();
+			$record = new Record($this);
 			$id = RecordId::createNumericId($personType["ID"]);
 			$record->setId($id);
 			$record->setXmlId(
