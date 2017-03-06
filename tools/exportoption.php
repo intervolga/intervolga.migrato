@@ -1,31 +1,16 @@
 <?php
-$_SERVER["DOCUMENT_ROOT"] = realpath(dirname(__FILE__)."/../../../..");
-$DOCUMENT_ROOT = $_SERVER["DOCUMENT_ROOT"];
+include dirname(__DIR__) . "/include/tools_before.php";
 
-define("NO_KEEP_STATISTIC", true);
-define("NOT_CHECK_PERMISSIONS",true);
-define('NO_AGENT_CHECK', true);
-define("STATISTIC_SKIP_ACTIVITY_CHECK", true);
-
-require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
-
-@set_time_limit(0);
-if (\Bitrix\Main\Loader::includeModule("intervolga.migrato"))
+try
 {
-	try
-	{
-		\Intervolga\Migrato\Tool\Page::checkRights();
-		\Intervolga\Migrato\Tool\Process\ExportOption::run();
-		$report = \Intervolga\Migrato\Tool\Process\ExportOption::getReports();
-		\Intervolga\Migrato\Tool\Page::showReport($report);
-	}
-	catch (\Exception $exception)
-	{
-		\Intervolga\Migrato\Tool\Page::handleException($exception);
-	}
+	\Intervolga\Migrato\Tool\Page::checkRights();
+	\Intervolga\Migrato\Tool\Process\ExportOption::run();
+	$report = \Intervolga\Migrato\Tool\Process\ExportOption::getReports();
+	\Intervolga\Migrato\Tool\Page::showReport($report);
 }
-else
+catch (\Exception $exception)
 {
-	echo "Module intervolga.migrato not installed";
+	\Intervolga\Migrato\Tool\Page::handleException($exception);
 }
-require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");
+
+include dirname(__DIR__) . "/include/tools_after.php";

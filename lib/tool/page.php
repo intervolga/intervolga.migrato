@@ -1,11 +1,9 @@
 <?namespace Intervolga\Migrato\Tool;
 
-use Bitrix\Main\AccessDeniedException;
-
 class Page
 {
 	/**
-	 * @throws \Bitrix\Main\AccessDeniedException
+	 * @throws \Exception
 	 */
 	public static function checkRights()
 	{
@@ -13,7 +11,7 @@ class Page
 		$isCli = php_sapi_name() == "cli";
 		if (!$isCli && !$USER->IsAdmin())
 		{
-			throw new AccessDeniedException("Need cli or admin login");
+			throw new \Exception("Need cli or admin login");
 		}
 	}
 
@@ -25,7 +23,10 @@ class Page
 		$report = array(
 			"EXCEPTION (Class: " . get_class($exception) . ")",
 			"Message: " . $exception->getMessage() . " (Code: " . $exception->getCode() . ")",
-			"Location: " . $exception->getFile() . ":" . $exception->getLine()
+			"Location: " . $exception->getFile() . ":" . $exception->getLine(),
+			"Trace:",
+			"",
+			$exception->getTraceAsString(),
 		);
 		static::showReport($report);
 	}
