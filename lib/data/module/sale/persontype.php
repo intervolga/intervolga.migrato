@@ -86,6 +86,7 @@ class PersonType extends BaseData
 		if ($id)
 		{
 			$recordId = RecordId::createNumericId($id);
+			$this->getXmlIdProvider()->setXmlId($recordId, $record->getXmlId());
 			return $recordId;
 		}
 		else
