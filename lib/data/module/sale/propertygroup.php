@@ -57,4 +57,73 @@ class PropertyGroup extends BaseData
 
 		return $result;
 	}
+
+	public function update(Record $record)
+	{
+		$update = $this->recordToArray($record);
+		$object = new \CSaleOrderPropsGroup();
+		$updateResult = $object->update($record->getId()->getValue(), $update);
+		if (!$updateResult)
+		{
+			global $APPLICATION;
+			throw new \Exception(implode(", ", $APPLICATION->getException()->getString()));
+		}
+	}
+
+	public function create(Record $record)
+	{
+		$add = $this->recordToArray($record);
+		$object = new \CSaleOrderPropsGroup();
+		$id = $object->add($add);
+		if ($id)
+		{
+			$recordId = RecordId::createNumericId($id);
+			$this->getXmlIdProvider()->setXmlId($recordId, $record->getXmlId());
+			return $recordId;
+		}
+		else
+		{
+			global $APPLICATION;
+			throw new \Exception(implode(", ", $APPLICATION->getException()->getString()));
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return array
+	 */
+	protected function recordToArray(Record $record)
+	{
+		$array = array(
+			"NAME" => $record->getFieldValue("NAME"),
+			"SORT" => $record->getFieldValue("SORT"),
+		);
+		if ($depenency = $record->getDependency("PERSON_TYPE_ID"))
+		{
+			$personTypeXmlId = $depenency->getValue();
+			$idObject = PersonType::getInstance()->findRecord($personTypeXmlId);
+			if ($idObject)
+			{
+				$array["PERSON_TYPE_ID"] = $idObject->getValue();
+			}
+		}
+
+		return $array;
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId);
+		if ($id)
+		{
+			$object = new \CSaleOrderPropsGroup();
+			$result = $object->delete($id->getValue());
+			if (!$result)
+			{
+				global $APPLICATION;
+				throw new \Exception(implode(", ", $APPLICATION->getException()->getString()));
+			}
+		}
+	}
 }
