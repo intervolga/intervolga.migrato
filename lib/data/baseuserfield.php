@@ -209,6 +209,28 @@ abstract class BaseUserField extends BaseData
 		return $links;
 	}
 
+	public function getSettingsLinksFieldsIBLOCK(Link $iblock)
+	{
+		$settings = array();
+		$iblockIdXml = $iblock->getValue();
+		$iblockId = Iblock::getInstance()->findRecord($iblockIdXml)->getValue();
+
+		$settings["IBLOCK_ID"] = $iblockId;
+		$settings["IBLOCK_TYPE_ID"] = \CIBlock::GetArrayByID($iblockId, "IBLOCK_TYPE_ID");
+
+		return $settings;
+	}
+
+	public function getSettingsLinksFieldsHLBLOCK(Link $iblock)
+	{
+		$iblock->getValue();
+	}
+
+	public function getSettingsLinksFieldsHLFIELD(Link $iblock)
+	{
+		$iblock->getValue();
+	}
+
 	public function getReferences()
 	{
 		$references = array();
