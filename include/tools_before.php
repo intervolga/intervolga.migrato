@@ -14,3 +14,12 @@ if (!\Bitrix\Main\Loader::includeModule("intervolga.migrato"))
 {
 	echo "Module intervolga.migrato not installed";
 }
+
+try
+{
+	\Intervolga\Migrato\Tool\Page::checkRights();
+}
+catch (\Exception $exception)
+{
+	\Intervolga\Migrato\Tool\Page::handleException($exception);
+}

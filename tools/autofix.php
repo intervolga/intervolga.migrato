@@ -3,7 +3,6 @@ include dirname(__DIR__) . "/include/tools_before.php";
 
 try
 {
-	\Intervolga\Migrato\Tool\Page::checkRights();
 	$report = array();
 	$errors = \Intervolga\Migrato\Tool\Process\BaseProcess::validate();
 	if (!$errors)
