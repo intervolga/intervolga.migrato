@@ -4,6 +4,7 @@ use Bitrix\Highloadblock\HighloadBlockTable;
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
+use Intervolga\Migrato\Data\Module\Iblock\Iblock;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Runtime;
@@ -107,5 +108,100 @@ class Element extends BaseData
 		return array(
 			"FIELD" => new Runtime(Field::getInstance()),
 		);
+	}
+
+	/**
+	 * @param array $fields
+	 * @return array
+	 */
+	public function getRuntimesFields(array $fields)
+	{
+		$result = array();
+		foreach($fields as $key => $value)
+		{
+			$fieldId = Field::getInstance()->findRecord($key)->getValue();
+			$field = \CUserTypeEntity::GetByID($fieldId);
+			$result[$field["FIELD_NAME"]] = $value->getValue();
+		}
+		return $result;
+	}
+
+	public function getRuntimesReferences(array $references)
+	{
+		$result = array();
+		foreach($references as $key => $value)
+		{
+			if($value->getValue())
+			{
+				$fieldId = Field::getInstance()->findRecord($key)->getValue();
+				$field = \CUserTypeEntity::GetByID($fieldId);
+				$result[$field["FIELD_NAME"]] = $value->getTargetData()->findRecord($value->getValue())->getValue();
+			}
+		}
+		return $result;
+	}
+
+	public function getDataClass($hlblockId)
+	{
+		$arHLBlock = HighloadBlockTable::getById($hlblockId)->fetch();
+		$obEntity = HighloadBlockTable::compileEntity($arHLBlock);
+
+		return $obEntity->getDataClass();
+	}
+
+	public function update(Record $record)
+	{
+		$id = $record->getId()->getValue();
+
+		$runtimes = $record->getRuntime("FIELD");
+
+		$fields = $this->getRuntimesFields($runtimes->getFields());
+
+		$fields = array_merge($fields, $this->getRuntimesReferences($runtimes->getReferences()));
+
+		$strEntityDataClass = $this->getDataClass($id["HLBLOCK_ID"]);
+
+		$result = $strEntityDataClass::update($id["ID"], $fields);
+		if(!$result->isSuccess())
+		{
+			throw new \Exception(trim(strip_tags($result->getErrorMessages())));
+		}
+
+	}
+
+	public function create(Record $record)
+	{
+		$id = $record->getId()->getValue();
+
+		$runtimes = $record->getRuntime("FIELD");
+
+		$fields = $this->getRuntimesFields($runtimes->getFields());
+		$fields = array_merge($fields, $this->getRuntimesReferences($runtimes->getReferences()));
+
+		$strEntityDataClass = $this->getDataClass($id["HLBLOCK_ID"]);
+		$result = $strEntityDataClass::add($fields);
+		if ($result->isSuccess())
+		{
+			$id = RecordId::createNumericId($result->getId());
+			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+
+			return $id;
+		}
+		else
+		{
+			throw new \Exception(trim(strip_tags($result->getErrorMessages())));
+		}
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId)->getValue();
+		$strEntityDataClass = $this->getDataClass($id["HLBLOCK_ID"]);
+
+		$result = $strEntityDataClass::delete($id["ID"]);
+		if(!$result->isSuccess())
+		{
+			throw new \Exception($result->getErrorMessages());
+		}
 	}
 }
