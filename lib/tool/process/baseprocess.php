@@ -16,6 +16,7 @@ class BaseProcess
 	public static function run()
 	{
 		static::$reports = array();
+		static::report("Process started");
 	}
 
 	/**

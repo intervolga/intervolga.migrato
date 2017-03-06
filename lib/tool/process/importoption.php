@@ -23,5 +23,6 @@ class ImportOption extends BaseProcess
 				static::report("Module $module options imported");
 			}
 		}
+		static::report("Process completed");
 	}
 }

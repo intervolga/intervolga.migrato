@@ -26,7 +26,7 @@ class ImportData extends BaseProcess
 		static::importWithDependencies();
 		static::deleteNotImported();
 		static::resolveReferences();
-		static::report("finishing");
+		static::report("Process completed");
 	}
 
 	protected static function init()

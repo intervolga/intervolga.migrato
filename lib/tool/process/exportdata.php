@@ -26,6 +26,7 @@ class ExportData extends BaseProcess
 		{
 			static::exportData($data);
 		}
+		static::report("Process completed");
 	}
 
 	/**
