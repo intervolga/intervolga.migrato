@@ -17,12 +17,12 @@ if (\Bitrix\Main\Loader::includeModule("intervolga.migrato"))
 		\Intervolga\Migrato\Tool\Page::checkRights();
 		\Intervolga\Migrato\Tool\Process\ImportOption::run();
 		$report = \Intervolga\Migrato\Tool\Process\ImportOption::getReports();
+		\Intervolga\Migrato\Tool\Page::showReport($report);
 	}
 	catch (\Exception $exception)
 	{
-		$report = \Intervolga\Migrato\Tool\Page::handleException($exception);
+		\Intervolga\Migrato\Tool\Page::handleException($exception);
 	}
-	\Intervolga\Migrato\Tool\Page::showReport($report);
 }
 else
 {

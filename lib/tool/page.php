@@ -19,8 +19,6 @@ class Page
 
 	/**
 	 * @param \Exception $exception
-	 *
-	 * @return string[]
 	 */
 	public static function handleException(\Exception $exception)
 	{
@@ -29,13 +27,13 @@ class Page
 			"Message: " . $exception->getMessage() . " (Code: " . $exception->getCode() . ")",
 			"Location: " . $exception->getFile() . ":" . $exception->getLine()
 		);
-		return $report;
+		static::showReport($report);
 	}
 
 	/**
 	 * @param string[] $report
 	 */
-	public static function showReport($report)
+	public static function showReport(array $report)
 	{
 		$isCli = php_sapi_name() == "cli";
 		if ($isCli)

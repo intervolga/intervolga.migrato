@@ -37,12 +37,12 @@ if (\Bitrix\Main\Loader::includeModule("intervolga.migrato"))
 		{
 			$report[] = "No validation errors";
 		}
+		\Intervolga\Migrato\Tool\Page::showReport($report);
 	}
 	catch (\Exception $exception)
 	{
-		$report = \Intervolga\Migrato\Tool\Page::handleException($exception);
+		\Intervolga\Migrato\Tool\Page::handleException($exception);
 	}
-	\Intervolga\Migrato\Tool\Page::showReport($report);
 }
 else
 {

@@ -26,12 +26,12 @@ if (\Bitrix\Main\Loader::includeModule("intervolga.migrato"))
 			\Intervolga\Migrato\Tool\Process\BaseProcess::fixErrors($errors);
 			$report[] = "Errors fixed";
 		}
+		\Intervolga\Migrato\Tool\Page::showReport($report);
 	}
 	catch (\Exception $exception)
 	{
-		$report = \Intervolga\Migrato\Tool\Page::handleException($exception);
+		\Intervolga\Migrato\Tool\Page::handleException($exception);
 	}
-	\Intervolga\Migrato\Tool\Page::showReport($report);
 }
 else
 {
