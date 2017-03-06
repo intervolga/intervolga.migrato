@@ -75,9 +75,9 @@ class ImportData extends BaseProcess
 		for ($i = 0; $i < count($configDataClasses); $i++)
 		{
 			$creatableDataRecords = static::$list->getCreatableRecords();
-			static::report("Import depenency step $i, count=" . count($creatableDataRecords) . " record(s)");
 			if ($creatableDataRecords)
 			{
+				static::report("Import depenency step $i, count=" . count($creatableDataRecords) . " record(s)");
 				foreach ($creatableDataRecords as $dataRecord)
 				{
 					static::saveDataRecord($dataRecord);
@@ -91,7 +91,7 @@ class ImportData extends BaseProcess
 		}
 		if (static::$list->getCreatableRecords())
 		{
-			static::report("Not enough import depenency steps!");
+			static::report("Not enough import depenency steps!", "fail");
 		}
 	}
 
