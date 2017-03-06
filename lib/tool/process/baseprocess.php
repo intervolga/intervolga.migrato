@@ -121,7 +121,14 @@ class BaseProcess
 				{
 					if (!in_array($record->getXmlId(), $xmlIds))
 					{
-						$xmlIds[] = $record->getXmlId();
+						if (static::isSimpleXmlId($record->getXmlId()))
+						{
+							$errorType = XmlIdValidateError::TYPE_SIMPLE;
+						}
+						else
+						{
+							$xmlIds[] = $record->getXmlId();
+						}
 					}
 					else
 					{
@@ -145,6 +152,16 @@ class BaseProcess
 		}
 
 		return $errors;
+	}
+
+	/**
+	 * @param string $xmlId
+	 *
+	 * @return bool
+	 */
+	protected static function isSimpleXmlId($xmlId)
+	{
+		return is_numeric($xmlId);
 	}
 
 	/**
