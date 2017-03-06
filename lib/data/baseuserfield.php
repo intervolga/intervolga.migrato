@@ -4,6 +4,8 @@ use Intervolga\Migrato\Data\Module\Highloadblock\Field;
 use Intervolga\Migrato\Data\Module\Highloadblock\HighloadBlock;
 use Intervolga\Migrato\Data\Module\Iblock\Element;
 use Intervolga\Migrato\Data\Module\Iblock\Iblock;
+use Intervolga\Migrato\Data\Module\Iblock\Section;
+use Intervolga\Migrato\Data\Module\Iblock\FieldEnum;
 use Intervolga\Migrato\Tool\XmlIdProvider\UfSelfXmlIdProvider;
 
 abstract class BaseUserField extends BaseData
@@ -11,7 +13,7 @@ abstract class BaseUserField extends BaseData
 	/**
 	 * @return string[]
 	 */
-	protected static function getLangFieldsNames()
+	public static function getLangFieldsNames()
 	{
 		return array(
 			"EDIT_FORM_LABEL",
@@ -91,18 +93,63 @@ abstract class BaseUserField extends BaseData
 	 *
 	 * @return array
 	 */
-	protected function getSettingsFields(array $settings)
+	protected function getSettingsFields(array $settings, $fullname = "")
 	{
 		$fields = array();
 		foreach ($settings as $name => $setting)
 		{
+			$name = $fullname ? $fullname . "." . $name : $name;
 			if (!in_array($name, array_keys($this->getSettingsReferences())))
 			{
-				$fields["SETTINGS." . $name] = $setting;
+				if(!is_array($setting))
+				{
+					$fields["SETTINGS." . $name] = $setting;
+				}
+				else
+				{
+					$fields = array_merge($fields, $this->getSettingsFields($setting, $name));
+				}
 			}
 		}
 
 		return $fields;
+	}
+
+	/**
+	 * @param array $fields список полей
+	 * @param array $isDelete удалять ли составные настройки
+	 *
+	 * @return array список настроек
+	 */
+	protected function fieldsToArray(&$fields, $cutKey, $isDelete = false)
+	{
+		$settings = array();
+		foreach($fields as $key => $field)
+		{
+			if(strstr($key, $cutKey) !== false)
+			{
+				$workSetting = &$settings;
+				$keys = explode(".", str_replace($cutKey . ".", "", $key));
+				foreach($keys as $pathKey)
+				{
+					if(end($keys) == $pathKey)
+					{
+						$workSetting[$pathKey] = $field;
+					}
+					else
+					{
+						$workSetting[$pathKey] = $workSetting[$pathKey] ? $workSetting[$pathKey] : array();
+						$workSetting = &$workSetting[$pathKey];
+					}
+				}
+
+				if($isDelete)
+				{
+					unset($fields[$key]);
+				}
+			}
+		}
+		return $settings;
 	}
 
 	/**
@@ -163,6 +210,28 @@ abstract class BaseUserField extends BaseData
 		return $links;
 	}
 
+	/**
+	 * @param array $links
+	 *
+	 * @return array настройки для привязки к сущности
+	 */
+	public function getSettingsLinksFields(array $links)
+	{
+		$settings = array();
+		foreach($links as $entity => $link)
+		{
+			$entity = str_replace("SETTINGS.", "", $entity);
+			$xmlId = $link->getValue();
+			$settings[$entity] = $this->getSettingsReference($entity)->getTargetData()->findRecord($xmlId)->getValue();
+
+			if ($entity == "IBLOCK_ID")
+			{
+				$settings["IBLOCK_TYPE_ID"] = \CIBlock::GetArrayByID($settings[$entity], "IBLOCK_TYPE_ID");
+			}
+		}
+		return $settings;
+	}
+
 	public function getReferences()
 	{
 		$references = array();
@@ -184,6 +253,17 @@ abstract class BaseUserField extends BaseData
 			"HLBLOCK_ID" => new Link(HighloadBlock::getInstance()),
 			"HLFIELD_ID" => new Link(Field::getInstance()),
 		);
+	}
+
+	/**
+	 * @param $key
+	 *
+	 * @return Link
+	 */
+	public function getSettingsReference($key)
+	{
+		$references = $this->getSettingsReferences();
+		return $references[$key];
 	}
 
 	/**
@@ -253,7 +333,10 @@ abstract class BaseUserField extends BaseData
 	 */
 	protected function getIblockSectionLink($value)
 	{
-		// todo
+		$inObject = RecordId::createNumericId($value);
+		$sectionXmlId = Section::getInstance()->getXmlIdProvider()->getXmlId($inObject);
+
+		return new Link(Section::getInstance(), $sectionXmlId);
 	}
 
 	/**
@@ -292,6 +375,10 @@ abstract class BaseUserField extends BaseData
 	 */
 	protected function getEnumerationLink($value)
 	{
-		// todo
+		$inObject = RecordId::createNumericId($value);
+		$fieldEnumXmlId = FieldEnum::getInstance()->getXmlIdProvider()->getXmlId($inObject);
+
+		return new Link(FieldEnum::getInstance(), $fieldEnumXmlId);
+
 	}
 }
