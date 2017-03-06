@@ -54,4 +54,59 @@ class PersonType extends BaseData
 		}
 		return $result;
 	}
+
+	public function update(Record $record)
+	{
+		$id = $record->getId()->getValue();
+		$update = array(
+			"NAME" => $record->getFieldValue("NAME"),
+			"SORT" => $record->getFieldValue("SORT"),
+			"ACTIVE" => $record->getFieldValue("ACTIVE"),
+			"LID" => $record->getFieldValues("LID"),
+		);
+		$object = new \CSalePersonType();
+		$updateResult = $object->update($id, $update);
+		if (!$updateResult)
+		{
+			global $APPLICATION;
+			throw new \Exception(implode(", ", $APPLICATION->getException()->getString()));
+		}
+	}
+
+	public function create(Record $record)
+	{
+		$add = array(
+			"NAME" => $record->getFieldValue("NAME"),
+			"SORT" => $record->getFieldValue("SORT"),
+			"ACTIVE" => $record->getFieldValue("ACTIVE"),
+			"LID" => $record->getFieldValues("LID"),
+		);
+		$object = new \CSalePersonType();
+		$id = $object->add($add);
+		if ($id)
+		{
+			$recordId = RecordId::createNumericId($id);
+			return $recordId;
+		}
+		else
+		{
+			global $APPLICATION;
+			throw new \Exception(implode(", ", $APPLICATION->getException()->getString()));
+		}
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId);
+		if ($id)
+		{
+			$object = new \CSalePersonType();
+			$result = $object->delete($id->getValue());
+			if (!$result)
+			{
+				global $APPLICATION;
+				throw new \Exception(implode(", ", $APPLICATION->getException()->getString()));
+			}
+		}
+	}
 }
