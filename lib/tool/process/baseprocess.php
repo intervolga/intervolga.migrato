@@ -171,20 +171,7 @@ class BaseProcess
 	{
 		foreach ($errors as $error)
 		{
-			if ($error->getType() == XmlIdValidateError::TYPE_EMPTY)
-			{
-				$error->getDataClass()->getXmlIdProvider()->generateXmlId($error->getId());
-			}
-			elseif ($error->getType() == XmlIdValidateError::TYPE_INVALID)
-			{
-				$xmlId = $error->getDataClass()->getXmlIdProvider()->getXmlId($error->getId());
-				$xmlId = preg_replace("/[^a-z0-9\-_]/", "-", $xmlId);
-				$error->getDataClass()->getXmlIdProvider()->setXmlId($error->getId(), $xmlId);
-			}
-			elseif ($error->getType() == XmlIdValidateError::TYPE_REPEAT)
-			{
-				$error->getDataClass()->getXmlIdProvider()->generateXmlId($error->getId());
-			}
+			$error->getDataClass()->getXmlIdProvider()->generateXmlId($error->getId());
 		}
 	}
 

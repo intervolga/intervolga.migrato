@@ -23,7 +23,11 @@ class OrmXmlIdProvider extends BaseXmlIdProvider
 	public function setXmlId($id, $xmlId)
 	{
 		$dataManager = $this->dataManager;
-		$dataManager::update($id->getValue(), array("XML_ID" => $xmlId));
+		$updateResult = $dataManager::update($id->getValue(), array("XML_ID" => $xmlId));
+		if (!$updateResult->isSuccess())
+		{
+			throw new \Exception(implode(";", $updateResult->getErrorMessages()));
+		}
 	}
 
 	public function getXmlId($id)
