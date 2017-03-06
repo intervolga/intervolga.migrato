@@ -63,19 +63,6 @@ class Field extends BaseUserField
 		return parent::getList($filter);
 	}
 
-	public function getReferencesStrings(array $references)
-	{
-		$settings = array();
-		if(!empty($references))
-		{
-			$entity = preg_replace("/(SETTINGS\.)|_ID/", "", key($references));
-			$func = "getSettingsLinksFields" . $entity;
-
-			$settings = $this->$func(array_pop($references));
-		}
-		return $settings;
-	}
-
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
@@ -90,7 +77,7 @@ class Field extends BaseUserField
 
 		if(!$iblockIdXml)
 		{
-			$fields["SETTINGS"] = array_merge($fields["SETTINGS"], $this->getReferencesStrings($record->getReferences()));
+			$fields["SETTINGS"] = array_merge($fields["SETTINGS"], $this->getSettingsLinksFields($record->getReferences()));
 		}
 
 		$fieldObject = new \CAllUserTypeEntity();

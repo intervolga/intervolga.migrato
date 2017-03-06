@@ -209,26 +209,26 @@ abstract class BaseUserField extends BaseData
 		return $links;
 	}
 
-	public function getSettingsLinksFieldsIBLOCK(Link $iblock)
+	/**
+	 * @param array $links
+	 *
+	 * @return array настройки для привязки к сущности
+	 */
+	public function getSettingsLinksFields(array $links)
 	{
 		$settings = array();
-		$iblockIdXml = $iblock->getValue();
-		$iblockId = Iblock::getInstance()->findRecord($iblockIdXml)->getValue();
+		foreach($links as $entity => $link)
+		{
+			$entity = str_replace("SETTINGS.", "", $entity);
+			$xmlId = $link->getValue();
+			$settings[$entity] = $this->getSettingsReference($entity)->getTargetData()->findRecord($xmlId)->getValue();
 
-		$settings["IBLOCK_ID"] = $iblockId;
-		$settings["IBLOCK_TYPE_ID"] = \CIBlock::GetArrayByID($iblockId, "IBLOCK_TYPE_ID");
-
+			if ($entity == "IBLOCK_ID")
+			{
+				$settings["IBLOCK_TYPE_ID"] = \CIBlock::GetArrayByID($settings[$entity], "IBLOCK_TYPE_ID");
+			}
+		}
 		return $settings;
-	}
-
-	public function getSettingsLinksFieldsHLBLOCK(Link $iblock)
-	{
-		$iblock->getValue();
-	}
-
-	public function getSettingsLinksFieldsHLFIELD(Link $iblock)
-	{
-		$iblock->getValue();
 	}
 
 	public function getReferences()
@@ -252,6 +252,17 @@ abstract class BaseUserField extends BaseData
 			"HLBLOCK_ID" => new Link(HighloadBlock::getInstance()),
 			"HLFIELD_ID" => new Link(Field::getInstance()),
 		);
+	}
+
+	/**
+	 * @param $key
+	 *
+	 * @return Link
+	 */
+	public function getSettingsReference($key)
+	{
+		$references = $this->getSettingsReferences();
+		return $references[$key];
 	}
 
 	/**
