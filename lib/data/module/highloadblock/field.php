@@ -62,4 +62,14 @@ class Field extends BaseUserField
 
 		return parent::getList($filter);
 	}
+
+	public function getDependencyString()
+	{
+		return "IBLOCK_ID";
+	}
+
+	public function getDependencyNameKey($id)
+	{
+		return "HLBLOCK_" . $id;
+	}
 }

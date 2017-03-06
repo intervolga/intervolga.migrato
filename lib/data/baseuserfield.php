@@ -381,4 +381,87 @@ abstract class BaseUserField extends BaseData
 		return new Link(FieldEnum::getInstance(), $fieldEnumXmlId);
 
 	}
+
+	/**
+	 * @return string
+	 */
+	abstract public function getDependencyString();
+
+	/**
+	 * @param $id
+	 * @return string
+	 */
+	abstract public function getDependencyNameKey($id);
+
+	public function update(Record $record)
+	{
+		$fields = $record->getFieldsStrings();
+
+		$blockIdXml = $record->getDependency($this->getDependencyString());
+
+		$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
+		foreach($this->getLangFieldsNames() as $lang)
+		{
+			$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
+		}
+
+		if(!$blockIdXml)
+		{
+			$fields["SETTINGS"] = array_merge($fields["SETTINGS"], $this->getSettingsLinksFields($record->getReferences()));
+		}
+
+		$fieldObject = new \CAllUserTypeEntity();
+		$isUpdated = $fieldObject->Update($record->getId()->getValue(), $fields);
+		if (!$isUpdated)
+		{
+			throw new \Exception("Unknown error");
+		}
+	}
+
+	public function create(Record $record)
+	{
+		$fields = $record->getFieldsStrings();
+
+		if($iblockIdXml = $record->getDependency($this->getDependencyString()))
+		{
+			$blockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
+
+			$fields["XML_ID"] = $record->getXmlId();
+			$fields["ENTITY_ID"] = $this->getDependencyNameKey($blockId);
+
+			$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
+			foreach($this->getLangFieldsNames() as $lang)
+			{
+				$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
+			}
+
+			$fieldObject = new \CAllUserTypeEntity();
+			$fieldId = $fieldObject->add($fields);
+			if ($fieldId)
+			{
+				$id = RecordId::createNumericId($fieldId);
+				$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+
+				return $id;
+			}
+			else
+			{
+				throw new \Exception("Unknown error");
+			}
+		}
+		else
+		{
+			throw new \Exception("iblock/field not defined a dependence for element " . $record->getId()->getValue());
+		}
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId);
+		$fieldObject = new \CAllUserTypeEntity();
+		if (!$fieldObject->delete($id->getValue()))
+		{
+			throw new \Exception("Unknown error");
+		}
+	}
 }
