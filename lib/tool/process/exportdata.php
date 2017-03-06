@@ -47,7 +47,7 @@ class ExportData extends BaseProcess
 				DataFileViewXml::writeToFileSystem($record, $path);
 			}
 
-			static::reportData($dataClass, "exported");
+			static::reportData($dataClass, "exported (" . count($records) . ")");
 		}
 		catch (\Exception $exception)
 		{
