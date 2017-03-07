@@ -5,7 +5,6 @@ use Bitrix\Sale\Internals\OrderPropsVariantTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
 
 class PropertyVariant extends BaseData
@@ -35,7 +34,7 @@ class PropertyVariant extends BaseData
 		while ($variant = $getList->fetch())
 		{
 			$record = new Record($this);
-			$id = RecordId::createNumericId($variant["ID"]);
+			$id = $this->createId($variant["ID"]);
 			$record->setId($id);
 			$record->setXmlId(
 				$this->getXmlIdProvider()->getXmlId($id)
@@ -48,7 +47,7 @@ class PropertyVariant extends BaseData
 			));
 
 			$link = clone $this->getDependency("ORDER_PROPS_ID");
-			$propId = RecordId::createNumericId($variant["ORDER_PROPS_ID"]);
+			$propId = Property::getInstance()->createId($variant["ORDER_PROPS_ID"]);
 			$propXmlId = Property::getInstance()->getXmlIdProvider()->getXmlId($propId);
 			$link->setValue($propXmlId);
 			$record->addDependency("ORDER_PROPS_ID", $link);

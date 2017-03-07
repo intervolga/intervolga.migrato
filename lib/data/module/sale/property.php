@@ -5,7 +5,7 @@ use Bitrix\Sale\Internals\OrderPropsTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Data\Value;
 use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
 
 class Property extends BaseData
@@ -36,7 +36,7 @@ class Property extends BaseData
 		while ($property = $getList->fetch())
 		{
 			$record = new Record($this);
-			$id = RecordId::createNumericId($property["ID"]);
+			$id = $this->createId($property["ID"]);
 			$record->setId($id);
 			$record->setXmlId(
 				$this->getXmlIdProvider()->getXmlId($id)
@@ -64,7 +64,7 @@ class Property extends BaseData
 				"INPUT_FIELD_LOCATION" => $property["INPUT_FIELD_LOCATION"],
 				"MULTIPLE" => $property["MULTIPLE"],
 			));
-			$this->addSettings($record, $property["SETTINGS"]);
+			$record->setFields(Value::treeToList($property["SETTINGS"], "SETTINGS"));
 			$this->addDependencies($record, $property);
 			$result[] = $record;
 		}
@@ -74,30 +74,18 @@ class Property extends BaseData
 
 	/**
 	 * @param Record $record
-	 * @param string[] $settings
-	 */
-	protected function addSettings(Record $record, array $settings)
-	{
-		foreach ($settings as $name => $value)
-		{
-			$record->setField("SETTINGS.$name", $value);
-		}
-	}
-
-	/**
-	 * @param Record $record
 	 * @param array $property
 	 */
 	protected function addDependencies(Record $record, array $property)
 	{
 		$link = clone $this->getDependency("PERSON_TYPE_ID");
-		$personTypeId = RecordId::createNumericId($property["PERSON_TYPE_ID"]);
+		$personTypeId = PersonType::getInstance()->createId($property["PERSON_TYPE_ID"]);
 		$personTypeXmlId = PersonType::getInstance()->getXmlIdProvider()->getXmlId($personTypeId);
 		$link->setValue($personTypeXmlId);
 		$record->addDependency("PERSON_TYPE_ID", $link);
 
 		$link = clone $this->getDependency("PROPS_GROUP_ID");
-		$propertyGroupId = RecordId::createNumericId($property["PROPS_GROUP_ID"]);
+		$propertyGroupId = PropertyGroup::getInstance()->createId($property["PROPS_GROUP_ID"]);
 		$propertyGroupXmlId = PropertyGroup::getInstance()->getXmlIdProvider()->getXmlId($propertyGroupId);
 		$link->setValue($propertyGroupXmlId);
 		$record->addDependency("PROPS_GROUP_ID", $link);

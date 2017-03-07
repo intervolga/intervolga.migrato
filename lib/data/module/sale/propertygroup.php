@@ -5,7 +5,6 @@ use Bitrix\Sale\Internals\OrderPropsGroupTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
 
 class PropertyGroup extends BaseData
@@ -35,7 +34,7 @@ class PropertyGroup extends BaseData
 		while ($propGroup = $getList->fetch())
 		{
 			$record = new Record($this);
-			$id = RecordId::createNumericId($propGroup["ID"]);
+			$id = $this->createId($propGroup["ID"]);
 			$record->setId($id);
 			$record->setXmlId(
 				$this->getXmlIdProvider()->getXmlId($id)
@@ -47,7 +46,7 @@ class PropertyGroup extends BaseData
 
 			$link = clone $this->getDependency("PERSON_TYPE_ID");
 			$personTypeXmlId = PersonType::getInstance()->getXmlIdProvider()->getXmlId(
-				RecordId::createNumericId($propGroup["PERSON_TYPE_ID"])
+				PersonType::getInstance()->createId($propGroup["PERSON_TYPE_ID"])
 			);
 			$link->setValue($personTypeXmlId);
 			$record->addDependency("PERSON_TYPE_ID", $link);
@@ -77,9 +76,7 @@ class PropertyGroup extends BaseData
 		$id = $object->add($add);
 		if ($id)
 		{
-			$recordId = RecordId::createNumericId($id);
-			$this->getXmlIdProvider()->setXmlId($recordId, $record->getXmlId());
-			return $recordId;
+			return $this->createId($id);
 		}
 		else
 		{
