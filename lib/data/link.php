@@ -65,4 +65,55 @@ class Link extends Value
 	{
 		return $this->id;
 	}
+
+	/**
+	 * @return \Intervolga\Migrato\Data\RecordId[]
+	 * @throws \Exception
+	 */
+	public function findIds()
+	{
+		if ($this->targetData)
+		{
+			if ($this->isMultiple())
+			{
+				$ids = array();
+				foreach ($this->getValues() as $xmlId)
+				{
+					$ids[] = $this->targetData->findRecord($xmlId);
+				}
+				return $ids;
+			}
+			else
+			{
+				throw new \Exception("Use findId() for finding single ids");
+			}
+		}
+		else
+		{
+			throw new \Exception("Set target data to find link id");
+		}
+	}
+
+	/**
+	 * @return \Intervolga\Migrato\Data\RecordId
+	 * @throws \Exception
+	 */
+	public function findId()
+	{
+		if ($this->targetData)
+		{
+			if ($this->isMultiple())
+			{
+				return $this->targetData->findRecord($this->getValue());
+			}
+			else
+			{
+				throw new \Exception("Use findIds() for finding multiple ids");
+			}
+		}
+		else
+		{
+			throw new \Exception("Set target data to find link id");
+		}
+	}
 }

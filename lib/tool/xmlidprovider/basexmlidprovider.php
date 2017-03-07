@@ -56,12 +56,35 @@ abstract class BaseXmlIdProvider
 	/**
 	 * @return string
 	 */
-	public static function makeXmlId()
+	protected function makeXmlId()
 	{
-		$xmlid = uniqid("", true);
+		$prefix = $this->dataClass->getModule() . "-" . $this->dataClass->getEntityName() . "-";
+		$prefix = str_replace(
+			array(
+				"iblock",
+				"element",
+				"section",
+				"highloadblock",
+				"field",
+				"property",
+				"group",
+				"event",
+			),
+			array(
+				"ibl",
+				"el",
+				"sect",
+				"hlb",
+				"fld",
+				"prop",
+				"grp",
+				"evt",
+			),
+			$prefix
+		);
+		$xmlid = strrev(uniqid("", true));
 		$xmlid = str_replace(".", "", $xmlid);
-		$xmlid = str_split($xmlid, 6);
-		$xmlid = implode("-", $xmlid);
-		return $xmlid;
+		$xmlid = implode("-", str_split($xmlid, 6));
+		return $prefix.$xmlid;
 	}
 }
