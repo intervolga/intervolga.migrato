@@ -1,18 +1,14 @@
-<? namespace Intervolga\Migrato\Data\Module\Iblock;
+<? namespace Intervolga\Migrato\Data\Module\Highloadblock;
 
-use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseUserFieldEnum;
 use Intervolga\Migrato\Data\Link;
-use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Data\RecordId;
-use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 class FieldEnum extends BaseUserFieldEnum
 {
 
 	public function getFilesSubdir()
 	{
-		return "/type/iblock/section/";
+		return "/highloadblock/";
 	}
 
 	/**
@@ -22,7 +18,7 @@ class FieldEnum extends BaseUserFieldEnum
 	 */
 	public function getList(array $filter = array())
 	{
-		$filter["ID"] = array();
+		$filter["USER_FIELD_ID"] = array();
 		foreach(Field::getInstance()->getList() as $record)
 		{
 			$fields = $record->getFieldsStrings();

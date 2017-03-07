@@ -9,7 +9,7 @@ class Field extends BaseUserField
 {
 	public function getFilesSubdir()
 	{
-		return "/type/iblock/section/   ";
+		return "/type/iblock/section/";
 	}
 
 	/**
