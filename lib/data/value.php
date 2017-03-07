@@ -20,6 +20,53 @@ class Value
 	protected $descriptionIsSet = false;
 
 	/**
+	 * @param array $tree
+	 * @param string $root
+	 *
+	 * @return string[]
+	 */
+	public static function treeToList(array $tree, $root)
+	{
+		$list = array();
+		foreach ($tree as $key => $value)
+		{
+			$list["$root.$key"] = $value;
+		}
+		return $list;
+	}
+
+	/**
+	 * @param array $list
+	 *
+	 * @return array
+	 */
+	public static function listToTree(array $list)
+	{
+		$tree = array();
+		foreach ($list as $key => $value)
+		{
+			$explode = explode(".", $key);
+			if (count($explode) == 2)
+			{
+				$tree[$explode[0]][$explode[1]] = $value;
+			}
+		}
+		return $tree;
+	}
+
+	/**
+	 * @param array $tree
+	 * @param string $root
+	 *
+	 * @return array
+	 */
+	public static function listToTreeGet(array $tree, $root)
+	{
+		$result = static::listToTree($tree);
+		return $result[$root];
+	}
+
+	/**
 	 * @param string[] $values
 	 *
 	 * @return static
