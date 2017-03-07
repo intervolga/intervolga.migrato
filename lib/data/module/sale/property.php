@@ -25,6 +25,12 @@ class Property extends BaseData
 	{
 		return array(
 			"PERSON_TYPE_ID" => new Link(PersonType::getInstance()),
+		);
+	}
+
+	public function getReferences()
+	{
+		return array(
 			"PROPS_GROUP_ID" => new Link(PropertyGroup::getInstance()),
 		);
 	}
@@ -65,7 +71,7 @@ class Property extends BaseData
 				"MULTIPLE" => $property["MULTIPLE"],
 			));
 			$record->setFields(Value::treeToList($property["SETTINGS"], "SETTINGS"));
-			$this->addDependencies($record, $property);
+			$this->addLinks($record, $property);
 			$result[] = $record;
 		}
 
@@ -76,7 +82,7 @@ class Property extends BaseData
 	 * @param Record $record
 	 * @param array $property
 	 */
-	protected function addDependencies(Record $record, array $property)
+	protected function addLinks(Record $record, array $property)
 	{
 		$link = clone $this->getDependency("PERSON_TYPE_ID");
 		$personTypeId = PersonType::getInstance()->createId($property["PERSON_TYPE_ID"]);
@@ -84,10 +90,96 @@ class Property extends BaseData
 		$link->setValue($personTypeXmlId);
 		$record->addDependency("PERSON_TYPE_ID", $link);
 
-		$link = clone $this->getDependency("PROPS_GROUP_ID");
+		$link = clone $this->getReference("PROPS_GROUP_ID");
 		$propertyGroupId = PropertyGroup::getInstance()->createId($property["PROPS_GROUP_ID"]);
 		$propertyGroupXmlId = PropertyGroup::getInstance()->getXmlIdProvider()->getXmlId($propertyGroupId);
 		$link->setValue($propertyGroupXmlId);
-		$record->addDependency("PROPS_GROUP_ID", $link);
+		$record->addReference("PROPS_GROUP_ID", $link);
+	}
+
+	public function update(Record $record)
+	{
+		$array = $this->recordToArray($record);
+		$object = new \CSaleOrderUserProps();
+		$updateResult = $object->update($record->getId()->getValue(), $array);
+		if (!$updateResult)
+		{
+			global $APPLICATION;
+			throw new \Exception($APPLICATION->getException()->getString());
+		}
+	}
+
+	public function create(Record $record)
+	{
+		$array = $this->recordToArray($record);
+		$object = new \CSaleOrderUserProps();
+		$id = $object->add($array);
+		if ($id)
+		{
+			return $this->createId($id);
+		}
+		else
+		{
+			global $APPLICATION;
+			throw new \Exception($APPLICATION->getException()->getString());
+		}
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId);
+		if ($id)
+		{
+			$object = new \CSaleOrderUserProps();
+			if (!$object->delete($id->getValue()))
+			{
+				throw new \Exception("Unknown error");
+			}
+		}
+	}
+
+	protected function recordToArray(Record $record)
+	{
+		$array = array(
+			"NAME" => $record->getFieldValue("NAME"),
+			"TYPE" => $record->getFieldValue("TYPE"),
+			"REQUIRED" => $record->getFieldValue("REQUIRED"),
+			"DEFAULT_VALUE" => $record->getFieldValue("DEFAULT_VALUE"),
+			"SORT" => $record->getFieldValue("SORT"),
+			"USER_PROPS" => $record->getFieldValue("USER_PROPS"),
+			"IS_LOCATION" => $record->getFieldValue("IS_LOCATION"),
+			"DESCRIPTION" => $record->getFieldValue("DESCRIPTION"),
+			"IS_EMAIL" => $record->getFieldValue("IS_EMAIL"),
+			"IS_PROFILE_NAME" => $record->getFieldValue("IS_PROFILE_NAME"),
+			"IS_PAYER" => $record->getFieldValue("IS_PAYER"),
+			"IS_LOCATION4TAX" => $record->getFieldValue("IS_LOCATION4TAX"),
+			"IS_FILTERED" => $record->getFieldValue("IS_FILTERED"),
+			"CODE" => $record->getFieldValue("CODE"),
+			"IS_ZIP" => $record->getFieldValue("IS_ZIP"),
+			"IS_PHONE" => $record->getFieldValue("IS_PHONE"),
+			"IS_ADDRESS" => $record->getFieldValue("IS_ADDRESS"),
+			"ACTIVE" => $record->getFieldValue("ACTIVE"),
+			"UTIL" => $record->getFieldValue("UTIL"),
+			"INPUT_FIELD_LOCATION" => $record->getFieldValue("INPUT_FIELD_LOCATION"),
+			"MULTIPLE" => $record->getFieldValue("MULTIPLE"),
+			"SETTINGS" => Value::listToTreeGet($record->getFieldsStrings(), "SETTINGS"),
+		);
+		if ($link = $record->getDependency("PERSON_TYPE_ID"))
+		{
+			$array["PERSON_TYPE_ID"] = $link->findId()->getValue();
+		}
+		if ($link = $record->getReference("PROPS_GROUP_ID"))
+		{
+			if ($idObject = $link->findId())
+			{
+				$array["PROPS_GROUP_ID"] = $idObject->getValue();
+			}
+			else
+			{
+				$array["PROPS_GROUP_ID"] = false;
+			}
+		}
+
+		return $array;
 	}
 }
