@@ -126,10 +126,10 @@ class Element extends BaseData
 		return $result;
 	}
 
-	public function getRuntimesReferences(array $references)
+	public function getRuntimesLinks(array $links)
 	{
 		$result = array();
-		foreach($references as $key => $value)
+		foreach($links as $key => $value)
 		{
 			if($value->getValue())
 			{
@@ -157,7 +157,7 @@ class Element extends BaseData
 
 		$fields = $this->getRuntimesFields($runtimes->getFields());
 
-		$fields = array_merge($fields, $this->getRuntimesReferences($runtimes->getReferences()));
+		$fields = array_merge($fields, $this->getRuntimesLinks($runtimes->getReferences()));
 
 		$strEntityDataClass = $this->getDataClass($id["HLBLOCK_ID"]);
 
@@ -175,8 +175,7 @@ class Element extends BaseData
 
 		$runtimes = $record->getRuntime("FIELD");
 
-		$fields = $this->getRuntimesFields($runtimes->getFields());
-		$fields = array_merge($fields, $this->getRuntimesReferences($runtimes->getReferences()));
+		$fields = $this->getRuntimesLinks($runtimes->getDependencies());
 
 		$strEntityDataClass = $this->getDataClass($id["HLBLOCK_ID"]);
 		$result = $strEntityDataClass::add($fields);
