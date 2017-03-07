@@ -102,7 +102,7 @@ class Link extends Value
 	{
 		if ($this->targetData)
 		{
-			if ($this->isMultiple())
+			if (!$this->isMultiple())
 			{
 				return $this->targetData->findRecord($this->getValue());
 			}
