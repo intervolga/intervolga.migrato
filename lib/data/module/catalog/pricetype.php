@@ -9,6 +9,7 @@ use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Module\Main\Group;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Data\Value;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 class PriceType extends BaseData
@@ -96,15 +97,18 @@ class PriceType extends BaseData
 		return $accesses;
 	}
 
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @throws \Exception
+	 */
 	protected function addGroupLang(Record $record)
 	{
 		$langs = $this->getPriceLangs();
 		if ($langs[$record->getId()->getValue()])
 		{
-			foreach ($langs[$record->getId()->getValue()] as $lang => $name)
-			{
-				$record->setField("USER_LANG.$lang", $name);
-			}
+			$userLangs = Value::treeToList($langs[$record->getId()->getValue()], "USER_LANG");
+			$record->setFields($userLangs);
 		}
 	}
 
@@ -177,45 +181,17 @@ class PriceType extends BaseData
 	 */
 	protected function recordToArray(Record $record)
 	{
-		$update = array(
+		$ugLinks = $record->getDependency("USER_GROUP");
+		$ugbLinks = $record->getDependency("USER_GROUP_BUY");
+		$array = array(
 			"NAME" => $record->getFieldValue("NAME"),
 			"BASE" => $record->getFieldValue("BASE"),
 			"SORT" => $record->getFieldValue("SORT"),
+			"USER_LANG" => Value::listToTreeGet($record->getFieldsStrings(), "USER_LANG"),
+			"USER_GROUP" => $ugLinks->findIds(),
+			"USER_GROUP_BUY" => $ugbLinks->findIds(),
 		);
-		foreach ($record->getFieldsStrings() as $name => $value)
-		{
-			if (substr_count($name, ".") == 1)
-			{
-				$explode = explode(".", $name);
-				if ($explode[0] == "USER_LANG")
-				{
-					$update[$explode[0]][$explode[1]] = $value;
-				}
-			}
-		}
-		if ($link = $record->getDependency("USER_GROUP"))
-		{
-			foreach ($link->getValues() as $groupXmlId)
-			{
-				$groupId = Group::getInstance()->findRecord($groupXmlId);
-				if ($groupId)
-				{
-					$update["USER_GROUP"][] = $groupId->getValue();
-				}
-			}
-		}
-		if ($link = $record->getDependency("USER_GROUP_BUY"))
-		{
-			foreach ($link->getValues() as $groupXmlId)
-			{
-				$groupId = Group::getInstance()->findRecord($groupXmlId);
-				if ($groupId)
-				{
-					$update["USER_GROUP_BUY"][] = $groupId->getValue();
-				}
-			}
-		}
 
-		return $update;
+		return $array;
 	}
 }
