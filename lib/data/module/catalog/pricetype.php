@@ -153,8 +153,7 @@ class PriceType extends BaseData
 		}
 		else
 		{
-			$idObject = $this->createId($id);
-			return $idObject;
+			return $this->createId($id);
 		}
 	}
 
