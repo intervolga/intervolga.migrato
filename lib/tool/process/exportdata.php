@@ -26,6 +26,7 @@ class ExportData extends BaseProcess
 		{
 			static::exportData($data);
 		}
+		static::reportStatistics();
 		static::report("Process completed");
 	}
 
@@ -34,24 +35,23 @@ class ExportData extends BaseProcess
 	 */
 	protected static function exportData(BaseData $dataClass)
 	{
-		try
-		{
-			$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . "/";
-			checkDirPath($path);
-			DataFileViewXml::markDataDeleted($path);
+		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . "/";
+		checkDirPath($path);
+		DataFileViewXml::markDataDeleted($path);
 
-			$filter = Config::getInstance()->getDataClassFilter($dataClass);
-			$records = $dataClass->getList($filter);
-			foreach ($records as $record)
+		$filter = Config::getInstance()->getDataClassFilter($dataClass);
+		$records = $dataClass->getList($filter);
+		foreach ($records as $record)
+		{
+			try
 			{
 				DataFileViewXml::writeToFileSystem($record, $path);
+				static::addStatistics($record, "export");
 			}
-
-			static::reportData($dataClass, "exported (" . count($records) . ")");
-		}
-		catch (\Exception $exception)
-		{
-			static::reportDataException($dataClass, $exception, "export");
+			catch (\Exception $exception)
+			{
+				static::addStatistics($record, "export", $exception);
+			}
 		}
 	}
 }

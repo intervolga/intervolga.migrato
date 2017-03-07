@@ -137,6 +137,16 @@ class Value
 	}
 
 	/**
+	 * @param string $description
+	 */
+	public function addDescription($description)
+	{
+		$this->descriptions[] = $description;
+		$this->multiple = true;
+		$this->descriptionIsSet = true;
+	}
+
+	/**
 	 * @return \string[]
 	 * @throws \Exception
 	 */
