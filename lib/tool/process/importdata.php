@@ -52,6 +52,9 @@ class ImportData extends BaseProcess
 				static::prepareConfigData($data);
 			}
 		}
+
+		// Добавить dependencies of runtimes
+		static::$list->addCreatedRecordRuntimes();
 	}
 
 	/**
@@ -151,16 +154,16 @@ class ImportData extends BaseProcess
 					{
 						foreach ($runtime->getFields() as $runtimeFieldName => $runtimeFieldValue)
 						{
-							$data[$i]->addDependency("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
+							$data[$i]->addReference("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
 						}
 						foreach ($runtime->getReferences() as $runtimeFieldName => $runtimeFieldValue)
 						{
-							$data[$i]->addDependency("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
+							$data[$i]->addReference("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
 							$data[$i]->addReference("RUNTIME.$name." . $runtimeFieldName, $runtimeFieldValue);
 						}
 						foreach ($runtime->getDependencies() as $runtimeFieldName => $runtimeFieldValue)
 						{
-							$data[$i]->addDependency("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
+							$data[$i]->addReference("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
 							$data[$i]->addDependency("RUNTIME.$name." . $runtimeFieldName, $runtimeFieldValue);
 						}
 					}
