@@ -35,7 +35,7 @@ class PriceType extends BaseData
 		while ($priceType = $getList->fetch())
 		{
 			$record = new Record($this);
-			$record->setId(RecordId::createNumericId($priceType["ID"]));
+			$record->setId($this->createId($priceType["ID"]));
 			$record->setXmlId($priceType["XML_ID"]);
 			$record->setFields(array(
 				"NAME" => $priceType["NAME"],
@@ -63,7 +63,7 @@ class PriceType extends BaseData
 			$viewGroupsXmlIds = array();
 			foreach ($accesses[$type][$record->getId()->getValue()] as $groupId)
 			{
-				$groupIdObject = RecordId::createNumericId($groupId);
+				$groupIdObject = Group::getInstance()->createId($groupId);
 				$groupXmlId = Group::getInstance()->getXmlIdProvider()->getXmlId($groupIdObject);
 				if ($groupXmlId)
 				{
@@ -154,8 +154,7 @@ class PriceType extends BaseData
 		}
 		else
 		{
-			$idObject = RecordId::createNumericId($id);
-			$this->getXmlIdProvider()->setXmlId($idObject, $record->getXmlId());
+			$idObject = $this->createId($id);
 			return $idObject;
 		}
 	}
