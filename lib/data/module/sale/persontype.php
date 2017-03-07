@@ -69,7 +69,7 @@ class PersonType extends BaseData
 		if (!$updateResult)
 		{
 			global $APPLICATION;
-			throw new \Exception(implode(", ", $APPLICATION->getException()->getString()));
+			throw new \Exception($APPLICATION->getException()->getString());
 		}
 	}
 
@@ -92,7 +92,7 @@ class PersonType extends BaseData
 		else
 		{
 			global $APPLICATION;
-			throw new \Exception(implode(", ", $APPLICATION->getException()->getString()));
+			throw new \Exception($APPLICATION->getException()->getString());
 		}
 	}
 
@@ -106,7 +106,7 @@ class PersonType extends BaseData
 			if (!$result)
 			{
 				global $APPLICATION;
-				throw new \Exception(implode(", ", $APPLICATION->getException()->getString()));
+				throw new \Exception($APPLICATION->getException()->getString());
 			}
 		}
 	}
