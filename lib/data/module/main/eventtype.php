@@ -2,7 +2,6 @@
 
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
 
 class EventType extends BaseData
@@ -19,7 +18,7 @@ class EventType extends BaseData
 		while ($type = $getList->fetch())
 		{
 			$record = new Record($this);
-			$id = RecordId::createNumericId($type["ID"]);
+			$id = $this->createId($type["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 			$record->setId($id);
 			$record->setFields(array(
@@ -52,7 +51,7 @@ class EventType extends BaseData
 		$eventTypeId = \CEventType::add($record->getFieldsStrings());
 		if ($eventTypeId)
 		{
-			return RecordId::createNumericId($eventTypeId);
+			return $this->createId($eventTypeId);
 		}
 		else
 		{

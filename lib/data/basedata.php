@@ -191,4 +191,14 @@ abstract class BaseData
 	{
 		return $this->xmlIdProvider;
 	}
+
+	/**
+	 * @param mixed $id
+	 *
+	 * @return RecordId
+	 */
+	public function createId($id)
+	{
+		return RecordId::createNumericId($id);
+	}
 }
