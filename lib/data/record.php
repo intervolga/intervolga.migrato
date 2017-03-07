@@ -84,6 +84,26 @@ class Record
 	}
 
 	/**
+	 * @param \Intervolga\Migrato\Data\Value[] $values
+	 */
+	public function setFieldsValues(array $values)
+	{
+		foreach ($values as $name => $value)
+		{
+			$this->setFieldValue($name, $value);
+		}
+	}
+
+	/**
+	 * @param string $name
+	 * @param \Intervolga\Migrato\Data\Value $value
+	 */
+	public function setFieldValue($name, Value $value)
+	{
+		$this->fields[$name] = $value;
+	}
+
+	/**
 	 * @return Value[]
 	 */
 	public function getFields()
