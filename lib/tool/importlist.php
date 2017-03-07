@@ -57,6 +57,25 @@ class ImportList
 		$this->createdXmlIds[$class][$xmlId] = true;
 	}
 
+	public function addCreatedRecordRuntimes()
+	{
+		foreach($this->recordsToImport as $records)
+		{
+			foreach($records as $record)
+			{
+				foreach($record->getRuntimes() as $runtime)
+				{
+					foreach($runtime->getDependencies() as $dependency)
+					{
+						$class = get_class($dependency->getTargetData());
+						$xmlId = $dependency->getValue();
+						$this->createdXmlIds[$class][$xmlId] = true;
+					}
+				}
+			}
+		}
+	}
+
 	/**
 	 * @return \Intervolga\Migrato\Data\Record[]
 	 */
