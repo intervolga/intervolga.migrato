@@ -202,7 +202,7 @@ class DataFileViewXml
 			if ($xmlArray["data"]["#"]["field"])
 			{
 				$fields = static::parseFields($xmlArray["data"]["#"]["field"]);
-				$record->setFields($fields);
+				$record->setFieldsValues($fields);
 			}
 
 			if ($xmlArray["data"]["#"]["dependency"])
@@ -229,10 +229,13 @@ class DataFileViewXml
 
 	/**
 	 * @param array $fieldsNodes
-	 * @return array
+	 * @return \Intervolga\Migrato\Data\Value[]
 	 */
 	protected static function parseFields(array $fieldsNodes)
 	{
+		/**
+		 * @var \Intervolga\Migrato\Data\Value[] $fields
+		 */
 		$fields = array();
 		foreach ($fieldsNodes as $field)
 		{
@@ -245,13 +248,20 @@ class DataFileViewXml
 			}
 			if ($isMultiple)
 			{
-				$fields[$name][] = $field["#"]["value"][0]["#"];
+				if (!$fields[$name])
+				{
+					$fields[$name] = Value::createMultiple(array());
+				}
+				$fields[$name]->addValue($field["#"]["value"][0]["#"]);
+				$fields[$name]->addDescription($field["#"]["description"][0]["#"]);
 			}
 			else
 			{
-				$fields[$name] = $field["#"]["value"][0]["#"];
+				$fields[$name] = new Value($field["#"]["value"][0]["#"]);
+				$fields[$name]->setDescription($field["#"]["description"][0]["#"]);
 			}
 		}
+
 		return $fields;
 	}
 
@@ -262,38 +272,43 @@ class DataFileViewXml
 	protected static function parseLinks(array $linksNodes)
 	{
 		/**
-		 * @var $dependencies Link[]
+		 * @var $links Link[]
 		 */
-		$dependencies = array();
-		foreach ($linksNodes as $dependency)
+		$links = array();
+		foreach ($linksNodes as $linkNode)
 		{
-			foreach ($dependency["#"]["value"] as $valueItem)
+			$name = $linkNode["#"]["name"][0]["#"];
+			$isMultiple = false;
+			if (substr_count($name, "[]") == 1)
 			{
-				$name = $dependency["#"]["name"][0]["#"];
-				$isMultiple = false;
-				if (substr_count($name, "[]") == 1)
+				$name = str_replace("[]", "", $name);
+				$isMultiple = true;
+			}
+			if ($isMultiple)
+			{
+				if (!$links[$name])
 				{
-					$name = str_replace("[]", "", $name);
-					$isMultiple = true;
+					$links[$name] = Link::createMultiple(array());
 				}
-				if ($isMultiple)
-				{
-					if (!$dependencies[$name])
-					{
-						$dependencies[$name] = Link::createMultiple(array($valueItem["#"]));
-					}
-					else
-					{
-						$dependencies[$name]->addValue($valueItem["#"]);
-					}
-				}
-				else
-				{
-					$dependencies[$name] = new Link(null, $valueItem["#"]);
-				}
+				$links[$name]->addValue($linkNode["#"]["value"][0]["#"]);
+				$links[$name]->addDescription($linkNode["#"]["description"][0]["#"]);
+			}
+			else
+			{
+				$links[$name] = new Link($linkNode["#"]["value"][0]["#"]);
+				$links[$name]->setDescription($linkNode["#"]["description"][0]["#"]);
+			}
+
+			$data = static::getDataClass(
+				$linkNode["#"]["module"][0]["#"],
+				$linkNode["#"]["entity"][0]["#"]
+			);
+			if ($data)
+			{
+				$links[$name]->setTargetData($data);
 			}
 		}
-		return $dependencies;
+		return $links;
 	}
 
 	/**
@@ -308,44 +323,20 @@ class DataFileViewXml
 		{
 			$runtime = new Runtime();
 			$runtimeName = $runtimeNode["#"]["name"][0]["#"];
-			foreach ($runtimeNode["#"]["field"] as $fieldNode)
+			if ($runtimeNode["#"]["field"])
 			{
-				$name = $fieldNode["#"]["name"][0]["#"];
-				$value = $fieldNode["#"]["value"][0]["#"];
-				$description = $fieldNode["#"]["description"][0]["#"];
-				$valueObject = new Value($value);
-				$valueObject->setDescription($description);
-				$runtime->setField($name, $valueObject);
+				$fields = static::parseFields($runtimeNode["#"]["field"]);
+				$runtime->setFields($fields);
 			}
-			foreach ($runtimeNode["#"]["reference"] as $referenceNode)
+			if ($runtimeNode["#"]["reference"])
 			{
-				$module = $referenceNode["#"]["module"][0]["#"];
-				$entity = $referenceNode["#"]["entity"][0]["#"];
-				$name = $referenceNode["#"]["name"][0]["#"];
-				$value = $referenceNode["#"]["value"][0]["#"];
-				$description = $referenceNode["#"]["description"][0]["#"];
-				$data = static::getDataClass($module, $entity);
-				if ($data && strlen($value))
-				{
-					$link = new Link($data, $value);
-					$link->setDescription($description);
-					$runtime->setReference($name, $link);
-				}
+				$links = static::parseLinks($runtimeNode["#"]["reference"]);
+				$runtime->setReferences($links);
 			}
-			foreach ($runtimeNode["#"]["dependency"] as $dependencyNode)
+			if ($runtimeNode["#"]["dependency"])
 			{
-				$module = $dependencyNode["#"]["module"][0]["#"];
-				$entity = $dependencyNode["#"]["entity"][0]["#"];
-				$name = $dependencyNode["#"]["name"][0]["#"];
-				$value = $dependencyNode["#"]["value"][0]["#"];
-				$description = $dependencyNode["#"]["description"][0]["#"];
-				$data = static::getDataClass($module, $entity);
-				if ($data && strlen($value))
-				{
-					$link = new Link($data, $value);
-					$link->setDescription($description);
-					$runtime->setDependency($name, $link);
-				}
+				$links = static::parseLinks($runtimeNode["#"]["dependency"]);
+				$runtime->setDependencies($links);
 			}
 			$result[$runtimeName] = $runtime;
 		}
