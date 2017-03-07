@@ -5,7 +5,6 @@ use Bitrix\Sale\Internals\PersonTypeSiteTable;
 use Bitrix\Sale\Internals\PersonTypeTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
 
 class PersonType extends BaseData
@@ -24,7 +23,7 @@ class PersonType extends BaseData
 		while ($personType = $getList->fetch())
 		{
 			$record = new Record($this);
-			$id = RecordId::createNumericId($personType["ID"]);
+			$id = $this->createId($personType["ID"]);
 			$record->setId($id);
 			$record->setXmlId(
 				$this->getXmlIdProvider()->getXmlId($id)
@@ -85,9 +84,7 @@ class PersonType extends BaseData
 		$id = $object->add($add);
 		if ($id)
 		{
-			$recordId = RecordId::createNumericId($id);
-			$this->getXmlIdProvider()->setXmlId($recordId, $record->getXmlId());
-			return $recordId;
+			return $this->createId($id);
 		}
 		else
 		{
