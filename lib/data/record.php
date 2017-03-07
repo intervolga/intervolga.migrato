@@ -27,6 +27,10 @@ class Record
 	 * @var Runtime[]
 	 */
 	protected $runtimes = array();
+	/**
+	 * @var bool
+	 */
+	protected $deleteMark = false;
 
 	/**
 	 * @param BaseData $data
@@ -309,6 +313,22 @@ class Record
 	public function getRuntimes()
 	{
 		return $this->runtimes;
+	}
+
+	/**
+	 * @param bool $deleteMark
+	 */
+	public function setDeleteMark($deleteMark)
+	{
+		$this->deleteMark = $deleteMark;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function getDeleteMark()
+	{
+		return $this->deleteMark;
 	}
 
 	/**

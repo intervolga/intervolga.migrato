@@ -193,29 +193,35 @@ class DataFileViewXml
 		$xmlArray = $xmlParser->getArray();
 		$record = new Record();
 		$record->setXmlId($xmlArray["data"]["#"]["xml_id"][0]["#"]);
-
-		if ($xmlArray["data"]["#"]["field"])
+		if ($xmlArray["data"]["@"]["deleted"])
 		{
-			$fields = static::parseFields($xmlArray["data"]["#"]["field"]);
-			$record->setFields($fields);
+			$record->setDeleteMark(true);
 		}
-
-		if ($xmlArray["data"]["#"]["dependency"])
+		else
 		{
-			$links = static::parseLinks($xmlArray["data"]["#"]["dependency"]);
-			$record->setDependencies($links);
-		}
+			if ($xmlArray["data"]["#"]["field"])
+			{
+				$fields = static::parseFields($xmlArray["data"]["#"]["field"]);
+				$record->setFields($fields);
+			}
 
-		if ($xmlArray["data"]["#"]["reference"])
-		{
-			$links = static::parseLinks($xmlArray["data"]["#"]["reference"]);
-			$record->setReferences($links);
-		}
+			if ($xmlArray["data"]["#"]["dependency"])
+			{
+				$links = static::parseLinks($xmlArray["data"]["#"]["dependency"]);
+				$record->setDependencies($links);
+			}
 
-		if ($xmlArray["data"]["#"]["runtime"])
-		{
-			$runtimes = static::parseRuntimes($xmlArray["data"]["#"]["runtime"]);
-			$record->setRuntimes($runtimes);
+			if ($xmlArray["data"]["#"]["reference"])
+			{
+				$links = static::parseLinks($xmlArray["data"]["#"]["reference"]);
+				$record->setReferences($links);
+			}
+
+			if ($xmlArray["data"]["#"]["runtime"])
+			{
+				$runtimes = static::parseRuntimes($xmlArray["data"]["#"]["runtime"]);
+				$record->setRuntimes($runtimes);
+			}
 		}
 
 		return $record;
