@@ -114,7 +114,7 @@ class Section extends BaseData
 		{
 			$iblockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
 		}
-		else
+		elseif($record->getId())
 		{
 			$rsSection = \CIBlockSection::GetByID($record->getId()->getValue());
 			if($arSection = $rsSection->Fetch())
@@ -122,7 +122,7 @@ class Section extends BaseData
 		}
 		if(!$iblockId)
 		{
-			throw new \Exception("Not found IBlock for the section " . $record->getId()->getValue());
+			throw new \Exception("Not found IBlock for the section " . $record->getXmlId());
 		}
 		return $iblockId;
 	}
@@ -164,6 +164,38 @@ class Section extends BaseData
 		return $result;
 	}
 
+	/**
+	 * @param Record $record
+	 * @return array
+	 */
+	public function getDependenciesStrings(Record $record)
+	{
+		$runtimes = $record->getRuntime("FIELD");
+
+		if($runtimes->getDependencies())
+		{
+			$result = $this->getRuntimesFields($runtimes->getDependencies());
+		}
+		else
+		{
+			$result = array();
+
+			$rsSection = \CIBlockSection::GetList(array(), array("ID" => $record->getId()->getValue()), false, array("UF_*"));
+			if($arSection = $rsSection->Fetch())
+			{
+				foreach($arSection as $key => $arField)
+				{
+					if(strstr($key, "UF_") !== false)
+					{
+						$result[$key] = $arField;
+					}
+				}
+			}
+		}
+		return $result;
+
+	}
+
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
@@ -174,10 +206,8 @@ class Section extends BaseData
 		$fields["IBLOCK_SECTION_ID"] = $reference;
 
 		$runtimes = $record->getRuntime("FIELD");
-		if($runtimes->getDependencies())
-		{
-			$fields = array_merge($fields, $this->getRuntimesLinks($runtimes->getDependencies()));
-		}
+
+		$fields = array_merge($fields, $this->getDependenciesStrings($record));
 		$fields = array_merge($fields, $this->getRuntimesFields($runtimes->getFields()));
 		$fields = array_merge($fields, $this->getRuntimesLinks($runtimes->getReferences()));
 

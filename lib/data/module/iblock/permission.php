@@ -101,16 +101,16 @@ class Permission extends BaseData
 
 	public function create(Record $record)
 	{
-		$dependencies = $record->getDependencies();
-
-		if($iblockId = Iblock::getInstance()->findRecord($dependencies["IBLOCK_ID"]->getValue()))
+		if($record->getDependency("IBLOCK_ID") &&
+			$iblockId = Iblock::getInstance()->findRecord($record->getDependency("IBLOCK_ID")->getValue()))
 		{
 			$iblockId = $iblockId->getValue();
 		}
 		else
 			throw new \Exception("Create permission: Broken external link on IBlock");
 
-		if($groupId = Group::getInstance()->findRecord($dependencies["GROUP_ID"]->getValue()))
+		if($record->getDependency("GROUP_ID") &&
+			$groupId = Group::getInstance()->findRecord($record->getDependency("GROUP_ID")->getValue()))
 		{
 			$groupId = $groupId->getValue();
 		}
