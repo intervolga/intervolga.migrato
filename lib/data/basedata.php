@@ -35,7 +35,7 @@ abstract class BaseData
 	 */
 	public function update(Record $record)
 	{
-		throw new NotImplementedException("Update for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
+		throw new NotImplementedException("Update for " . $record->getData()->getModule() . "/" . $record->getData()->getEntityName() . " is not yet implemented");
 	}
 
 	/**
@@ -47,7 +47,7 @@ abstract class BaseData
 	 */
 	public function create(Record $record)
 	{
-		throw new NotImplementedException("Create for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
+		throw new NotImplementedException("Create for " . $record->getData()->getModule() . "/" . $record->getData()->getEntityName() . " is not yet implemented");
 	}
 
 	/**
@@ -57,7 +57,7 @@ abstract class BaseData
 	 */
 	public function delete($xmlId)
 	{
-		throw new NotImplementedException("Delete for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
+		throw new NotImplementedException("Delete for " . $this->getModule() . "/" . $this->getEntityName() . " ($xmlId) is not yet implemented");
 	}
 
 	/**
@@ -67,15 +67,28 @@ abstract class BaseData
 	 */
 	public function findRecord($xmlId)
 	{
-		foreach (static::getList() as $dbRecord)
+		$findRecords = static::findRecords(array($xmlId));
+		return $findRecords[$xmlId];
+	}
+
+	/**
+	 * @param string[] $xmlIds
+	 *
+	 * @return \Intervolga\Migrato\Data\RecordId|null
+	 */
+	public function findRecords(array $xmlIds)
+	{
+		$result = array();
+		$allRecords = static::getList();
+		foreach ($allRecords as $dbRecord)
 		{
-			if ($dbRecord->getXmlId() == $xmlId)
+			if (in_array($dbRecord->getXmlId(), $xmlIds))
 			{
-				return $dbRecord->getId();
+				$result[$dbRecord->getXmlId()] = $dbRecord->getId();
 			}
 		}
 
-		return null;
+		return $result;
 	}
 
 	/**
