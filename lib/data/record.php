@@ -360,6 +360,7 @@ class Record
 			"data" => $this->getData()->getModule() . ":" . $this->getData()->getEntityName(),
 			"xmlId" => $this->getXmlId(),
 			"id" => $this->getId() ? $this->getId()->getValue() : false,
+			"deleted" => $this->getDeleteMark(),
 			"fields" => $this->getFieldsStrings(),
 		);
 		if ($this->getDependencies())
