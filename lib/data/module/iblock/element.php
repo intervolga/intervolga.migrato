@@ -8,14 +8,14 @@ use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Runtime;
 use Intervolga\Migrato\Data\Value;
-use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\IblockElementXmlIdProvider;
 
 class Element extends BaseData
 {
 	public function __construct()
 	{
 		Loader::includeModule("iblock");
-		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\ElementTable");
+		$this->xmlIdProvider = new IblockElementXmlIdProvider($this);
 	}
 
 	public function getFilesSubdir()
