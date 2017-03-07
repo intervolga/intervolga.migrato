@@ -108,10 +108,7 @@ class Event extends BaseData
 		$eventMessageId = $eventMessageObject->add($record->getFieldsStrings());
 		if ($eventMessageId)
 		{
-			$id = RecordId::createNumericId($eventMessageId);
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-			return $id;
+			return RecordId::createNumericId($eventMessageId);
 		}
 		else
 		{

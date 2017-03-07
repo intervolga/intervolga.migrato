@@ -52,18 +52,12 @@ class EventType extends BaseData
 		$eventTypeId = \CEventType::add($record->getFieldsStrings());
 		if ($eventTypeId)
 		{
-			$id = RecordId::createNumericId($eventTypeId);
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-			return $id;
+			return RecordId::createNumericId($eventTypeId);
 		}
 		else
 		{
 			global $APPLICATION;
-			if($exception = $APPLICATION->GetException())
-			{
-				throw new \Exception(trim(strip_tags($exception->GetString())));
-			}
+			throw new \Exception(trim(strip_tags($APPLICATION->getException()->getString())));
 		}
 	}
 

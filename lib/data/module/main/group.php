@@ -53,10 +53,7 @@ class Group extends BaseData
 		$groupId = $groupObject->add($record->getFieldsStrings());
 		if ($groupId)
 		{
-			$id = RecordId::createNumericId($groupId);
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-			return $id;
+			return RecordId::createNumericId($groupId);
 		}
 		else
 		{

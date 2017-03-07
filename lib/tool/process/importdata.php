@@ -301,6 +301,10 @@ class ImportData extends BaseProcess
 		try
 		{
 			$dataRecord->setId($dataRecord->create());
+			$dataRecord->getData()->getXmlIdProvider()->setXmlId(
+				$dataRecord->getId(),
+				$dataRecord->getXmlId()
+			);
 			static::addStatistics($dataRecord, "create");
 		}
 		catch (\Exception $exception)
