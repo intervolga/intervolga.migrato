@@ -36,4 +36,36 @@ class HighloadBlock extends BaseData
 
 		return $result;
 	}
+
+	public function update(Record $record)
+	{
+		$result = HighloadBlockTable::update($record->getId()->getValue(), $record->getFieldsStrings());
+		if (!$result->isSuccess())
+		{
+			throw new \Exception(trim(strip_tags($result->getErrorMessages())));
+		}
+	}
+
+	public function create(Record $record)
+	{
+		$result = HighloadBlockTable::add($record->getFieldsStrings());
+		if ($result->isSuccess())
+		{
+			$id = RecordId::createNumericId($result->getId());
+			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+
+			return $id;
+		} else {
+			throw new \Exception(trim(strip_tags($result->getErrorMessages())));
+		}
+	}
+
+	public function delete($xmlId)
+	{
+		$result = HighloadBlockTable::delete($this->findRecord($xmlId)->getValue());
+		if (!$result->isSuccess())
+		{
+			throw new \Exception(trim(strip_tags($result->getErrorMessages())));
+		}
+	}
 }

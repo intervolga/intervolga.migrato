@@ -63,74 +63,13 @@ class Field extends BaseUserField
 		return parent::getList($filter);
 	}
 
-	public function update(Record $record)
+	public function getDependencyString()
 	{
-		$fields = $record->getFieldsStrings();
-
-		$iblockIdXml = $record->getDependency("IBLOCK_ID");
-
-		$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
-		foreach($this->getLangFieldsNames() as $lang)
-		{
-			$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
-		}
-
-		if(!$iblockIdXml)
-		{
-			$fields["SETTINGS"] = array_merge($fields["SETTINGS"], $this->getSettingsLinksFields($record->getReferences()));
-		}
-
-		$fieldObject = new \CAllUserTypeEntity();
-		$isUpdated = $fieldObject->Update($record->getId()->getValue(), $fields);
-		if (!$isUpdated)
-		{
-			throw new \Exception("Unknown error");
-		}
+		return "IBLOCK_ID";
 	}
 
-	public function create(Record $record)
+	public function getDependencyNameKey($id)
 	{
-		$fields = $record->getFieldsStrings();
-
-		if($iblockIdXml = $record->getDependency("IBLOCK_ID"))
-		{
-			$iblockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
-
-			$fields["XML_ID"] = $record->getXmlId();
-			$fields["ENTITY_ID"] = "IBLOCK_" . $iblockId . "_SECTION";
-			$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
-			foreach($this->getLangFieldsNames() as $lang)
-			{
-				$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
-			}
-
-			$fieldObject = new \CAllUserTypeEntity();
-			$fieldId = $fieldObject->add($fields);
-			if ($fieldId)
-			{
-				$id = RecordId::createNumericId($fieldId);
-				$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-				return $id;
-			}
-			else
-			{
-				throw new \Exception("Unknown error");
-			}
-		}
-		else
-		{
-			throw new \Exception("iblock/field not defined iblock dependence for element " . $record->getId()->getValue());
-		}
-	}
-
-	public function delete($xmlId)
-	{
-		$id = $this->findRecord($xmlId);
-		$fieldObject = new \CAllUserTypeEntity();
-		if (!$fieldObject->delete($id->getValue()))
-		{
-			throw new \Exception("Unknown error");
-		}
+		return "IBLOCK_" . $id . "_SECTION";
 	}
 }
