@@ -102,10 +102,13 @@ class Iblock extends BaseData
 	public function delete($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		$iblockObject = new \CIBlock();
-		if (!$iblockObject->delete($id->getValue()))
+		if ($id)
 		{
-			throw new \Exception("Unknown error");
+			$iblockObject = new \CIBlock();
+			if (!$iblockObject->delete($id->getValue()))
+			{
+				throw new \Exception("Unknown error");
+			}
 		}
 	}
 }
