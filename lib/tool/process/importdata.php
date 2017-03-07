@@ -17,6 +17,10 @@ class ImportData extends BaseProcess
 	 * @var \Intervolga\Migrato\Tool\ImportList
 	 */
 	protected static $list = null;
+	/**
+	 * @var \Intervolga\Migrato\Tool\Process\Statistics
+	 */
+	protected static $statistics = null;
 
 	public static function run()
 	{
@@ -33,6 +37,7 @@ class ImportData extends BaseProcess
 	{
 		static::report(__FUNCTION__);
 		static::$list = new ImportList();
+		static::$statistics = new Statistics();
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		$dataClasses = static::recursiveGetDependentDataClasses($configDataClasses);
 		foreach ($dataClasses as $data)
@@ -74,10 +79,11 @@ class ImportData extends BaseProcess
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		for ($i = 0; $i < count($configDataClasses); $i++)
 		{
+			static::$statistics->reset();
 			$creatableDataRecords = static::$list->getCreatableRecords();
 			if ($creatableDataRecords)
 			{
-				static::report("Import depenency step $i, count=" . count($creatableDataRecords) . " record(s)");
+				static::report("Import step $i, count=" . count($creatableDataRecords) . " record(s)");
 				foreach ($creatableDataRecords as $dataRecord)
 				{
 					static::saveDataRecord($dataRecord);
@@ -88,7 +94,9 @@ class ImportData extends BaseProcess
 			{
 				break;
 			}
+			static::reportStatistics();
 		}
+
 		if (static::$list->getCreatableRecords())
 		{
 			static::report("Not enough import depenency steps!", "fail");
@@ -243,32 +251,27 @@ class ImportData extends BaseProcess
 		{
 			static::$recordsWithReferences[] = $dataRecord;
 		}
-		if ($dataRecordId = $dataRecord->getData()->findRecord($dataRecord->getXmlId()))
+		$operation = "";
+		$exception = null;
+		try
 		{
-			try
+			if ($dataRecordId = $dataRecord->getData()->findRecord($dataRecord->getXmlId()))
 			{
+				$operation = "update";
 				$dataRecord->setId($dataRecordId);
 				$dataRecord->update();
-				static::reportRecord($dataRecord, "updated");
 			}
-			catch (\Exception $exception)
+			else
 			{
-				static::reportRecordException($dataRecord, $exception, "update");
+				$operation = "create";
+				$dataRecord->setId($dataRecord->create());
 			}
 		}
-		else
+		catch (\Exception $e)
 		{
-			try
-			{
-				$id = $dataRecord->create();
-				$dataRecord->setId($id);
-				static::reportRecord($dataRecord, "created");
-			}
-			catch (\Exception $exception)
-			{
-				static::reportRecordException($dataRecord, $exception, "create");
-			}
+			$exception = $e;
 		}
+		static::reportCrudOperation($dataRecord, $operation, $exception);
 	}
 
 	protected static function deleteNotImported()
@@ -313,6 +316,39 @@ class ImportData extends BaseProcess
 			{
 				static::reportRecordException($dataRecord, $exception, "update reference");
 			}
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @param string $operation
+	 * @param \Exception $exception
+	 */
+	protected static function reportCrudOperation(Record $record, $operation, \Exception $exception = null)
+	{
+		if ($exception)
+		{
+			static::reportRecordException($record, $exception, $operation);
+		}
+		else
+		{
+			static::$statistics->add(
+				$record->getData(),
+				$operation,
+				$record->getXmlId(),
+				!$exception
+			);
+		}
+	}
+
+	protected static function reportStatistics()
+	{
+		foreach (static::$statistics->get() as $statistics)
+		{
+			static::report(
+				$statistics["module"] . "/" . $statistics["entity"] . " " . $statistics["operation"] . " (" . $statistics["count"] . ")",
+				$statistics["status"] ? "ok" : "fail"
+			);
 		}
 	}
 }
