@@ -287,10 +287,13 @@ class Element extends BaseData
 	public function delete($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		$elementObject = new \CIBlockType();
-		if (!$elementObject->delete($id->getValue()))
+		if ($id)
 		{
-			throw new \Exception("Unknown error");
+			$elementObject = new \CIBlockType();
+			if (!$elementObject->delete($id->getValue()))
+			{
+				throw new \Exception("Unknown error");
+			}
 		}
 	}
 }
