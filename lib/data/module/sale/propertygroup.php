@@ -66,7 +66,7 @@ class PropertyGroup extends BaseData
 		if (!$updateResult)
 		{
 			global $APPLICATION;
-			throw new \Exception(implode(", ", $APPLICATION->getException()->getString()));
+			throw new \Exception($APPLICATION->getException()->getString());
 		}
 	}
 
@@ -84,7 +84,7 @@ class PropertyGroup extends BaseData
 		else
 		{
 			global $APPLICATION;
-			throw new \Exception(implode(", ", $APPLICATION->getException()->getString()));
+			throw new \Exception($APPLICATION->getException()->getString());
 		}
 	}
 
@@ -122,7 +122,7 @@ class PropertyGroup extends BaseData
 			if (!$result)
 			{
 				global $APPLICATION;
-				throw new \Exception(implode(", ", $APPLICATION->getException()->getString()));
+				throw new \Exception($APPLICATION->getException()->getString());
 			}
 		}
 	}
