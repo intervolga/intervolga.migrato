@@ -148,52 +148,22 @@ class Section extends BaseData
 		$result = array();
 
 		/**
-		 * @var \Intervolga\Migrato\Data\Link  $value
+		 * @var \Intervolga\Migrato\Data\Link  $link
 		 */
-		foreach($links as $key => $value)
+		foreach($links as $key => $link)
 		{
-			if($value->getValue())
+			$fieldId = Field::getInstance()->findRecord($key)->getValue();
+			$field = \CUserTypeEntity::GetByID($fieldId);
+			if(!$link->isMultiple())
 			{
-				$fieldId = Field::getInstance()->findRecord($key)->getValue();
-				$field = \CUserTypeEntity::GetByID($fieldId);
-
-				$value = $value->getTargetData()->findRecord($value->getValue());
-				$result[$field["FIELD_NAME"]] = $value ? $value->getValue() : "";
+				$result[$field["FIELD_NAME"]] = $link->getId() ? $link->getId()->getValue() : null;
+			}
+			else
+			{
+				$result[$field["FIELD_NAME"]] = $link->getIds();
 			}
 		}
 		return $result;
-	}
-
-	/**
-	 * @param Record $record
-	 * @return array
-	 */
-	public function getDependenciesStrings(Record $record)
-	{
-		$runtimes = $record->getRuntime("FIELD");
-
-		if($runtimes->getDependencies())
-		{
-			$result = $this->getRuntimesFields($runtimes->getDependencies());
-		}
-		else
-		{
-			$result = array();
-
-			$rsSection = \CIBlockSection::GetList(array(), array("ID" => $record->getId()->getValue()), false, array("UF_*"));
-			if($arSection = $rsSection->Fetch())
-			{
-				foreach($arSection as $key => $arField)
-				{
-					if(strstr($key, "UF_") !== false)
-					{
-						$result[$key] = $arField;
-					}
-				}
-			}
-		}
-		return $result;
-
 	}
 
 	public function update(Record $record)
@@ -201,16 +171,15 @@ class Section extends BaseData
 		$fields = $record->getFieldsStrings();
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 
-		$reference = $record->getReference("IBLOCK_SECTION_ID");
-		$reference = $reference->getValue() ? self::findRecord($reference->getValue())->getValue() : null;
-		$fields["IBLOCK_SECTION_ID"] = $reference;
+		$reference = $record->getReference("IBLOCK_SECTION_ID")->getId();
+		$fields["IBLOCK_SECTION_ID"] = $reference ? $reference->getValue() : null;
 
 		$runtimes = $record->getRuntime("FIELD");
 
-		$fields = array_merge($fields, $this->getDependenciesStrings($record));
 		$fields = array_merge($fields, $this->getRuntimesFields($runtimes->getFields()));
+		$fields = array_merge($fields, $this->getRuntimesLinks($runtimes->getDependencies()));
 		$fields = array_merge($fields, $this->getRuntimesLinks($runtimes->getReferences()));
-
+		dump($fields);
 		$sectionObject = new \CIBlockSection();
 		$isUpdated = $sectionObject->update($record->getId()->getValue(), $fields);
 		if (!$isUpdated)
