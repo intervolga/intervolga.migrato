@@ -313,6 +313,28 @@ abstract class BaseUserField extends BaseData
 		}
 	}
 
+	public function getXmlIds(Basedata $instance, $value)
+	{
+		$values = is_array($value) ? $value : array($value);
+		$xmlIds = array();
+		foreach($values as $value)
+		{
+			$inObject = RecordId::createNumericId($value);
+			$xmlIds[] = $instance->getXmlIdProvider()->getXmlId($inObject);
+		}
+		if(count($xmlIds) == 1)
+		{
+			return new Link($instance, $xmlIds[0]);
+		}
+		else
+		{
+			$link = new Link($instance);
+			$link->setValues($xmlIds);
+			return $link;
+		}
+
+	}
+
 	/**
 	 * @param int $value
 	 *
@@ -320,10 +342,7 @@ abstract class BaseUserField extends BaseData
 	 */
 	protected function getIblockElementLink($value)
 	{
-		$inObject = RecordId::createNumericId($value);
-		$elementXmlId = Element::getInstance()->getXmlIdProvider()->getXmlId($inObject);
-
-		return new Link(Element::getInstance(), $elementXmlId);
+		return $this->getXmlIds(Element::getInstance(), $value);
 	}
 
 	/**
@@ -333,13 +352,10 @@ abstract class BaseUserField extends BaseData
 	 */
 	protected function getIblockSectionLink($value)
 	{
-		$inObject = RecordId::createNumericId($value);
-		$sectionXmlId = Section::getInstance()->getXmlIdProvider()->getXmlId($inObject);
-
-		return new Link(Section::getInstance(), $sectionXmlId);
+		return $this->getXmlIds(Section::getInstance(), $value);
 	}
 
-	/**
+	/** TODO Сделать для множественных значений
 	 * @param \Intervolga\Migrato\Data\Record $field
 	 * @param int $value
 	 *
@@ -375,11 +391,7 @@ abstract class BaseUserField extends BaseData
 	 */
 	protected function getEnumerationLink($value)
 	{
-		$inObject = RecordId::createNumericId($value);
-		$fieldEnumXmlId = FieldEnum::getInstance()->getXmlIdProvider()->getXmlId($inObject);
-
-		return new Link(FieldEnum::getInstance(), $fieldEnumXmlId);
-
+		return $this->getXmlIds(FieldEnum::getInstance(), $value);
 	}
 
 	/**
