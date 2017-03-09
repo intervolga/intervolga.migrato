@@ -1,10 +1,13 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
+
+Loc::loadMessages(__FILE__);
 
 class BaseProcess
 {
@@ -12,10 +15,16 @@ class BaseProcess
 	 * @var string[]
 	 */
 	protected static $reports = array();
+	/**
+	 * @var \Intervolga\Migrato\Tool\Process\Statistics
+	 */
+	protected static $statistics = null;
 
 	public static function run()
 	{
 		static::$reports = array();
+		static::$statistics = new Statistics();
+		static::report("Process started");
 	}
 
 	/**
@@ -120,7 +129,14 @@ class BaseProcess
 				{
 					if (!in_array($record->getXmlId(), $xmlIds))
 					{
-						$xmlIds[] = $record->getXmlId();
+						if (static::isSimpleXmlId($record->getXmlId()))
+						{
+							$errorType = XmlIdValidateError::TYPE_SIMPLE;
+						}
+						else
+						{
+							$xmlIds[] = $record->getXmlId();
+						}
 					}
 					else
 					{
@@ -147,26 +163,23 @@ class BaseProcess
 	}
 
 	/**
+	 * @param string $xmlId
+	 *
+	 * @return bool
+	 */
+	protected static function isSimpleXmlId($xmlId)
+	{
+		return is_numeric($xmlId);
+	}
+
+	/**
 	 * @param XmlIdValidateError[] $errors
 	 */
 	public static function fixErrors(array $errors)
 	{
 		foreach ($errors as $error)
 		{
-			if ($error->getType() == XmlIdValidateError::TYPE_EMPTY)
-			{
-				$error->getDataClass()->getXmlIdProvider()->generateXmlId($error->getId());
-			}
-			elseif ($error->getType() == XmlIdValidateError::TYPE_INVALID)
-			{
-				$xmlId = $error->getDataClass()->getXmlIdProvider()->getXmlId($error->getId());
-				$xmlId = preg_replace("/[^a-z0-9\-_]/", "-", $xmlId);
-				$error->getDataClass()->getXmlIdProvider()->setXmlId($error->getId(), $xmlId);
-			}
-			elseif ($error->getType() == XmlIdValidateError::TYPE_REPEAT)
-			{
-				$error->getDataClass()->getXmlIdProvider()->generateXmlId($error->getId());
-			}
+			$error->getDataClass()->getXmlIdProvider()->generateXmlId($error->getId());
 		}
 	}
 
@@ -191,6 +204,10 @@ class BaseProcess
 		if ($exception->getMessage())
 		{
 			$report .= " exception: " . $exception->getMessage();
+		}
+		else
+		{
+			$report .= " exception: " . get_class($exception);
 		}
 		static::report($report, "fail");
 	}
@@ -286,5 +303,46 @@ class BaseProcess
 			$type = "[" . $type . "] ";
 		}
 		static::$reports[] = date("d.m.Y H:i:s") . ":" . $microSec . " " . $type . $message;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @param string $operation
+	 * @param \Exception $exception
+	 */
+	protected static function addStatistics(Record $record, $operation, \Exception $exception = null)
+	{
+		if ($exception)
+		{
+			static::reportRecordException($record, $exception, $operation);
+		}
+		else
+		{
+			static::$statistics->add(
+				$record->getData(),
+				$operation,
+				$record->getXmlId(),
+				!$exception
+			);
+		}
+	}
+
+	protected static function reportStatistics()
+	{
+		foreach (static::$statistics->get() as $statistics)
+		{
+			static::report(
+				Loc::getMessage(
+					"INTERVOLGA_MIGRATO.STATISTICS_RECORD",
+					array(
+						"#MODULE#" => $statistics["module"],
+						"#ENTITY#" => $statistics["entity"],
+						"#OPERATION#" => $statistics["operation"],
+						"#COUNT#" => $statistics["count"],
+					)
+				),
+				$statistics["status"] ? "ok" : "fail"
+			);
+		}
 	}
 }

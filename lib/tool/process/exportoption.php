@@ -24,5 +24,6 @@ class ExportOption extends BaseProcess
 			OptionFileViewXml::writeToFileSystem($export, $path);
 			static::report("Module $module options exported");
 		}
+		static::report("Process completed");
 	}
 }
