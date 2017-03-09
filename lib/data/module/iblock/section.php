@@ -114,9 +114,9 @@ class Section extends BaseData
 		{
 			$iblockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
 		}
-		elseif($record->getId())
+		elseif($id = $record->getId())
 		{
-			$rsSection = \CIBlockSection::GetByID($record->getId()->getValue());
+			$rsSection = \CIBlockSection::GetByID($id->getValue());
 			if($arSection = $rsSection->Fetch())
 				$iblockId = intval($arSection["IBLOCK_ID"]);
 		}
@@ -138,6 +138,7 @@ class Section extends BaseData
 		{
 			$fieldId = Field::getInstance()->findRecord($key)->getValue();
 			$field = \CUserTypeEntity::GetByID($fieldId);
+
 			$result[$field["FIELD_NAME"]] = $value->getValue();
 		}
 		return $result;
@@ -148,52 +149,27 @@ class Section extends BaseData
 		$result = array();
 
 		/**
-		 * @var \Intervolga\Migrato\Data\Link  $value
+		 * @var \Intervolga\Migrato\Data\Link  $link
 		 */
-		foreach($links as $key => $value)
+		foreach($links as $key => $link)
 		{
-			if($value->getValue())
+			$fieldId = Field::getInstance()->findRecord($key)->getValue();
+			$field = \CUserTypeEntity::GetByID($fieldId);
+			if(!$link->isMultiple())
 			{
-				$fieldId = Field::getInstance()->findRecord($key)->getValue();
-				$field = \CUserTypeEntity::GetByID($fieldId);
-
-				$value = $value->getTargetData()->findRecord($value->getValue());
-				$result[$field["FIELD_NAME"]] = $value ? $value->getValue() : "";
+                $id = $link->getId() ? $link->getId()->getValue() : null;
+			    if(is_array($id))
+                {
+                    $id = $id["ID"];
+                }
+                $result[$field["FIELD_NAME"]] = $id;
+			}
+			else
+			{
+				$result[$field["FIELD_NAME"]] = $link->getIds();
 			}
 		}
 		return $result;
-	}
-
-	/**
-	 * @param Record $record
-	 * @return array
-	 */
-	public function getDependenciesStrings(Record $record)
-	{
-		$runtimes = $record->getRuntime("FIELD");
-
-		if($runtimes->getDependencies())
-		{
-			$result = $this->getRuntimesFields($runtimes->getDependencies());
-		}
-		else
-		{
-			$result = array();
-
-			$rsSection = \CIBlockSection::GetList(array(), array("ID" => $record->getId()->getValue()), false, array("UF_*"));
-			if($arSection = $rsSection->Fetch())
-			{
-				foreach($arSection as $key => $arField)
-				{
-					if(strstr($key, "UF_") !== false)
-					{
-						$result[$key] = $arField;
-					}
-				}
-			}
-		}
-		return $result;
-
 	}
 
 	public function update(Record $record)
@@ -201,14 +177,13 @@ class Section extends BaseData
 		$fields = $record->getFieldsStrings();
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 
-		$reference = $record->getReference("IBLOCK_SECTION_ID");
-		$reference = $reference->getValue() ? self::findRecord($reference->getValue())->getValue() : null;
-		$fields["IBLOCK_SECTION_ID"] = $reference;
+		$reference = $record->getReference("IBLOCK_SECTION_ID")->getId();
+		$fields["IBLOCK_SECTION_ID"] = $reference ? $reference->getValue() : null;
 
 		$runtimes = $record->getRuntime("FIELD");
 
-		$fields = array_merge($fields, $this->getDependenciesStrings($record));
 		$fields = array_merge($fields, $this->getRuntimesFields($runtimes->getFields()));
+		$fields = array_merge($fields, $this->getRuntimesLinks($runtimes->getDependencies()));
 		$fields = array_merge($fields, $this->getRuntimesLinks($runtimes->getReferences()));
 
 		$sectionObject = new \CIBlockSection();
@@ -224,16 +199,14 @@ class Section extends BaseData
 		$fields = $record->getFieldsStrings();
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 
+		$fields = array_merge($fields, $this->getRuntimesFields($record->getRuntime("FIELD")->getFields()));
 		$fields = array_merge($fields, $this->getRuntimesLinks($record->getRuntime("FIELD")->getDependencies()));
 
 		$sectionObject = new \CIBlockSection();
 		$sectionId = $sectionObject->add($fields);
 		if ($sectionId)
 		{
-			$id = RecordId::createNumericId($sectionId);
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-			return $id;
+			return RecordId::createNumericId($sectionId);
 		}
 		else
 		{
@@ -244,7 +217,7 @@ class Section extends BaseData
 	public function delete($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		if(!\CIBlockSection::Delete($id))
+		if(!\CIBlockSection::Delete($id->getValue()))
 		{
 			throw new \Exception("Unknown error");
 		}

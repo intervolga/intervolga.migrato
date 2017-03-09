@@ -1,15 +1,14 @@
 <? namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\Loader;
-use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\UfEnumXmlIdProvider;
 
 abstract class BaseUserFieldEnum extends BaseData
 {
 	public function __construct()
 	{
-		Loader::includeModule("iblock");
-		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\PropertyEnumerationTable");
-	}
+        $this->xmlIdProvider = new UfEnumXmlIdProvider($this);
+    }
 
 	/**
 	 * @param string[] $filter

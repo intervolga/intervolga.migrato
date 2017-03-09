@@ -1,6 +1,8 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
+use Bitrix\Main\Entity\ReferenceField;
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\Module\Catalog\PriceType;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
@@ -286,6 +288,10 @@ class ImportData extends BaseProcess
 	{
 		try
 		{
+			foreach ($dataRecord->getDependencies() as $dependency)
+			{
+				self::setLinkId($dependency);
+			}
 			$dataRecord->setId($dataRecordId);
 			$dataRecord->update();
 			static::addStatistics($dataRecord, "update");
@@ -364,11 +370,7 @@ class ImportData extends BaseProcess
 			$clone->setDependencies(array());
 			foreach ($clone->getReferences() as $reference)
 			{
-				$id = $reference->getTargetData()->findRecord($reference->getValue());
-				if ($id)
-				{
-					$reference->setId($id);
-				}
+				self::setLinkId($reference);
 			}
 			try
 			{
@@ -379,6 +381,25 @@ class ImportData extends BaseProcess
 			{
 				static::reportRecordException($dataRecord, $exception, "update reference");
 			}
+		}
+	}
+
+	/**
+	 * @param Link $link
+	 */
+	protected static function setLinkId($link)
+	{
+		if(!$link->isMultiple())
+		{
+			$id = $link->findId();
+			if($id)
+			{
+				$link->setId($link->findId());
+			}
+		}
+		else
+		{
+			$link->setIds($link->findIds());
 		}
 	}
 }
