@@ -135,10 +135,7 @@ class Property extends BaseData
 		$propertyId = $propertyObject->add($fields);
 		if ($propertyId)
 		{
-			$id = RecordId::createNumericId($propertyId);
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-			return $id;
+			return RecordId::createNumericId($propertyId);
 		}
 		else
 		{

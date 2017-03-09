@@ -153,14 +153,14 @@ class Element extends BaseData
 	}
 
 	/**
-	 * @param Runtime $runtime
+	 * @param Link[] $links
 	 * @param string $IBlockId
 	 *
 	 * @return array properties
 	 */
-	private function getRuntimesReferences($properties, Runtime $runtime, $IBlockId)
+	private function getRuntimesLinks($properties, array $links, $IBlockId)
 	{
-		foreach($runtime->getReferences() as $xmlId => $arField)
+		foreach($links as $xmlId => $arField)
 		{
 			if($property = Property::getInstance()->findRecord($xmlId))
 			{
@@ -205,39 +205,14 @@ class Element extends BaseData
 
 	public function getIBlock(Record $record)
 	{
-		$iblockId = null;
-		if($iblockIdXml = $record->getDependency("IBLOCK_ID"))
+		if($iblockId = $record->getDependency("IBLOCK_ID")->getId())
 		{
-			$iblockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
+            return $iblockId->getValue();
 		}
 		else
 		{
-			$iblockId = \CIBlockElement::GetIBlockByID($record->getId()->getValue());
+            return \CIBlockElement::GetIBlockByID($record->getId()->getValue());
 		}
-		if(!$iblockId)
-		{
-			throw new \Exception("Not found IBlock for the element " . $record->getId()->getValue());
-		}
-		return $iblockId;
-	}
-
-	public function generateProperties($iblockId, Record $record)
-	{
-		$properties = array();
-		if($record->getId())
-		{
-			$rsProperties = \CIBlockElement::GetProperty($iblockId, $record->getId()->getValue());
-			while($arProperty = $rsProperties->Fetch())
-			{
-				$properties[strval($arProperty["ID"])]= $arProperty["VALUE"];
-			}
-		}
-
-		$properties = $this->getRuntimesFields($properties, $record->getRuntime("PROPERTY"));
-
-		$properties = $this->getRuntimesReferences($properties, $record->getRuntime("PROPERTY"), $iblockId);
-
-		return $properties;
 	}
 
 	public function update(Record $record)
@@ -245,10 +220,21 @@ class Element extends BaseData
 		$fields = $record->getFieldsStrings();
 		$IBlockId = $this->getIBlock($record);
 
-		$properties = $this->generateProperties($IBlockId, $record);
+        $fields["PROPERTY_VALUES"] = array();
+        $rsProperties = \CIBlockElement::GetProperty($IBlockId, $record->getId()->getValue());
+        while($arProperty = $rsProperties->Fetch())
+        {
+            $fields["PROPERTY_VALUES"][strval($arProperty["ID"])]= $arProperty["VALUE"];
+        }
 
-		if(count($properties))
-			$fields["PROPERTY_VALUES"] = $properties;
+        $fields["PROPERTY_VALUES"] = $this->getRuntimesFields($fields["PROPERTY_VALUES"],
+            $record->getRuntime("PROPERTY"));
+
+        $fields["PROPERTY_VALUES"] = $this->getRuntimesLinks($fields["PROPERTY_VALUES"],
+            $record->getRuntime("PROPERTY")->getReferences(), $IBlockId);
+
+        $fields["PROPERTY_VALUES"] = $this->getRuntimesLinks($fields["PROPERTY_VALUES"],
+            $record->getRuntime("PROPERTY")->getDependencies(), $IBlockId);
 
 		$elementObject = new \CIBlockElement();
 		$isUpdated = $elementObject->Update($record->getId()->getValue(), $fields);
@@ -273,10 +259,7 @@ class Element extends BaseData
 		$elementId = $elementObject->add($fields);
 		if ($elementId)
 		{
-			$id = RecordId::createNumericId($elementId);
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-			return $id;
+			return RecordId::createNumericId($elementId);
 		}
 		else
 		{

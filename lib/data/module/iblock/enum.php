@@ -82,10 +82,7 @@ class Enum extends BaseData
 			$enumId = $enumObject->add($fields);
 			if ($enumId)
 			{
-				$id = RecordId::createNumericId($enumId);
-				$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-				return $id;
+				return RecordId::createNumericId($enumId);
 			}
 			else
 			{

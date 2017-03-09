@@ -5,6 +5,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
+use Bitrix\Main\Localization\LanguageTable;
 
 class Type extends BaseData
 {
@@ -38,6 +39,21 @@ class Type extends BaseData
 		return $result;
 	}
 
+	protected function getDefaultLanguages()
+    {
+        $languages = array();
+        $rsLanguages = LanguageTable::getList(array(
+            "select" => array(
+                "LID"
+            )
+        ));
+        while ($language = $rsLanguages->fetch())
+        {
+            $languages[$language["LID"]] = array("NAME" => "Unknown");
+        }
+        return $languages;
+    }
+
 	public function update(Record $record)
 	{
 		$typeObject = new \CIBlockType();
@@ -51,15 +67,12 @@ class Type extends BaseData
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$fields["LANG"] = array("ru" => array("NAME" => " "), "en" => array("NAME" => " "));
+		$fields["LANG"] = $this->getDefaultLanguages();
 		$typeObject = new \CIBlockType();
 		$typeId = $typeObject->add($fields);
 		if ($typeId)
 		{
-			$id = RecordId::createNumericId($typeId);
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-			return $id;
+			return RecordId::createNumericId($typeId);
 		}
 		else
 		{

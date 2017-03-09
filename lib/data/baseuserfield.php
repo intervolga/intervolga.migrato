@@ -451,10 +451,7 @@ abstract class BaseUserField extends BaseData
 			$fieldId = $fieldObject->add($fields);
 			if ($fieldId)
 			{
-				$id = RecordId::createNumericId($fieldId);
-				$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-				return $id;
+				return RecordId::createNumericId($fieldId);
 			}
 			else
 			{
