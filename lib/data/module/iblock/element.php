@@ -259,7 +259,7 @@ class Element extends BaseData
 		$elementId = $elementObject->add($fields);
 		if ($elementId)
 		{
-			return RecordId::createNumericId($elementId);
+			return $this->createId($elementId);
 		}
 		else
 		{

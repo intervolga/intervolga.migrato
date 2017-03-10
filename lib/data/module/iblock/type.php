@@ -72,7 +72,7 @@ class Type extends BaseData
 		$typeId = $typeObject->add($fields);
 		if ($typeId)
 		{
-			return RecordId::createNumericId($typeId);
+			return $this->createId($typeId);
 		}
 		else
 		{

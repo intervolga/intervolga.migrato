@@ -85,7 +85,7 @@ class Iblock extends BaseData
 		$iblockId = $iblockObject->add($fields);
 		if ($iblockId)
 		{
-			return RecordId::createNumericId($iblockId);
+			return $this->createId($iblockId);
 		}
 		else
 		{

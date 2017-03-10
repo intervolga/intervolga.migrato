@@ -206,7 +206,7 @@ class Section extends BaseData
 		$sectionId = $sectionObject->add($fields);
 		if ($sectionId)
 		{
-			return RecordId::createNumericId($sectionId);
+			return $this->createId($sectionId);
 		}
 		else
 		{

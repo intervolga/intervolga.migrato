@@ -46,8 +46,7 @@ abstract class BaseUserFieldEnum extends BaseData
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$dependency = $record->getDependency("USER_FIELD_ID");
-		if($fieldId = $dependency->getTargetData()->findRecord($dependency->getValue()))
+		if($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
 		{
 			$fields["XML_ID"] = $record->getXmlId();
 			$enumObject = new \CUserFieldEnum();
@@ -63,8 +62,7 @@ abstract class BaseUserFieldEnum extends BaseData
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$dependency = $record->getDependency("USER_FIELD_ID");
-		if($fieldId = $dependency->getTargetData()->findRecord($dependency->getValue()))
+		if($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
 		{
 			$fields["XML_ID"] = $record->getXmlId();
 			$fields["USER_FIELD_ID"] = $fieldId->getValue();
@@ -73,7 +71,7 @@ abstract class BaseUserFieldEnum extends BaseData
 			$isUpdated = $enumObject->SetEnumValues($fieldId->getValue(), array("n" => $fields));
 			if ($isUpdated)
 			{
-			    return RecordId::createNumericId($this->findRecord($record->getXmlId())->getValue());
+			    return $this->createId($this->findRecord($record->getXmlId())->getValue());
 			}
 			else
 			{
