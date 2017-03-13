@@ -312,6 +312,10 @@ class ImportData extends BaseProcess
 	{
 		try
 		{
+			foreach($dataRecord->getDependencies() as $dependency)
+			{
+				self::setLinkId($dependency);
+			}
 			$dataRecord->setId($dataRecord->create());
 			$dataRecord->getData()->getXmlIdProvider()->setXmlId(
 				$dataRecord->getId(),

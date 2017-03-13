@@ -217,7 +217,7 @@ class Section extends BaseData
 	public function delete($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		if(!\CIBlockSection::Delete($id->getValue()))
+		if(!\CIBlockSection::Delete($id))
 		{
 			throw new \Exception("Unknown error");
 		}

@@ -84,7 +84,7 @@ class Type extends BaseData
 	{
 		$id = $this->findRecord($xmlId);
 		$typeObject = new \CIBlockType();
-		if (!$typeObject->delete($id->getValue()))
+		if (!$typeObject->delete($id))
 		{
 			throw new \Exception("Unknown error");
 		}

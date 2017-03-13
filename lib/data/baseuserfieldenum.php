@@ -88,6 +88,6 @@ abstract class BaseUserFieldEnum extends BaseData
 	{
 		$id = $this->findRecord($xmlId);
 		$fieldenumObject = new \CUserFieldEnum();
-		$fieldenumObject->DeleteFieldEnum($id->getValue());
+		$fieldenumObject->DeleteFieldEnum($id);
 	}
 }

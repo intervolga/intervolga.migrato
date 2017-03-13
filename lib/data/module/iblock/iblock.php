@@ -79,17 +79,24 @@ class Iblock extends BaseData
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-        $fields["IBLOCK_TYPE_ID"] = $this->getDependency("IBLOCK_TYPE_ID")->getId()->getValue();
-
-        $iblockObject = new \CIBlock();
-		$iblockId = $iblockObject->add($fields);
-		if ($iblockId)
+		if($iblockTypeId = $record->getDependency("IBLOCK_TYPE_ID")->getId())
 		{
-			return $this->createId($iblockId);
+			$fields["IBLOCK_TYPE_ID"] = $iblockTypeId->getValue();
+
+			$iblockObject = new \CIBlock();
+			$iblockId = $iblockObject->add($fields);
+			if ($iblockId)
+			{
+				return $this->createId($iblockId);
+			}
+			else
+			{
+				throw new \Exception(trim(strip_tags($iblockObject->LAST_ERROR)));
+			}
 		}
 		else
 		{
-			throw new \Exception(trim(strip_tags($iblockObject->LAST_ERROR)));
+			throw new \Exception("IBlock " . $record->getXmlId() . " haven`t dependency");
 		}
 	}
 
@@ -97,7 +104,7 @@ class Iblock extends BaseData
 	{
 		$id = $this->findRecord($xmlId);
 		$iblockObject = new \CIBlock();
-		if (!$iblockObject->delete($id->getValue()))
+		if (!$iblockObject->delete($id))
 		{
 			throw new \Exception("Unknown error");
 		}
