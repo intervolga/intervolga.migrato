@@ -147,7 +147,7 @@ class Property extends BaseData
 	{
 		$id = $this->findRecord($xmlId);
 		$propertyObject = new \CIBlockProperty();
-		if (!$propertyObject->delete($id->getValue()))
+		if (!$propertyObject->delete($id))
 		{
 			throw new \Exception("Unknown error");
 		}
