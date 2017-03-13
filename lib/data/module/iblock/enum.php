@@ -82,10 +82,7 @@ class Enum extends BaseData
 			$enumId = $enumObject->add($fields);
 			if ($enumId)
 			{
-				$id = RecordId::createNumericId($enumId);
-				$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-				return $id;
+				return $this->createId($enumId);
 			}
 			else
 			{
@@ -97,7 +94,7 @@ class Enum extends BaseData
 	public function delete($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		if (!\CIBlockPropertyEnum::Delete($id->getValue()))
+		if (!\CIBlockPropertyEnum::Delete($id))
 		{
 			throw new \Exception("Unknown error");
 		}

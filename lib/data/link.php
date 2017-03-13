@@ -59,11 +59,44 @@ class Link extends Value
 	}
 
 	/**
+	 * @param \Intervolga\Migrato\Data\RecordId[] $ids
+	 */
+	public function setIds(array $ids)
+	{
+		$this->id = $ids;
+	}
+
+	/**
 	 * @return \Intervolga\Migrato\Data\RecordId
 	 */
 	public function getId()
 	{
 		return $this->id;
+	}
+
+	/**
+	 * @return array
+	 * @throws \Exception
+	 */
+	public function getIds()
+	{
+		if($this->isMultiple())
+		{
+			$ids = array();
+
+			/**
+			 * @var \Intervolga\Migrato\Data\RecordId $id
+			 */
+			foreach($this->id as $id)
+			{
+				$ids[] = $id->getValue();
+			}
+			return $ids;
+		}
+		else
+		{
+			throw new \Exception("Use getId() for geting single id");
+		}
 	}
 
 	/**

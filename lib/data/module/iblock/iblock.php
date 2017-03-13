@@ -63,8 +63,8 @@ class Iblock extends BaseData
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$dependency = $this->getDependency("IBLOCK_TYPE_ID")->getValue();
-		if($typeId = Type::getInstance()->findRecord($dependency))
+
+		if($typeId = $this->getDependency("IBLOCK_TYPE_ID")->getId())
 		{
 			$fields["IBLOCK_TYPE_ID"] = $typeId->getValue();
 		}
@@ -79,23 +79,24 @@ class Iblock extends BaseData
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$dependency = $this->getDependency("IBLOCK_TYPE_ID")->getValue();
-		if($typeId = Type::getInstance()->findRecord($dependency))
+		if($iblockTypeId = $record->getDependency("IBLOCK_TYPE_ID")->getId())
 		{
-			$fields["IBLOCK_TYPE_ID"] = $typeId->getValue();
-		}
-		$iblockObject = new \CIBlock();
-		$iblockId = $iblockObject->add($fields);
-		if ($iblockId)
-		{
-			$id = RecordId::createNumericId($iblockId);
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+			$fields["IBLOCK_TYPE_ID"] = $iblockTypeId->getValue();
 
-			return $id;
+			$iblockObject = new \CIBlock();
+			$iblockId = $iblockObject->add($fields);
+			if ($iblockId)
+			{
+				return $this->createId($iblockId);
+			}
+			else
+			{
+				throw new \Exception(trim(strip_tags($iblockObject->LAST_ERROR)));
+			}
 		}
 		else
 		{
-			throw new \Exception(trim(strip_tags($iblockObject->LAST_ERROR)));
+			throw new \Exception("IBlock " . $record->getXmlId() . " haven`t dependency");
 		}
 	}
 
@@ -103,7 +104,7 @@ class Iblock extends BaseData
 	{
 		$id = $this->findRecord($xmlId);
 		$iblockObject = new \CIBlock();
-		if (!$iblockObject->delete($id->getValue()))
+		if (!$iblockObject->delete($id))
 		{
 			throw new \Exception("Unknown error");
 		}

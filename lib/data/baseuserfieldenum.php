@@ -1,15 +1,14 @@
 <? namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\Loader;
-use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\UfEnumXmlIdProvider;
 
 abstract class BaseUserFieldEnum extends BaseData
 {
 	public function __construct()
 	{
-		Loader::includeModule("iblock");
-		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\PropertyEnumerationTable");
-	}
+        $this->xmlIdProvider = new UfEnumXmlIdProvider($this);
+    }
 
 	/**
 	 * @param string[] $filter
@@ -47,8 +46,7 @@ abstract class BaseUserFieldEnum extends BaseData
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$dependency = $record->getDependency("USER_FIELD_ID");
-		if($fieldId = $dependency->getTargetData()->findRecord($dependency->getValue()))
+		if($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
 		{
 			$fields["XML_ID"] = $record->getXmlId();
 			$enumObject = new \CUserFieldEnum();
@@ -64,8 +62,7 @@ abstract class BaseUserFieldEnum extends BaseData
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$dependency = $record->getDependency("USER_FIELD_ID");
-		if($fieldId = $dependency->getTargetData()->findRecord($dependency->getValue()))
+		if($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
 		{
 			$fields["XML_ID"] = $record->getXmlId();
 			$fields["USER_FIELD_ID"] = $fieldId->getValue();
@@ -74,10 +71,7 @@ abstract class BaseUserFieldEnum extends BaseData
 			$isUpdated = $enumObject->SetEnumValues($fieldId->getValue(), array("n" => $fields));
 			if ($isUpdated)
 			{
-				$id = RecordId::createNumericId($this->findRecord($record->getXmlId())->getValue());
-				$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-				return $id;
+			    return $this->createId($this->findRecord($record->getXmlId())->getValue());
 			}
 			else
 			{
@@ -94,6 +88,6 @@ abstract class BaseUserFieldEnum extends BaseData
 	{
 		$id = $this->findRecord($xmlId);
 		$fieldenumObject = new \CUserFieldEnum();
-		$fieldenumObject->DeleteFieldEnum($id->getValue());
+		$fieldenumObject->DeleteFieldEnum($id);
 	}
 }

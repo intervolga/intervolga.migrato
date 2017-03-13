@@ -89,11 +89,16 @@ class Property extends BaseData
 	public function getIBlock(Record $record)
 	{
 		$iblockId = null;
-		if($iblockIdXml = $record->getDependency("IBLOCK_ID"))
+		if($iblock = $record->getDependency("IBLOCK_ID"))
 		{
-			$iblockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
+			if($iblock->getId())
+			{
+				$iblockId = $iblock->getId()->getValue();
+			}
+			else
+				throw new \Exception("Not found IBlock " . $iblock->getValue());
 		}
-		else
+		elseif($record->getId())
 		{
 			$rsProperty = \CIBlockProperty::GetByID($record->getId()->getValue());
 			if($arProperty = $rsProperty->Fetch())
@@ -101,7 +106,7 @@ class Property extends BaseData
 		}
 		if(!$iblockId)
 		{
-			throw new \Exception("Not found IBlock for the element " . $record->getId()->getValue());
+			throw new \Exception("Not found IBlock for the element " . $record->getXmlId());
 		}
 		return $iblockId;
 	}
@@ -135,10 +140,7 @@ class Property extends BaseData
 		$propertyId = $propertyObject->add($fields);
 		if ($propertyId)
 		{
-			$id = RecordId::createNumericId($propertyId);
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-			return $id;
+			return RecordId::createNumericId($propertyId);
 		}
 		else
 		{
@@ -150,7 +152,7 @@ class Property extends BaseData
 	{
 		$id = $this->findRecord($xmlId);
 		$propertyObject = new \CIBlockProperty();
-		if (!$propertyObject->delete($id->getValue()))
+		if (!$propertyObject->delete($id))
 		{
 			throw new \Exception("Unknown error");
 		}

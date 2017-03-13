@@ -222,7 +222,10 @@ abstract class BaseUserField extends BaseData
 		{
 			$entity = str_replace("SETTINGS.", "", $entity);
 			$xmlId = $link->getValue();
-			$settings[$entity] = $this->getSettingsReference($entity)->getTargetData()->findRecord($xmlId)->getValue();
+			if($entityId = $this->getSettingsReference($entity)->getTargetData()->findRecord($xmlId))
+			{
+				$settings[$entity] = $entityId->getValue();
+			}
 
 			if ($entity == "IBLOCK_ID")
 			{
@@ -451,10 +454,7 @@ abstract class BaseUserField extends BaseData
 			$fieldId = $fieldObject->add($fields);
 			if ($fieldId)
 			{
-				$id = RecordId::createNumericId($fieldId);
-				$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-				return $id;
+				return $this->createId($fieldId);
 			}
 			else
 			{
@@ -471,7 +471,7 @@ abstract class BaseUserField extends BaseData
 	{
 		$id = $this->findRecord($xmlId);
 		$fieldObject = new \CAllUserTypeEntity();
-		if (!$fieldObject->delete($id->getValue()))
+		if (!$fieldObject->delete($id))
 		{
 			throw new \Exception("Unknown error");
 		}

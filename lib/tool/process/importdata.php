@@ -1,7 +1,10 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
+use Bitrix\Main\Entity\ReferenceField;
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\Module\Catalog\PriceType;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Data\Runtime;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Data\Link;
@@ -286,6 +289,12 @@ class ImportData extends BaseProcess
 	{
 		try
 		{
+			foreach ($dataRecord->getDependencies() as $dependency)
+			{
+				self::setLinkId($dependency);
+			}
+			self::setRuntimesId($dataRecord->getRuntimes());
+
 			$dataRecord->setId($dataRecordId);
 			$dataRecord->update();
 			static::addStatistics($dataRecord, "update");
@@ -303,6 +312,10 @@ class ImportData extends BaseProcess
 	{
 		try
 		{
+			foreach($dataRecord->getDependencies() as $dependency)
+			{
+				self::setLinkId($dependency);
+			}
 			$dataRecord->setId($dataRecord->create());
 			$dataRecord->getData()->getXmlIdProvider()->setXmlId(
 				$dataRecord->getId(),
@@ -364,12 +377,9 @@ class ImportData extends BaseProcess
 			$clone->setDependencies(array());
 			foreach ($clone->getReferences() as $reference)
 			{
-				$id = $reference->getTargetData()->findRecord($reference->getValue());
-				if ($id)
-				{
-					$reference->setId($id);
-				}
+				self::setLinkId($reference);
 			}
+			self::setRuntimesId($clone->getRuntimes());
 			try
 			{
 				$clone->update();
@@ -379,6 +389,43 @@ class ImportData extends BaseProcess
 			{
 				static::reportRecordException($dataRecord, $exception, "update reference");
 			}
+		}
+	}
+
+	/**
+	 * @param Runtime[] $runtimes
+	 */
+	protected static function setRuntimesId(array $runtimes)
+	{
+		foreach($runtimes as &$runtime)
+		{
+			foreach($runtime->getDependencies() as $link)
+			{
+				self::setLinkId($link);
+			}
+			foreach($runtime->getReferences() as $link)
+			{
+				self::setLinkId($link);
+			}
+		}
+	}
+
+	/**
+	 * @param Link $link
+	 */
+	protected static function setLinkId($link)
+	{
+		if(!$link->isMultiple())
+		{
+			$id = $link->findId();
+			if($id)
+			{
+				$link->setId($link->findId());
+			}
+		}
+		else
+		{
+			$link->setIds($link->findIds());
 		}
 	}
 }
