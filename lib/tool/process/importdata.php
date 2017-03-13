@@ -4,6 +4,7 @@ use Bitrix\Main\Entity\ReferenceField;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Module\Catalog\PriceType;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Data\Runtime;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Data\Link;
@@ -292,6 +293,8 @@ class ImportData extends BaseProcess
 			{
 				self::setLinkId($dependency);
 			}
+			self::setRuntimesId($dataRecord->getRuntimes());
+
 			$dataRecord->setId($dataRecordId);
 			$dataRecord->update();
 			static::addStatistics($dataRecord, "update");
@@ -372,6 +375,7 @@ class ImportData extends BaseProcess
 			{
 				self::setLinkId($reference);
 			}
+			self::setRuntimesId($clone->getRuntimes());
 			try
 			{
 				$clone->update();
@@ -380,6 +384,24 @@ class ImportData extends BaseProcess
 			catch (\Exception $exception)
 			{
 				static::reportRecordException($dataRecord, $exception, "update reference");
+			}
+		}
+	}
+
+	/**
+	 * @param Runtime[] $runtimes
+	 */
+	protected static function setRuntimesId(array $runtimes)
+	{
+		foreach($runtimes as &$runtime)
+		{
+			foreach($runtime->getDependencies() as $link)
+			{
+				self::setLinkId($link);
+			}
+			foreach($runtime->getReferences() as $link)
+			{
+				self::setLinkId($link);
 			}
 		}
 	}
