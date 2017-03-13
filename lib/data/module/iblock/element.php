@@ -49,7 +49,6 @@ class Element extends BaseData
 
 			$result[] = $record;
 		}
-
 		return $result;
 	}
 
@@ -67,35 +66,34 @@ class Element extends BaseData
 		);
 	}
 
-    /**
-     * @param Link[] $runtimeReferences
-     * @param array $property
-     * @param BaseData $instance
-     * @return Link
-     */
-    protected function getPropertyLink($runtimeReferences, $property, $instance = null)
-    {
-        $valueElementXmlId = $property["XML_ID"];
-        if(!$valueElementXmlId && $instance)
-        {
-            $valueElementId = RecordId::createNumericId($property["VALUE"]);
-            $valueElementXmlId = Element::getInstance()->getXmlIdProvider()->getXmlId($valueElementId);
-        }
+	/**
+	 * @param Link[] $runtimeReferences
+	 * @param array $property
+	 * @param BaseData $instance
+	 * @return Link
+	 */
+	protected function getPropertyLink($runtimeReferences, $property, $instance = null)
+	{
+		$valueElementId = RecordId::createNumericId($property["VALUE"]);
+		$valueElementXmlId = $instance->getXmlIdProvider()->getXmlId($valueElementId);
 
-        if($property["MULTIPLE"] == "Y" && $runtimeReferences[$property["XML_ID"]])
-        {
-            $link = $runtimeReferences[$property["XML_ID"]];
-            $values = $link->isMultiple() ? $link->getValues() : array($link->getValue());
-            $values[] = $valueElementXmlId;
-            $link->setValues($values);
-        }
-        else
-        {
-            $link = new Link($instance, $valueElementXmlId);
-        }
-        $link->setDescription($property["DESCRIPTION"]);
-        return $link;
-    }
+		if($property["MULTIPLE"] == "Y" && $runtimeReferences[$property["XML_ID"]])
+		{
+			$link = $runtimeReferences[$property["XML_ID"]];
+			$values = $link->isMultiple() ? $link->getValues() : array($link->getValue());
+			$values[] = $valueElementXmlId;
+			$link->setValues($values);
+		} else
+		{
+			$link = new Link($instance, $valueElementXmlId);
+		}
+		// TODO сделать для множественного поля
+		if($property["DESCRIPTION"])
+		{
+			$link->setDescription($property["DESCRIPTION"]);
+		}
+		return $link;
+	}
 
 	/**
 	 * @param \Intervolga\Migrato\Data\Record $record
@@ -111,22 +109,22 @@ class Element extends BaseData
 		{
 			if (strlen($property["VALUE"]))
 			{
-                $link = null;
+				$link = null;
 				if ($property["PROPERTY_TYPE"] == "F")
 				{
 					continue;
 				}
 				elseif ($property["PROPERTY_TYPE"] == "L") {
-                    $link = $this->getPropertyLink($runtimeReferences, $property, Enum::getInstance());
+					$link = $this->getPropertyLink($runtimeReferences, $property, Enum::getInstance());
 				}
 				elseif ($property["PROPERTY_TYPE"] == "E")
 				{
-                    $link = $this->getPropertyLink($runtimeReferences, $property, Element::getInstance());
+					$link = $this->getPropertyLink($runtimeReferences, $property, Element::getInstance());
 				}
 				elseif($property["PROPERTY_TYPE"] == "G")
-                {
-                    $link = $this->getPropertyLink($runtimeReferences, $property, Section::getInstance());
-                }
+				{
+					$link = $this->getPropertyLink($runtimeReferences, $property, Section::getInstance());
+				}
 				else
 				{
 					$value = new Value($property["VALUE"]);
@@ -134,16 +132,16 @@ class Element extends BaseData
 					$runtimeFields[$property["XML_ID"]] = $value;
 				}
 				if($link)
-                {
-                    if ($property["IS_REQUIRED"] == "Y")
-                    {
-                        $runtimeDependencies[$property["XML_ID"]] = $link;
-                    }
-                    else
-                    {
-                        $runtimeReferences[$property["XML_ID"]] = $link;
-                    }
-                }
+				{
+					if ($property["IS_REQUIRED"] == "Y")
+					{
+						$runtimeDependencies[$property["XML_ID"]] = $link;
+					}
+					else
+					{
+						$runtimeReferences[$property["XML_ID"]] = $link;
+					}
+				}
 			}
 		}
 		if ($runtimeFields || $runtimeReferences)
@@ -187,7 +185,12 @@ class Element extends BaseData
 		foreach($runtime->getFields() as $xmlId => $arField)
 		{
 			if($property = Property::getInstance()->findRecord($xmlId))
-				$properties[$property->getValue()] = $arField->getValue();
+			{
+				$properties[$property->getValue()] = array(
+					"VALUE" => $arField->getValue(),
+					"DESCRIPTION" => $arField->getDescription()
+				);
+			}
 		}
 		return $properties;
 	}
@@ -200,7 +203,7 @@ class Element extends BaseData
 	 */
 	private function getRuntimesLinks($properties, array $links, $IBlockId)
 	{
-		foreach($links as $xmlId => $arField)
+		foreach($links as $xmlId => $link)
 		{
 			if($property = Property::getInstance()->findRecord($xmlId))
 			{
@@ -210,31 +213,19 @@ class Element extends BaseData
 					switch($arProperty["PROPERTY_TYPE"])
 					{
 						case "N":
-							$properties[$property->getValue()] = $arField->getValue();
+							$properties[$property->getValue()] = $link->getValue();
 							break;
 						case "S":
 							if(array_search($arProperty["USER_TYPE"], array("HTML", "video", "DateTime", "map_yandex", "map_google", "FileMan", "ElementXmlID")) !== false)
 							{
-								$properties[$property->getValue()] = $arField->getValue();
+								$properties[$property->getValue()] = $link->getValue();
 							}
 							break;
 						case "L":
-							if($enumId = (Enum::getInstance()->findRecord($arField->getValue())))
-							{
-								$properties[$property->getValue()] = $enumId->getValue();
-							}
-							break;
 						case "G":
-							if($sectionId = (Section::getInstance()->findRecord($arField->getValue())))
-							{
-								$properties[$property->getValue()] = $sectionId->getValue();
-							}
-							break;
 						case "E":
-							if($elementId = (Element::getInstance()->findRecord($arField->getValue())))
-							{
-								$properties[$property->getValue()] = $elementId->getValue();
-							}
+							$values = $link->isMultiple() ? $link->getIds() : $link->getId()->getValue();
+							$properties[$property->getValue()] = $values;
 							break;
 					}
 				}
@@ -245,9 +236,10 @@ class Element extends BaseData
 
 	public function getIBlock(Record $record)
 	{
-		if($iblockId = $record->getDependency("IBLOCK_ID")->getId())
+		$iblock = $record->getDependency("IBLOCK_ID");
+		if($iblock && $iblock->getId())
 		{
-            return $iblockId->getValue();
+            return $iblock->getId()->getValue();
 		}
 		else
 		{
@@ -260,21 +252,24 @@ class Element extends BaseData
 		$fields = $record->getFieldsStrings();
 		$IBlockId = $this->getIBlock($record);
 
-        $fields["PROPERTY_VALUES"] = array();
-        $rsProperties = \CIBlockElement::GetProperty($IBlockId, $record->getId()->getValue());
-        while($arProperty = $rsProperties->Fetch())
-        {
-            $fields["PROPERTY_VALUES"][strval($arProperty["ID"])]= $arProperty["VALUE"];
-        }
+		$fields["PROPERTY_VALUES"] = array();
+		$rsProperties = \CIBlockElement::GetProperty($IBlockId, $record->getId()->getValue());
+		while($arProperty = $rsProperties->Fetch())
+		{
+			if($arProperty["PROPERTY_TYPE"] != "F" )
+			{
+				$fields["PROPERTY_VALUES"][strval($arProperty["ID"])]= $arProperty["VALUE"];
+			}
+		}
 
-        $fields["PROPERTY_VALUES"] = $this->getRuntimesFields($fields["PROPERTY_VALUES"],
-            $record->getRuntime("PROPERTY"));
+		$fields["PROPERTY_VALUES"] = $this->getRuntimesFields($fields["PROPERTY_VALUES"],
+			$record->getRuntime("PROPERTY"));
 
-        $fields["PROPERTY_VALUES"] = $this->getRuntimesLinks($fields["PROPERTY_VALUES"],
-            $record->getRuntime("PROPERTY")->getReferences(), $IBlockId);
+		$fields["PROPERTY_VALUES"] = $this->getRuntimesLinks($fields["PROPERTY_VALUES"],
+			$record->getRuntime("PROPERTY")->getReferences(), $IBlockId);
 
-        $fields["PROPERTY_VALUES"] = $this->getRuntimesLinks($fields["PROPERTY_VALUES"],
-            $record->getRuntime("PROPERTY")->getDependencies(), $IBlockId);
+		$fields["PROPERTY_VALUES"] = $this->getRuntimesLinks($fields["PROPERTY_VALUES"],
+			$record->getRuntime("PROPERTY")->getDependencies(), $IBlockId);
 
 		$elementObject = new \CIBlockElement();
 		$isUpdated = $elementObject->Update($record->getId()->getValue(), $fields);
@@ -289,11 +284,13 @@ class Element extends BaseData
 		$fields = $record->getFieldsStrings();
 
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
+		$fields["PROPERTY_VALUES"] = array();
 
-		$properties = $this->generateProperties($fields["IBLOCK_ID"], $record);
+		$fields["PROPERTY_VALUES"] = $this->getRuntimesFields($fields["PROPERTY_VALUES"],
+			$record->getRuntime("PROPERTY"));
 
-		if(count($properties))
-			$fields["PROPERTY_VALUES"] = $properties;
+		$fields["PROPERTY_VALUES"] = $this->getRuntimesLinks($fields["PROPERTY_VALUES"],
+			$record->getRuntime("PROPERTY")->getDependencies(), $fields["IBLOCK_ID"]);
 
 		$elementObject = new \CIBlockElement();
 		$elementId = $elementObject->add($fields);
@@ -310,8 +307,8 @@ class Element extends BaseData
 	public function delete($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		$elementObject = new \CIBlockType();
-		if (!$elementObject->delete($id->getValue()))
+		$elementObject = new \CIBlockElement();
+		if (!$elementObject->delete($id))
 		{
 			throw new \Exception("Unknown error");
 		}
