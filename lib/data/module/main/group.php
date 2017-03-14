@@ -64,9 +64,12 @@ class Group extends BaseData
 	{
 		$id = $this->findRecord($xmlId);
 		$groupObject = new \CGroup();
-		if (!$groupObject->delete($id->getValue()))
+		if ($id)
 		{
-			throw new \Exception("Unknown error");
+			if (!$groupObject->delete($id->getValue()))
+			{
+				throw new \Exception("Unknown error");
+			}
 		}
 	}
 }
