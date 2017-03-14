@@ -21,16 +21,19 @@ class Group extends BaseData
 		{
 			$record = new Record($this);
 			$id = $this->createId($group["ID"]);
-			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
-
-			$record->setId($id);
-			$record->setFields(array(
-				"ACTIVE" => $group["ACTIVE"],
-				"NAME" => $group["NAME"],
-				"DESCRIPTION" => $group["DESCRIPTION"],
-				"STRING_ID" => $group["STRING_ID"],
-			));
-			$result[] = $record;
+			$xmlId = $this->getXmlIdProvider()->getXmlId($id);
+			if (!$filter || in_array($xmlId, $filter))
+			{
+				$record->setId($id);
+				$record->setXmlId($xmlId);
+				$record->setFields(array(
+					"ACTIVE" => $group["ACTIVE"],
+					"NAME" => $group["NAME"],
+					"DESCRIPTION" => $group["DESCRIPTION"],
+					"STRING_ID" => $group["STRING_ID"],
+				));
+				$result[] = $record;
+			}
 		}
 
 		return $result;
