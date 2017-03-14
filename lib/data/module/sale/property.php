@@ -100,7 +100,7 @@ class Property extends BaseData
 	public function update(Record $record)
 	{
 		$array = $this->recordToArray($record);
-		$object = new \CSaleOrderUserProps();
+		$object = new \CSaleOrderProps();
 		$updateResult = $object->update($record->getId()->getValue(), $array);
 		if (!$updateResult)
 		{
@@ -112,7 +112,7 @@ class Property extends BaseData
 	public function create(Record $record)
 	{
 		$array = $this->recordToArray($record);
-		$object = new \CSaleOrderUserProps();
+		$object = new \CSaleOrderProps();
 		$id = $object->add($array);
 		if ($id)
 		{
@@ -130,7 +130,7 @@ class Property extends BaseData
 		$id = $this->findRecord($xmlId);
 		if ($id)
 		{
-			$object = new \CSaleOrderUserProps();
+			$object = new \CSaleOrderProps();
 			if (!$object->delete($id->getValue()))
 			{
 				throw new \Exception("Unknown error");
