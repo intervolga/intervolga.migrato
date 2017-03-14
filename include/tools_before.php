@@ -22,4 +22,6 @@ try
 catch (\Exception $exception)
 {
 	\Intervolga\Migrato\Tool\Page::handleException($exception);
+	include "tools_after.php";
+	die;
 }
