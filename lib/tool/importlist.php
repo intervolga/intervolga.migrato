@@ -104,11 +104,18 @@ class ImportList
 		$result = array();
 		foreach ($this->existingRecords as $class => $xmlIds)
 		{
+			/**
+			 * @var \Intervolga\Migrato\Data\Record $dataRecord
+			 */
 			foreach ($xmlIds as $xmlId => $dataRecord)
 			{
-				if (!$this->createdXmlIds[$class][$xmlId])
+				$configFilter = Config::getInstance()->getDataClassFilter($dataRecord->getData());
+				if (!$configFilter || in_array($xmlId, $xmlId))
 				{
-					$result[] = $dataRecord;
+					if (!$this->createdXmlIds[$class][$xmlId])
+					{
+						$result[] = $dataRecord;
+					}
 				}
 			}
 		}
