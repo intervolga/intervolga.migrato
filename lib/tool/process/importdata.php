@@ -1,8 +1,6 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
-use Bitrix\Main\Entity\ReferenceField;
 use Intervolga\Migrato\Data\BaseData;
-use Intervolga\Migrato\Data\Module\Catalog\PriceType;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Runtime;
 use Intervolga\Migrato\Tool\Config;
@@ -373,8 +371,8 @@ class ImportData extends BaseProcess
 		foreach (static::$recordsWithReferences as $dataRecord)
 		{
 			$clone = clone $dataRecord;
-			$clone->setFields(array());
-			$clone->setDependencies(array());
+			$clone->removeFields();
+			$clone->removeDependencies();
 			foreach ($clone->getReferences() as $reference)
 			{
 				self::setLinkId($reference);

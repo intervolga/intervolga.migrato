@@ -56,6 +56,11 @@ class Record
 		return $this->xmlId;
 	}
 
+	public function removeFields()
+	{
+		$this->fields = array();
+	}
+
 	/**
 	 * @param array $fields string[] or string[][]
 	 */
@@ -178,6 +183,11 @@ class Record
 		{
 			return array();
 		}
+	}
+
+	public function removeDependencies()
+	{
+		$this->dependencies = array();
 	}
 
 	/**
