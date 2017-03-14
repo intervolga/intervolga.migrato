@@ -250,18 +250,20 @@ class DataFileViewXml
 			{
 				if (!$fields[$name])
 				{
-					$fields[$name] = Value::createMultiple(array($field["#"]["value"][0]["#"]));
+					$fields[$name] = Value::createMultiple(
+						array(trim($field["#"]["value"][0]["#"]))
+					);
 				}
 				else
 				{
-					$fields[$name]->addValue($field["#"]["value"][0]["#"]);
+					$fields[$name]->addValue(trim($field["#"]["value"][0]["#"]));
 				}
 				$fields[$name]->addDescription($field["#"]["description"][0]["#"]);
 			}
 			else
 			{
-				$fields[$name] = new Value($field["#"]["value"][0]["#"]);
-				$fields[$name]->setDescription($field["#"]["description"][0]["#"]);
+				$fields[$name] = new Value(trim($field["#"]["value"][0]["#"]));
+				$fields[$name]->setDescription(trim($field["#"]["description"][0]["#"]));
 			}
 		}
 
@@ -291,18 +293,20 @@ class DataFileViewXml
 			{
 				if (!$links[$name])
 				{
-					$links[$name] = Link::createMultiple(array($linkNode["#"]["value"][0]["#"]));
+					$links[$name] = Link::createMultiple(
+						array(trim($linkNode["#"]["value"][0]["#"]))
+					);
 				}
 				else
 				{
-					$links[$name]->addValue($linkNode["#"]["value"][0]["#"]);
+					$links[$name]->addValue(trim($linkNode["#"]["value"][0]["#"]));
 				}
-				$links[$name]->addDescription($linkNode["#"]["description"][0]["#"]);
+				$links[$name]->addDescription(trim($linkNode["#"]["description"][0]["#"]));
 			}
 			else
 			{
-				$links[$name] = new Link(null, $linkNode["#"]["value"][0]["#"]);
-				$links[$name]->setDescription($linkNode["#"]["description"][0]["#"]);
+				$links[$name] = new Link(null, trim($linkNode["#"]["value"][0]["#"]));
+				$links[$name]->setDescription(trim($linkNode["#"]["description"][0]["#"]));
 			}
 
 			$data = static::getDataClass(
