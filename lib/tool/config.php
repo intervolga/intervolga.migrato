@@ -1,6 +1,5 @@
 <? namespace Intervolga\Migrato\Tool;
 
-
 use Intervolga\Migrato\Data\BaseData;
 
 class Config
@@ -72,24 +71,27 @@ class Config
 	 */
 	public function getDataClasses()
 	{
-		$entities = array();
-		foreach ($this->configArray["config"]["#"]["module"] as $moduleArray)
+		static $entities = array();
+		if (!$entities)
 		{
-			$moduleName = $moduleArray["#"]["name"][0]["#"];
-			foreach ($moduleArray["#"]["entity"] as $entityArray)
+			foreach ($this->configArray["config"]["#"]["module"] as $moduleArray)
 			{
-				$className = $entityArray["#"]["name"][0]["#"];
-				$name = "\\Intervolga\\Migrato\\Data\\Module\\" . $moduleName . "\\" . $className;
-				if (class_exists($name))
+				$moduleName = $moduleArray["#"]["name"][0]["#"];
+				foreach ($moduleArray["#"]["entity"] as $entityArray)
 				{
-					/**
-					 * @var BaseData $name
-					 */
-					$dataObject = $name::getInstance();
-					$entities[] = $dataObject;
-					if ($entityArray["#"]["filter"])
+					$className = $entityArray["#"]["name"][0]["#"];
+					$name = "\\Intervolga\\Migrato\\Data\\Module\\" . $moduleName . "\\" . $className;
+					if (class_exists($name))
 					{
-						$this->registerDataFilter($dataObject, $entityArray["#"]["filter"]);
+						/**
+						 * @var BaseData $name
+						 */
+						$dataObject = $name::getInstance();
+						$entities[] = $dataObject;
+						if ($entityArray["#"]["filter"])
+						{
+							$this->registerDataFilter($dataObject, $entityArray["#"]["filter"]);
+						}
 					}
 				}
 			}
