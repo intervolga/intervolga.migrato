@@ -310,7 +310,7 @@ class Element extends BaseData
 		$id = $this->findRecord($xmlId);
 		if ($id)
 		{
-			$elementObject = new \CIBlockType();
+			$elementObject = new \CIBlockElement();
 			if (!$elementObject->delete($id->getValue()))
 			{
 				throw new \Exception("Unknown error");
