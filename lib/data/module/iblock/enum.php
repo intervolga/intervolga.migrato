@@ -6,14 +6,14 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
-use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\EnumXmlIdProvider;
 
 class Enum extends BaseData
 {
 	public function __construct()
 	{
 		Loader::includeModule("iblock");
-		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\PropertyEnumerationTable");
+		$this->xmlIdProvider = new EnumXmlIdProvider($this);
 	}
 
 	public function getFilesSubdir()
