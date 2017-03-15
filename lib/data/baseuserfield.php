@@ -437,12 +437,10 @@ abstract class BaseUserField extends BaseData
 	{
 		$fields = $record->getFieldsStrings();
 
-		if($iblockIdXml = $record->getDependency($this->getDependencyString()))
+		if($iblockId = $record->getDependency($this->getDependencyString())->getId())
 		{
-			$blockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
-
 			$fields["XML_ID"] = $record->getXmlId();
-			$fields["ENTITY_ID"] = $this->getDependencyNameKey($blockId);
+			$fields["ENTITY_ID"] = $this->getDependencyNameKey($iblockId->getValue());
 
 			$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
 			foreach($this->getLangFieldsNames() as $lang)
@@ -463,7 +461,7 @@ abstract class BaseUserField extends BaseData
 		}
 		else
 		{
-			throw new \Exception("iblock/field not defined a dependence for element " . $record->getId()->getValue());
+			throw new \Exception("Create iblock/field: record haven`t the dependence for element " . $record->getXmlId());
 		}
 	}
 
