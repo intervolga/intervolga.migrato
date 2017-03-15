@@ -3,6 +3,7 @@
 use Bitrix\Main;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
+use Bitrix\Main\IO\Directory;
 
 Loc::loadMessages(__FILE__);
 
@@ -35,6 +36,7 @@ class intervolga_migrato extends CModule
 		try
 		{
 			$this->installDb();
+			$this->copyPublicFiles();
 			Main\ModuleManager::registerModule($this->MODULE_ID);
 		}
 		catch (\Exception $e)
@@ -58,6 +60,16 @@ class intervolga_migrato extends CModule
 		}
 
 		return true;
+	}
+
+	public function copyPublicFiles()
+	{
+		if(!Directory::isDirectoryExists(INTERVOLGA_MIGRATO_DIRECTORY))
+		{
+			Directory::createDirectory(INTERVOLGA_MIGRATO_DIRECTORY);
+
+			CopyDirFiles(__DIR__ . "/public/", INTERVOLGA_MIGRATO_DIRECTORY);
+		}
 	}
 
 	public function doUninstall()
