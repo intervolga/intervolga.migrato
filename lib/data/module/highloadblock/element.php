@@ -171,25 +171,25 @@ class Element extends BaseData
 
 	public function create(Record $record)
 	{
-		$id = $record->getId()->getValue();
-
-		$runtimes = $record->getRuntime("FIELD");
-
-		$fields = $this->getRuntimesLinks($runtimes->getDependencies());
-
-		$strEntityDataClass = $this->getDataClass($id["HLBLOCK_ID"]);
-		$result = $strEntityDataClass::add($fields);
-		if ($result->isSuccess())
+		if($hlIblockId = $record->getDependency("HLBLOCK_ID")->getId())
 		{
-			$id = RecordId::createNumericId($result->getId());
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+			$runtimes = $record->getRuntime("FIELD");
 
-			return $id;
+			$fields = $this->getRuntimesLinks($runtimes->getDependencies());
+
+			$strEntityDataClass = $this->getDataClass($hlIblockId->getValue());
+			$result = $strEntityDataClass::add($fields);
+			if ($result->isSuccess())
+			{
+				return $this->createId($result->getId());
+			}
+			else
+			{
+				throw new \Exception(trim(strip_tags($result->getErrorMessages())));
+			}
 		}
 		else
-		{
-			throw new \Exception(trim(strip_tags($result->getErrorMessages())));
-		}
+			throw new \Exception("Creating highloadblock/element: record " . $record->getXmlId() .  "haven`t HLBLOCK_ID");
 	}
 
 	public function delete($xmlId)
