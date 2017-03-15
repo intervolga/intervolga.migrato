@@ -20,6 +20,7 @@ class intervolga_migrato extends CModule
 	public function __construct()
 	{
 		$arModuleVersion = array();
+		include(dirname(__DIR__) . "/include.php");
 		include(dirname(__FILE__) . "/version.php");
 		$this->MODULE_ID = self::getModuleId();
 		$this->MODULE_VERSION = $arModuleVersion["VERSION"];
@@ -68,7 +69,7 @@ class intervolga_migrato extends CModule
 		{
 			Directory::createDirectory(INTERVOLGA_MIGRATO_DIRECTORY);
 
-			CopyDirFiles(__DIR__ . "/public/", INTERVOLGA_MIGRATO_DIRECTORY);
+			CopyDirFiles(__DIR__ . "/public", INTERVOLGA_MIGRATO_DIRECTORY);
 		}
 	}
 
