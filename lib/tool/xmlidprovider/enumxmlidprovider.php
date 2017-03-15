@@ -10,7 +10,7 @@ class EnumXmlIdProvider extends BaseXmlIdProvider
 			"XML_ID" => $xmlId,
 			"PROPERTY_ID" => $userFieldEnum["PROPERTY_ID"]
 		);
-		\CIBlockPropertyEnum::Update($id, $arFields);
+		\CIBlockPropertyEnum::Update($id->getValue(), $arFields);
 	}
 
 	public function getXmlId($id)
