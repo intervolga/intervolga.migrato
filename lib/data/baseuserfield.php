@@ -6,7 +6,6 @@ use Intervolga\Migrato\Data\Module\Iblock\Element;
 use Intervolga\Migrato\Data\Module\Iblock\Iblock;
 use Intervolga\Migrato\Data\Module\Iblock\Section;
 use Intervolga\Migrato\Data\Module\Iblock\FieldEnum;
-use Intervolga\Migrato\Tool\XmlIdProvider\UfSelfXmlIdProvider;
 
 abstract class BaseUserField extends BaseData
 {
@@ -22,11 +21,6 @@ abstract class BaseUserField extends BaseData
 			"ERROR_MESSAGE",
 			"HELP_MESSAGE",
 		);
-	}
-
-	public function __construct()
-	{
-		$this->xmlIdProvider = new UfSelfXmlIdProvider($this);
 	}
 
 	public function getList(array $filter = array())
@@ -473,5 +467,18 @@ abstract class BaseUserField extends BaseData
 		{
 			throw new \Exception("Unknown error");
 		}
+	}
+
+	public function setXmlId($id, $xmlId)
+	{
+		$userFieldObject = new \CUserTypeEntity();
+		$userFieldObject->update($id->getValue(), array("XML_ID" => $xmlId));
+	}
+
+	public function getXmlId($id)
+	{
+		$userField = \CUserTypeEntity::getById($id->getValue());
+
+		return $userField["XML_ID"];
 	}
 }
