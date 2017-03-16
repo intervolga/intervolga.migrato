@@ -69,10 +69,20 @@ class Group extends BaseData
 		$groupObject = new \CGroup();
 		if ($id)
 		{
+			if($id->getValue() == 1 || $id->getValue() == 2)
+			{
+				$groups = array(1 => "\"Администраторы\"", 2 => "\"Все пользователи\"");
+				throw new \Exception("Невозможно удалить группу " . $groups[$id->getValue()] . " с xmlId: " . $xmlId
+					. ". Пожалуйста, убедитесь чтобы xmlId этой группы совпадали.");
+			}
 			if (!$groupObject->delete($id->getValue()))
 			{
 				throw new \Exception("Unknown error");
 			}
+		}
+		else
+		{
+			throw new \Exception("Not found record with xml id " . $xmlId);
 		}
 	}
 }
