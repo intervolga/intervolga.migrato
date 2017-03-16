@@ -19,7 +19,7 @@ class EventType extends BaseData
 		{
 			$record = new Record($this);
 			$id = $this->createId($type["ID"]);
-			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
+			$record->setXmlId($this->getXmlId($id));
 			$record->setId($id);
 			$record->addFieldsRaw(array(
 				"LID" => $type["LID"],

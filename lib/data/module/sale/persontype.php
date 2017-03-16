@@ -26,7 +26,7 @@ class PersonType extends BaseData
 			$id = $this->createId($personType["ID"]);
 			$record->setId($id);
 			$record->setXmlId(
-				$this->getXmlIdProvider()->getXmlId($id)
+				$this->getXmlId($id)
 			);
 			$record->addFieldsRaw(array(
 				"NAME" => $personType["NAME"],

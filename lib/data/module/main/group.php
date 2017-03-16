@@ -21,7 +21,7 @@ class Group extends BaseData
 		{
 			$record = new Record($this);
 			$id = $this->createId($group["ID"]);
-			$xmlId = $this->getXmlIdProvider()->getXmlId($id);
+			$xmlId = $this->getXmlId($id);
 			if (!$filter || in_array($xmlId, $filter))
 			{
 				$record->setId($id);

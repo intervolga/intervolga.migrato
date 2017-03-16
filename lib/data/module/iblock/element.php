@@ -41,7 +41,7 @@ class Element extends BaseData
 
 			$dependency = clone $this->getDependency("IBLOCK_ID");
 			$dependency->setValue(
-				Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($element["IBLOCK_ID"]))
+				Iblock::getInstance()->getXmlId(RecordId::createNumericId($element["IBLOCK_ID"]))
 			);
 			$record->setDependency("IBLOCK_ID", $dependency);
 
@@ -76,7 +76,7 @@ class Element extends BaseData
 	protected function getPropertyLink($runtimeReferences, $property, $instance = null)
 	{
 		$valueElementId = RecordId::createNumericId($property["VALUE"]);
-		$valueElementXmlId = $instance->getXmlIdProvider()->getXmlId($valueElementId);
+		$valueElementXmlId = $instance->getXmlId($valueElementId);
 
 		if($property["MULTIPLE"] == "Y" && $runtimeReferences[$property["XML_ID"]])
 		{

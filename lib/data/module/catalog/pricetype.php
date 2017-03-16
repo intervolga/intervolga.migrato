@@ -63,7 +63,7 @@ class PriceType extends BaseData
 			foreach ($accesses[$type][$record->getId()->getValue()] as $groupId)
 			{
 				$groupIdObject = Group::getInstance()->createId($groupId);
-				$groupXmlId = Group::getInstance()->getXmlIdProvider()->getXmlId($groupIdObject);
+				$groupXmlId = Group::getInstance()->getXmlId($groupIdObject);
 				if ($groupXmlId)
 				{
 					$viewGroupsXmlIds[] = $groupXmlId;

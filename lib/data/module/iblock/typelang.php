@@ -38,7 +38,7 @@ class TypeLang extends BaseData
 						)
 					);
 					$record = new Record($this);
-					$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
+					$record->setXmlId($this->getXmlId($id));
 					$record->setId($id);
 					$record->addFieldsRaw(array(
 						"LID" => $typeLang["LID"],
@@ -50,7 +50,7 @@ class TypeLang extends BaseData
 						"IBLOCK_TYPE_ID",
 						new Link(
 							Type::getInstance(),
-							Type::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createStringId($typeLang["IBLOCK_TYPE_ID"]))
+							Type::getInstance()->getXmlId(RecordId::createStringId($typeLang["IBLOCK_TYPE_ID"]))
 						)
 					);
 					$result[] = $record;

@@ -32,7 +32,7 @@ abstract class BaseUserFieldEnum extends BaseData
 
 			$dependency = clone $this->getDependency("USER_FIELD_ID");
 			$dependency->setValue(
-				$dependency->getTargetData()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($enum["USER_FIELD_ID"]))
+				$dependency->getTargetData()->getXmlId(RecordId::createNumericId($enum["USER_FIELD_ID"]))
 			);
 			$record->setDependency("USER_FIELD_ID", $dependency);
 

@@ -224,6 +224,24 @@ abstract class BaseData
 	}
 
 	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $id
+	 *
+	 * @return string
+	 * @throws \Bitrix\Main\NotImplementedException
+	 */
+	public function getXmlId($id)
+	{
+		if ($this->xmlIdProvider)
+		{
+			$this->xmlIdProvider->getXmlId($id);
+		}
+		else
+		{
+			throw new NotImplementedException("Not implemented yet");
+		}
+	}
+
+	/**
 	 * @return bool
 	 */
 	public function isXmlIdFieldExists()

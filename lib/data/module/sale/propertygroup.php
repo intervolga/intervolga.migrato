@@ -37,7 +37,7 @@ class PropertyGroup extends BaseData
 			$id = $this->createId($propGroup["ID"]);
 			$record->setId($id);
 			$record->setXmlId(
-				$this->getXmlIdProvider()->getXmlId($id)
+				$this->getXmlId($id)
 			);
 			$record->addFieldsRaw(array(
 				"NAME" => $propGroup["NAME"],
@@ -45,7 +45,7 @@ class PropertyGroup extends BaseData
 			));
 
 			$link = clone $this->getDependency("PERSON_TYPE_ID");
-			$personTypeXmlId = PersonType::getInstance()->getXmlIdProvider()->getXmlId(
+			$personTypeXmlId = PersonType::getInstance()->getXmlId(
 				PersonType::getInstance()->createId($propGroup["PERSON_TYPE_ID"])
 			);
 			$link->setValue($personTypeXmlId);

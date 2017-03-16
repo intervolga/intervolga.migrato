@@ -42,10 +42,10 @@ class Section extends BaseData
 			));
 
 			$dependency = clone $this->getDependency("IBLOCK_ID");
-			$dependency->setValue(Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($section["IBLOCK_ID"])));
+			$dependency->setValue(Iblock::getInstance()->getXmlId(RecordId::createNumericId($section["IBLOCK_ID"])));
 			$record->setDependency("IBLOCK_ID", $dependency);
 
-			$link = new Link(self::getInstance(), $this->getXmlIdProvider()->getXmlId(RecordId::createNumericId($section["IBLOCK_SECTION_ID"])));
+			$link = new Link(self::getInstance(), $this->getXmlId(RecordId::createNumericId($section["IBLOCK_SECTION_ID"])));
 			$record->setReferences(array("IBLOCK_SECTION_ID" => $link));
 
 			$rsSection = \CIBlockSection::GetList(array(), array("IBLOCK_ID" => $section["IBLOCK_ID"], "ID" => $section["ID"]), false, array("UF_*"));
