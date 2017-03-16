@@ -103,16 +103,29 @@ class Event extends BaseData
 
 	public function create(Record $record)
 	{
-		$eventMessageObject = new \CEventMessage();
-		$eventMessageId = $eventMessageObject->add($record->getFieldsStrings());
-		if ($eventMessageId)
+		$fields = $record->getFieldsStrings();
+
+		if($eventType = $record->getDependency("EVENT_NAME")->getId())
 		{
-			return $this->createId($eventMessageId);
+			$rsEventType = \CEventType::GetList(array("ID" => $eventType->getValue()));
+			if($arEventType = $rsEventType->Fetch())
+			{
+				$fields["EVENT_NAME"] = $arEventType["EVENT_NAME"];
+			}
+
+			$eventMessageObject = new \CEventMessage();
+			$eventMessageId = $eventMessageObject->add($fields);
+			if ($eventMessageId)
+			{
+				return $this->createId($eventMessageId);
+			}
+			else
+			{
+				throw new \Exception(trim(strip_tags($eventMessageObject->LAST_ERROR)));
+			}
 		}
 		else
-		{
-			throw new \Exception(trim(strip_tags($eventMessageObject->LAST_ERROR)));
-		}
+			throw new \Exception("Не задано поле EVENT_TYPE для почтового шаблона с xmlId " . $record->getXmlId());
 	}
 
 	public function delete($xmlId)

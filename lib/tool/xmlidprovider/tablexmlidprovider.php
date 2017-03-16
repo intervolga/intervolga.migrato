@@ -38,7 +38,7 @@ class TableXmlIdProvider extends BaseXmlIdProvider
 	/**
 	 * @param RecordId $id
 	 */
-	private function getTableXmlIdRecordId($id)
+	protected function getTableXmlIdRecordId($id)
 	{
 		$parameters = array(
 			"select" => array(

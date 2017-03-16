@@ -2,13 +2,13 @@
 
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\GroupXmlIdProvider;
 
 class Group extends BaseData
 {
 	public function __construct()
 	{
-		$this->xmlIdProvider = new UfXmlIdProvider($this);
+		$this->xmlIdProvider = new GroupXmlIdProvider($this);
 	}
 
 	public function getList(array $filter = array())
@@ -69,10 +69,20 @@ class Group extends BaseData
 		$groupObject = new \CGroup();
 		if ($id)
 		{
+			if($id->getValue() == 1 || $id->getValue() == 2)
+			{
+				$groups = array(1 => "\"Администраторы\"", 2 => "\"Все пользователи\"");
+				throw new \Exception("Невозможно удалить группу " . $groups[$id->getValue()] . " с xmlId: " . $xmlId
+					. ". Пожалуйста, убедитесь чтобы xmlId этой группы совпадали.");
+			}
 			if (!$groupObject->delete($id->getValue()))
 			{
 				throw new \Exception("Unknown error");
 			}
+		}
+		else
+		{
+			throw new \Exception("Not found record with xml id " . $xmlId);
 		}
 	}
 }
