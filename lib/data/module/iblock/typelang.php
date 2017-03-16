@@ -144,11 +144,11 @@ class TypeLang extends BaseData
 			return RecordId::createComplexId(
 				array(
 					"ID" => strval($typeId->getValue()),
-					"LANG" => strval($record->getField("LID"))
+					"LANG" => strval($record->getField("LID")->getValue())
 				)
 			);
 		}
 		else
-			throw new \Exception("Creating typelang: not found iblocktype for record " . $record->getXmlId());
+			throw new \Exception("not found iblocktype for record " . $record->getXmlId());
 	}
 }
