@@ -2,13 +2,13 @@
 
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\GroupXmlIdProvider;
 
 class Group extends BaseData
 {
 	public function __construct()
 	{
-		$this->xmlIdProvider = new UfXmlIdProvider($this);
+		$this->xmlIdProvider = new GroupXmlIdProvider($this);
 	}
 
 	public function getList(array $filter = array())
