@@ -8,11 +8,6 @@ abstract class BaseXmlIdProvider
 {
 	protected $dataClass = null;
 
-	public static function deleteXmlIdFields()
-	{
-		throw new NotImplementedException(__FUNCTION__ . " is not yet implemented");
-	}
-
 	public function __construct(BaseData $dataClass)
 	{
 		$this->dataClass = $dataClass;
