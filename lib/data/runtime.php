@@ -101,7 +101,7 @@ class Runtime
 	}
 
 	/**
-	 * @return array|\Intervolga\Migrato\Data\Link[]
+	 * @return \Intervolga\Migrato\Data\Link[]
 	 */
 	public function getDependencies()
 	{
