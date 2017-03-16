@@ -36,6 +36,14 @@ class Runtime
 	}
 
 	/**
+	 * @param \Intervolga\Migrato\Data\Value[] $fields
+	 */
+	public function addFields(array $fields)
+	{
+		$this->fields = array_merge($this->fields, $fields);
+	}
+
+	/**
 	 * @param string $name
 	 * @param \Intervolga\Migrato\Data\Value $value
 	 */
@@ -62,12 +70,25 @@ class Runtime
 		return $this->fields[$name];
 	}
 
+	public function removeFields()
+	{
+		$this->fields = array();
+	}
+
 	/**
 	 * @param \Intervolga\Migrato\Data\Link[] $dependencies
 	 */
 	public function setDependencies(array $dependencies)
 	{
 		$this->dependencies = $dependencies;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Link[] $dependencies
+	 */
+	public function addDependencies(array $dependencies)
+	{
+		$this->dependencies = array_merge($this->dependencies, $dependencies);
 	}
 
 	/**
@@ -87,12 +108,25 @@ class Runtime
 		return $this->dependencies;
 	}
 
+	public function removeDependencies()
+	{
+		$this->dependencies = array();
+	}
+
 	/**
 	 * @param \Intervolga\Migrato\Data\Link[] $references
 	 */
 	public function setReferences(array $references)
 	{
 		$this->references = $references;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Link[] $references
+	 */
+	public function addReferences(array $references)
+	{
+		$this->references = array_merge($this->references, $references);
 	}
 
 	/**
@@ -119,6 +153,11 @@ class Runtime
 	{
 		$references = $this->getReferences();
 		return $references[$key];
+	}
+
+	public function removeReferences()
+	{
+		$this->references = array();
 	}
 
 	/**
