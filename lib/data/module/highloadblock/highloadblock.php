@@ -52,7 +52,7 @@ class HighloadBlock extends BaseData
 		if ($result->isSuccess())
 		{
 			$id = RecordId::createNumericId($result->getId());
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+			$this->setXmlId($id, $record->getXmlId());
 
 			return $id;
 		} else {

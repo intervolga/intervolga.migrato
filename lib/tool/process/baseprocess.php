@@ -51,7 +51,7 @@ class BaseProcess
 			{
 				throw new \Exception($data->getModule() . "/" . $data->getEntityName() . " has no xml id provider");
 			}
-			if (!$data->getXmlIdProvider()->isXmlIdFieldExists())
+			if (!$data->isXmlIdFieldExists())
 			{
 				$data->getXmlIdProvider()->createXmlIdField();
 			}

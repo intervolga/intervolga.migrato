@@ -63,7 +63,8 @@ class ImportData extends BaseProcess
 	 */
 	protected static function prepareNonConfigData(BaseData $data)
 	{
-		foreach ($data->getList() as $localDataRecord)
+		$dataGetList = $data->getList();
+		foreach ($dataGetList as $localDataRecord)
 		{
 			static::$list->addCreatedRecord($localDataRecord);
 		}
@@ -315,7 +316,7 @@ class ImportData extends BaseProcess
 				self::setLinkId($dependency);
 			}
 			$dataRecord->setId($dataRecord->create());
-			$dataRecord->getData()->getXmlIdProvider()->setXmlId(
+			$dataRecord->getData()->setXmlId(
 				$dataRecord->getId(),
 				$dataRecord->getXmlId()
 			);
