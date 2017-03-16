@@ -6,14 +6,14 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
-use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\EnumXmlIdProvider;
 
 class Enum extends BaseData
 {
 	public function __construct()
 	{
 		Loader::includeModule("iblock");
-		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\PropertyEnumerationTable");
+		$this->xmlIdProvider = new EnumXmlIdProvider($this);
 	}
 
 	public function getFilesSubdir()
@@ -58,8 +58,8 @@ class Enum extends BaseData
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$dependency = $record->getDependency("PROPERTY_ID");
-		if($propertyId = Property::getInstance()->findRecord($dependency->getValue()))
+
+		if($propertyId = $record->getDependency("PROPERTY_ID")->getId())
 		{
 			$fields["PROPERTY_ID"] = $propertyId->getValue();
 			$enumObject = new \CIBlockPropertyEnum();
@@ -74,12 +74,14 @@ class Enum extends BaseData
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsStrings();
-		$dependency = $record->getDependency("PROPERTY_ID");
-		if($propertyId = Property::getInstance()->findRecord($dependency->getValue()))
+		if($propertyId = $record->getDependency("PROPERTY_ID")->getId())
 		{
 			$fields["PROPERTY_ID"] = $propertyId->getValue();
+			$fields["XML_ID"] = $record->getXmlId();
+
 			$enumObject = new \CIBlockPropertyEnum();
 			$enumId = $enumObject->add($fields);
+			// TODO Ошибка с добавлением
 			if ($enumId)
 			{
 				return $this->createId($enumId);
@@ -89,6 +91,8 @@ class Enum extends BaseData
 				throw new \Exception("Unknown error");
 			}
 		}
+		else
+			throw new \Exception("Creating enum: not found property for record " . $record->getXmlId());
 	}
 
 	public function delete($xmlId)

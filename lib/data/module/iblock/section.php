@@ -110,9 +110,9 @@ class Section extends BaseData
 	public function getIBlock(Record $record)
 	{
 		$iblockId = null;
-		if($iblockIdXml = $record->getDependency("IBLOCK_ID"))
+		if($iblockId = $record->getDependency("IBLOCK_ID")->getId())
 		{
-			$iblockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
+			$iblockId = $iblockId->getValue();
 		}
 		elseif($id = $record->getId())
 		{

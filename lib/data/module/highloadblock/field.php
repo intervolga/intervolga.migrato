@@ -65,7 +65,7 @@ class Field extends BaseUserField
 
 	public function getDependencyString()
 	{
-		return "IBLOCK_ID";
+		return "HLBLOCK_ID";
 	}
 
 	public function getDependencyNameKey($id)

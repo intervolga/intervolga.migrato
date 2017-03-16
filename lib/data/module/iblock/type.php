@@ -4,7 +4,7 @@ use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
-use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\TypeXmlIdProvider;
 use Bitrix\Main\Localization\LanguageTable;
 
 class Type extends BaseData
@@ -12,7 +12,7 @@ class Type extends BaseData
 	protected function __construct()
 	{
 		Loader::includeModule("iblock");
-		$this->xmlIdProvider = new TableXmlIdProvider($this);
+		$this->xmlIdProvider = new TypeXmlIdProvider($this);
 	}
 
 	public function getList(array $filter = array())
