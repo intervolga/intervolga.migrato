@@ -110,9 +110,13 @@ class Section extends BaseData
 	public function getIBlock(Record $record)
 	{
 		$iblockId = null;
-		if($iblockId = $record->getDependency("IBLOCK_ID")->getId())
+
+		if($iblock = $record->getDependency("IBLOCK_ID"))
 		{
-			$iblockId = $iblockId->getValue();
+			if($iblockId = $iblock->getId())
+			{
+				$iblockId = $iblockId->getValue();
+			}
 		}
 		elseif($id = $record->getId())
 		{
@@ -136,10 +140,12 @@ class Section extends BaseData
 		 */
 		foreach($fields as $key => $value)
 		{
-			$fieldId = Field::getInstance()->findRecord($key)->getValue();
-			$field = \CUserTypeEntity::GetByID($fieldId);
+			if($fieldId = Field::getInstance()->findRecord($key))
+			{
+				$field = \CUserTypeEntity::GetByID($fieldId->getValue());
 
-			$result[$field["FIELD_NAME"]] = $value->getValue();
+				$result[$field["FIELD_NAME"]] = $value->getValue();
+			}
 		}
 		return $result;
 	}
