@@ -131,6 +131,18 @@ class Value
 	}
 
 	/**
+	 * @param string[] $values
+	 */
+	public function addValues(array $values)
+	{
+		foreach ($values as $value)
+		{
+			$this->values[] = $value;
+		}
+		$this->multiple = true;
+	}
+
+	/**
 	 * @return \string[]
 	 * @throws \Exception
 	 */
@@ -189,6 +201,19 @@ class Value
 	public function addDescription($description)
 	{
 		$this->descriptions[] = $description;
+		$this->multiple = true;
+		$this->descriptionIsSet = true;
+	}
+
+	/**
+	 * @param string[] $descriptions
+	 */
+	public function addDescriptions(array $descriptions)
+	{
+		foreach ($descriptions as $description)
+		{
+			$this->descriptions[] = $description;
+		}
 		$this->multiple = true;
 		$this->descriptionIsSet = true;
 	}
