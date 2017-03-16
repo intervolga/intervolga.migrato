@@ -30,7 +30,7 @@ class Property extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($property["XML_ID"]);
 			$record->setId(RecordId::createNumericId($property["ID"]));
-			$record->setFields(array(
+			$record->addFields(array(
 				"NAME" => $property["NAME"],
 				"ACTIVE" => $property["ACTIVE"],
 				"SORT" => $property["SORT"],
@@ -56,7 +56,7 @@ class Property extends BaseData
 			$dependency->setValue(
 				Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($property["IBLOCK_ID"]))
 			);
-			$record->addDependency("IBLOCK_ID", $dependency);
+			$record->setDependency("IBLOCK_ID", $dependency);
 
 			if ($property["LINK_IBLOCK_ID"])
 			{
@@ -64,7 +64,7 @@ class Property extends BaseData
 				$reference->setValue(
 					Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($property["LINK_IBLOCK_ID"]))
 				);
-				$record->addReference("LINK_IBLOCK_ID", $reference);
+				$record->setReference("LINK_IBLOCK_ID", $reference);
 			}
 			$result[] = $record;
 		}

@@ -36,7 +36,7 @@ class PriceType extends BaseData
 			$record = new Record($this);
 			$record->setId($this->createId($priceType["ID"]));
 			$record->setXmlId($priceType["XML_ID"]);
-			$record->setFields(array(
+			$record->addFields(array(
 				"NAME" => $priceType["NAME"],
 				"BASE" => $priceType["BASE"],
 				"SORT" => $priceType["SORT"],
@@ -70,7 +70,7 @@ class PriceType extends BaseData
 				}
 			}
 			$link->setValues($viewGroupsXmlIds);
-			$record->addDependency($type, $link);
+			$record->setDependency($type, $link);
 		}
 	}
 
@@ -107,7 +107,7 @@ class PriceType extends BaseData
 		if ($langs[$record->getId()->getValue()])
 		{
 			$userLangs = Value::treeToList($langs[$record->getId()->getValue()], "USER_LANG");
-			$record->setFields($userLangs);
+			$record->addFields($userLangs);
 		}
 	}
 

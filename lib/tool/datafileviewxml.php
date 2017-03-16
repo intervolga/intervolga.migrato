@@ -202,7 +202,7 @@ class DataFileViewXml
 			if ($xmlArray["data"]["#"]["field"])
 			{
 				$fields = static::parseFields($xmlArray["data"]["#"]["field"]);
-				$record->setFieldsValues($fields);
+				$record->addFieldsValues($fields);
 			}
 
 			if ($xmlArray["data"]["#"]["dependency"])

@@ -31,7 +31,7 @@ class Section extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($section["XML_ID"]);
 			$record->setId(RecordId::createNumericId($section["ID"]));
-			$record->setFields(array(
+			$record->addFields(array(
 				"NAME"              => $section["NAME"],
 				"CODE"              => $section["CODE"],
 				"ACTIVE"            => $section["ACTIVE"],
@@ -43,7 +43,7 @@ class Section extends BaseData
 
 			$dependency = clone $this->getDependency("IBLOCK_ID");
 			$dependency->setValue(Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($section["IBLOCK_ID"])));
-			$record->addDependency("IBLOCK_ID", $dependency);
+			$record->setDependency("IBLOCK_ID", $dependency);
 
 			$link = new Link(self::getInstance(), $this->getXmlIdProvider()->getXmlId(RecordId::createNumericId($section["IBLOCK_SECTION_ID"])));
 			$record->setReferences(array("IBLOCK_SECTION_ID" => $link));

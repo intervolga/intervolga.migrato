@@ -64,7 +64,7 @@ class Record
 	/**
 	 * @param array $fields string[] or string[][]
 	 */
-	public function setFields(array $fields)
+	public function addFields(array $fields)
 	{
 		foreach ($fields as $name => $field)
 		{
@@ -91,7 +91,7 @@ class Record
 	/**
 	 * @param \Intervolga\Migrato\Data\Value[] $values
 	 */
-	public function setFieldsValues(array $values)
+	public function addFieldsValues(array $values)
 	{
 		foreach ($values as $name => $value)
 		{
@@ -202,7 +202,7 @@ class Record
 	 * @param string $key
 	 * @param \Intervolga\Migrato\Data\Link $dependency
 	 */
-	public function addDependency($key, Link $dependency)
+	public function setDependency($key, Link $dependency)
 	{
 		$this->dependencies[$key] = $dependency;
 	}
@@ -238,7 +238,7 @@ class Record
 	 * @param string $key
 	 * @param \Intervolga\Migrato\Data\Link $reference
 	 */
-	public function addReference($key, Link $reference)
+	public function setReference($key, Link $reference)
 	{
 		$this->references[$key] = $reference;
 	}

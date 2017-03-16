@@ -39,7 +39,7 @@ class PropertyGroup extends BaseData
 			$record->setXmlId(
 				$this->getXmlIdProvider()->getXmlId($id)
 			);
-			$record->setFields(array(
+			$record->addFields(array(
 				"NAME" => $propGroup["NAME"],
 				"SORT" => $propGroup["SORT"],
 			));
@@ -49,7 +49,7 @@ class PropertyGroup extends BaseData
 				PersonType::getInstance()->createId($propGroup["PERSON_TYPE_ID"])
 			);
 			$link->setValue($personTypeXmlId);
-			$record->addDependency("PERSON_TYPE_ID", $link);
+			$record->setDependency("PERSON_TYPE_ID", $link);
 
 			$result[] = $record;
 		}

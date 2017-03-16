@@ -79,10 +79,10 @@ abstract class BaseUserField extends BaseData
 		);
 		$fields = array_merge($fields, $this->getSettingsFields($userField["SETTINGS"]));
 		$fields = array_merge($fields, $this->getLangFields($userField));
-		$record->setFields($fields);
+		$record->addFields($fields);
 		foreach ($this->getSettingsLinks($userField["SETTINGS"]) as $name => $link)
 		{
-			$record->addReference($name, $link);
+			$record->setReference($name, $link);
 		}
 
 		return $record;
@@ -211,7 +211,7 @@ abstract class BaseUserField extends BaseData
 	}
 
 	/**
-	 * @param array $links
+	 * @param \Intervolga\Migrato\Data\Link[] $links
 	 *
 	 * @return array настройки для привязки к сущности
 	 */
@@ -469,7 +469,7 @@ abstract class BaseUserField extends BaseData
 	{
 		$id = $this->findRecord($xmlId);
 		$fieldObject = new \CAllUserTypeEntity();
-		if (!$fieldObject->delete($id))
+		if (!$fieldObject->delete($id->getValue()))
 		{
 			throw new \Exception("Unknown error");
 		}

@@ -37,7 +37,7 @@ class Permission extends BaseData
 				$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 				$record->setId($id);
 
-				$record->setFields(array(
+				$record->addFields(array(
 					"PERMISSION" => $permission,
 				));
 
@@ -45,13 +45,13 @@ class Permission extends BaseData
 				$dependency->setValue(
 					Group::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($groupId))
 				);
-				$record->addDependency("GROUP_ID", $dependency);
+				$record->setDependency("GROUP_ID", $dependency);
 
 				$dependency = clone $this->getDependency("IBLOCK_ID");
 				$dependency->setValue(
 					Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($iblockId))
 				);
-				$record->addDependency("IBLOCK_ID", $dependency);
+				$record->setDependency("IBLOCK_ID", $dependency);
 
 				$result[] = $record;
 			}

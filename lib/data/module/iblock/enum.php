@@ -30,7 +30,7 @@ class Enum extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($enum["XML_ID"]);
 			$record->setId(RecordId::createNumericId($enum["ID"]));
-			$record->setFields(array(
+			$record->addFields(array(
 				"VALUE" => $enum["VALUE"],
 				"DEF" => $enum["DEF"],
 				"SORT" => $enum["SORT"],
@@ -40,7 +40,7 @@ class Enum extends BaseData
 			$dependency->setValue(
 				Property::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($enum["PROPERTY_ID"]))
 			);
-			$record->addDependency("PROPERTY_ID", $dependency);
+			$record->setDependency("PROPERTY_ID", $dependency);
 
 			$result[] = $record;
 		}

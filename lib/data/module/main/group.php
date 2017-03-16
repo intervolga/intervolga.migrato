@@ -26,7 +26,7 @@ class Group extends BaseData
 			{
 				$record->setId($id);
 				$record->setXmlId($xmlId);
-				$record->setFields(array(
+				$record->addFields(array(
 					"ACTIVE" => $group["ACTIVE"],
 					"NAME" => $group["NAME"],
 					"DESCRIPTION" => $group["DESCRIPTION"],

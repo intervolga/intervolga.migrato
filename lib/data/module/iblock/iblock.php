@@ -35,7 +35,7 @@ class Iblock extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($iblock["XML_ID"]);
 			$record->setId(RecordId::createNumericId($iblock["ID"]));
-			$record->setFields(array(
+			$record->addFields(array(
 				"SITE_ID" => $iblock["LID"],
 				"CODE" => $iblock["CODE"],
 				"NAME" => $iblock["NAME"],
@@ -46,7 +46,7 @@ class Iblock extends BaseData
 			$dependency->setValue(
 				Type::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createStringId($iblock["IBLOCK_TYPE_ID"]))
 			);
-			$record->addDependency("IBLOCK_TYPE_ID", $dependency);
+			$record->setDependency("IBLOCK_TYPE_ID", $dependency);
 			$result[] = $record;
 		}
 

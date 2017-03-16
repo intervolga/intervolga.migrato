@@ -32,7 +32,7 @@ class Element extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($element["XML_ID"]);
 			$record->setId(RecordId::createNumericId($element["ID"]));
-			$record->setFields(array(
+			$record->addFields(array(
 				"NAME" => $element["NAME"],
 				"ACTIVE" => $element["ACTIVE"],
 				"SORT" => $element["SORT"],
@@ -43,7 +43,7 @@ class Element extends BaseData
 			$dependency->setValue(
 				Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($element["IBLOCK_ID"]))
 			);
-			$record->addDependency("IBLOCK_ID", $dependency);
+			$record->setDependency("IBLOCK_ID", $dependency);
 
 			$this->addRuntime($record, $element);
 

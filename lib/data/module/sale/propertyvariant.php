@@ -39,7 +39,7 @@ class PropertyVariant extends BaseData
 			$record->setXmlId(
 				$this->getXmlIdProvider()->getXmlId($id)
 			);
-			$record->setFields(array(
+			$record->addFields(array(
 				"NAME" => $variant["NAME"],
 				"VALUE" => $variant["VALUE"],
 				"SORT" => $variant["SORT"],
@@ -50,7 +50,7 @@ class PropertyVariant extends BaseData
 			$propId = Property::getInstance()->createId($variant["ORDER_PROPS_ID"]);
 			$propXmlId = Property::getInstance()->getXmlIdProvider()->getXmlId($propId);
 			$link->setValue($propXmlId);
-			$record->addDependency("ORDER_PROPS_ID", $link);
+			$record->setDependency("ORDER_PROPS_ID", $link);
 
 			$result[] = $record;
 		}

@@ -28,7 +28,7 @@ class PersonType extends BaseData
 			$record->setXmlId(
 				$this->getXmlIdProvider()->getXmlId($id)
 			);
-			$record->setFields(array(
+			$record->addFields(array(
 				"NAME" => $personType["NAME"],
 				"SORT" => $personType["SORT"],
 				"ACTIVE" => $personType["ACTIVE"],

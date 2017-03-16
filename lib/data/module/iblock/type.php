@@ -25,7 +25,7 @@ class Type extends BaseData
 			$id = RecordId::createStringId($type["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 			$record->setId($id);
-			$record->setFields(array(
+			$record->addFields(array(
 				"ID" => $type["ID"],
 				"SECTIONS" => $type["SECTIONS"],
 				"EDIT_FILE_BEFORE" => $type["EDIT_FILE_BEFORE"],

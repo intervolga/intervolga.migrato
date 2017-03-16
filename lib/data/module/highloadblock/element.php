@@ -4,7 +4,6 @@ use Bitrix\Highloadblock\HighloadBlockTable;
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
-use Intervolga\Migrato\Data\Module\Iblock\Iblock;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Runtime;
@@ -64,7 +63,7 @@ class Element extends BaseData
 
 		$link = clone $this->getDependency("HLBLOCK_ID");
 		$link->setValue($hlblock->getXmlId());
-		$record->addDependency("HLBLOCK_ID", $link);
+		$record->setDependency("HLBLOCK_ID", $link);
 
 		$this->addRuntime($record, $element, $hlblock->getId()->getValue());
 
@@ -111,7 +110,7 @@ class Element extends BaseData
 	}
 
 	/**
-	 * @param array $fields
+	 * @param \Intervolga\Migrato\Data\Value[] $fields
 	 * @return array
 	 */
 	public function getRuntimesFields(array $fields)
@@ -126,6 +125,12 @@ class Element extends BaseData
 		return $result;
 	}
 
+	/**
+	 * @param \Intervolga\Migrato\Data\Link[] $links
+	 *
+	 * @return array
+	 * @throws \Exception
+	 */
 	public function getRuntimesLinks(array $links)
 	{
 		$result = array();
@@ -141,6 +146,12 @@ class Element extends BaseData
 		return $result;
 	}
 
+	/**
+	 * @param int $hlblockId
+	 *
+	 * @return \Bitrix\Main\Entity\DataManager
+	 * @throws \Bitrix\Main\SystemException
+	 */
 	public function getDataClass($hlblockId)
 	{
 		$arHLBlock = HighloadBlockTable::getById($hlblockId)->fetch();

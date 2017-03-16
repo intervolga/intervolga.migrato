@@ -47,7 +47,7 @@ class Field extends BaseUserField
 
 		$dependency = clone $this->getDependency("HLBLOCK_ID");
 		$dependency->setValue($hlBlockXmlId);
-		$record->addDependency("HLBLOCK_ID", $dependency);
+		$record->setDependency("HLBLOCK_ID", $dependency);
 
 		return $record;
 	}

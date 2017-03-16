@@ -31,7 +31,7 @@ class Event extends BaseData
 			$id = $this->createId($message["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 			$record->setId($id);
-			$record->setFields(array(
+			$record->addFields(array(
 				"LID" => $message["LID"],
 				"ACTIVE" => $message["ACTIVE"],
 				"EMAIL_FROM" => $message["EMAIL_FROM"],
@@ -44,7 +44,7 @@ class Event extends BaseData
 
 			$dependency = clone $this->getDependency(static::DEPENDENCY_EVENT_NAME);
 			$dependency->setValue($this->getEventTypeXmlId($message["EVENT_NAME"]));
-			$record->addDependency(static::DEPENDENCY_EVENT_NAME, $dependency);
+			$record->setDependency(static::DEPENDENCY_EVENT_NAME, $dependency);
 
 			if ($record->getDependencies())
 			{

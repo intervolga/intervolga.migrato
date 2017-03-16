@@ -1,6 +1,5 @@
 <? namespace Intervolga\Migrato\Data;
 
-use Bitrix\Main\Loader;
 use Intervolga\Migrato\Tool\XmlIdProvider\UfEnumXmlIdProvider;
 
 abstract class BaseUserFieldEnum extends BaseData
@@ -25,7 +24,7 @@ abstract class BaseUserFieldEnum extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($enum["XML_ID"]);
 			$record->setId(RecordId::createNumericId($enum["ID"]));
-			$record->setFields(array(
+			$record->addFields(array(
 				"VALUE" => $enum["VALUE"],
 				"DEF" => $enum["DEF"],
 				"SORT" => $enum["SORT"],
@@ -35,7 +34,7 @@ abstract class BaseUserFieldEnum extends BaseData
 			$dependency->setValue(
 				$dependency->getTargetData()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($enum["USER_FIELD_ID"]))
 			);
-			$record->addDependency("USER_FIELD_ID", $dependency);
+			$record->setDependency("USER_FIELD_ID", $dependency);
 
 			$result[] = $record;
 		}

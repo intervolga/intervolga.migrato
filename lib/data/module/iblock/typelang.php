@@ -40,13 +40,13 @@ class TypeLang extends BaseData
 					$record = new Record($this);
 					$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 					$record->setId($id);
-					$record->setFields(array(
+					$record->addFields(array(
 						"LID" => $typeLang["LID"],
 						"NAME" => $typeLang["NAME"],
 						"SECTION_NAME" => $typeLang["SECTION_NAME"],
 						"ELEMENT_NAME" => $typeLang["ELEMENT_NAME"],
 					));
-					$record->addDependency(
+					$record->setDependency(
 						"IBLOCK_TYPE_ID",
 						new Link(
 							Type::getInstance(),

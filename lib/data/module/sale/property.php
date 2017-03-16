@@ -47,7 +47,7 @@ class Property extends BaseData
 			$record->setXmlId(
 				$this->getXmlIdProvider()->getXmlId($id)
 			);
-			$record->setFields(array(
+			$record->addFields(array(
 				"NAME" => $property["NAME"],
 				"TYPE" => $property["TYPE"],
 				"REQUIRED" => $property["REQUIRED"],
@@ -70,7 +70,7 @@ class Property extends BaseData
 				"INPUT_FIELD_LOCATION" => $property["INPUT_FIELD_LOCATION"],
 				"MULTIPLE" => $property["MULTIPLE"],
 			));
-			$record->setFields(Value::treeToList($property["SETTINGS"], "SETTINGS"));
+			$record->addFields(Value::treeToList($property["SETTINGS"], "SETTINGS"));
 			$this->addLinks($record, $property);
 			$result[] = $record;
 		}
@@ -88,13 +88,13 @@ class Property extends BaseData
 		$personTypeId = PersonType::getInstance()->createId($property["PERSON_TYPE_ID"]);
 		$personTypeXmlId = PersonType::getInstance()->getXmlIdProvider()->getXmlId($personTypeId);
 		$link->setValue($personTypeXmlId);
-		$record->addDependency("PERSON_TYPE_ID", $link);
+		$record->setDependency("PERSON_TYPE_ID", $link);
 
 		$link = clone $this->getReference("PROPS_GROUP_ID");
 		$propertyGroupId = PropertyGroup::getInstance()->createId($property["PROPS_GROUP_ID"]);
 		$propertyGroupXmlId = PropertyGroup::getInstance()->getXmlIdProvider()->getXmlId($propertyGroupId);
 		$link->setValue($propertyGroupXmlId);
-		$record->addReference("PROPS_GROUP_ID", $link);
+		$record->setReference("PROPS_GROUP_ID", $link);
 	}
 
 	public function update(Record $record)

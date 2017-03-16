@@ -26,7 +26,7 @@ class HighloadBlock extends BaseData
 			$xmlId = $this->xmlIdProvider->getXmlId($id);
 			$record->setXmlId($xmlId);
 			$record->setId($id);
-			$record->setFields(array(
+			$record->addFields(array(
 				"NAME" => $hlBlock["NAME"],
 				"TABLE_NAME" => $hlBlock["TABLE_NAME"],
 			));
