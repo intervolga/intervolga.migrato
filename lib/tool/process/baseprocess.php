@@ -53,7 +53,7 @@ class BaseProcess
 			}
 			if (!$data->isXmlIdFieldExists())
 			{
-				$data->getXmlIdProvider()->createXmlIdField();
+				$data->createXmlIdField();
 			}
 			$result = array_merge($result, static::validateData($data, $filter));
 		}

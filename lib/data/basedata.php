@@ -255,4 +255,12 @@ abstract class BaseData
 			return true;
 		}
 	}
+
+	public function createXmlIdField()
+	{
+		if ($this->xmlIdProvider)
+		{
+			$this->xmlIdProvider->createXmlIdField();
+		}
+	}
 }
