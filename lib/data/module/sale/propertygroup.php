@@ -39,7 +39,7 @@ class PropertyGroup extends BaseData
 			$record->setXmlId(
 				$this->getXmlIdProvider()->getXmlId($id)
 			);
-			$record->addFields(array(
+			$record->addFieldsRaw(array(
 				"NAME" => $propGroup["NAME"],
 				"SORT" => $propGroup["SORT"],
 			));
@@ -93,8 +93,8 @@ class PropertyGroup extends BaseData
 	protected function recordToArray(Record $record)
 	{
 		$array = array(
-			"NAME" => $record->getFieldValue("NAME"),
-			"SORT" => $record->getFieldValue("SORT"),
+			"NAME" => $record->getFieldRaw("NAME"),
+			"SORT" => $record->getFieldRaw("SORT"),
 		);
 		if ($depenency = $record->getDependency("PERSON_TYPE_ID"))
 		{

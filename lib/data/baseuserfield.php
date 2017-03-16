@@ -79,7 +79,7 @@ abstract class BaseUserField extends BaseData
 		);
 		$fields = array_merge($fields, $this->getSettingsFields($userField["SETTINGS"]));
 		$fields = array_merge($fields, $this->getLangFields($userField));
-		$record->addFields($fields);
+		$record->addFieldsRaw($fields);
 		foreach ($this->getSettingsLinks($userField["SETTINGS"]) as $name => $link)
 		{
 			$record->setReference($name, $link);
@@ -278,23 +278,23 @@ abstract class BaseUserField extends BaseData
 	{
 		$runtimeValue = null;
 		$runtimeLink = null;
-		if ($field->getFieldValue("USER_TYPE_ID") == "iblock_element")
+		if ($field->getFieldRaw("USER_TYPE_ID") == "iblock_element")
 		{
 			$runtimeLink = $this->getIblockElementLink($value);
 		}
-		elseif ($field->getFieldValue("USER_TYPE_ID") == "hlblock")
+		elseif ($field->getFieldRaw("USER_TYPE_ID") == "hlblock")
 		{
 			$runtimeLink = $this->getHlblockElementLink($field, $value);
 		}
-		elseif ($field->getFieldValue("USER_TYPE_ID") == "iblock_section")
+		elseif ($field->getFieldRaw("USER_TYPE_ID") == "iblock_section")
 		{
 			$runtimeLink = $this->getIblockSectionLink($value);
 		}
-		elseif ($field->getFieldValue("USER_TYPE_ID") == "enumeration")
+		elseif ($field->getFieldRaw("USER_TYPE_ID") == "enumeration")
 		{
 			$runtimeLink = $this->getEnumerationLink($value);
 		}
-		elseif (in_array($field->getFieldValue("USER_TYPE_ID"), array("string", "double", "boolean", "integer", "datetime", "date", "string_formatted")))
+		elseif (in_array($field->getFieldRaw("USER_TYPE_ID"), array("string", "double", "boolean", "integer", "datetime", "date", "string_formatted")))
 		{
 			$runtimeValue = new Value($value);
 		}
@@ -305,7 +305,7 @@ abstract class BaseUserField extends BaseData
 		}
 		if ($runtimeLink)
 		{
-			if ($field->getFieldValue("MANDATORY") == "Y")
+			if ($field->getFieldRaw("MANDATORY") == "Y")
 			{
 				$runtime->setDependency($field->getXmlId(), $runtimeLink);
 			}
@@ -410,7 +410,7 @@ abstract class BaseUserField extends BaseData
 
 	public function update(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 
 		$blockIdXml = $record->getDependency($this->getDependencyString());
 
@@ -435,7 +435,7 @@ abstract class BaseUserField extends BaseData
 
 	public function create(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 
 		if($iblockId = $record->getDependency($this->getDependencyString())->getId())
 		{

@@ -85,7 +85,7 @@ class Element extends BaseData
 			/**
 			 * @var Record $field
 			 */
-			$fieldName = $field->getFieldValue("FIELD_NAME");
+			$fieldName = $field->getFieldRaw("FIELD_NAME");
 			Field::getInstance()->fillRuntime($runtime, $field, $element[$fieldName]);
 		}
 

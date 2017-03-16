@@ -39,7 +39,7 @@ class PropertyVariant extends BaseData
 			$record->setXmlId(
 				$this->getXmlIdProvider()->getXmlId($id)
 			);
-			$record->addFields(array(
+			$record->addFieldsRaw(array(
 				"NAME" => $variant["NAME"],
 				"VALUE" => $variant["VALUE"],
 				"SORT" => $variant["SORT"],

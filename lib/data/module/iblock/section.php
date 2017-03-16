@@ -31,7 +31,7 @@ class Section extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($section["XML_ID"]);
 			$record->setId(RecordId::createNumericId($section["ID"]));
-			$record->addFields(array(
+			$record->addFieldsRaw(array(
 				"NAME"              => $section["NAME"],
 				"CODE"              => $section["CODE"],
 				"ACTIVE"            => $section["ACTIVE"],
@@ -76,7 +76,7 @@ class Section extends BaseData
 			/**
 			 * @var Record $field
 			 */
-			$fieldName = $field->getFieldValue("FIELD_NAME");
+			$fieldName = $field->getFieldRaw("FIELD_NAME");
 			Field::getInstance()->fillRuntime($runtime, $field, $section[$fieldName]);
 		}
 
@@ -174,7 +174,7 @@ class Section extends BaseData
 
 	public function update(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 
 		$reference = $record->getReference("IBLOCK_SECTION_ID")->getId();
@@ -196,7 +196,7 @@ class Section extends BaseData
 
 	public function create(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 
 		$fields = array_merge($fields, $this->getRuntimesFields($record->getRuntime("FIELD")->getFields()));

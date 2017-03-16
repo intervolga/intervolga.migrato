@@ -25,7 +25,7 @@ class Type extends BaseData
 			$id = RecordId::createStringId($type["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 			$record->setId($id);
-			$record->addFields(array(
+			$record->addFieldsRaw(array(
 				"ID" => $type["ID"],
 				"SECTIONS" => $type["SECTIONS"],
 				"EDIT_FILE_BEFORE" => $type["EDIT_FILE_BEFORE"],
@@ -57,7 +57,7 @@ class Type extends BaseData
 	public function update(Record $record)
 	{
 		$typeObject = new \CIBlockType();
-		$isUpdated = $typeObject->update($record->getId()->getValue(), $record->getFieldsStrings());
+		$isUpdated = $typeObject->update($record->getId()->getValue(), $record->getFieldsRaw());
 		if (!$isUpdated)
 		{
 			throw new \Exception(trim(strip_tags($typeObject->LAST_ERROR)));
@@ -66,7 +66,7 @@ class Type extends BaseData
 
 	public function create(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 		$fields["LANG"] = $this->getDefaultLanguages();
 		$typeObject = new \CIBlockType();
 		$typeId = $typeObject->add($fields);

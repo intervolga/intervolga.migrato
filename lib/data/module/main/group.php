@@ -26,7 +26,7 @@ class Group extends BaseData
 			{
 				$record->setId($id);
 				$record->setXmlId($xmlId);
-				$record->addFields(array(
+				$record->addFieldsRaw(array(
 					"ACTIVE" => $group["ACTIVE"],
 					"NAME" => $group["NAME"],
 					"DESCRIPTION" => $group["DESCRIPTION"],
@@ -42,7 +42,7 @@ class Group extends BaseData
 	public function update(Record $record)
 	{
 		$groupObject = new \CGroup();
-		$isUpdated = $groupObject->update($record->getId()->getValue(), $record->getFieldsStrings());
+		$isUpdated = $groupObject->update($record->getId()->getValue(), $record->getFieldsRaw());
 		if (!$isUpdated)
 		{
 			throw new \Exception(trim(strip_tags($groupObject->LAST_ERROR)));
@@ -52,7 +52,7 @@ class Group extends BaseData
 	public function create(Record $record)
 	{
 		$groupObject = new \CGroup();
-		$groupId = $groupObject->add($record->getFieldsStrings());
+		$groupId = $groupObject->add($record->getFieldsRaw());
 		if ($groupId)
 		{
 			return $this->createId($groupId);

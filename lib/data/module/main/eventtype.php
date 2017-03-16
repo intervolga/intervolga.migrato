@@ -21,7 +21,7 @@ class EventType extends BaseData
 			$id = $this->createId($type["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 			$record->setId($id);
-			$record->addFields(array(
+			$record->addFieldsRaw(array(
 				"LID" => $type["LID"],
 				"EVENT_NAME" => $type["EVENT_NAME"],
 				"NAME" => $type["NAME"],
@@ -35,7 +35,7 @@ class EventType extends BaseData
 
 	public function update(Record $record)
 	{
-		$isUpdated = \CEventType::update(array("ID" => $record->getId()->getValue()), $record->getFieldsStrings());
+		$isUpdated = \CEventType::update(array("ID" => $record->getId()->getValue()), $record->getFieldsRaw());
 		if (!$isUpdated)
 		{
 			global $APPLICATION;
@@ -48,7 +48,7 @@ class EventType extends BaseData
 
 	public function create(Record $record)
 	{
-		$eventTypeId = \CEventType::add($record->getFieldsStrings());
+		$eventTypeId = \CEventType::add($record->getFieldsRaw());
 		if ($eventTypeId)
 		{
 			return $this->createId($eventTypeId);

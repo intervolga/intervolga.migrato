@@ -26,7 +26,7 @@ class HighloadBlock extends BaseData
 			$xmlId = $this->xmlIdProvider->getXmlId($id);
 			$record->setXmlId($xmlId);
 			$record->setId($id);
-			$record->addFields(array(
+			$record->addFieldsRaw(array(
 				"NAME" => $hlBlock["NAME"],
 				"TABLE_NAME" => $hlBlock["TABLE_NAME"],
 			));
@@ -39,7 +39,7 @@ class HighloadBlock extends BaseData
 
 	public function update(Record $record)
 	{
-		$result = HighloadBlockTable::update($record->getId()->getValue(), $record->getFieldsStrings());
+		$result = HighloadBlockTable::update($record->getId()->getValue(), $record->getFieldsRaw());
 		if (!$result->isSuccess())
 		{
 			throw new \Exception(trim(strip_tags($result->getErrorMessages())));
@@ -48,7 +48,7 @@ class HighloadBlock extends BaseData
 
 	public function create(Record $record)
 	{
-		$result = HighloadBlockTable::add($record->getFieldsStrings());
+		$result = HighloadBlockTable::add($record->getFieldsRaw());
 		if ($result->isSuccess())
 		{
 			$id = RecordId::createNumericId($result->getId());

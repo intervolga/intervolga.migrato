@@ -31,7 +31,7 @@ class Event extends BaseData
 			$id = $this->createId($message["ID"]);
 			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 			$record->setId($id);
-			$record->addFields(array(
+			$record->addFieldsRaw(array(
 				"LID" => $message["LID"],
 				"ACTIVE" => $message["ACTIVE"],
 				"EMAIL_FROM" => $message["EMAIL_FROM"],
@@ -94,7 +94,7 @@ class Event extends BaseData
 	public function update(Record $record)
 	{
 		$eventMessageObject = new \CEventMessage();
-		$isUpdated = $eventMessageObject->update($record->getId()->getValue(), $record->getFieldsStrings());
+		$isUpdated = $eventMessageObject->update($record->getId()->getValue(), $record->getFieldsRaw());
 		if (!$isUpdated)
 		{
 			throw new \Exception(trim(strip_tags($eventMessageObject->LAST_ERROR)));
@@ -103,7 +103,7 @@ class Event extends BaseData
 
 	public function create(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 
 		if($eventType = $record->getDependency("EVENT_NAME")->getId())
 		{

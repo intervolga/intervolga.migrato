@@ -30,7 +30,7 @@ class Property extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($property["XML_ID"]);
 			$record->setId(RecordId::createNumericId($property["ID"]));
-			$record->addFields(array(
+			$record->addFieldsRaw(array(
 				"NAME" => $property["NAME"],
 				"ACTIVE" => $property["ACTIVE"],
 				"SORT" => $property["SORT"],
@@ -113,7 +113,7 @@ class Property extends BaseData
 
 	public function update(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 
@@ -132,7 +132,7 @@ class Property extends BaseData
 
 	public function create(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 

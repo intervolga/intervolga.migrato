@@ -28,7 +28,7 @@ class PersonType extends BaseData
 			$record->setXmlId(
 				$this->getXmlIdProvider()->getXmlId($id)
 			);
-			$record->addFields(array(
+			$record->addFieldsRaw(array(
 				"NAME" => $personType["NAME"],
 				"SORT" => $personType["SORT"],
 				"ACTIVE" => $personType["ACTIVE"],
@@ -58,10 +58,10 @@ class PersonType extends BaseData
 	{
 		$id = $record->getId()->getValue();
 		$update = array(
-			"NAME" => $record->getFieldValue("NAME"),
-			"SORT" => $record->getFieldValue("SORT"),
-			"ACTIVE" => $record->getFieldValue("ACTIVE"),
-			"LID" => $record->getFieldValues("LID"),
+			"NAME" => $record->getFieldRaw("NAME"),
+			"SORT" => $record->getFieldRaw("SORT"),
+			"ACTIVE" => $record->getFieldRaw("ACTIVE"),
+			"LID" => $record->getFieldRaws("LID"),
 		);
 		$object = new \CSalePersonType();
 		$updateResult = $object->update($id, $update);
@@ -75,10 +75,10 @@ class PersonType extends BaseData
 	public function create(Record $record)
 	{
 		$add = array(
-			"NAME" => $record->getFieldValue("NAME"),
-			"SORT" => $record->getFieldValue("SORT"),
-			"ACTIVE" => $record->getFieldValue("ACTIVE"),
-			"LID" => $record->getFieldValues("LID"),
+			"NAME" => $record->getFieldRaw("NAME"),
+			"SORT" => $record->getFieldRaw("SORT"),
+			"ACTIVE" => $record->getFieldRaw("ACTIVE"),
+			"LID" => $record->getFieldRaws("LID"),
 		);
 		$object = new \CSalePersonType();
 		$id = $object->add($add);

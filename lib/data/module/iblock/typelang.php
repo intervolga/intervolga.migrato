@@ -40,7 +40,7 @@ class TypeLang extends BaseData
 					$record = new Record($this);
 					$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 					$record->setId($id);
-					$record->addFields(array(
+					$record->addFieldsRaw(array(
 						"LID" => $typeLang["LID"],
 						"NAME" => $typeLang["NAME"],
 						"SECTION_NAME" => $typeLang["SECTION_NAME"],
@@ -90,7 +90,7 @@ class TypeLang extends BaseData
 
 	protected function getTypeLanguages($typeId, Record $record) {
 		$result = array();
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 		foreach ($this->getLanguages() as $lang)
 		{
 			$language = $fields;

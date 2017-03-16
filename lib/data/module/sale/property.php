@@ -47,7 +47,7 @@ class Property extends BaseData
 			$record->setXmlId(
 				$this->getXmlIdProvider()->getXmlId($id)
 			);
-			$record->addFields(array(
+			$record->addFieldsRaw(array(
 				"NAME" => $property["NAME"],
 				"TYPE" => $property["TYPE"],
 				"REQUIRED" => $property["REQUIRED"],
@@ -70,7 +70,7 @@ class Property extends BaseData
 				"INPUT_FIELD_LOCATION" => $property["INPUT_FIELD_LOCATION"],
 				"MULTIPLE" => $property["MULTIPLE"],
 			));
-			$record->addFields(Value::treeToList($property["SETTINGS"], "SETTINGS"));
+			$record->addFieldsRaw(Value::treeToList($property["SETTINGS"], "SETTINGS"));
 			$this->addLinks($record, $property);
 			$result[] = $record;
 		}
@@ -141,28 +141,28 @@ class Property extends BaseData
 	protected function recordToArray(Record $record)
 	{
 		$array = array(
-			"NAME" => $record->getFieldValue("NAME"),
-			"TYPE" => $record->getFieldValue("TYPE"),
-			"REQUIRED" => $record->getFieldValue("REQUIRED"),
-			"DEFAULT_VALUE" => $record->getFieldValue("DEFAULT_VALUE"),
-			"SORT" => $record->getFieldValue("SORT"),
-			"USER_PROPS" => $record->getFieldValue("USER_PROPS"),
-			"IS_LOCATION" => $record->getFieldValue("IS_LOCATION"),
-			"DESCRIPTION" => $record->getFieldValue("DESCRIPTION"),
-			"IS_EMAIL" => $record->getFieldValue("IS_EMAIL"),
-			"IS_PROFILE_NAME" => $record->getFieldValue("IS_PROFILE_NAME"),
-			"IS_PAYER" => $record->getFieldValue("IS_PAYER"),
-			"IS_LOCATION4TAX" => $record->getFieldValue("IS_LOCATION4TAX"),
-			"IS_FILTERED" => $record->getFieldValue("IS_FILTERED"),
-			"CODE" => $record->getFieldValue("CODE"),
-			"IS_ZIP" => $record->getFieldValue("IS_ZIP"),
-			"IS_PHONE" => $record->getFieldValue("IS_PHONE"),
-			"IS_ADDRESS" => $record->getFieldValue("IS_ADDRESS"),
-			"ACTIVE" => $record->getFieldValue("ACTIVE"),
-			"UTIL" => $record->getFieldValue("UTIL"),
-			"INPUT_FIELD_LOCATION" => $record->getFieldValue("INPUT_FIELD_LOCATION"),
-			"MULTIPLE" => $record->getFieldValue("MULTIPLE"),
-			"SETTINGS" => Value::listToTreeGet($record->getFieldsStrings(), "SETTINGS"),
+			"NAME" => $record->getFieldRaw("NAME"),
+			"TYPE" => $record->getFieldRaw("TYPE"),
+			"REQUIRED" => $record->getFieldRaw("REQUIRED"),
+			"DEFAULT_VALUE" => $record->getFieldRaw("DEFAULT_VALUE"),
+			"SORT" => $record->getFieldRaw("SORT"),
+			"USER_PROPS" => $record->getFieldRaw("USER_PROPS"),
+			"IS_LOCATION" => $record->getFieldRaw("IS_LOCATION"),
+			"DESCRIPTION" => $record->getFieldRaw("DESCRIPTION"),
+			"IS_EMAIL" => $record->getFieldRaw("IS_EMAIL"),
+			"IS_PROFILE_NAME" => $record->getFieldRaw("IS_PROFILE_NAME"),
+			"IS_PAYER" => $record->getFieldRaw("IS_PAYER"),
+			"IS_LOCATION4TAX" => $record->getFieldRaw("IS_LOCATION4TAX"),
+			"IS_FILTERED" => $record->getFieldRaw("IS_FILTERED"),
+			"CODE" => $record->getFieldRaw("CODE"),
+			"IS_ZIP" => $record->getFieldRaw("IS_ZIP"),
+			"IS_PHONE" => $record->getFieldRaw("IS_PHONE"),
+			"IS_ADDRESS" => $record->getFieldRaw("IS_ADDRESS"),
+			"ACTIVE" => $record->getFieldRaw("ACTIVE"),
+			"UTIL" => $record->getFieldRaw("UTIL"),
+			"INPUT_FIELD_LOCATION" => $record->getFieldRaw("INPUT_FIELD_LOCATION"),
+			"MULTIPLE" => $record->getFieldRaw("MULTIPLE"),
+			"SETTINGS" => Value::listToTreeGet($record->getFieldsRaw(), "SETTINGS"),
 		);
 		if ($link = $record->getDependency("PERSON_TYPE_ID"))
 		{

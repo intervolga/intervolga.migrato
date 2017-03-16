@@ -36,7 +36,7 @@ class PriceType extends BaseData
 			$record = new Record($this);
 			$record->setId($this->createId($priceType["ID"]));
 			$record->setXmlId($priceType["XML_ID"]);
-			$record->addFields(array(
+			$record->addFieldsRaw(array(
 				"NAME" => $priceType["NAME"],
 				"BASE" => $priceType["BASE"],
 				"SORT" => $priceType["SORT"],
@@ -107,7 +107,7 @@ class PriceType extends BaseData
 		if ($langs[$record->getId()->getValue()])
 		{
 			$userLangs = Value::treeToList($langs[$record->getId()->getValue()], "USER_LANG");
-			$record->addFields($userLangs);
+			$record->addFieldsRaw($userLangs);
 		}
 	}
 
@@ -181,10 +181,10 @@ class PriceType extends BaseData
 		$ugLinks = $record->getDependency("USER_GROUP");
 		$ugbLinks = $record->getDependency("USER_GROUP_BUY");
 		$array = array(
-			"NAME" => $record->getFieldValue("NAME"),
-			"BASE" => $record->getFieldValue("BASE"),
-			"SORT" => $record->getFieldValue("SORT"),
-			"USER_LANG" => Value::listToTreeGet($record->getFieldsStrings(), "USER_LANG"),
+			"NAME" => $record->getFieldRaw("NAME"),
+			"BASE" => $record->getFieldRaw("BASE"),
+			"SORT" => $record->getFieldRaw("SORT"),
+			"USER_LANG" => Value::listToTreeGet($record->getFieldsRaw(), "USER_LANG"),
 			"USER_GROUP" => $ugLinks->findIds(),
 			"USER_GROUP_BUY" => $ugbLinks->findIds(),
 		);

@@ -37,7 +37,7 @@ class Permission extends BaseData
 				$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
 				$record->setId($id);
 
-				$record->addFields(array(
+				$record->addFieldsRaw(array(
 					"PERMISSION" => $permission,
 				));
 
@@ -90,7 +90,7 @@ class Permission extends BaseData
 
 		if(key_exists($curValue["GROUP_ID"], $arGroups))
 		{
-			$curFields = $record->getFieldsStrings();
+			$curFields = $record->getFieldsRaw();
 			$arGroups[$curValue["GROUP_ID"]] = $curFields["PERMISSION"];
 			$iblock = new \CIBlock();
 			$iblock->SetPermission($curValue["IBLOCK_ID"], $arGroups);

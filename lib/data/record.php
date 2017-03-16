@@ -1,28 +1,12 @@
 <? namespace Intervolga\Migrato\Data;
 
-class Record
+class Record extends BaseDataObject
 {
 	protected $xmlId = "";
 	/**
 	 * @var \Intervolga\Migrato\Data\RecordId
 	 */
 	protected $id;
-	/**
-	 * @var \Intervolga\Migrato\Data\Value[]
-	 */
-	protected $fields = array();
-	/**
-	 * @var \Intervolga\Migrato\Data\Link[]
-	 */
-	protected $dependencies = array();
-	/**
-	 * @var \Intervolga\Migrato\Data\Link[]
-	 */
-	protected $references = array();
-	/**
-	 * @var \Intervolga\Migrato\Data\BaseData
-	 */
-	protected $data;
 	/**
 	 * @var Runtime[]
 	 */
@@ -31,14 +15,6 @@ class Record
 	 * @var bool
 	 */
 	protected $deleteMark = false;
-
-	/**
-	 * @param BaseData $data
-	 */
-	public function __construct(BaseData $data = null)
-	{
-		$this->data = $data;
-	}
 
 	/**
 	 * @param string $xmlId
@@ -56,19 +32,14 @@ class Record
 		return $this->xmlId;
 	}
 
-	public function removeFields()
-	{
-		$this->fields = array();
-	}
-
 	/**
 	 * @param array $fields string[] or string[][]
 	 */
-	public function addFields(array $fields)
+	public function addFieldsRaw(array $fields)
 	{
 		foreach ($fields as $name => $field)
 		{
-			$this->setField($name, $field);
+			$this->setFieldRaw($name, $field);
 		}
 	}
 
@@ -76,7 +47,7 @@ class Record
 	 * @param string $name
 	 * @param string|string[] $field
 	 */
-	public function setField($name, $field)
+	public function setFieldRaw($name, $field)
 	{
 		if (is_array($field))
 		{
@@ -89,37 +60,9 @@ class Record
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\Value[] $values
-	 */
-	public function addFieldsValues(array $values)
-	{
-		foreach ($values as $name => $value)
-		{
-			$this->setFieldValue($name, $value);
-		}
-	}
-
-	/**
-	 * @param string $name
-	 * @param \Intervolga\Migrato\Data\Value $value
-	 */
-	public function setFieldValue($name, Value $value)
-	{
-		$this->fields[$name] = $value;
-	}
-
-	/**
-	 * @return Value[]
-	 */
-	public function getFields()
-	{
-		return $this->fields;
-	}
-
-	/**
 	 * @return string[]
 	 */
-	public function getFieldsStrings()
+	public function getFieldsRaw()
 	{
 		$result = array();
 		foreach ($this->fields as $name => $field)
@@ -140,20 +83,10 @@ class Record
 	/**
 	 * @param string $name
 	 *
-	 * @return Value
-	 */
-	public function getField($name)
-	{
-		return $this->fields[$name];
-	}
-
-	/**
-	 * @param string $name
-	 *
 	 * @return string
 	 * @throws \Exception
 	 */
-	public function getFieldValue($name)
+	public function getFieldRaw($name)
 	{
 		$field = $this->fields[$name];
 		if ($field)
@@ -172,7 +105,7 @@ class Record
 	 * @return string[]
 	 * @throws \Exception
 	 */
-	public function getFieldValues($name)
+	public function getFieldRaws($name)
 	{
 		$field = $this->fields[$name];
 		if ($field)
@@ -183,81 +116,6 @@ class Record
 		{
 			return array();
 		}
-	}
-
-	public function removeDependencies()
-	{
-		$this->dependencies = array();
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Link[] $dependencies
-	 */
-	public function setDependencies(array $dependencies)
-	{
-		$this->dependencies = $dependencies;
-	}
-
-	/**
-	 * @param string $key
-	 * @param \Intervolga\Migrato\Data\Link $dependency
-	 */
-	public function setDependency($key, Link $dependency)
-	{
-		$this->dependencies[$key] = $dependency;
-	}
-
-	/**
-	 * @return \Intervolga\Migrato\Data\Link[]
-	 */
-	public function getDependencies()
-	{
-		return $this->dependencies;
-	}
-
-	/**
-	 * @param $key string
-	 *
-	 * @return \Intervolga\Migrato\Data\Link
-	 */
-	public function getDependency($key)
-	{
-		$dependencies = $this->getDependencies();
-		return $dependencies[$key];
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Link[] $references
-	 */
-	public function setReferences(array $references)
-	{
-		$this->references = $references;
-	}
-
-	/**
-	 * @param string $key
-	 * @param \Intervolga\Migrato\Data\Link $reference
-	 */
-	public function setReference($key, Link $reference)
-	{
-		$this->references[$key] = $reference;
-	}
-
-	/**
-	 * @return \Intervolga\Migrato\Data\Link[]
-	 */
-	public function getReferences()
-	{
-		return $this->references;
-	}
-
-	/**
-	 * @return \Intervolga\Migrato\Data\Link
-	 */
-	public function getReference($key)
-	{
-		$references = $this->getReferences();
-		return $references[$key];
 	}
 
 	/**
@@ -281,15 +139,7 @@ class Record
 	 */
 	public function setData(BaseData $dataObject)
 	{
-		$this->data = $dataObject;
-	}
-
-	/**
-	 * @return BaseData
-	 */
-	public function getData()
-	{
-		return $this->data;
+		$this->dataClass = $dataObject;
 	}
 
 	public function update()
@@ -371,7 +221,7 @@ class Record
 			"xmlId" => $this->getXmlId(),
 			"id" => $this->getId() ? $this->getId()->getValue() : false,
 			"deleted" => $this->getDeleteMark(),
-			"fields" => $this->getFieldsStrings(),
+			"fields" => $this->getFieldsRaw(),
 		);
 		if ($this->getDependencies())
 		{

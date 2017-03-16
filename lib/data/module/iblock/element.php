@@ -32,7 +32,7 @@ class Element extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($element["XML_ID"]);
 			$record->setId(RecordId::createNumericId($element["ID"]));
-			$record->addFields(array(
+			$record->addFieldsRaw(array(
 				"NAME" => $element["NAME"],
 				"ACTIVE" => $element["ACTIVE"],
 				"SORT" => $element["SORT"],
@@ -250,7 +250,7 @@ class Element extends BaseData
 
 	public function update(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 		$IBlockId = $this->getIBlock($record);
 
 		$fields["PROPERTY_VALUES"] = array();
@@ -282,7 +282,7 @@ class Element extends BaseData
 
 	public function create(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 		$fields["PROPERTY_VALUES"] = array();

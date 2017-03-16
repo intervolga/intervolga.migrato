@@ -24,7 +24,7 @@ abstract class BaseUserFieldEnum extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($enum["XML_ID"]);
 			$record->setId(RecordId::createNumericId($enum["ID"]));
-			$record->addFields(array(
+			$record->addFieldsRaw(array(
 				"VALUE" => $enum["VALUE"],
 				"DEF" => $enum["DEF"],
 				"SORT" => $enum["SORT"],
@@ -44,7 +44,7 @@ abstract class BaseUserFieldEnum extends BaseData
 
 	public function update(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 		if($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
 		{
 			$fields["XML_ID"] = $record->getXmlId();
@@ -60,7 +60,7 @@ abstract class BaseUserFieldEnum extends BaseData
 
 	public function create(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 		if($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
 		{
 			$fields["XML_ID"] = $record->getXmlId();
