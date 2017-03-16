@@ -23,9 +23,11 @@ class FieldEnum extends BaseUserFieldEnum
 	public function getList(array $filter = array())
 	{
 		$filter["ID"] = array();
+
+		/** @var Record $record */
 		foreach(Field::getInstance()->getList() as $record)
 		{
-			$fields = $record->getFieldsStrings();
+			$fields = $record->getFieldsRaw();
 			if($fields["USER_TYPE_ID"] == "enumeration")
 			{
 				$filter["USER_FIELD_ID"][] = $record->getId()->getValue();
