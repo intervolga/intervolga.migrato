@@ -1,6 +1,7 @@
 <? namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\NotImplementedException;
+use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 abstract class BaseData
 {
@@ -187,7 +188,6 @@ abstract class BaseData
 	}
 
 	/**
-	 * @deprecated
 	 * @return \Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider
 	 */
 	public function getXmlIdProvider()
@@ -261,6 +261,39 @@ abstract class BaseData
 		if ($this->xmlIdProvider)
 		{
 			$this->xmlIdProvider->createXmlIdField();
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $id
+	 *
+	 * @return bool
+	 */
+	public function generateXmlId($id)
+	{
+		if ($this->xmlIdProvider)
+		{
+			return $this->xmlIdProvider->generateXmlId($id);
+		}
+		else
+		{
+			$this->setXmlId($id, $this->makeXmlId());
+			return true;
+		}
+	}
+
+	/**
+	 * @return string
+	 */
+	protected function makeXmlId()
+	{
+		if ($this->xmlIdProvider)
+		{
+			return $this->xmlIdProvider->makeXmlId();
+		}
+		else
+		{
+			return BaseXmlIdProvider::makeDefaultXmlId($this);
 		}
 	}
 }

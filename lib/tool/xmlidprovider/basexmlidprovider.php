@@ -56,30 +56,32 @@ abstract class BaseXmlIdProvider
 	/**
 	 * @return string
 	 */
-	protected function makeXmlId()
+	public function makeXmlId()
 	{
-		$prefix = $this->dataClass->getModule() . "-" . $this->dataClass->getEntityName() . "-";
+		return static::makeDefaultXmlId($this->dataClass);
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
+	 *
+	 * @return string
+	 */
+	public static function makeDefaultXmlId(BaseData $dataClass)
+	{
+		$prefix = $dataClass->getModule() . "-" . $dataClass->getEntityName() . "-";
+		$replace = array(
+			"iblock" => "ibl",
+			"element" => "el",
+			"section" => "sect",
+			"highloadblock" => "hlb",
+			"field" => "fld",
+			"property" => "prop",
+			"group" => "grp",
+			"event" => "evt",
+		);
 		$prefix = str_replace(
-			array(
-				"iblock",
-				"element",
-				"section",
-				"highloadblock",
-				"field",
-				"property",
-				"group",
-				"event",
-			),
-			array(
-				"ibl",
-				"el",
-				"sect",
-				"hlb",
-				"fld",
-				"prop",
-				"grp",
-				"evt",
-			),
+			array_keys($replace),
+			array_values($replace),
 			$prefix
 		);
 		$xmlid = strrev(uniqid("", true));

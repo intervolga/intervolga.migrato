@@ -47,10 +47,6 @@ class BaseProcess
 		foreach ($dataClasses as $data)
 		{
 			$filter = Config::getInstance()->getDataClassFilter($data);
-			if (!$data->getXmlIdProvider())
-			{
-				throw new \Exception($data->getModule() . "/" . $data->getEntityName() . " has no xml id provider");
-			}
 			if (!$data->isXmlIdFieldExists())
 			{
 				$data->createXmlIdField();
@@ -179,7 +175,7 @@ class BaseProcess
 	{
 		foreach ($errors as $error)
 		{
-			$error->getDataClass()->getXmlIdProvider()->generateXmlId($error->getId());
+			$error->getDataClass()->generateXmlId($error->getId());
 		}
 	}
 
