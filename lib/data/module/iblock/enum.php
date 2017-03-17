@@ -13,7 +13,6 @@ class Enum extends BaseData
 	public function __construct()
 	{
 		Loader::includeModule("iblock");
-		$this->xmlIdProvider = new EnumXmlIdProvider($this);
 	}
 
 	public function getFilesSubdir()
@@ -102,5 +101,26 @@ class Enum extends BaseData
 		{
 			throw new \Exception("Unknown error");
 		}
+	}
+
+	public function setXmlId($id, $xmlId)
+	{
+		$userFieldEnum = \CIBlockPropertyEnum::GetByID($id->getValue());
+		$arFields = array(
+			"XML_ID" => $xmlId,
+			"PROPERTY_ID" => $userFieldEnum["PROPERTY_ID"]
+		);
+		\CIBlockPropertyEnum::Update($id->getValue(), $arFields);
+	}
+
+	public function getXmlId($id)
+	{
+		$xmlId = null;
+		if($id = $id->getValue())
+		{
+			$userFieldEnum = \CIBlockPropertyEnum::GetByID($id);
+			$xmlId = $userFieldEnum["XML_ID"];
+		}
+		return $xmlId;
 	}
 }
