@@ -43,7 +43,7 @@ class Field extends BaseUserField
 		$record = parent::userFieldToRecord($userField);
 		$hlBlockId = str_replace("HLBLOCK_", "", $userField["ENTITY_ID"]);
 		$hlBlockRecordId = RecordId::createNumericId($hlBlockId);
-		$hlBlockXmlId = HighloadBlock::getInstance()->getXmlIdProvider()->getXmlId($hlBlockRecordId);
+		$hlBlockXmlId = HighloadBlock::getInstance()->getXmlId($hlBlockRecordId);
 
 		$dependency = clone $this->getDependency("HLBLOCK_ID");
 		$dependency->setValue($hlBlockXmlId);

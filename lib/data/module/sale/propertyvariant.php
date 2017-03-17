@@ -37,7 +37,7 @@ class PropertyVariant extends BaseData
 			$id = $this->createId($variant["ID"]);
 			$record->setId($id);
 			$record->setXmlId(
-				$this->getXmlIdProvider()->getXmlId($id)
+				$this->getXmlId($id)
 			);
 			$record->addFieldsRaw(array(
 				"NAME" => $variant["NAME"],
@@ -48,7 +48,7 @@ class PropertyVariant extends BaseData
 
 			$link = clone $this->getDependency("ORDER_PROPS_ID");
 			$propId = Property::getInstance()->createId($variant["ORDER_PROPS_ID"]);
-			$propXmlId = Property::getInstance()->getXmlIdProvider()->getXmlId($propId);
+			$propXmlId = Property::getInstance()->getXmlId($propId);
 			$link->setValue($propXmlId);
 			$record->setDependency("ORDER_PROPS_ID", $link);
 

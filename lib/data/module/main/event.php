@@ -29,7 +29,7 @@ class Event extends BaseData
 		{
 			$record = new Record($this);
 			$id = $this->createId($message["ID"]);
-			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
+			$record->setXmlId($this->getXmlId($id));
 			$record->setId($id);
 			$record->addFieldsRaw(array(
 				"LID" => $message["LID"],

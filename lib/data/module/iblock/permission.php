@@ -34,7 +34,7 @@ class Permission extends BaseData
 					"GROUP_ID" => intval($groupId),
 				));
 				$record = new Record($this);
-				$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
+				$record->setXmlId($this->getXmlId($id));
 				$record->setId($id);
 
 				$record->addFieldsRaw(array(
@@ -43,13 +43,13 @@ class Permission extends BaseData
 
 				$dependency = clone $this->getDependency("GROUP_ID");
 				$dependency->setValue(
-					Group::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($groupId))
+					Group::getInstance()->getXmlId(RecordId::createNumericId($groupId))
 				);
 				$record->setDependency("GROUP_ID", $dependency);
 
 				$dependency = clone $this->getDependency("IBLOCK_ID");
 				$dependency->setValue(
-					Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($iblockId))
+					Iblock::getInstance()->getXmlId(RecordId::createNumericId($iblockId))
 				);
 				$record->setDependency("IBLOCK_ID", $dependency);
 

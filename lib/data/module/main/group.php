@@ -2,15 +2,9 @@
 
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\XmlIdProvider\GroupXmlIdProvider;
 
 class Group extends BaseData
 {
-	public function __construct()
-	{
-		$this->xmlIdProvider = new GroupXmlIdProvider($this);
-	}
-
 	public function getList(array $filter = array())
 	{
 		$result = array();
@@ -21,11 +15,10 @@ class Group extends BaseData
 		{
 			$record = new Record($this);
 			$id = $this->createId($group["ID"]);
-			$xmlId = $this->getXmlIdProvider()->getXmlId($id);
-			if (!$filter || in_array($xmlId, $filter))
+			if (!$filter || in_array($group["STRING_ID"], $filter))
 			{
 				$record->setId($id);
-				$record->setXmlId($xmlId);
+				$record->setXmlId($group["STRING_ID"]);
 				$record->addFieldsRaw(array(
 					"ACTIVE" => $group["ACTIVE"],
 					"NAME" => $group["NAME"],
@@ -83,6 +76,29 @@ class Group extends BaseData
 		else
 		{
 			throw new \Exception("Not found record with xml id " . $xmlId);
+		}
+	}
+
+	public function setXmlId($id, $xmlId)
+	{
+		$groupObject = new \CGroup();
+		$isUpdated = $groupObject->update($id->getValue(), array("STRING_ID" => $xmlId));
+		if (!$isUpdated)
+		{
+			throw new \Exception(trim(strip_tags($groupObject->LAST_ERROR)));
+		}
+	}
+
+	public function getXmlId($id)
+	{
+		$element = \CGroup::getByID($id->getValue());
+		if ($element = $element->fetch())
+		{
+			return $element["STRING_ID"];
+		}
+		else
+		{
+			return "";
 		}
 	}
 }

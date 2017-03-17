@@ -23,7 +23,7 @@ class Type extends BaseData
 		{
 			$record = new Record($this);
 			$id = RecordId::createStringId($type["ID"]);
-			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
+			$record->setXmlId($this->getXmlId($id));
 			$record->setId($id);
 			$record->addFieldsRaw(array(
 				"ID" => $type["ID"],

@@ -23,7 +23,7 @@ class HighloadBlock extends BaseData
 		{
 			$record = new Record($this);
 			$id = RecordId::createNumericId($hlBlock["ID"]);
-			$xmlId = $this->xmlIdProvider->getXmlId($id);
+			$xmlId = $this->getXmlId($id);
 			$record->setXmlId($xmlId);
 			$record->setId($id);
 			$record->addFieldsRaw(array(
@@ -52,7 +52,7 @@ class HighloadBlock extends BaseData
 		if ($result->isSuccess())
 		{
 			$id = RecordId::createNumericId($result->getId());
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+			$this->setXmlId($id, $record->getXmlId());
 
 			return $id;
 		} else {

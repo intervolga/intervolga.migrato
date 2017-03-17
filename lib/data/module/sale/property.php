@@ -45,7 +45,7 @@ class Property extends BaseData
 			$id = $this->createId($property["ID"]);
 			$record->setId($id);
 			$record->setXmlId(
-				$this->getXmlIdProvider()->getXmlId($id)
+				$this->getXmlId($id)
 			);
 			$record->addFieldsRaw(array(
 				"NAME" => $property["NAME"],
@@ -86,13 +86,13 @@ class Property extends BaseData
 	{
 		$link = clone $this->getDependency("PERSON_TYPE_ID");
 		$personTypeId = PersonType::getInstance()->createId($property["PERSON_TYPE_ID"]);
-		$personTypeXmlId = PersonType::getInstance()->getXmlIdProvider()->getXmlId($personTypeId);
+		$personTypeXmlId = PersonType::getInstance()->getXmlId($personTypeId);
 		$link->setValue($personTypeXmlId);
 		$record->setDependency("PERSON_TYPE_ID", $link);
 
 		$link = clone $this->getReference("PROPS_GROUP_ID");
 		$propertyGroupId = PropertyGroup::getInstance()->createId($property["PROPS_GROUP_ID"]);
-		$propertyGroupXmlId = PropertyGroup::getInstance()->getXmlIdProvider()->getXmlId($propertyGroupId);
+		$propertyGroupXmlId = PropertyGroup::getInstance()->getXmlId($propertyGroupId);
 		$link->setValue($propertyGroupXmlId);
 		$record->setReference("PROPS_GROUP_ID", $link);
 	}

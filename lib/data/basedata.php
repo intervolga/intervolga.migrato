@@ -6,6 +6,9 @@ use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 abstract class BaseData
 {
 	protected static $instances = array();
+	/**
+	 * @var \Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider
+	 */
 	protected $xmlIdProvider = null;
 
 	/**
@@ -31,7 +34,7 @@ abstract class BaseData
 	/**
 	 * @param Record $record
 	 *
-	 * @throws NotImplementedException
+	 * @throws \Bitrix\Main\NotImplementedException
 	 */
 	public function update(Record $record)
 	{
@@ -41,7 +44,7 @@ abstract class BaseData
 	/**
 	 * @param Record $record
 	 *
-	 * @throws NotImplementedException
+	 * @throws \Bitrix\Main\NotImplementedException
 	 *
 	 * @return \Intervolga\Migrato\Data\RecordId
 	 */
@@ -53,7 +56,7 @@ abstract class BaseData
 	/**
 	 * @param string $xmlId
 	 *
-	 * @throws NotImplementedException
+	 * @throws \Bitrix\Main\NotImplementedException
 	 */
 	public function delete($xmlId)
 	{
@@ -185,7 +188,7 @@ abstract class BaseData
 	}
 
 	/**
-	 * @return BaseXmlIdProvider
+	 * @return \Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider
 	 */
 	public function getXmlIdProvider()
 	{
@@ -200,5 +203,97 @@ abstract class BaseData
 	public function createId($id)
 	{
 		return RecordId::createNumericId($id);
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $id
+	 * @param string $xmlId
+	 *
+	 * @throws \Bitrix\Main\NotImplementedException
+	 */
+	public function setXmlId($id, $xmlId)
+	{
+		if ($this->xmlIdProvider)
+		{
+			$this->xmlIdProvider->setXmlId($id, $xmlId);
+		}
+		else
+		{
+			throw new NotImplementedException("Not implemented yet");
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $id
+	 *
+	 * @return string
+	 * @throws \Bitrix\Main\NotImplementedException
+	 */
+	public function getXmlId($id)
+	{
+		if ($this->xmlIdProvider)
+		{
+			$this->xmlIdProvider->getXmlId($id);
+		}
+		else
+		{
+			throw new NotImplementedException("Not implemented yet");
+		}
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isXmlIdFieldExists()
+	{
+		if ($this->xmlIdProvider)
+		{
+			return $this->xmlIdProvider->isXmlIdFieldExists();
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	public function createXmlIdField()
+	{
+		if ($this->xmlIdProvider)
+		{
+			$this->xmlIdProvider->createXmlIdField();
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $id
+	 *
+	 * @return bool
+	 */
+	public function generateXmlId($id)
+	{
+		if ($this->xmlIdProvider)
+		{
+			return $this->xmlIdProvider->generateXmlId($id);
+		}
+		else
+		{
+			$this->setXmlId($id, $this->makeXmlId());
+			return true;
+		}
+	}
+
+	/**
+	 * @return string
+	 */
+	protected function makeXmlId()
+	{
+		if ($this->xmlIdProvider)
+		{
+			return $this->xmlIdProvider->makeXmlId();
+		}
+		else
+		{
+			return BaseXmlIdProvider::makeDefaultXmlId($this);
+		}
 	}
 }

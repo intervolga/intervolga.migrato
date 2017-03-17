@@ -6,7 +6,6 @@ use Intervolga\Migrato\Data\Module\Iblock\Element;
 use Intervolga\Migrato\Data\Module\Iblock\Iblock;
 use Intervolga\Migrato\Data\Module\Iblock\Section;
 use Intervolga\Migrato\Data\Module\Iblock\FieldEnum;
-use Intervolga\Migrato\Tool\XmlIdProvider\UfSelfXmlIdProvider;
 
 abstract class BaseUserField extends BaseData
 {
@@ -22,11 +21,6 @@ abstract class BaseUserField extends BaseData
 			"ERROR_MESSAGE",
 			"HELP_MESSAGE",
 		);
-	}
-
-	public function __construct()
-	{
-		$this->xmlIdProvider = new UfSelfXmlIdProvider($this);
 	}
 
 	public function getList(array $filter = array())
@@ -184,7 +178,7 @@ abstract class BaseUserField extends BaseData
 			if ($name == "IBLOCK_ID")
 			{
 				$iblockIdObject = RecordId::createNumericId($setting);
-				$xmlId = Iblock::getInstance()->getXmlIdProvider()->getXmlId($iblockIdObject);
+				$xmlId = Iblock::getInstance()->getXmlId($iblockIdObject);
 				$link = clone $this->getReference("SETTINGS.$name");
 				$link->setValue($xmlId);
 				$links["SETTINGS.$name"] = $link;
@@ -192,7 +186,7 @@ abstract class BaseUserField extends BaseData
 			if ($name == "HLBLOCK_ID")
 			{
 				$hlBlockIdObject = RecordId::createNumericId($setting);
-				$xmlId = HighloadBlock::getInstance()->getXmlIdProvider()->getXmlId($hlBlockIdObject);
+				$xmlId = HighloadBlock::getInstance()->getXmlId($hlBlockIdObject);
 				$link = clone $this->getReference("SETTINGS.$name");
 				$link->setValue($xmlId);
 				$links["SETTINGS.$name"] = $link;
@@ -200,7 +194,7 @@ abstract class BaseUserField extends BaseData
 			if ($name == "HLFIELD_ID")
 			{
 				$userFieldIdObject = RecordId::createNumericId($setting);
-				$xmlId = Field::getInstance()->getXmlIdProvider()->getXmlId($userFieldIdObject);
+				$xmlId = Field::getInstance()->getXmlId($userFieldIdObject);
 				$link = clone $this->getReference("SETTINGS.$name");
 				$link->setValue($xmlId);
 				$links["SETTINGS.$name"] = $link;
@@ -323,7 +317,7 @@ abstract class BaseUserField extends BaseData
 		foreach($values as $value)
 		{
 			$inObject = RecordId::createNumericId($value);
-			$xmlIds[] = $instance->getXmlIdProvider()->getXmlId($inObject);
+			$xmlIds[] = $instance->getXmlId($inObject);
 		}
 		if(count($xmlIds) == 1)
 		{
@@ -380,7 +374,7 @@ abstract class BaseUserField extends BaseData
 					"ID" => intval($value),
 					"HLBLOCK_ID" => intval($hlblockId),
 				));
-				$hlbElementXmlId = Module\Highloadblock\Element::getInstance()->getXmlIdProvider()->getXmlId($elementIdObject);
+				$hlbElementXmlId = Module\Highloadblock\Element::getInstance()->getXmlId($elementIdObject);
 			}
 		}
 
@@ -478,5 +472,18 @@ abstract class BaseUserField extends BaseData
 				throw new \Exception("Unknown error");
 			}
 		}
+	}
+
+	public function setXmlId($id, $xmlId)
+	{
+		$userFieldObject = new \CUserTypeEntity();
+		$userFieldObject->update($id->getValue(), array("XML_ID" => $xmlId));
+	}
+
+	public function getXmlId($id)
+	{
+		$userField = \CUserTypeEntity::getById($id->getValue());
+
+		return $userField["XML_ID"];
 	}
 }

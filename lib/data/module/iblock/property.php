@@ -54,7 +54,7 @@ class Property extends BaseData
 
 			$dependency = clone $this->getDependency("IBLOCK_ID");
 			$dependency->setValue(
-				Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($property["IBLOCK_ID"]))
+				Iblock::getInstance()->getXmlId(RecordId::createNumericId($property["IBLOCK_ID"]))
 			);
 			$record->setDependency("IBLOCK_ID", $dependency);
 
@@ -62,7 +62,7 @@ class Property extends BaseData
 			{
 				$reference = clone $this->getReference("LINK_IBLOCK_ID");
 				$reference->setValue(
-					Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($property["LINK_IBLOCK_ID"]))
+					Iblock::getInstance()->getXmlId(RecordId::createNumericId($property["LINK_IBLOCK_ID"]))
 				);
 				$record->setReference("LINK_IBLOCK_ID", $reference);
 			}

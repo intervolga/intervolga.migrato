@@ -1,14 +1,7 @@
 <? namespace Intervolga\Migrato\Data;
 
-use Intervolga\Migrato\Tool\XmlIdProvider\UfEnumXmlIdProvider;
-
 abstract class BaseUserFieldEnum extends BaseData
 {
-	public function __construct()
-	{
-        $this->xmlIdProvider = new UfEnumXmlIdProvider($this);
-    }
-
 	/**
 	 * @param string[] $filter
 	 *
@@ -32,7 +25,7 @@ abstract class BaseUserFieldEnum extends BaseData
 
 			$dependency = clone $this->getDependency("USER_FIELD_ID");
 			$dependency->setValue(
-				$dependency->getTargetData()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($enum["USER_FIELD_ID"]))
+				$dependency->getTargetData()->getXmlId(RecordId::createNumericId($enum["USER_FIELD_ID"]))
 			);
 			$record->setDependency("USER_FIELD_ID", $dependency);
 
@@ -88,5 +81,30 @@ abstract class BaseUserFieldEnum extends BaseData
 		$id = $this->findRecord($xmlId);
 		$fieldenumObject = new \CUserFieldEnum();
 		$fieldenumObject->DeleteFieldEnum($id);
+	}
+
+	public function setXmlId($id, $xmlId)
+	{
+		$enumGetList = \CUserFieldEnum::getList(array(), array("ID" => $id));
+		if($enum = $enumGetList->fetch())
+		{
+			$enum["XML_ID"] = $xmlId;
+			$userFieldObject = new \CUserFieldEnum();
+			$userFieldObject->setEnumValues($enum["USER_FIELD_ID"], $enum);
+		}
+	}
+
+	public function getXmlId($id)
+	{
+		$xmlId = "";
+		if($id = $id->getValue())
+		{
+			$enumGetList = \CUserFieldEnum::getList(array(), array("ID" => $id));
+			if($enum = $enumGetList->fetch())
+			{
+				$xmlId = $enum["XML_ID"];
+			}
+		}
+		return $xmlId;
 	}
 }
