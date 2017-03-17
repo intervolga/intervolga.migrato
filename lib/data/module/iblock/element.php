@@ -254,9 +254,13 @@ class Element extends BaseData
 		{
             return $iblock->getId()->getValue();
 		}
-		else
+		elseif($record->getId())
 		{
             return \CIBlockElement::GetIBlockByID($record->getId()->getValue());
+		}
+		else
+		{
+			return null;
 		}
 	}
 
