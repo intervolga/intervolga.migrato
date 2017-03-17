@@ -159,20 +159,22 @@ class Section extends BaseData
 		 */
 		foreach($links as $key => $link)
 		{
-			$fieldId = Field::getInstance()->findRecord($key)->getValue();
-			$field = \CUserTypeEntity::GetByID($fieldId);
-			if(!$link->isMultiple())
+			if($fieldId = Field::getInstance()->findRecord($key))
 			{
-                $id = $link->getId() ? $link->getId()->getValue() : null;
-			    if(is_array($id))
-                {
-                    $id = $id["ID"];
-                }
-                $result[$field["FIELD_NAME"]] = $id;
-			}
-			else
-			{
-				$result[$field["FIELD_NAME"]] = $link->getIds();
+				$field = \CUserTypeEntity::GetByID($fieldId->getValue());
+				if(!$link->isMultiple())
+				{
+					$id = $link->getId() ? $link->getId()->getValue() : null;
+					if(is_array($id))
+					{
+						$id = $id["ID"];
+					}
+					$result[$field["FIELD_NAME"]] = $id;
+				}
+				else
+				{
+					$result[$field["FIELD_NAME"]] = $link->getIds();
+				}
 			}
 		}
 		return $result;
