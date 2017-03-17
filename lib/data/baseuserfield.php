@@ -439,6 +439,9 @@ abstract class BaseUserField extends BaseData
 
 		if($iblockId = $record->getDependency($this->getDependencyString())->getId())
 		{
+			$userTypeEntity = new \CUserTypeEntity();
+			$userTypeEntity->CreatePropertyTables("iblock_" . $iblockId->getValue() . "_section");
+
 			$fields["XML_ID"] = $record->getXmlId();
 			$fields["ENTITY_ID"] = $this->getDependencyNameKey($iblockId->getValue());
 
@@ -467,11 +470,13 @@ abstract class BaseUserField extends BaseData
 
 	public function delete($xmlId)
 	{
-		$id = $this->findRecord($xmlId);
-		$fieldObject = new \CAllUserTypeEntity();
-		if (!$fieldObject->delete($id->getValue()))
+		if($id = $this->findRecord($xmlId))
 		{
-			throw new \Exception("Unknown error");
+			$fieldObject = new \CAllUserTypeEntity();
+			if (!$fieldObject->delete($id->getValue()))
+			{
+				throw new \Exception("Unknown error");
+			}
 		}
 	}
 }

@@ -3,25 +3,29 @@
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\Orm\XmlIdTable;
 
-class TypeXmlIdProvider extends TableXmlIdProvider
+class TypeXmlIdProvider extends BaseXmlIdProvider
 {
 	public function setXmlId($id, $xmlId)
 	{
-		$tableId = $this->getTableXmlIdRecordId($id);
-		if ($tableId)
+		$rsType = \CIBlockType::GetByID($id->getValue());
+		if($arType = $rsType->Fetch())
 		{
-			XmlIdTable::update($tableId, array("DATA_XML_ID" => $id->getValue()));
-		}
-		else
-		{
-			$add = array(
-				"MODULE_NAME" => $this->dataClass->getModule(),
-				"ENTITY_NAME" => $this->dataClass->getEntityName(),
-				"DATA_XML_ID" => $id->getValue(),
-				"DATA_ID_STR" => $id->getValue()
+			$arFields = array(
+				"ID" => $xmlId,
+				"SECTIONS" => $arType["SECTIONS"],
+				"IN_RSS" => $arType["IN_RSS"]
 			);
-
-			XmlIdTable::add($add);
+			$type = new \CIBlockType();
+			$isUpdated = $type->Update($id, $arFields);
+			if(!$isUpdated)
+			{
+				throw new \Exception("Ошибка обновления xmlId элемента iblocktype " . $id->getValue());
+			}
 		}
+	}
+
+	public function getXmlId($id)
+	{
+		return $id->getValue();
 	}
 }

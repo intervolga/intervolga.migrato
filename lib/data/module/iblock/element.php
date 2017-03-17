@@ -225,7 +225,7 @@ class Element extends BaseData
 						case "L":
 						case "G":
 						case "E":
-							$values = $link->isMultiple() ? $link->getIds() : $link->getId()->getValue();
+							$values = $link->isMultiple() ? $link->getIds() : $this->getLinkId($link);
 							$properties[$property->getValue()] = $values;
 							break;
 					}
@@ -235,6 +235,18 @@ class Element extends BaseData
 		return $properties;
 	}
 
+	private function getLinkId(Link $link)
+	{
+		if($id = $link->getId())
+		{
+			return $id->getValue();
+		}
+		else
+		{
+			return null;
+		}
+	}
+
 	public function getIBlock(Record $record)
 	{
 		$iblock = $record->getDependency("IBLOCK_ID");
@@ -242,9 +254,13 @@ class Element extends BaseData
 		{
             return $iblock->getId()->getValue();
 		}
-		else
+		elseif($record->getId())
 		{
             return \CIBlockElement::GetIBlockByID($record->getId()->getValue());
+		}
+		else
+		{
+			return null;
 		}
 	}
 

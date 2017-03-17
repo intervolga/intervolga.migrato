@@ -368,6 +368,9 @@ class ImportData extends BaseProcess
 	protected static function resolveReferences()
 	{
 		static::report(__FUNCTION__);
+		/**
+		 * @var Record $dataRecord
+		 */
 		foreach (static::$recordsWithReferences as $dataRecord)
 		{
 			$clone = clone $dataRecord;
@@ -380,6 +383,7 @@ class ImportData extends BaseProcess
 			self::setRuntimesId($clone->getRuntimes());
 			try
 			{
+				$clone->setId($dataRecord->getData()->findRecord($dataRecord->getXmlId()));
 				$clone->update();
 				static::reportRecord($dataRecord, "updated references");
 			}

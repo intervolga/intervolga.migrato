@@ -84,9 +84,39 @@ class Type extends BaseData
 	{
 		$id = $this->findRecord($xmlId);
 		$typeObject = new \CIBlockType();
-		if (!$typeObject->delete($id))
+		if($id)
 		{
-			throw new \Exception("Unknown error");
+			$this->deleteContentIBlockType($id->getValue());
+			if (!$typeObject->delete($id->getValue()))
+			{
+				throw new \Exception("Unknown error");
+			}
+		}
+		else
+			throw new \Exception("Элемент с id " . $xmlId . " не существует");
+	}
+
+	private function deleteContentIBlockType($id)
+	{
+		$rsIblock = \CIBlock::GetList(array(), array("TYPE" => $id));
+		while($arIblock = $rsIblock->Fetch())
+		{
+			if(\CModule::IncludeModule("catalog"))
+			{
+				\CCatalog::Delete($arIblock["ID"]);
+			}
+
+			$rsElement = \CIBlockElement::GetList(array(), array("IBLOCK_ID" => $arIblock["ID"]));
+			while($arElement = $rsElement->Fetch())
+			{
+				\CIBlockElement::Delete($arElement["ID"]);
+			}
+
+			$rsSection = \CIBlockSection::GetList(array(), array("IBLOCK_ID" => $arIblock["ID"]));
+			while($arSection = $rsSection->Fetch())
+			{
+				\CIBlockSection::Delete($arSection["ID"]);
+			}
 		}
 	}
 }

@@ -2,6 +2,7 @@
 
 use Intervolga\Migrato\Data\BaseUserFieldEnum;
 use Intervolga\Migrato\Data\Link;
+use Intervolga\Migrato\Data\Record;
 
 class FieldEnum extends BaseUserFieldEnum
 {
@@ -19,9 +20,11 @@ class FieldEnum extends BaseUserFieldEnum
 	public function getList(array $filter = array())
 	{
 		$filter["USER_FIELD_ID"] = array();
+
+		/** @var Record $record */
 		foreach(Field::getInstance()->getList() as $record)
 		{
-			$fields = $record->getFieldsStrings();
+			$fields = $record->getFieldsRaw();
 			if($fields["USER_TYPE_ID"] == "enumeration")
 			{
 				$filter["USER_FIELD_ID"][] = $record->getId()->getValue();

@@ -9,6 +9,10 @@ class Page
 	{
 		global $USER;
 		$isCli = php_sapi_name() == "cli";
+		if($isCli)
+		{
+			$USER->Authorize(1);
+		}
 		if (!$isCli && !$USER->IsAdmin())
 		{
 			throw new \Exception("Need cli or admin login");
@@ -40,6 +44,8 @@ class Page
 		if ($isCli)
 		{
 			echo implode("\r\n", $report)."\r\n";
+			global $USER;
+			$USER->Logout();
 		}
 		else
 		{

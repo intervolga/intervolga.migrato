@@ -119,7 +119,10 @@ class Property extends BaseData
 
 		if($reference = $record->getReference("LINK_IBLOCK_ID"))
 		{
-			$fields["LINK_IBLOCK_ID"] = Iblock::getInstance()->findRecord($reference->getValue())->getValue();
+			if($reference->getId())
+			{
+				$fields["LINK_IBLOCK_ID"] = $reference->getId()->getValue();
+			}
 		}
 
 		$propertyObject = new \CIBlockProperty();
