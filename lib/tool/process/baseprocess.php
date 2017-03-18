@@ -5,6 +5,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Tool\Orm\LogTable;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 Loc::loadMessages(__FILE__);
@@ -24,6 +25,7 @@ class BaseProcess
 	{
 		static::$reports = array();
 		static::$statistics = new Statistics();
+		LogTable::deleteAll();
 		static::report("Process started");
 	}
 
@@ -152,6 +154,7 @@ class BaseProcess
 			if ($errorType)
 			{
 				$errors[] = new XmlIdValidateError($dataClass, $errorType, $record->getId(), $record->getXmlId());
+				LogTable::logError($record, "validate", XmlIdValidateError::typeToString($errorType));
 			}
 		}
 
@@ -311,6 +314,7 @@ class BaseProcess
 		if ($exception)
 		{
 			static::reportRecordException($record, $exception, $operation);
+			LogTable::logException($record, $operation, $exception);
 		}
 		else
 		{
@@ -320,6 +324,7 @@ class BaseProcess
 				$record->getXmlId(),
 				!$exception
 			);
+			LogTable::log($record, $operation);
 		}
 	}
 

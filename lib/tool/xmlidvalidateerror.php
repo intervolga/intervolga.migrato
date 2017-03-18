@@ -1,7 +1,10 @@
 <?namespace Intervolga\Migrato\Tool;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\RecordId;
+
+Loc::loadMessages(__FILE__);
 
 class XmlIdValidateError
 {
@@ -71,21 +74,47 @@ class XmlIdValidateError
 		$xmlId = $this->getXmlId();
 		if ($this->getType() == static::TYPE_EMPTY)
 		{
-			$string = $name . " " . $this->getId()->getValue() . " empty xmlid";
+			$string = $name . " " . $this->getId()->getValue() . " " . static::typeToString($this->getType());
 		}
 		if ($this->getType() == static::TYPE_REPEAT)
 		{
-			$string = $name . " " . $xmlId . " repeat error";
+			$string = $name . " " . $xmlId . " " . static::typeToString($this->getType());
 		}
 		if ($this->getType() == static::TYPE_INVALID)
 		{
-			$string = $name . " " . $xmlId . " invalid";
+			$string = $name . " " . $xmlId . " " . static::typeToString($this->getType());
 		}
 		if ($this->getType() == static::TYPE_SIMPLE)
 		{
-			$string = $name . " " . $xmlId . " is too simple";
+			$string = $name . " " . $xmlId . " " . static::typeToString($this->getType());
 		}
 
 		return $string;
+	}
+
+	/**
+	 * @param string $type
+	 *
+	 * @return string
+	 */
+	public static function typeToString($type)
+	{
+		if ($type == static::TYPE_EMPTY)
+		{
+			return Loc::getMessage("INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_EMPTY");
+		}
+		if ($type == static::TYPE_REPEAT)
+		{
+			return Loc::getMessage("INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_REPEAT");
+		}
+		if ($type == static::TYPE_INVALID)
+		{
+			return Loc::getMessage("INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_INVALID");
+		}
+		if ($type == static::TYPE_SIMPLE)
+		{
+			return Loc::getMessage("INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_SIMPLE");
+		}
+		return Loc::getMessage("INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_UNKNOWN");
 	}
 }

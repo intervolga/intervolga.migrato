@@ -4,6 +4,7 @@ include dirname(__DIR__) . "/include/tools_before.php";
 try
 {
 	$report = array();
+	\Intervolga\Migrato\Tool\Process\BaseProcess::run();
 	foreach (\Intervolga\Migrato\Tool\Process\BaseProcess::validate() as $error)
 	{
 		$report[] = $error->toString();
