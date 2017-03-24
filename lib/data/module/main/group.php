@@ -1,10 +1,16 @@
 <? namespace Intervolga\Migrato\Data\Module\Main;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 
+Loc::loadMessages(__FILE__);
+
 class Group extends BaseData
 {
+	const GROUP_ADMINS = 1;
+	const GROUP_ALL_USERS = 2;
+
 	public function getList(array $filter = array())
 	{
 		$result = array();
@@ -62,11 +68,14 @@ class Group extends BaseData
 		$groupObject = new \CGroup();
 		if ($id)
 		{
-			if($id->getValue() == 1 || $id->getValue() == 2)
+			if (in_array($id->getValue(), array(static::GROUP_ADMINS, static::GROUP_ALL_USERS)))
 			{
-				$groups = array(1 => "\"Администраторы\"", 2 => "\"Все пользователи\"");
-				throw new \Exception("Невозможно удалить группу " . $groups[$id->getValue()] . " с xmlId: " . $xmlId
-					. ". Пожалуйста, убедитесь чтобы xmlId этой группы совпадали.");
+				$group = Loc::getMessage("INTERVOLGA_MIGRATO.SYSTEM_GROUP_" . $id->getValue());
+				$message = Loc::getMessage("INTERVOLGA_MIGRATO.DELETE_SYSTEM_GROUP_ERROR", array(
+					"#GROUP#" => $group,
+					"#XMLID#" => $xmlId,
+				));
+				throw new \Exception($message);
 			}
 			if (!$groupObject->delete($id->getValue()))
 			{
@@ -100,5 +109,23 @@ class Group extends BaseData
 		{
 			return "";
 		}
+	}
+
+	public function generateXmlId($id)
+	{
+		if ($id->getValue() == static::GROUP_ADMINS)
+		{
+			$xmlId = "ADMINS";
+		}
+		elseif ($id->getValue() == static::GROUP_ALL_USERS)
+		{
+			$xmlId = "ALL-USERS";
+		}
+		else
+		{
+			$xmlId = parent::makeXmlId();
+		}
+		$this->setXmlId($id, $xmlId);
+		return $xmlId;
 	}
 }
