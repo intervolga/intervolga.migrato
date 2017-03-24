@@ -60,9 +60,12 @@ class Record extends BaseDataObject
 	}
 
 	/**
-	 * @return string[]
+	 * @param string[] $treeRoots
+	 *
+	 * @return \string[]
+	 * @throws \Exception
 	 */
-	public function getFieldsRaw()
+	public function getFieldsRaw($treeRoots = array())
 	{
 		$result = array();
 		foreach ($this->fields as $name => $field)
@@ -74,6 +77,21 @@ class Record extends BaseDataObject
 			else
 			{
 				$result[$name] = $field->getValue();
+			}
+		}
+		if ($treeRoots)
+		{
+			$tree = Value::listToTree($result);
+			foreach ($tree as $root => $treeFields)
+			{
+				if (in_array($root, $treeRoots))
+				{
+					foreach (array_keys($treeRoots) as $treeFieldName)
+					{
+						unset($result[$root . "." . $treeFieldName]);
+					}
+					$result[$root] = $treeFields;
+				}
 			}
 		}
 
