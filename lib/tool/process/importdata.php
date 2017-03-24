@@ -30,6 +30,7 @@ class ImportData extends BaseProcess
 
 		static::init();
 		static::importWithDependencies();
+		static::reportNotResolved();
 		static::deleteNotImported();
 		static::deleteMarked();
 		static::resolveReferences();
@@ -121,7 +122,6 @@ class ImportData extends BaseProcess
 			static::report("Not enough import depenency steps!", "fail");
 		}
 	}
-
 
 	/**
 	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
@@ -325,6 +325,14 @@ class ImportData extends BaseProcess
 		catch (\Exception $exception)
 		{
 			static::addStatistics($dataRecord, "create", $exception);
+		}
+	}
+
+	protected static function reportNotResolved()
+	{
+		foreach (static::$list->getNotResolvedRecords() as $notResolvedRecord)
+		{
+			static::addStatistics($notResolvedRecord, "resolve", new \Exception("Dependencies not resolved"));
 		}
 	}
 
