@@ -43,6 +43,11 @@ class Page
 		$isCli = php_sapi_name() == "cli";
 		if ($isCli)
 		{
+			foreach ($report as $i => $string)
+			{
+				$report[$i] = iconv("UTF-8", "cp1251", $string);
+			}
+
 			echo implode("\r\n", $report)."\r\n";
 			global $USER;
 			$USER->Logout();
