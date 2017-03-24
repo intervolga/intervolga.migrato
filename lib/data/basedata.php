@@ -77,7 +77,7 @@ abstract class BaseData
 	/**
 	 * @param string[] $xmlIds
 	 *
-	 * @return \Intervolga\Migrato\Data\RecordId|null
+	 * @return \Intervolga\Migrato\Data\RecordId[]|null
 	 */
 	public function findRecords(array $xmlIds)
 	{
@@ -233,7 +233,7 @@ abstract class BaseData
 	{
 		if ($this->xmlIdProvider)
 		{
-			$this->xmlIdProvider->getXmlId($id);
+			return $this->xmlIdProvider->getXmlId($id);
 		}
 		else
 		{
