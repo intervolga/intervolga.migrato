@@ -1,10 +1,10 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
+use Bitrix\Main\Entity\ExpressionField;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool;
 use Intervolga\Migrato\Tool\Config;
-use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 
@@ -17,14 +17,13 @@ class BaseProcess
 	 */
 	protected static $reports = array();
 	/**
-	 * @var \Intervolga\Migrato\Tool\Process\Statistics
+	 * @var string
 	 */
-	protected static $statistics = null;
+	protected static $step = "";
 
 	public static function run()
 	{
 		static::$reports = array();
-		static::$statistics = new Statistics();
 		LogTable::deleteAll();
 		static::report("Process started");
 	}
@@ -56,6 +55,7 @@ class BaseProcess
 			$result = array_merge($result, static::validateData($data, $filter));
 		}
 
+		static::reportStep("Validate");
 		return $result;
 	}
 
@@ -158,6 +158,7 @@ class BaseProcess
 					"RECORD" => $record,
 					"OPERATION" => "validate",
 					"COMMENT" => XmlIdValidateError::typeToString($errorType),
+					"STEP" => "Validate",
 				));
 			}
 		}
@@ -177,9 +178,12 @@ class BaseProcess
 
 	/**
 	 * @param XmlIdValidateError[] $errors
+	 *
+	 * @return int
 	 */
 	public static function fixErrors(array $errors)
 	{
+		$counter = 0;
 		foreach ($errors as $error)
 		{
 			try
@@ -189,7 +193,9 @@ class BaseProcess
 				LogTable::add(array(
 					"XML_ID_ERROR" => $error,
 					"OPERATION" => "xmlid error fix",
+					"STEP" => __FUNCTION__,
 				));
+				$counter++;
 			}
 			catch (\Exception $exception)
 			{
@@ -197,9 +203,12 @@ class BaseProcess
 					"XML_ID_ERROR" => $error,
 					"EXCEPTION" => $exception,
 					"OPERATION" => "xmlid error fix",
+					"STEP" => __FUNCTION__,
 				));
 			}
 		}
+
+		return $counter;
 	}
 
 	/**
@@ -210,101 +219,6 @@ class BaseProcess
 	protected static function getModuleOptionsDirectory($module)
 	{
 		return INTERVOLGA_MIGRATO_DIRECTORY . $module . "/";
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Record $dataRecord
-	 * @param \Exception $exception
-	 * @param string $message
-	 */
-	protected static function reportRecordException(Record $dataRecord, \Exception $exception, $message)
-	{
-		$report = static::getRecordNameForReport($dataRecord) . " " . $message;
-		if ($exception->getMessage())
-		{
-			$report .= " exception: " . $exception->getMessage();
-		}
-		else
-		{
-			$report .= " exception: " . get_class($exception);
-		}
-		static::report($report, "fail");
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Record $dataRecord
-	 *
-	 * @return string
-	 */
-	protected static function getRecordNameForReport(Record $dataRecord)
-	{
-		$data = $dataRecord->getData();
-		$recordName = "Record ";
-		$recordName .= $data->getModule() . "/" . $data->getEntityName();
-		if ($dataRecord->getXmlId())
-		{
-			$recordName .= " (xmlid: " . $dataRecord->getXmlId() . ")";
-		}
-		elseif ($id = $dataRecord->getId())
-		{
-			$idValue = $id->getValue();
-			if (is_array($idValue))
-			{
-				$recordName .= " (id: [" . implode(",", $idValue) . "])";
-			}
-			else
-			{
-				$recordName .= " (id: " . $idValue . ")";
-			}
-		}
-
-		return $recordName;
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Record $dataRecord
-	 * @param string $message
-	 */
-	protected static function reportRecord(Record $dataRecord, $message)
-	{
-		static::report(static::getRecordNameForReport($dataRecord) . " " . $message, "ok");
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\BaseData $data
-	 * @param string $message
-	 */
-	protected static function reportData(BaseData $data, $message)
-	{
-		static::report(static::getDataNameForReport($data) . " " . $message, "ok");
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\BaseData $data
-	 *
-	 * @return string
-	 */
-	protected static function getDataNameForReport(BaseData $data)
-	{
-		$recordName = "Data ";
-		$recordName .= $data->getModule() . "/" . $data->getEntityName();
-
-		return $recordName;
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\BaseData $data
-	 * @param \Exception $exception
-	 * @param string $message
-	 */
-	protected static function reportDataException(BaseData $data, \Exception $exception, $message)
-	{
-		$report = static::getDataNameForReport($data) . " " . $message;
-		if ($exception->getMessage())
-		{
-			$report .= " exception: " . $exception->getMessage();
-		}
-		static::report($report, "fail");
 	}
 
 	/**
@@ -325,51 +239,41 @@ class BaseProcess
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\Record $record
-	 * @param string $operation
-	 * @param \Exception $exception
+	 * @param string $step
 	 */
-	protected static function addStatistics(Record $record, $operation, \Exception $exception = null)
+	protected static function reportStep($step)
 	{
-		if ($exception)
-		{
-			static::reportRecordException($record, $exception, $operation);
-			LogTable::add(array(
-				"RECORD" => $record,
-				"OPERATION" => $operation,
-				"EXCEPTION" => $exception,
-			));
-		}
-		else
-		{
-			static::$statistics->add(
-				$record->getData(),
-				$operation,
-				$record->getXmlId(),
-				!$exception
-			);
-			LogTable::add(array(
-				"RECORD" => $record,
-				"OPERATION" => $operation,
-			));
-		}
-	}
-
-	protected static function reportStatistics()
-	{
-		foreach (static::$statistics->get() as $statistics)
+		$getList = LogTable::getList(array(
+			"filter" => array(
+				"=STEP" => $step,
+			),
+			"select" => array(
+				"MODULE_NAME",
+				"ENTITY_NAME",
+				"OPERATION",
+				"RESULT",
+				new ExpressionField('CNT', 'COUNT(*)')
+			),
+			"group" => array(
+				"MODULE_NAME",
+				"ENTITY_NAME",
+				"OPERATION",
+				"RESULT",
+			),
+		));
+		while ($logs = $getList->fetch())
 		{
 			static::report(
 				Loc::getMessage(
 					"INTERVOLGA_MIGRATO.STATISTICS_RECORD",
 					array(
-						"#MODULE#" => $statistics["module"],
-						"#ENTITY#" => $statistics["entity"],
-						"#OPERATION#" => $statistics["operation"],
-						"#COUNT#" => $statistics["count"],
+						"#MODULE#" => $logs["MODULE_NAME"],
+						"#ENTITY#" => $logs["ENTITY_NAME"],
+						"#OPERATION#" => $logs["OPERATION"],
+						"#COUNT#" => $logs["CNT"],
 					)
 				),
-				$statistics["status"] ? "ok" : "fail"
+				$logs["RESULT"] ? "ok" : "fail"
 			);
 		}
 	}

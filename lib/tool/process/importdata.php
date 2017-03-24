@@ -8,6 +8,7 @@ use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\ImportList;
+use Intervolga\Migrato\Tool\Orm\LogTable;
 
 class ImportData extends BaseProcess
 {
@@ -30,7 +31,7 @@ class ImportData extends BaseProcess
 
 		static::init();
 		static::importWithDependencies();
-		static::reportNotResolved();
+		static::logNotResolved();
 		static::deleteNotImported();
 		static::deleteMarked();
 		static::resolveReferences();
@@ -99,7 +100,7 @@ class ImportData extends BaseProcess
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		for ($i = 0; $i < count($configDataClasses); $i++)
 		{
-			static::$statistics->reset();
+			static::$step = __FUNCTION__;
 			$creatableDataRecords = static::$list->getCreatableRecords();
 			if ($creatableDataRecords)
 			{
@@ -114,7 +115,7 @@ class ImportData extends BaseProcess
 			{
 				break;
 			}
-			static::reportStatistics();
+			static::reportStep(static::$step);
 		}
 
 		if (static::$list->getCreatableRecords())
@@ -296,11 +297,20 @@ class ImportData extends BaseProcess
 
 			$dataRecord->setId($dataRecordId);
 			$dataRecord->update();
-			static::addStatistics($dataRecord, "update");
+			LogTable::add(array(
+				"RECORD" => $dataRecord,
+				"OPERATION" => "update",
+				"STEP" => static::$step,
+			));
 		}
 		catch (\Exception $exception)
 		{
-			static::addStatistics($dataRecord, "update", $exception);
+			LogTable::add(array(
+				"RECORD" => $dataRecord,
+				"EXCEPTION" => $exception,
+				"OPERATION" => "update",
+				"STEP" => static::$step,
+			));
 		}
 	}
 
@@ -320,31 +330,47 @@ class ImportData extends BaseProcess
 				$dataRecord->getId(),
 				$dataRecord->getXmlId()
 			);
-			static::addStatistics($dataRecord, "create");
+			LogTable::add(array(
+				"RECORD" => $dataRecord,
+				"OPERATION" => "create",
+				"STEP" => static::$step,
+			));
 		}
 		catch (\Exception $exception)
 		{
-			static::addStatistics($dataRecord, "create", $exception);
+			LogTable::add(array(
+				"RECORD" => $dataRecord,
+				"EXCEPTION" => $exception,
+				"OPERATION" => "create",
+				"STEP" => static::$step,
+			));
 		}
 	}
 
-	protected static function reportNotResolved()
+	protected static function logNotResolved()
 	{
+		static::report(__FUNCTION__);
+		static::$step = __FUNCTION__;
 		foreach (static::$list->getNotResolvedRecords() as $notResolvedRecord)
 		{
-			static::addStatistics($notResolvedRecord, "resolve", new \Exception("Dependencies not resolved"));
+			LogTable::add(array(
+				"RECORD" => $notResolvedRecord,
+				"EXCEPTION" => new \Exception("Dependencies not resolved"),
+				"OPERATION" => "resolve",
+				"STEP" => static::$step,
+			));
 		}
 	}
 
 	protected static function deleteNotImported()
 	{
 		static::report(__FUNCTION__);
-		static::$statistics->reset();
+		static::$step = __FUNCTION__;
 		foreach (static::$list->getRecordsToDelete() as $dataRecord)
 		{
 			static::deleteRecordWithLog($dataRecord);
 		}
-		static::reportStatistics();
+		static::reportStep(static::$step);
 	}
 
 	/**
@@ -355,28 +381,38 @@ class ImportData extends BaseProcess
 		try
 		{
 			$record->delete();
-			static::addStatistics($record, "delete");
+			LogTable::add(array(
+				"RECORD" => $record,
+				"OPERATION" => "delete",
+				"STEP" => static::$step,
+			));
 		}
 		catch (\Exception $exception)
 		{
-			static::addStatistics($record, "delete", $exception);
+			LogTable::add(array(
+				"RECORD" => $record,
+				"EXCEPTION" => $exception,
+				"OPERATION" => "delete",
+				"STEP" => static::$step,
+			));
 		}
 	}
 
 	protected static function deleteMarked()
 	{
 		static::report(__FUNCTION__);
-		static::$statistics->reset();
+		static::$step = __FUNCTION__;
 		foreach (static::$deleteRecords as $record)
 		{
 			static::deleteRecordWithLog($record);
 		}
-		static::reportStatistics();
+		static::reportStep(static::$step);
 	}
 
 	protected static function resolveReferences()
 	{
 		static::report(__FUNCTION__);
+		static::$step = __FUNCTION__;
 		/**
 		 * @var Record $dataRecord
 		 */
@@ -392,15 +428,27 @@ class ImportData extends BaseProcess
 			self::setRuntimesId($clone->getRuntimes());
 			try
 			{
-				$clone->setId($dataRecord->getData()->findRecord($dataRecord->getXmlId()));
+				$id = $dataRecord->getData()->findRecord($dataRecord->getXmlId());
+				if (!$id)
+				{
+					throw new \Exception("Record not found");
+				}
+				$clone->setId($id);
 				$clone->update();
-				static::reportRecord($dataRecord, "updated references");
-				static::addStatistics($dataRecord, "update reference");
+				LogTable::add(array(
+					"RECORD" => $dataRecord,
+					"OPERATION" => "update references",
+					"STEP" => static::$step,
+				));
 			}
 			catch (\Exception $exception)
 			{
-				static::reportRecordException($dataRecord, $exception, "update reference");
-				static::addStatistics($dataRecord, "update reference", $exception);
+				LogTable::add(array(
+					"RECORD" => $dataRecord,
+					"EXCEPTION" => $exception,
+					"OPERATION" => "update reference",
+					"STEP" => static::$step,
+				));
 			}
 		}
 	}

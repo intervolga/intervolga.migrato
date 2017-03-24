@@ -3,6 +3,7 @@
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
+use Intervolga\Migrato\Tool\Orm\LogTable;
 
 class ExportData extends BaseProcess
 {
@@ -26,7 +27,7 @@ class ExportData extends BaseProcess
 		{
 			static::exportData($data);
 		}
-		static::reportStatistics();
+		static::reportStep("Export");
 		static::report("Process completed");
 	}
 
@@ -46,11 +47,20 @@ class ExportData extends BaseProcess
 			try
 			{
 				DataFileViewXml::writeToFileSystem($record, $path);
-				static::addStatistics($record, "export");
+				LogTable::add(array(
+					"RECORD" => $record,
+					"OPERATION" => "export",
+					"STEP" => "Export",
+				));
 			}
 			catch (\Exception $exception)
 			{
-				static::addStatistics($record, "export", $exception);
+				LogTable::add(array(
+					"RECORD" => $record,
+					"EXCEPTION" => $exception,
+					"OPERATION" => "export",
+					"STEP" => "Export",
+				));
 			}
 		}
 	}

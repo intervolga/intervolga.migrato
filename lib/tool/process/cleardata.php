@@ -7,6 +7,7 @@ use Intervolga\Migrato\Tool\Config;
 class ClearData extends BaseProcess
 {
 	protected static $cleared;
+
 	public static function run()
 	{
 		parent::run();
@@ -17,7 +18,6 @@ class ClearData extends BaseProcess
 		{
 			static::clearData($data);
 		}
-		static::reportStatistics();
 		static::report("Process completed");
 	}
 

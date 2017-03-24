@@ -12,8 +12,8 @@ try
 	}
 	else
 	{
-		\Intervolga\Migrato\Tool\Process\BaseProcess::fixErrors($errors);
-		$report[] = "Errors fixed";
+		$fixed = \Intervolga\Migrato\Tool\Process\BaseProcess::fixErrors($errors);
+		$report[] = "Errors fixed ($fixed/" . count($errors) . ")";
 	}
 	\Intervolga\Migrato\Tool\Page::showReport($report);
 }
