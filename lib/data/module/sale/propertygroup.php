@@ -92,10 +92,7 @@ class PropertyGroup extends BaseData
 	 */
 	protected function recordToArray(Record $record)
 	{
-		$array = array(
-			"NAME" => $record->getFieldRaw("NAME"),
-			"SORT" => $record->getFieldRaw("SORT"),
-		);
+		$array = $record->getFieldsRaw();
 		if ($depenency = $record->getDependency("PERSON_TYPE_ID"))
 		{
 			$personTypeXmlId = $depenency->getValue();

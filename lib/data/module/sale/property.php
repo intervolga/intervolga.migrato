@@ -140,30 +140,7 @@ class Property extends BaseData
 
 	protected function recordToArray(Record $record)
 	{
-		$array = array(
-			"NAME" => $record->getFieldRaw("NAME"),
-			"TYPE" => $record->getFieldRaw("TYPE"),
-			"REQUIRED" => $record->getFieldRaw("REQUIRED"),
-			"DEFAULT_VALUE" => $record->getFieldRaw("DEFAULT_VALUE"),
-			"SORT" => $record->getFieldRaw("SORT"),
-			"USER_PROPS" => $record->getFieldRaw("USER_PROPS"),
-			"IS_LOCATION" => $record->getFieldRaw("IS_LOCATION"),
-			"DESCRIPTION" => $record->getFieldRaw("DESCRIPTION"),
-			"IS_EMAIL" => $record->getFieldRaw("IS_EMAIL"),
-			"IS_PROFILE_NAME" => $record->getFieldRaw("IS_PROFILE_NAME"),
-			"IS_PAYER" => $record->getFieldRaw("IS_PAYER"),
-			"IS_LOCATION4TAX" => $record->getFieldRaw("IS_LOCATION4TAX"),
-			"IS_FILTERED" => $record->getFieldRaw("IS_FILTERED"),
-			"CODE" => $record->getFieldRaw("CODE"),
-			"IS_ZIP" => $record->getFieldRaw("IS_ZIP"),
-			"IS_PHONE" => $record->getFieldRaw("IS_PHONE"),
-			"IS_ADDRESS" => $record->getFieldRaw("IS_ADDRESS"),
-			"ACTIVE" => $record->getFieldRaw("ACTIVE"),
-			"UTIL" => $record->getFieldRaw("UTIL"),
-			"INPUT_FIELD_LOCATION" => $record->getFieldRaw("INPUT_FIELD_LOCATION"),
-			"MULTIPLE" => $record->getFieldRaw("MULTIPLE"),
-			"SETTINGS" => Value::listToTreeGet($record->getFieldsRaw(), "SETTINGS"),
-		);
+		$array = $record->getFieldsRaw(array("SETTINGS"));
 		if ($link = $record->getDependency("PERSON_TYPE_ID"))
 		{
 			$array["PERSON_TYPE_ID"] = $link->findId()->getValue();
