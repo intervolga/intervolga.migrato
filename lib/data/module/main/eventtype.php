@@ -2,7 +2,6 @@
 
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\XmlIdProvider\EventTypeXmlIdProvider;
 
 class EventType extends BaseData
 {

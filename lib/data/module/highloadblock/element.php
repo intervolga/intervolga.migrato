@@ -7,7 +7,6 @@ use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Runtime;
-use Intervolga\Migrato\Tool\XmlIdProvider\HlbElementXmlIdProvider;
 
 class Element extends BaseData
 {

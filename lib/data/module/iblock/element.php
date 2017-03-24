@@ -8,7 +8,6 @@ use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Runtime;
 use Intervolga\Migrato\Data\Value;
-use Intervolga\Migrato\Tool\XmlIdProvider\IblockElementXmlIdProvider;
 
 class Element extends BaseData
 {
