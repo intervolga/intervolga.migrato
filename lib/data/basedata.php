@@ -32,7 +32,7 @@ abstract class BaseData
 	abstract public function getList(array $filter = array());
 
 	/**
-	 * @param Record $record
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 *
 	 * @throws \Bitrix\Main\NotImplementedException
 	 */
@@ -42,7 +42,7 @@ abstract class BaseData
 	}
 
 	/**
-	 * @param Record $record
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 *
 	 * @throws \Bitrix\Main\NotImplementedException
 	 *
@@ -77,7 +77,7 @@ abstract class BaseData
 	/**
 	 * @param string[] $xmlIds
 	 *
-	 * @return \Intervolga\Migrato\Data\RecordId[]|null
+	 * @return \Intervolga\Migrato\Data\RecordId[]
 	 */
 	public function findRecords(array $xmlIds)
 	{
@@ -148,7 +148,7 @@ abstract class BaseData
 	}
 
 	/**
-	 * @return Link[]
+	 * @return \Intervolga\Migrato\Data\Link[]
 	 */
 	public function getDependencies()
 	{
@@ -158,7 +158,7 @@ abstract class BaseData
 	/**
 	 * @param string $name
 	 *
-	 * @return Link
+	 * @return \Intervolga\Migrato\Data\Link
 	 */
 	public function getDependency($name)
 	{
@@ -168,7 +168,7 @@ abstract class BaseData
 	}
 
 	/**
-	 * @return Link[]
+	 * @return \Intervolga\Migrato\Data\Link[]
 	 */
 	public function getReferences()
 	{
@@ -178,7 +178,7 @@ abstract class BaseData
 	/**
 	 * @param string $name
 	 *
-	 * @return Link
+	 * @return \Intervolga\Migrato\Data\Link
 	 */
 	public function getReference($name)
 	{
@@ -198,7 +198,7 @@ abstract class BaseData
 	/**
 	 * @param mixed $id
 	 *
-	 * @return RecordId
+	 * @return \Intervolga\Migrato\Data\RecordId
 	 */
 	public function createId($id)
 	{

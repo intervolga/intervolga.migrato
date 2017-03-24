@@ -20,7 +20,7 @@ abstract class BaseDataObject
 	protected $references = array();
 
 	/**
-	 * @param BaseData $dataClass
+	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
 	 */
 	public function __construct(BaseData $dataClass = null)
 	{

@@ -168,7 +168,6 @@ class Value
 		$this->descriptionIsSet = true;
 	}
 
-
 	/**
 	 * @return string
 	 * @throws \Exception

@@ -8,7 +8,7 @@ class Record extends BaseDataObject
 	 */
 	protected $id;
 	/**
-	 * @var Runtime[]
+	 * @var \Intervolga\Migrato\Data\Runtime[]
 	 */
 	protected $runtimes = array();
 	/**
@@ -127,7 +127,7 @@ class Record extends BaseDataObject
 	}
 
 	/**
-	 * @return RecordId
+	 * @return \Intervolga\Migrato\Data\RecordId
 	 */
 	public function getId()
 	{
@@ -135,7 +135,7 @@ class Record extends BaseDataObject
 	}
 
 	/**
-	 * @param BaseData $dataObject
+	 * @param \Intervolga\Migrato\Data\BaseData $dataObject
 	 */
 	public function setData(BaseData $dataObject)
 	{
@@ -180,7 +180,7 @@ class Record extends BaseDataObject
 	/**
 	 * @param string $name
 	 *
-	 * @return Runtime
+	 * @return \Intervolga\Migrato\Data\Runtime
 	 */
 	public function getRuntime($name)
 	{
@@ -188,7 +188,7 @@ class Record extends BaseDataObject
 	}
 
 	/**
-	 * @return Runtime[]
+	 * @return \Intervolga\Migrato\Data\Runtime[]
 	 */
 	public function getRuntimes()
 	{
@@ -235,7 +235,7 @@ class Record extends BaseDataObject
 	}
 
 	/**
-	 * @param Link[] $links
+	 * @param \Intervolga\Migrato\Data\Link[] $links
 	 * @return array
 	 */
 	protected function infoLinks(array $links)
