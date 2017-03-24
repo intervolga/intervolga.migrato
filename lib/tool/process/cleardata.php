@@ -30,12 +30,21 @@ class ClearData extends BaseProcess
 		{
 			$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . "/";
 			$moduleDirectory = new Directory($path);
+			$hasFiles = false;
 			foreach ($moduleDirectory->getChildren() as $child)
 			{
 				if ($child->isDirectory())
 				{
 					$child->delete();
 				}
+				if ($child->isFile())
+				{
+					$hasFiles = true;
+				}
+			}
+			if (!$hasFiles)
+			{
+				$moduleDirectory->delete();
 			}
 			static::report("Clear for module " . $dataClass->getModule());
 			static::$cleared[$dataClass->getModule()] = true;
