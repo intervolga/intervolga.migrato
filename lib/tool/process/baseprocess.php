@@ -178,7 +178,16 @@ class BaseProcess
 	{
 		foreach ($errors as $error)
 		{
-			$error->getDataClass()->generateXmlId($error->getId());
+			try
+			{
+				$xmlId = $error->getDataClass()->generateXmlId($error->getId());
+				$error->setXmlId($xmlId);
+				LogTable::logErrorFix($error);
+			}
+			catch (\Exception $exception)
+			{
+				LogTable::logErrorFix($error, $exception);
+			}
 		}
 	}
 

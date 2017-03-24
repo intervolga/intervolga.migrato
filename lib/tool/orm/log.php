@@ -6,8 +6,10 @@ use Bitrix\Main\Entity\DatetimeField;
 use Bitrix\Main\Entity\IntegerField;
 use Bitrix\Main\Entity\StringField;
 use Bitrix\Main\Type\DateTime;
+use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 class LogTable extends DataManager
 {
@@ -72,14 +74,9 @@ class LogTable extends DataManager
 	 */
 	public static function logException(Record $record, $operation, \Exception $exception)
 	{
-		$log = static::prepareLog($record);
-		$log["RESULT"] = false;
+		$log = static::recordToLog($record);
+		$log = array_merge($log, static::exceptionToLog($exception));
 		$log["OPERATION"] = $operation;
-		$log["COMMENT"] = get_class($exception) . ": " . $exception->getMessage();
-		if ($exception->getCode())
-		{
-			$log["COMMENT"] .= "(" . $exception->getCode() . ")";
-		}
 		static::add($log);
 	}
 
@@ -89,8 +86,7 @@ class LogTable extends DataManager
 	 */
 	public static function log(Record $record, $operation)
 	{
-		$log = static::prepareLog($record);
-		$log["RESULT"] = true;
+		$log = static::recordToLog($record);
 		$log["OPERATION"] = $operation;
 		static::add($log);
 	}
@@ -101,7 +97,40 @@ class LogTable extends DataManager
 	 * @return array
 	 * @throws \Exception
 	 */
-	protected static function prepareLog(Record $record)
+	protected static function recordToLog(Record $record)
+	{
+		$log = static::prepareLog();
+		$log["DATA_XML_ID"] = $record->getXmlId();
+		$log = array_merge($log, static::dataToLog($record->getData()));
+		if ($id = $record->getId())
+		{
+			$log = array_merge($log, static::idToLog($id));
+		}
+		return $log;
+	}
+
+	/**
+	 * @param \Exception $exception
+	 *
+	 * @return array
+	 */
+	protected static function exceptionToLog(\Exception $exception)
+	{
+		$log = array(
+			"RESULT" => false,
+			"COMMENT" => get_class($exception) . ": " . $exception->getMessage(),
+		);
+		if ($exception->getCode())
+		{
+			$log["COMMENT"] .= " (" . $exception->getCode() . ")";
+		}
+		return $log;
+	}
+
+	/**
+	 * @return array
+	 */
+	protected static function prepareLog()
 	{
 		if (!static::$migrationTime)
 		{
@@ -109,24 +138,44 @@ class LogTable extends DataManager
 		}
 		$log = array(
 			"MIGRATION_DATETIME" => DateTime::createFromTimestamp(static::$migrationTime),
-			"MODULE_NAME" => $record->getData()->getModule(),
-			"ENTITY_NAME" => $record->getData()->getEntityName(),
-			"DATA_XML_ID" => $record->getXmlId(),
+			"RESULT" => true,
 		);
-		if ($id = $record->getId())
+		return $log;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $data
+	 *
+	 * @return array
+	 */
+	protected static function dataToLog(BaseData $data)
+	{
+		return array(
+			"MODULE_NAME" => $data->getModule(),
+			"ENTITY_NAME" => $data->getEntityName(),
+		);
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $id
+	 *
+	 * @return array
+	 * @throws \Exception
+	 */
+	protected static function idToLog(RecordId $id)
+	{
+		$log = array();
+		if ($id->getType() == RecordId::TYPE_NUMERIC)
 		{
-			if ($id->getType() == RecordId::TYPE_NUMERIC)
-			{
-				$log["DATA_ID_NUM"] = $id->getValue();
-			}
-			if ($id->getType() == RecordId::TYPE_STRING)
-			{
-				$log["DATA_ID_STR"] = $id->getValue();
-			}
-			if ($id->getType() == RecordId::TYPE_COMPLEX)
-			{
-				$log["DATA_ID_COMPLEX"] = $id->getValue();
-			}
+			$log["DATA_ID_NUM"] = $id->getValue();
+		}
+		if ($id->getType() == RecordId::TYPE_STRING)
+		{
+			$log["DATA_ID_STR"] = $id->getValue();
+		}
+		if ($id->getType() == RecordId::TYPE_COMPLEX)
+		{
+			$log["DATA_ID_COMPLEX"] = $id->getValue();
 		}
 		return $log;
 	}
@@ -140,7 +189,7 @@ class LogTable extends DataManager
 	 */
 	public static function logError(Record $record, $operation, $error)
 	{
-		$log = static::prepareLog($record);
+		$log = static::recordToLog($record);
 		$log["RESULT"] = false;
 		$log["OPERATION"] = $operation;
 		$log["COMMENT"] = $error;
@@ -159,5 +208,31 @@ class LogTable extends DataManager
 
 		$sql = "DELETE FROM $tableName";
 		return $connection->query($sql);
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Tool\XmlIdValidateError $error
+	 * @param \Exception $exception
+	 *
+	 * @throws \Exception
+	 */
+	public static function logErrorFix(XmlIdValidateError $error, \Exception $exception = null)
+	{
+		$log = static::prepareLog();
+		$log = array_merge($log, static::dataToLog($error->getDataClass()));
+		if ($id = $error->getId())
+		{
+			$log = array_merge($log, static::idToLog($id));
+		}
+		if ($exception)
+		{
+			$log = array_merge($log, static::exceptionToLog($exception));
+		}
+		if ($xmlId = $error->getXmlId())
+		{
+			$log["DATA_XML_ID"] = $xmlId;
+		}
+		$log["OPERATION"] = "xmlid error fix";
+		static::add($log);
 	}
 }

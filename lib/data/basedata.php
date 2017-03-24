@@ -267,7 +267,7 @@ abstract class BaseData
 	/**
 	 * @param \Intervolga\Migrato\Data\RecordId $id
 	 *
-	 * @return bool
+	 * @return string
 	 */
 	public function generateXmlId($id)
 	{
@@ -277,8 +277,9 @@ abstract class BaseData
 		}
 		else
 		{
-			$this->setXmlId($id, $this->makeXmlId());
-			return true;
+			$xmlId = $this->makeXmlId();
+			$this->setXmlId($id, $xmlId);
+			return $xmlId;
 		}
 	}
 

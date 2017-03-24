@@ -41,11 +41,13 @@ abstract class BaseXmlIdProvider
 	/**
 	 * @param \Intervolga\Migrato\Data\RecordId $id
 	 *
-	 * @return bool
+	 * @return string
 	 */
 	public function generateXmlId($id)
 	{
-		return $this->setXmlId($id, $this->makeXmlId());
+		$xmlId = $this->makeXmlId();
+		$this->setXmlId($id, $this->makeXmlId());
+		return $xmlId;
 	}
 
 	/**
