@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS intervolga_migrato_data(
 	ID INT(11) NOT NULL AUTO_INCREMENT,
+	TIMESTAMP_X timestamp not null default current_timestamp,
 	MODULE_NAME VARCHAR(200),
 	ENTITY_NAME VARCHAR(200),
 	DATA_XML_ID VARCHAR(200) NOT NULL,
