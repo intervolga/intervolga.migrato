@@ -5,14 +5,14 @@ use Bitrix\Sale\Internals\PersonTypeSiteTable;
 use Bitrix\Sale\Internals\PersonTypeTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
 
 class PersonType extends BaseData
 {
 	public function __construct()
 	{
 		Loader::includeModule("sale");
-		$this->xmlIdProvider = new UfXmlIdProvider($this);
+		$this->xmlIdProvider = new TableXmlIdProvider($this);
 	}
 
 	public function getList(array $filter = array())

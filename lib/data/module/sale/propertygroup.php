@@ -5,14 +5,14 @@ use Bitrix\Sale\Internals\OrderPropsGroupTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
 
 class PropertyGroup extends BaseData
 {
 	public function __construct()
 	{
 		Loader::includeModule("sale");
-		$this->xmlIdProvider = new UfXmlIdProvider($this, "ORDERPROPGROUP");
+		$this->xmlIdProvider = new TableXmlIdProvider($this);
 	}
 
 	public function getFilesSubdir()
