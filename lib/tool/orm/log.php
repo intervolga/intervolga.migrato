@@ -67,46 +67,44 @@ class LogTable extends DataManager
 		return parent::getCount($filter);
 	}
 
-	/**
-	 * @param \Intervolga\Migrato\Data\Record $record
-	 * @param string $operation
-	 * @param \Exception|null $exception
-	 */
-	public static function logException(Record $record, $operation, \Exception $exception)
+	public static function add(array $data)
 	{
-		$log = static::recordToLog($record);
-		$log = array_merge($log, static::exceptionToLog($exception));
-		$log["OPERATION"] = $operation;
-		static::add($log);
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Record $record
-	 * @param string $operation
-	 */
-	public static function log(Record $record, $operation)
-	{
-		$log = static::recordToLog($record);
-		$log["OPERATION"] = $operation;
-		static::add($log);
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Record $record
-	 *
-	 * @return array
-	 * @throws \Exception
-	 */
-	protected static function recordToLog(Record $record)
-	{
-		$log = static::prepareLog();
-		$log["DATA_XML_ID"] = $record->getXmlId();
-		$log = array_merge($log, static::dataToLog($record->getData()));
-		if ($id = $record->getId())
+		if (!array_key_exists("RESULT", $data))
 		{
-			$log = array_merge($log, static::idToLog($id));
+			$data["RESULT"] = true;
 		}
-		return $log;
+		if (!array_key_exists("MIGRATION_DATETIME", $data))
+		{
+			$data["MIGRATION_DATETIME"] = static::getMigrationDateTime();
+		}
+		if ($data["XML_ID_ERROR"])
+		{
+			$data = array_merge($data, static::xmlIdErrorToLog($data["XML_ID_ERROR"]));
+			unset($data["XML_ID_ERROR"]);
+		}
+		if ($data["RECORD"])
+		{
+			$data = array_merge($data, static::recordToLog($data["RECORD"]));
+			unset($data["RECORD"]);
+		}
+		if ($data["EXCEPTION"])
+		{
+			$data = array_merge($data, static::exceptionToLog($data["EXCEPTION"]));
+			unset($data["EXCEPTION"]);
+		}
+		parent::add($data);
+	}
+
+	/**
+	 * @return DateTime
+	 */
+	protected static function getMigrationDateTime()
+	{
+		if (!static::$migrationTime)
+		{
+			static::$migrationTime = time();
+		}
+		return DateTime::createFromTimestamp(static::$migrationTime);
 	}
 
 	/**
@@ -123,6 +121,24 @@ class LogTable extends DataManager
 		if ($exception->getCode())
 		{
 			$log["COMMENT"] .= " (" . $exception->getCode() . ")";
+		}
+		return $log;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return array
+	 * @throws \Exception
+	 */
+	protected static function recordToLog(Record $record)
+	{
+		$log = static::prepareLog();
+		$log["DATA_XML_ID"] = $record->getXmlId();
+		$log = array_merge($log, static::dataToLog($record->getData()));
+		if ($id = $record->getId())
+		{
+			$log = array_merge($log, static::idToLog($id));
 		}
 		return $log;
 	}
@@ -181,19 +197,23 @@ class LogTable extends DataManager
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\Record $record
-	 * @param string $operation
-	 * @param string $error
+	 * @param \Intervolga\Migrato\Tool\XmlIdValidateError $error
 	 *
-	 * @throws \Exception
+	 * @return array
 	 */
-	public static function logError(Record $record, $operation, $error)
+	protected static function xmlIdErrorToLog(XmlIdValidateError $error)
 	{
-		$log = static::recordToLog($record);
-		$log["RESULT"] = false;
-		$log["OPERATION"] = $operation;
-		$log["COMMENT"] = $error;
-		static::add($log);
+		$log = array();
+		if ($error->getDataClass())
+		{
+			$log = array_merge($log, static::dataToLog($error->getDataClass()));
+		}
+		if ($error->getId())
+		{
+			$log = array_merge($log, static::idToLog($error->getId()));
+		}
+		$log["DATA_XML_ID"] = $error->getXmlId();
+		return $log;
 	}
 
 	/**
@@ -208,31 +228,5 @@ class LogTable extends DataManager
 
 		$sql = "DELETE FROM $tableName";
 		return $connection->query($sql);
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Tool\XmlIdValidateError $error
-	 * @param \Exception $exception
-	 *
-	 * @throws \Exception
-	 */
-	public static function logErrorFix(XmlIdValidateError $error, \Exception $exception = null)
-	{
-		$log = static::prepareLog();
-		$log = array_merge($log, static::dataToLog($error->getDataClass()));
-		if ($id = $error->getId())
-		{
-			$log = array_merge($log, static::idToLog($id));
-		}
-		if ($exception)
-		{
-			$log = array_merge($log, static::exceptionToLog($exception));
-		}
-		if ($xmlId = $error->getXmlId())
-		{
-			$log["DATA_XML_ID"] = $xmlId;
-		}
-		$log["OPERATION"] = "xmlid error fix";
-		static::add($log);
 	}
 }

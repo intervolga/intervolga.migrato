@@ -154,7 +154,11 @@ class BaseProcess
 			if ($errorType)
 			{
 				$errors[] = new XmlIdValidateError($dataClass, $errorType, $record->getId(), $record->getXmlId());
-				LogTable::logError($record, "validate", XmlIdValidateError::typeToString($errorType));
+				LogTable::add(array(
+					"RECORD" => $record,
+					"OPERATION" => "validate",
+					"COMMENT" => XmlIdValidateError::typeToString($errorType),
+				));
 			}
 		}
 
@@ -182,11 +186,18 @@ class BaseProcess
 			{
 				$xmlId = $error->getDataClass()->generateXmlId($error->getId());
 				$error->setXmlId($xmlId);
-				LogTable::logErrorFix($error);
+				LogTable::add(array(
+					"XML_ID_ERROR" => $error,
+					"OPERATION" => "xmlid error fix",
+				));
 			}
 			catch (\Exception $exception)
 			{
-				LogTable::logErrorFix($error, $exception);
+				LogTable::add(array(
+					"XML_ID_ERROR" => $error,
+					"EXCEPTION" => $exception,
+					"OPERATION" => "xmlid error fix",
+				));
 			}
 		}
 	}
@@ -323,7 +334,11 @@ class BaseProcess
 		if ($exception)
 		{
 			static::reportRecordException($record, $exception, $operation);
-			LogTable::logException($record, $operation, $exception);
+			LogTable::add(array(
+				"RECORD" => $record,
+				"OPERATION" => $operation,
+				"EXCEPTION" => $exception,
+			));
 		}
 		else
 		{
@@ -333,7 +348,10 @@ class BaseProcess
 				$record->getXmlId(),
 				!$exception
 			);
-			LogTable::log($record, $operation);
+			LogTable::add(array(
+				"RECORD" => $record,
+				"OPERATION" => $operation,
+			));
 		}
 	}
 
