@@ -57,4 +57,57 @@ class PropertyVariant extends BaseData
 
 		return $result;
 	}
+
+	public function create(Record $record)
+	{
+		$create = $this->recordToArray($record);
+		$addResult = OrderPropsVariantTable::add($create);
+		if ($addResult)
+		{
+			return $this->createId($addResult->getId());
+		}
+		else
+		{
+			throw new \Exception(implode("<br>", $addResult->getErrorMessages()));
+		}
+	}
+
+	public function update(Record $record)
+	{
+		$array = $this->recordToArray($record);
+		$updateResult = OrderPropsVariantTable::update($record->getId()->getValue(), $array);
+		if (!$updateResult)
+		{
+			throw new \Exception(implode("<br>", $updateResult->getErrorMessages()));
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return \string[]
+	 * @throws \Exception
+	 */
+	protected function recordToArray(Record $record)
+	{
+		$array = $record->getFieldsRaw();
+		if ($id = $record->getDependency("ORDER_PROPS_ID")->findId())
+		{
+			$array["ORDER_PROPS_ID"] = $id->getValue();
+		}
+
+		return $array;
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId);
+		if ($id)
+		{
+			if (!OrderPropsVariantTable::delete($id->getValue()))
+			{
+				throw new \Exception("Unknown error");
+			}
+		}
+	}
 }
