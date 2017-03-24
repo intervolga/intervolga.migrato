@@ -395,10 +395,12 @@ class ImportData extends BaseProcess
 				$clone->setId($dataRecord->getData()->findRecord($dataRecord->getXmlId()));
 				$clone->update();
 				static::reportRecord($dataRecord, "updated references");
+				static::addStatistics($dataRecord, "update reference");
 			}
 			catch (\Exception $exception)
 			{
 				static::reportRecordException($dataRecord, $exception, "update reference");
+				static::addStatistics($dataRecord, "update reference", $exception);
 			}
 		}
 	}
