@@ -143,7 +143,10 @@ class Property extends BaseData
 		$array = $record->getFieldsRaw(array("SETTINGS"));
 		if ($link = $record->getDependency("PERSON_TYPE_ID"))
 		{
-			$array["PERSON_TYPE_ID"] = $link->findId()->getValue();
+			if ($id = $link->findId())
+			{
+				$array["PERSON_TYPE_ID"] = $id->getValue();
+			}
 		}
 		if ($link = $record->getReference("PROPS_GROUP_ID"))
 		{
