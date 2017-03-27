@@ -32,6 +32,7 @@ class Value
 		{
 			$list["$root.$key"] = $value;
 		}
+		ksort($list);
 		return $list;
 	}
 
