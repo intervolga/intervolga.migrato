@@ -8,7 +8,12 @@ class EventType extends BaseData
 	public function getList(array $filter = array())
 	{
 		$result = array();
-		$getList = \CEventType::getList();
+		$getList = \CEventType::getList(
+			array(),
+			array(
+				"LID" => "ASC",
+			)
+		);
 		while ($type = $getList->fetch())
 		{
 			$record = new Record($this);
