@@ -153,25 +153,25 @@ class Element extends BaseData
 		}
 	}
 
-	public function findRecord($xmlId)
+	public function findRecords(array $xmlIds)
 	{
+		$result = array();
 		$parameters = array(
 			"select" => array(
 				"ID",
+				"XML_ID",
 			),
 			"filter" => array(
-				"=XML_ID" => $xmlId,
+				"=XML_ID" => $xmlIds,
 			),
 		);
-		$element = ElementTable::getList($parameters)->fetch();
-		if ($element["ID"])
+		$getList = ElementTable::getList($parameters);
+		while ($element = $getList->fetch())
 		{
-			return RecordId::createNumericId($element["ID"]);
+			$result[$element["XML_ID"]] = RecordId::createNumericId($element["ID"]);
 		}
-		else
-		{
-			return null;
-		}
+
+		return $result;
 	}
 
 	/**
