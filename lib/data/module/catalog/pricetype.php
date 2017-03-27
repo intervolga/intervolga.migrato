@@ -69,6 +69,7 @@ class PriceType extends BaseData
 					$viewGroupsXmlIds[] = $groupXmlId;
 				}
 			}
+			sort($viewGroupsXmlIds);
 			$link->setValues($viewGroupsXmlIds);
 			$record->setDependency($type, $link);
 		}
