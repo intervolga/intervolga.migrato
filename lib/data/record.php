@@ -86,7 +86,7 @@ class Record extends BaseDataObject
 			{
 				if (in_array($root, $treeRoots))
 				{
-					foreach (array_keys($treeRoots) as $treeFieldName)
+					foreach (array_keys($treeFields) as $treeFieldName)
 					{
 						unset($result[$root . "." . $treeFieldName]);
 					}
