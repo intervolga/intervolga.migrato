@@ -113,18 +113,7 @@ class Property extends BaseData
 
 	public function update(Record $record)
 	{
-		$fields = $record->getFieldsRaw();
-
-		$fields["IBLOCK_ID"] = $this->getIBlock($record);
-
-		if($reference = $record->getReference("LINK_IBLOCK_ID"))
-		{
-			if($reference->getId())
-			{
-				$fields["LINK_IBLOCK_ID"] = $reference->getId()->getValue();
-			}
-		}
-
+		$fields = $this->recordToArray($record);
 		$propertyObject = new \CIBlockProperty();
 		$isUpdated = $propertyObject->update($record->getId()->getValue(), $fields);
 		if (!$isUpdated)
@@ -133,12 +122,34 @@ class Property extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return \string[]
+	 * @throws \Exception
+	 */
+	protected function recordToArray(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
-
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
+		if ($reference = $record->getReference("LINK_IBLOCK_ID"))
+		{
+			if ($reference->getId())
+			{
+				$fields["LINK_IBLOCK_ID"] = $reference->getId()->getValue();
+			}
+		}
+		if ($fields["MULTIPLE_CNT"] === "")
+		{
+			$fields["MULTIPLE_CNT"] = false;
+		}
 
+		return $fields;
+	}
+
+	public function create(Record $record)
+	{
+		$fields = $this->recordToArray($record);
 		$propertyObject = new \CIBlockProperty();
 		$propertyId = $propertyObject->add($fields);
 		if ($propertyId)
