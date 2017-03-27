@@ -3,7 +3,7 @@
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\Link;
-use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
 
 class Event extends BaseData
 {
@@ -11,7 +11,7 @@ class Event extends BaseData
 
 	public function __construct()
 	{
-		$this->xmlIdProvider = new UfXmlIdProvider($this);
+		$this->xmlIdProvider = new TableXmlIdProvider($this);
 	}
 
 	public function getFilesSubdir()
