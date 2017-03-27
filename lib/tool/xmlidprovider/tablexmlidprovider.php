@@ -105,13 +105,9 @@ class TableXmlIdProvider extends BaseXmlIdProvider
 		return $filter;
 	}
 
-	/**
-	 * @param string $xmlId
-	 *
-	 * @return \Intervolga\Migrato\Data\RecordId|null
-	 */
-	public function findRecord($xmlId)
+	public function findRecords(array $xmlIds)
 	{
+		$result = array();
 		$parameters = array(
 			"select" => array(
 				"DATA_XML_ID",
@@ -120,27 +116,25 @@ class TableXmlIdProvider extends BaseXmlIdProvider
 				"DATA_ID_COMPLEX",
 			),
 			"filter" => array(
-				"=DATA_XML_ID" => $xmlId,
+				"=DATA_XML_ID" => $xmlIds,
 			),
-			"limit" => 1,
 		);
-		$record = XmlIdTable::getList($parameters)->fetch();
-
-		if ($record["DATA_ID_NUM"])
+		$getList = XmlIdTable::getList($parameters);
+		while ($record = $getList->fetch())
 		{
-			return RecordId::createNumericId($record["DATA_ID_NUM"]);
+			if ($record["DATA_ID_NUM"])
+			{
+				$result[$record["DATA_XML_ID"]] = RecordId::createNumericId($record["DATA_ID_NUM"]);
+			}
+			elseif (strlen($record["DATA_ID_STR"]))
+			{
+				$result[$record["DATA_XML_ID"]] = RecordId::createStringId($record["DATA_ID_STR"]);
+			}
+			elseif ($record["DATA_ID_COMPLEX"])
+			{
+				$result[$record["DATA_XML_ID"]] = RecordId::createComplexId($record["DATA_ID_COMPLEX"]);
+			}
 		}
-		elseif (strlen($record["DATA_ID_STR"]))
-		{
-			return RecordId::createStringId($record["DATA_ID_STR"]);
-		}
-		elseif ($record["DATA_ID_COMPLEX"])
-		{
-			return RecordId::createComplexId($record["DATA_ID_COMPLEX"]);
-		}
-		else
-		{
-			return null;
-		}
+		return $result;
 	}
 }

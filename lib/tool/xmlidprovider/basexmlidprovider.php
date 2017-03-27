@@ -86,4 +86,15 @@ abstract class BaseXmlIdProvider
 		$xmlid = implode("-", str_split($xmlid, 6));
 		return $prefix.$xmlid;
 	}
+
+	/**
+	 * @param string[] $xmlIds
+	 *
+	 * @return \Intervolga\Migrato\Data\RecordId[]
+	 * @throws \Bitrix\Main\NotImplementedException
+	 */
+	public function findRecords(array $xmlIds)
+	{
+		throw new NotImplementedException("Not implemented yet");
+	}
 }

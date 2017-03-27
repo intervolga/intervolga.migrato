@@ -81,17 +81,24 @@ abstract class BaseData
 	 */
 	public function findRecords(array $xmlIds)
 	{
-		$result = array();
-		$allRecords = static::getList();
-		foreach ($allRecords as $dbRecord)
+		if ($this->xmlIdProvider)
 		{
-			if (in_array($dbRecord->getXmlId(), $xmlIds))
-			{
-				$result[$dbRecord->getXmlId()] = $dbRecord->getId();
-			}
+			return $this->xmlIdProvider->findRecords($xmlIds);
 		}
+		else
+		{
+			$result = array();
+			$allRecords = static::getList();
+			foreach ($allRecords as $dbRecord)
+			{
+				if (in_array($dbRecord->getXmlId(), $xmlIds))
+				{
+					$result[$dbRecord->getXmlId()] = $dbRecord->getId();
+				}
+			}
 
-		return $result;
+			return $result;
+		}
 	}
 
 	/**
