@@ -178,9 +178,21 @@ class PriceType extends BaseData
 	 */
 	protected function recordToArray(Record $record)
 	{
-		$array = $record->getFieldsRaw();
-		$array["USER_GROUP"] = $record->getDependency("USER_GROUP")->findIds();
-		$array["USER_GROUP_BUY"] = $record->getDependency("USER_GROUP_BUY")->findIds();
+		$array = $record->getFieldsRaw(array("USER_LANG"));
+		if ($dependency = $record->getDependency("USER_GROUP"))
+		{
+			foreach ($dependency->findIds() as $id)
+			{
+				$array["USER_GROUP"][] = $id->getValue();
+			}
+		}
+		if ($dependency = $record->getDependency("USER_GROUP_BUY"))
+		{
+			foreach ($dependency->findIds() as $id)
+			{
+				$array["USER_GROUP_BUY"][] = $id->getValue();
+			}
+		}
 
 		return $array;
 	}
