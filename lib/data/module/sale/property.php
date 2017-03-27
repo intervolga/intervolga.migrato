@@ -100,28 +100,24 @@ class Property extends BaseData
 	public function update(Record $record)
 	{
 		$array = $this->recordToArray($record);
-		$object = new \CSaleOrderProps();
-		$updateResult = $object->update($record->getId()->getValue(), $array);
-		if (!$updateResult)
+		$updateResult = OrderPropsTable::update($record->getId()->getValue(), $array);
+		if ($updateResult->getErrorMessages())
 		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->getException()->getString());
+			throw new \Exception(implode("<br>", $updateResult->getErrorMessages()));
 		}
 	}
 
 	public function create(Record $record)
 	{
 		$array = $this->recordToArray($record);
-		$object = new \CSaleOrderProps();
-		$id = $object->add($array);
-		if ($id)
+		$addResult = OrderPropsTable::add($array);
+		if ($addResult->isSuccess())
 		{
-			return $this->createId($id);
+			return $this->createId($addResult->getId());
 		}
 		else
 		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->getException()->getString());
+			throw new \Exception(implode("<br>", $addResult->getErrorMessages()));
 		}
 	}
 
@@ -130,8 +126,7 @@ class Property extends BaseData
 		$id = $this->findRecord($xmlId);
 		if ($id)
 		{
-			$object = new \CSaleOrderProps();
-			if (!$object->delete($id->getValue()))
+			if (!OrderPropsTable::delete($id->getValue()))
 			{
 				throw new \Exception("Unknown error");
 			}
