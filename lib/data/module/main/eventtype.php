@@ -5,6 +5,8 @@ use Intervolga\Migrato\Data\Record;
 
 class EventType extends BaseData
 {
+	const XML_ID_SEPARATOR = "___";
+
 	public function getList(array $filter = array())
 	{
 		$result = array();
@@ -70,7 +72,7 @@ class EventType extends BaseData
 
 	public function setXmlId($id, $xmlId)
 	{
-		$fields = explode("___", $xmlId);
+		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
 		$isUpdated = \CEventType::update(
 			array("ID" => $id->getValue()),
 			array("LID" => $fields[0], "EVENT_NAME" => $fields[1])
@@ -87,11 +89,26 @@ class EventType extends BaseData
 		$eventType = \CEventType::GetList(array("ID" => $id->getValue()));
 		if ($type = $eventType->Fetch())
 		{
-			return $type["LID"] . "___" .  $type["EVENT_NAME"];
+			return $type["LID"] . static::XML_ID_SEPARATOR .  $type["EVENT_NAME"];
 		}
 		else
 		{
 			return "";
+		}
+	}
+
+	public function findRecord($xmlId)
+	{
+		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		$filter = array("LID" => $fields[0], "EVENT_NAME" => $fields[1]);
+		$record = \CEventType::getList($filter)->fetch();
+		if ($record["ID"])
+		{
+			return $this->createId($record["ID"]);
+		}
+		else
+		{
+			return null;
 		}
 	}
 }

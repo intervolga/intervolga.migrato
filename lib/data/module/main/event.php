@@ -137,4 +137,9 @@ class Event extends BaseData
 			throw new \Exception("Unknown error");
 		}
 	}
+
+	public function findRecord($xmlId)
+	{
+		return $this->xmlIdProvider->findRecord($xmlId);
+	}
 }
