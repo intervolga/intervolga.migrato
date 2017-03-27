@@ -104,4 +104,43 @@ class TableXmlIdProvider extends BaseXmlIdProvider
 
 		return $filter;
 	}
+
+	/**
+	 * @param string $xmlId
+	 *
+	 * @return \Intervolga\Migrato\Data\RecordId|null
+	 */
+	public function findRecord($xmlId)
+	{
+		$parameters = array(
+			"select" => array(
+				"DATA_XML_ID",
+				"DATA_ID_NUM",
+				"DATA_ID_STR",
+				"DATA_ID_COMPLEX",
+			),
+			"filter" => array(
+				"=DATA_XML_ID" => $xmlId,
+			),
+			"limit" => 1,
+		);
+		$record = XmlIdTable::getList($parameters)->fetch();
+
+		if ($record["DATA_ID_NUM"])
+		{
+			return RecordId::createNumericId($record["DATA_ID_NUM"]);
+		}
+		elseif (strlen($record["DATA_ID_STR"]))
+		{
+			return RecordId::createStringId($record["DATA_ID_STR"]);
+		}
+		elseif ($record["DATA_ID_COMPLEX"])
+		{
+			return RecordId::createComplexId($record["DATA_ID_COMPLEX"]);
+		}
+		else
+		{
+			return null;
+		}
+	}
 }
