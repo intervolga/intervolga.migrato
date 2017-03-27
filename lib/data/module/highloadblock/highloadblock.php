@@ -5,14 +5,14 @@ use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
-use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
 
 class HighloadBlock extends BaseData
 {
 	protected function __construct()
 	{
 		Loader::includeModule("highloadblock");
-		$this->xmlIdProvider = new UfXmlIdProvider($this, "HLBLOCK");
+		$this->xmlIdProvider = new TableXmlIdProvider($this);
 	}
 
 	public function getList(array $filter = array())
@@ -62,10 +62,13 @@ class HighloadBlock extends BaseData
 
 	public function delete($xmlId)
 	{
-		$result = HighloadBlockTable::delete($this->findRecord($xmlId)->getValue());
-		if (!$result->isSuccess())
+		if ($id = $this->findRecord($xmlId))
 		{
-			throw new \Exception(trim(strip_tags($result->getErrorMessages())));
+			$result = HighloadBlockTable::delete($id->getValue());
+			if (!$result->isSuccess())
+			{
+				throw new \Exception(trim(strip_tags($result->getErrorMessages())));
+			}
 		}
 	}
 }
