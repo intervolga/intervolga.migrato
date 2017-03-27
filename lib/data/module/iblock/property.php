@@ -6,6 +6,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
+use Intervolga\Migrato\Data\Value;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 class Property extends BaseData
@@ -48,9 +49,15 @@ class Property extends BaseData
 				"FILTRABLE" => $property["FILTRABLE"],
 				"IS_REQUIRED" => $property["IS_REQUIRED"],
 				"USER_TYPE" => $property["USER_TYPE"],
-				"USER_TYPE_SETTINGS" => $property["USER_TYPE_SETTINGS"],
 				"HINT" => $property["HINT"],
 			));
+			if ($property["USER_TYPE_SETTINGS"])
+			{
+				if ($userTypeSettings = unserialize($property["USER_TYPE_SETTINGS"]))
+				{
+					$record->addFieldsRaw(Value::treeToList($userTypeSettings, "USER_TYPE_SETTINGS"));
+				}
+			}
 
 			$dependency = clone $this->getDependency("IBLOCK_ID");
 			$dependency->setValue(
@@ -130,7 +137,7 @@ class Property extends BaseData
 	 */
 	protected function recordToArray(Record $record)
 	{
-		$fields = $record->getFieldsRaw();
+		$fields = $record->getFieldsRaw(array("USER_TYPE_SETTINGS"));
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 		if ($reference = $record->getReference("LINK_IBLOCK_ID"))
 		{
