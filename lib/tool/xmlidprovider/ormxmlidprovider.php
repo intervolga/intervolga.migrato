@@ -58,6 +58,7 @@ class OrmXmlIdProvider extends BaseXmlIdProvider
 		$parameters = array(
 			"select" => array(
 				"ID",
+				"XML_ID",
 			),
 			"filter" => array(
 				"=XML_ID" => $xmlIds,
