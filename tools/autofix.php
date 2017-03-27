@@ -1,54 +1,25 @@
 <?php
-$_SERVER["DOCUMENT_ROOT"] = realpath(dirname(__FILE__)."/../../../..");
-$DOCUMENT_ROOT = $_SERVER["DOCUMENT_ROOT"];
+include dirname(__DIR__) . "/include/tools_before.php";
 
-define("NO_KEEP_STATISTIC", true);
-define("NOT_CHECK_PERMISSIONS",true);
-define('NO_AGENT_CHECK', true);
-define("STATISTIC_SKIP_ACTIVITY_CHECK", true);
-$isCli = php_sapi_name() == "cli";
-
-require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
-if (!$isCli && !$USER->IsAdmin())
+try
 {
-	die("Access denied");
-}
-
-@set_time_limit(0);
-if (\Bitrix\Main\Loader::includeModule("intervolga.migrato"))
-{
-	try
+	$report = array();
+	\Intervolga\Migrato\Tool\Process\BaseProcess::run();
+	$errors = \Intervolga\Migrato\Tool\Process\BaseProcess::validate();
+	if (!$errors)
 	{
-		$report = array();
-		$errors = \Intervolga\Migrato\Tool\Process\BaseProcess::validate();
-		if (!$errors)
-		{
-			$report[] = "No validation errors";
-		}
-		else
-		{
-			\Intervolga\Migrato\Tool\Process\BaseProcess::fixErrors($errors);
-			$report[] = "Errors fixed";
-		}
+		$report[] = "No validation errors";
 	}
-	catch (\Exception $exception)
+	else
 	{
-		$report = array(
-			"EXCEPTION (Class: " . get_class($exception) . ")",
-			"Message: " . $exception->getMessage() . " (Code: " . $exception->getCode() . ")",
-			"Location: " . $exception->getFile() . ":" . $exception->getLine()
-		);
+		$fixed = \Intervolga\Migrato\Tool\Process\BaseProcess::fixErrors($errors);
+		$report[] = "Errors fixed ($fixed/" . count($errors) . ")";
 	}
+	\Intervolga\Migrato\Tool\Page::showReport($report);
 }
-else
+catch (\Exception $exception)
 {
-	$report = array("Module intervolga.migrato not installed");
+	\Intervolga\Migrato\Tool\Page::handleException($exception);
 }
-if ($isCli)
-{
-	echo implode("\r\n", $report)."\r\n";
-}
-else
-{
-	echo "<pre>" . implode("<br>", $report) . "</pre>";
-}
+
+include dirname(__DIR__) . "/include/tools_after.php";

@@ -31,7 +31,7 @@ class Section extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($section["XML_ID"]);
 			$record->setId(RecordId::createNumericId($section["ID"]));
-			$record->setFields(array(
+			$record->addFieldsRaw(array(
 				"NAME"              => $section["NAME"],
 				"CODE"              => $section["CODE"],
 				"ACTIVE"            => $section["ACTIVE"],
@@ -42,16 +42,48 @@ class Section extends BaseData
 			));
 
 			$dependency = clone $this->getDependency("IBLOCK_ID");
-			$dependency->setValue(Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($section["IBLOCK_ID"])));
-			$record->addDependency("IBLOCK_ID", $dependency);
+			$dependency->setValue(Iblock::getInstance()->getXmlId(RecordId::createNumericId($section["IBLOCK_ID"])));
+			$record->setDependency("IBLOCK_ID", $dependency);
 
-			$link = new Link(self::getInstance(), $this->getXmlIdProvider()->getXmlId(RecordId::createNumericId($section["IBLOCK_SECTION_ID"])));
+			$link = new Link(self::getInstance(), $this->getXmlId(RecordId::createNumericId($section["IBLOCK_SECTION_ID"])));
 			$record->setReferences(array("IBLOCK_SECTION_ID" => $link));
+
+			$rsSection = \CIBlockSection::GetList(array(), array("IBLOCK_ID" => $section["IBLOCK_ID"], "ID" => $section["ID"]), false, array("UF_*"));
+			if($arSection = $rsSection->Fetch())
+			{
+				$this->addRuntime($record, $arSection, $section["IBLOCK_ID"]);
+			}
+
 
 			$result[] = $record;
 		}
 
 		return $result;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @param array $section
+	 * @param int $iblockId
+	 */
+	protected function addRuntime(Record $record, array $section, $iblockId)
+	{
+		$runtime = clone $this->getRuntime("FIELD");
+
+		$fields = Field::getInstance()->getList(array("IBLOCK_ID" => $iblockId));
+		foreach ($fields as $field)
+		{
+			/**
+			 * @var Record $field
+			 */
+			$fieldName = $field->getFieldRaw("FIELD_NAME");
+			Field::getInstance()->fillRuntime($runtime, $field, $section[$fieldName]);
+		}
+
+		if ($runtime->getFields() || $runtime->getDependencies() || $runtime->getReferences())
+		{
+			$record->setRuntime("FIELD", $runtime);
+		}
 	}
 
 	public function getDependencies()
@@ -68,34 +100,99 @@ class Section extends BaseData
 		);
 	}
 
+	public function getRuntimes()
+	{
+		return array(
+			"FIELD" => new Runtime(Field::getInstance()),
+		);
+	}
+
 	public function getIBlock(Record $record)
 	{
 		$iblockId = null;
-		if($iblockIdXml = $record->getDependency("IBLOCK_ID"))
+
+		if($iblock = $record->getDependency("IBLOCK_ID"))
 		{
-			$iblockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
+			if($iblockId = $iblock->getId())
+			{
+				$iblockId = $iblockId->getValue();
+			}
 		}
-		else
+		elseif($id = $record->getId())
 		{
-			$rsSection = \CIBlockSection::GetByID($record->getId()->getValue());
+			$rsSection = \CIBlockSection::GetByID($id->getValue());
 			if($arSection = $rsSection->Fetch())
 				$iblockId = intval($arSection["IBLOCK_ID"]);
 		}
 		if(!$iblockId)
 		{
-			throw new \Exception("Not found IBlock for the section " . $record->getId()->getValue());
+			throw new \Exception("Not found IBlock for the section " . $record->getXmlId());
 		}
 		return $iblockId;
 	}
 
+	public function getRuntimesFields($fields)
+	{
+		$result = array();
+
+		/**
+		 * @var \Intervolga\Migrato\Data\Link  $value
+		 */
+		foreach($fields as $key => $value)
+		{
+			if($fieldId = Field::getInstance()->findRecord($key))
+			{
+				$field = \CUserTypeEntity::GetByID($fieldId->getValue());
+
+				$result[$field["FIELD_NAME"]] = $value->getValue();
+			}
+		}
+		return $result;
+	}
+
+	public function getRuntimesLinks($links)
+	{
+		$result = array();
+
+		/**
+		 * @var \Intervolga\Migrato\Data\Link  $link
+		 */
+		foreach($links as $key => $link)
+		{
+			if($fieldId = Field::getInstance()->findRecord($key))
+			{
+				$field = \CUserTypeEntity::GetByID($fieldId->getValue());
+				if(!$link->isMultiple())
+				{
+					$id = $link->getId() ? $link->getId()->getValue() : null;
+					if(is_array($id))
+					{
+						$id = $id["ID"];
+					}
+					$result[$field["FIELD_NAME"]] = $id;
+				}
+				else
+				{
+					$result[$field["FIELD_NAME"]] = $link->getIds();
+				}
+			}
+		}
+		return $result;
+	}
+
 	public function update(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
 
-		$reference = $record->getReference("IBLOCK_SECTION_ID");
-		$reference = $reference->getValue() ? self::findRecord($reference->getValue())->getValue() : null;
-		$fields["IBLOCK_SECTION_ID"] = $reference;
+		$reference = $record->getReference("IBLOCK_SECTION_ID")->getId();
+		$fields["IBLOCK_SECTION_ID"] = $reference ? $reference->getValue() : null;
+
+		$runtimes = $record->getRuntime("FIELD");
+
+		$fields = array_merge($fields, $this->getRuntimesFields($runtimes->getFields()));
+		$fields = array_merge($fields, $this->getRuntimesLinks($runtimes->getDependencies()));
+		$fields = array_merge($fields, $this->getRuntimesLinks($runtimes->getReferences()));
 
 		$sectionObject = new \CIBlockSection();
 		$isUpdated = $sectionObject->update($record->getId()->getValue(), $fields);
@@ -107,17 +204,17 @@ class Section extends BaseData
 
 	public function create(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
+
+		$fields = array_merge($fields, $this->getRuntimesFields($record->getRuntime("FIELD")->getFields()));
+		$fields = array_merge($fields, $this->getRuntimesLinks($record->getRuntime("FIELD")->getDependencies()));
 
 		$sectionObject = new \CIBlockSection();
 		$sectionId = $sectionObject->add($fields);
 		if ($sectionId)
 		{
-			$id = RecordId::createNumericId($sectionId);
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-			return $id;
+			return $this->createId($sectionId);
 		}
 		else
 		{

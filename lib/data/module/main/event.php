@@ -2,9 +2,8 @@
 
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
-use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
 
 class Event extends BaseData
 {
@@ -12,7 +11,7 @@ class Event extends BaseData
 
 	public function __construct()
 	{
-		$this->xmlIdProvider = new UfXmlIdProvider($this);
+		$this->xmlIdProvider = new TableXmlIdProvider($this);
 	}
 
 	public function getFilesSubdir()
@@ -29,10 +28,10 @@ class Event extends BaseData
 		while ($message = $getList->fetch())
 		{
 			$record = new Record($this);
-			$id = RecordId::createNumericId($message["ID"]);
-			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
+			$id = $this->createId($message["ID"]);
+			$record->setXmlId($this->getXmlId($id));
 			$record->setId($id);
-			$record->setFields(array(
+			$record->addFieldsRaw(array(
 				"LID" => $message["LID"],
 				"ACTIVE" => $message["ACTIVE"],
 				"EMAIL_FROM" => $message["EMAIL_FROM"],
@@ -45,7 +44,7 @@ class Event extends BaseData
 
 			$dependency = clone $this->getDependency(static::DEPENDENCY_EVENT_NAME);
 			$dependency->setValue($this->getEventTypeXmlId($message["EVENT_NAME"]));
-			$record->addDependency(static::DEPENDENCY_EVENT_NAME, $dependency);
+			$record->setDependency(static::DEPENDENCY_EVENT_NAME, $dependency);
 
 			if ($record->getDependencies())
 			{
@@ -95,7 +94,7 @@ class Event extends BaseData
 	public function update(Record $record)
 	{
 		$eventMessageObject = new \CEventMessage();
-		$isUpdated = $eventMessageObject->update($record->getId()->getValue(), $record->getFieldsStrings());
+		$isUpdated = $eventMessageObject->update($record->getId()->getValue(), $record->getFieldsRaw());
 		if (!$isUpdated)
 		{
 			throw new \Exception(trim(strip_tags($eventMessageObject->LAST_ERROR)));
@@ -104,28 +103,41 @@ class Event extends BaseData
 
 	public function create(Record $record)
 	{
-		$eventMessageObject = new \CEventMessage();
-		$eventMessageId = $eventMessageObject->add($record->getFieldsStrings());
-		if ($eventMessageId)
-		{
-			$id = RecordId::createNumericId($eventMessageId);
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
+		$fields = $record->getFieldsRaw();
 
-			return $id;
+		if($eventType = $record->getDependency("EVENT_NAME")->getId())
+		{
+			$rsEventType = \CEventType::GetList(array("ID" => $eventType->getValue()));
+			if($arEventType = $rsEventType->Fetch())
+			{
+				$fields["EVENT_NAME"] = $arEventType["EVENT_NAME"];
+			}
+
+			$eventMessageObject = new \CEventMessage();
+			$eventMessageId = $eventMessageObject->add($fields);
+			if ($eventMessageId)
+			{
+				return $this->createId($eventMessageId);
+			}
+			else
+			{
+				throw new \Exception(trim(strip_tags($eventMessageObject->LAST_ERROR)));
+			}
 		}
 		else
-		{
-			throw new \Exception(trim(strip_tags($eventMessageObject->LAST_ERROR)));
-		}
+			throw new \Exception("Не задано поле EVENT_TYPE для почтового шаблона с xmlId " . $record->getXmlId());
 	}
 
 	public function delete($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		$eventMessageObject = new \CEventMessage();
-		if (!$eventMessageObject->delete($id->getValue()))
+		if ($id)
 		{
-			throw new \Exception("Unknown error");
+			$eventMessageObject = new \CEventMessage();
+			if (!$eventMessageObject->delete($id->getValue()))
+			{
+				throw new \Exception("Unknown error");
+			}
 		}
 	}
 }

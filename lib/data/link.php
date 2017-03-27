@@ -59,10 +59,94 @@ class Link extends Value
 	}
 
 	/**
+	 * @param \Intervolga\Migrato\Data\RecordId[] $ids
+	 */
+	public function setIds(array $ids)
+	{
+		$this->id = $ids;
+	}
+
+	/**
 	 * @return \Intervolga\Migrato\Data\RecordId
 	 */
 	public function getId()
 	{
 		return $this->id;
+	}
+
+	/**
+	 * @return array
+	 * @throws \Exception
+	 */
+	public function getIds()
+	{
+		if($this->isMultiple())
+		{
+			$ids = array();
+
+			/**
+			 * @var \Intervolga\Migrato\Data\RecordId $id
+			 */
+			foreach($this->id as $id)
+			{
+				$ids[] = $id->getValue();
+			}
+			return $ids;
+		}
+		else
+		{
+			throw new \Exception("Use getId() for geting single id");
+		}
+	}
+
+	/**
+	 * @return \Intervolga\Migrato\Data\RecordId[]
+	 * @throws \Exception
+	 */
+	public function findIds()
+	{
+		if ($this->targetData)
+		{
+			if ($this->isMultiple())
+			{
+				$ids = array();
+				foreach ($this->getValues() as $xmlId)
+				{
+					$ids[] = $this->targetData->findRecord($xmlId);
+				}
+				return $ids;
+			}
+			else
+			{
+				throw new \Exception("Use findId() for finding single ids");
+			}
+		}
+		else
+		{
+			throw new \Exception("Set target data to find link id");
+		}
+	}
+
+	/**
+	 * @return \Intervolga\Migrato\Data\RecordId
+	 * @throws \Exception
+	 */
+	public function findId()
+	{
+		if ($this->targetData)
+		{
+			if (!$this->isMultiple())
+			{
+				return $this->targetData->findRecord($this->getValue());
+			}
+			else
+			{
+				throw new \Exception("Use findIds() for finding multiple ids");
+			}
+		}
+		else
+		{
+			throw new \Exception("Set target data to find link id");
+		}
 	}
 }

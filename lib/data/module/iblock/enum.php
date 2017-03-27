@@ -6,14 +6,12 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
-use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 class Enum extends BaseData
 {
 	public function __construct()
 	{
 		Loader::includeModule("iblock");
-		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\PropertyEnumerationTable");
 	}
 
 	public function getFilesSubdir()
@@ -30,7 +28,7 @@ class Enum extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($enum["XML_ID"]);
 			$record->setId(RecordId::createNumericId($enum["ID"]));
-			$record->setFields(array(
+			$record->addFieldsRaw(array(
 				"VALUE" => $enum["VALUE"],
 				"DEF" => $enum["DEF"],
 				"SORT" => $enum["SORT"],
@@ -38,9 +36,9 @@ class Enum extends BaseData
 
 			$dependency = clone $this->getDependency("PROPERTY_ID");
 			$dependency->setValue(
-				Property::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($enum["PROPERTY_ID"]))
+				Property::getInstance()->getXmlId(RecordId::createNumericId($enum["PROPERTY_ID"]))
 			);
-			$record->addDependency("PROPERTY_ID", $dependency);
+			$record->setDependency("PROPERTY_ID", $dependency);
 
 			$result[] = $record;
 		}
@@ -57,9 +55,9 @@ class Enum extends BaseData
 
 	public function update(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
-		$dependency = $record->getDependency("PROPERTY_ID");
-		if($propertyId = Property::getInstance()->findRecord($dependency->getValue()))
+		$fields = $record->getFieldsRaw();
+
+		if($propertyId = $record->getDependency("PROPERTY_ID")->getId())
 		{
 			$fields["PROPERTY_ID"] = $propertyId->getValue();
 			$enumObject = new \CIBlockPropertyEnum();
@@ -73,33 +71,55 @@ class Enum extends BaseData
 
 	public function create(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
-		$dependency = $record->getDependency("PROPERTY_ID");
-		if($propertyId = Property::getInstance()->findRecord($dependency->getValue()))
+		$fields = $record->getFieldsRaw();
+		if($propertyId = $record->getDependency("PROPERTY_ID")->getId())
 		{
 			$fields["PROPERTY_ID"] = $propertyId->getValue();
+			$fields["XML_ID"] = $record->getXmlId();
+
 			$enumObject = new \CIBlockPropertyEnum();
 			$enumId = $enumObject->add($fields);
+			// TODO Ошибка с добавлением
 			if ($enumId)
 			{
-				$id = RecordId::createNumericId($enumId);
-				$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-				return $id;
+				return $this->createId($enumId);
 			}
 			else
 			{
 				throw new \Exception("Unknown error");
 			}
 		}
+		else
+			throw new \Exception("Creating enum: not found property for record " . $record->getXmlId());
 	}
 
 	public function delete($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		if (!\CIBlockPropertyEnum::Delete($id->getValue()))
+		if (!\CIBlockPropertyEnum::Delete($id))
 		{
 			throw new \Exception("Unknown error");
 		}
+	}
+
+	public function setXmlId($id, $xmlId)
+	{
+		$userFieldEnum = \CIBlockPropertyEnum::GetByID($id->getValue());
+		$arFields = array(
+			"XML_ID" => $xmlId,
+			"PROPERTY_ID" => $userFieldEnum["PROPERTY_ID"]
+		);
+		\CIBlockPropertyEnum::Update($id->getValue(), $arFields);
+	}
+
+	public function getXmlId($id)
+	{
+		$xmlId = null;
+		if($id = $id->getValue())
+		{
+			$userFieldEnum = \CIBlockPropertyEnum::GetByID($id);
+			$xmlId = $userFieldEnum["XML_ID"];
+		}
+		return $xmlId;
 	}
 }

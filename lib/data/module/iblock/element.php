@@ -8,14 +8,12 @@ use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Runtime;
 use Intervolga\Migrato\Data\Value;
-use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 class Element extends BaseData
 {
 	public function __construct()
 	{
 		Loader::includeModule("iblock");
-		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\ElementTable");
 	}
 
 	public function getFilesSubdir()
@@ -32,7 +30,7 @@ class Element extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($element["XML_ID"]);
 			$record->setId(RecordId::createNumericId($element["ID"]));
-			$record->setFields(array(
+			$record->addFieldsRaw(array(
 				"NAME" => $element["NAME"],
 				"ACTIVE" => $element["ACTIVE"],
 				"SORT" => $element["SORT"],
@@ -41,9 +39,9 @@ class Element extends BaseData
 
 			$dependency = clone $this->getDependency("IBLOCK_ID");
 			$dependency->setValue(
-				Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($element["IBLOCK_ID"]))
+				Iblock::getInstance()->getXmlId(RecordId::createNumericId($element["IBLOCK_ID"]))
 			);
-			$record->addDependency("IBLOCK_ID", $dependency);
+			$record->setDependency("IBLOCK_ID", $dependency);
 
 			$this->addRuntime($record, $element);
 
@@ -68,6 +66,35 @@ class Element extends BaseData
 	}
 
 	/**
+	 * @param Link[] $runtimeReferences
+	 * @param array $property
+	 * @param BaseData $instance
+	 * @return Link
+	 */
+	protected function getPropertyLink($runtimeReferences, $property, $instance = null)
+	{
+		$valueElementId = RecordId::createNumericId($property["VALUE"]);
+		$valueElementXmlId = $instance->getXmlId($valueElementId);
+
+		if($property["MULTIPLE"] == "Y" && $runtimeReferences[$property["XML_ID"]])
+		{
+			$link = $runtimeReferences[$property["XML_ID"]];
+			$values = $link->isMultiple() ? $link->getValues() : array($link->getValue());
+			$values[] = $valueElementXmlId;
+			$link->setValues($values);
+		} else
+		{
+			$link = new Link($instance, $valueElementXmlId);
+		}
+		// TODO сделать для множественного поля
+		if($property["DESCRIPTION"])
+		{
+			$link->setDescription($property["DESCRIPTION"]);
+		}
+		return $link;
+	}
+
+	/**
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @param array $element
 	 */
@@ -75,35 +102,44 @@ class Element extends BaseData
 	{
 		$runtimeFields = array();
 		$runtimeReferences = array();
+        $runtimeDependencies = array();
 		$properties = \CIBlockElement::GetProperty($element["IBLOCK_ID"], $element["ID"]);
 		while ($property = $properties->fetch())
 		{
 			if (strlen($property["VALUE"]))
 			{
+				$link = null;
 				if ($property["PROPERTY_TYPE"] == "F")
 				{
 					continue;
 				}
-				elseif ($property["PROPERTY_TYPE"] == "L")
-				{
-					$link = new Link(Enum::getInstance(), $property["VALUE_XML_ID"]);
-					$link->setDescription($property["DESCRIPTION"]);
-					$runtimeReferences[$property["XML_ID"]] = $link;
+				elseif ($property["PROPERTY_TYPE"] == "L") {
+					$link = $this->getPropertyLink($runtimeReferences, $property, Enum::getInstance());
 				}
 				elseif ($property["PROPERTY_TYPE"] == "E")
 				{
-					$valueElementId = RecordId::createNumericId($property["VALUE"]);
-					$valueElementXmlId = Element::getInstance()->getXmlIdProvider()->getXmlId($valueElementId);
-
-					$link = new Link(Element::getInstance(), $valueElementXmlId);
-					$link->setDescription($property["DESCRIPTION"]);
-					$runtimeReferences[$property["XML_ID"]] = $link;
+					$link = $this->getPropertyLink($runtimeReferences, $property, Element::getInstance());
+				}
+				elseif($property["PROPERTY_TYPE"] == "G")
+				{
+					$link = $this->getPropertyLink($runtimeReferences, $property, Section::getInstance());
 				}
 				else
 				{
 					$value = new Value($property["VALUE"]);
 					$value->setDescription($property["DESCRIPTION"]);
 					$runtimeFields[$property["XML_ID"]] = $value;
+				}
+				if($link)
+				{
+					if ($property["IS_REQUIRED"] == "Y")
+					{
+						$runtimeDependencies[$property["XML_ID"]] = $link;
+					}
+					else
+					{
+						$runtimeReferences[$property["XML_ID"]] = $link;
+					}
 				}
 			}
 		}
@@ -112,29 +148,30 @@ class Element extends BaseData
 			$runtime = clone $this->getRuntime("PROPERTY");
 			$runtime->setFields($runtimeFields);
 			$runtime->setReferences($runtimeReferences);
+			$runtime->setDependencies($runtimeDependencies);
 			$record->setRuntime("PROPERTY", $runtime);
 		}
 	}
 
-	public function findRecord($xmlId)
+	public function findRecords(array $xmlIds)
 	{
+		$result = array();
 		$parameters = array(
 			"select" => array(
 				"ID",
+				"XML_ID",
 			),
 			"filter" => array(
-				"=XML_ID" => $xmlId,
+				"=XML_ID" => $xmlIds,
 			),
 		);
-		$element = ElementTable::getList($parameters)->fetch();
-		if ($element["ID"])
+		$getList = ElementTable::getList($parameters);
+		while ($element = $getList->fetch())
 		{
-			return RecordId::createNumericId($element["ID"]);
+			$result[$element["XML_ID"]] = RecordId::createNumericId($element["ID"]);
 		}
-		else
-		{
-			return null;
-		}
+
+		return $result;
 	}
 
 	/**
@@ -147,20 +184,25 @@ class Element extends BaseData
 		foreach($runtime->getFields() as $xmlId => $arField)
 		{
 			if($property = Property::getInstance()->findRecord($xmlId))
-				$properties[$property->getValue()] = $arField->getValue();
+			{
+				$properties[$property->getValue()] = array(
+					"VALUE" => $arField->getValue(),
+					"DESCRIPTION" => $arField->getDescription()
+				);
+			}
 		}
 		return $properties;
 	}
 
 	/**
-	 * @param Runtime $runtime
+	 * @param Link[] $links
 	 * @param string $IBlockId
 	 *
 	 * @return array properties
 	 */
-	private function getRuntimesReferences($properties, Runtime $runtime, $IBlockId)
+	private function getRuntimesLinks($properties, array $links, $IBlockId)
 	{
-		foreach($runtime->getReferences() as $xmlId => $arField)
+		foreach($links as $xmlId => $link)
 		{
 			if($property = Property::getInstance()->findRecord($xmlId))
 			{
@@ -170,31 +212,19 @@ class Element extends BaseData
 					switch($arProperty["PROPERTY_TYPE"])
 					{
 						case "N":
-							$properties[$property->getValue()] = $arField->getValue();
+							$properties[$property->getValue()] = $link->getValue();
 							break;
 						case "S":
 							if(array_search($arProperty["USER_TYPE"], array("HTML", "video", "DateTime", "map_yandex", "map_google", "FileMan", "ElementXmlID")) !== false)
 							{
-								$properties[$property->getValue()] = $arField->getValue();
+								$properties[$property->getValue()] = $link->getValue();
 							}
 							break;
 						case "L":
-							if($enumId = (Enum::getInstance()->findRecord($arField->getValue())))
-							{
-								$properties[$property->getValue()] = $enumId->getValue();
-							}
-							break;
 						case "G":
-							if($sectionId = (Section::getInstance()->findRecord($arField->getValue())))
-							{
-								$properties[$property->getValue()] = $sectionId->getValue();
-							}
-							break;
 						case "E":
-							if($elementId = (Element::getInstance()->findRecord($arField->getValue())))
-							{
-								$properties[$property->getValue()] = $elementId->getValue();
-							}
+							$values = $link->isMultiple() ? $link->getIds() : $this->getLinkId($link);
+							$properties[$property->getValue()] = $values;
 							break;
 					}
 				}
@@ -203,52 +233,58 @@ class Element extends BaseData
 		return $properties;
 	}
 
-	public function getIBlock(Record $record)
+	private function getLinkId(Link $link)
 	{
-		$iblockId = null;
-		if($iblockIdXml = $record->getDependency("IBLOCK_ID"))
+		if($id = $link->getId())
 		{
-			$iblockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
+			return $id->getValue();
 		}
 		else
 		{
-			$iblockId = \CIBlockElement::GetIBlockByID($record->getId()->getValue());
+			return null;
 		}
-		if(!$iblockId)
-		{
-			throw new \Exception("Not found IBlock for the element " . $record->getId()->getValue());
-		}
-		return $iblockId;
 	}
 
-	public function generateProperties($iblockId, Record $record)
+	public function getIBlock(Record $record)
 	{
-		$properties = array();
-		if($record->getId())
+		$iblock = $record->getDependency("IBLOCK_ID");
+		if($iblock && $iblock->getId())
 		{
-			$rsProperties = \CIBlockElement::GetProperty($iblockId, $record->getId()->getValue());
-			while($arProperty = $rsProperties->Fetch())
-			{
-				$properties[strval($arProperty["ID"])]= $arProperty["VALUE"];
-			}
+            return $iblock->getId()->getValue();
 		}
-
-		$properties = $this->getRuntimesFields($properties, $record->getRuntime("PROPERTY"));
-
-		$properties = $this->getRuntimesReferences($properties, $record->getRuntime("PROPERTY"), $iblockId);
-
-		return $properties;
+		elseif($record->getId())
+		{
+            return \CIBlockElement::GetIBlockByID($record->getId()->getValue());
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	public function update(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 		$IBlockId = $this->getIBlock($record);
 
-		$properties = $this->generateProperties($IBlockId, $record);
+		$fields["PROPERTY_VALUES"] = array();
+		$rsProperties = \CIBlockElement::GetProperty($IBlockId, $record->getId()->getValue());
+		while($arProperty = $rsProperties->Fetch())
+		{
+			if($arProperty["PROPERTY_TYPE"] != "F" )
+			{
+				$fields["PROPERTY_VALUES"][strval($arProperty["ID"])]= $arProperty["VALUE"];
+			}
+		}
 
-		if(count($properties))
-			$fields["PROPERTY_VALUES"] = $properties;
+		$fields["PROPERTY_VALUES"] = $this->getRuntimesFields($fields["PROPERTY_VALUES"],
+			$record->getRuntime("PROPERTY"));
+
+		$fields["PROPERTY_VALUES"] = $this->getRuntimesLinks($fields["PROPERTY_VALUES"],
+			$record->getRuntime("PROPERTY")->getReferences(), $IBlockId);
+
+		$fields["PROPERTY_VALUES"] = $this->getRuntimesLinks($fields["PROPERTY_VALUES"],
+			$record->getRuntime("PROPERTY")->getDependencies(), $IBlockId);
 
 		$elementObject = new \CIBlockElement();
 		$isUpdated = $elementObject->Update($record->getId()->getValue(), $fields);
@@ -260,23 +296,22 @@ class Element extends BaseData
 
 	public function create(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
+		$fields = $record->getFieldsRaw();
 
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
+		$fields["PROPERTY_VALUES"] = array();
 
-		$properties = $this->generateProperties($fields["IBLOCK_ID"], $record);
+		$fields["PROPERTY_VALUES"] = $this->getRuntimesFields($fields["PROPERTY_VALUES"],
+			$record->getRuntime("PROPERTY"));
 
-		if(count($properties))
-			$fields["PROPERTY_VALUES"] = $properties;
+		$fields["PROPERTY_VALUES"] = $this->getRuntimesLinks($fields["PROPERTY_VALUES"],
+			$record->getRuntime("PROPERTY")->getDependencies(), $fields["IBLOCK_ID"]);
 
 		$elementObject = new \CIBlockElement();
 		$elementId = $elementObject->add($fields);
 		if ($elementId)
 		{
-			$id = RecordId::createNumericId($elementId);
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-			return $id;
+			return $this->createId($elementId);
 		}
 		else
 		{
@@ -287,10 +322,45 @@ class Element extends BaseData
 	public function delete($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		$elementObject = new \CIBlockType();
-		if (!$elementObject->delete($id->getValue()))
+		if ($id)
 		{
-			throw new \Exception("Unknown error");
+			$elementObject = new \CIBlockElement();
+			if (!$elementObject->delete($id->getValue()))
+			{
+				throw new \Exception("Unknown error");
+			}
+		}
+	}
+
+	public function setXmlId($id, $xmlId)
+	{
+		Loader::includeModule("iblock");
+
+		$elementObject = new \CIBlockElement();
+		$isUpdated = $elementObject->update($id->getValue(), array("XML_ID" => $xmlId));
+		if (!$isUpdated)
+		{
+			throw new \Exception(trim(strip_tags($elementObject->LAST_ERROR)));
+		}
+	}
+
+	public function getXmlId($id)
+	{
+		Loader::includeModule("iblock");
+		$elements = \CIBlockElement::getList(
+			array("ID" => "ASC"),
+			array("ID" => $id->getValue()),
+			false,
+			false,
+			array("ID", "XML_ID")
+		);
+		if ($element = $elements->fetch())
+		{
+			return $element["XML_ID"];
+		}
+		else
+		{
+			return "";
 		}
 	}
 }

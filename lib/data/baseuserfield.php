@@ -4,14 +4,15 @@ use Intervolga\Migrato\Data\Module\Highloadblock\Field;
 use Intervolga\Migrato\Data\Module\Highloadblock\HighloadBlock;
 use Intervolga\Migrato\Data\Module\Iblock\Element;
 use Intervolga\Migrato\Data\Module\Iblock\Iblock;
-use Intervolga\Migrato\Tool\XmlIdProvider\UfSelfXmlIdProvider;
+use Intervolga\Migrato\Data\Module\Iblock\Section;
+use Intervolga\Migrato\Data\Module\Iblock\FieldEnum;
 
 abstract class BaseUserField extends BaseData
 {
 	/**
 	 * @return string[]
 	 */
-	protected static function getLangFieldsNames()
+	public static function getLangFieldsNames()
 	{
 		return array(
 			"EDIT_FORM_LABEL",
@@ -20,11 +21,6 @@ abstract class BaseUserField extends BaseData
 			"ERROR_MESSAGE",
 			"HELP_MESSAGE",
 		);
-	}
-
-	public function __construct()
-	{
-		$this->xmlIdProvider = new UfSelfXmlIdProvider($this);
 	}
 
 	public function getList(array $filter = array())
@@ -77,10 +73,10 @@ abstract class BaseUserField extends BaseData
 		);
 		$fields = array_merge($fields, $this->getSettingsFields($userField["SETTINGS"]));
 		$fields = array_merge($fields, $this->getLangFields($userField));
-		$record->setFields($fields);
+		$record->addFieldsRaw($fields);
 		foreach ($this->getSettingsLinks($userField["SETTINGS"]) as $name => $link)
 		{
-			$record->addReference($name, $link);
+			$record->setReference($name, $link);
 		}
 
 		return $record;
@@ -91,18 +87,63 @@ abstract class BaseUserField extends BaseData
 	 *
 	 * @return array
 	 */
-	protected function getSettingsFields(array $settings)
+	protected function getSettingsFields(array $settings, $fullname = "")
 	{
 		$fields = array();
 		foreach ($settings as $name => $setting)
 		{
+			$name = $fullname ? $fullname . "." . $name : $name;
 			if (!in_array($name, array_keys($this->getSettingsReferences())))
 			{
-				$fields["SETTINGS." . $name] = $setting;
+				if(!is_array($setting))
+				{
+					$fields["SETTINGS." . $name] = $setting;
+				}
+				else
+				{
+					$fields = array_merge($fields, $this->getSettingsFields($setting, $name));
+				}
 			}
 		}
 
 		return $fields;
+	}
+
+	/**
+	 * @param array $fields список полей
+	 * @param array $isDelete удалять ли составные настройки
+	 *
+	 * @return array список настроек
+	 */
+	protected function fieldsToArray(&$fields, $cutKey, $isDelete = false)
+	{
+		$settings = array();
+		foreach($fields as $key => $field)
+		{
+			if(strstr($key, $cutKey) !== false)
+			{
+				$workSetting = &$settings;
+				$keys = explode(".", str_replace($cutKey . ".", "", $key));
+				foreach($keys as $pathKey)
+				{
+					if(end($keys) == $pathKey)
+					{
+						$workSetting[$pathKey] = $field;
+					}
+					else
+					{
+						$workSetting[$pathKey] = $workSetting[$pathKey] ? $workSetting[$pathKey] : array();
+						$workSetting = &$workSetting[$pathKey];
+					}
+				}
+
+				if($isDelete)
+				{
+					unset($fields[$key]);
+				}
+			}
+		}
+		return $settings;
 	}
 
 	/**
@@ -137,7 +178,7 @@ abstract class BaseUserField extends BaseData
 			if ($name == "IBLOCK_ID")
 			{
 				$iblockIdObject = RecordId::createNumericId($setting);
-				$xmlId = Iblock::getInstance()->getXmlIdProvider()->getXmlId($iblockIdObject);
+				$xmlId = Iblock::getInstance()->getXmlId($iblockIdObject);
 				$link = clone $this->getReference("SETTINGS.$name");
 				$link->setValue($xmlId);
 				$links["SETTINGS.$name"] = $link;
@@ -145,7 +186,7 @@ abstract class BaseUserField extends BaseData
 			if ($name == "HLBLOCK_ID")
 			{
 				$hlBlockIdObject = RecordId::createNumericId($setting);
-				$xmlId = HighloadBlock::getInstance()->getXmlIdProvider()->getXmlId($hlBlockIdObject);
+				$xmlId = HighloadBlock::getInstance()->getXmlId($hlBlockIdObject);
 				$link = clone $this->getReference("SETTINGS.$name");
 				$link->setValue($xmlId);
 				$links["SETTINGS.$name"] = $link;
@@ -153,7 +194,7 @@ abstract class BaseUserField extends BaseData
 			if ($name == "HLFIELD_ID")
 			{
 				$userFieldIdObject = RecordId::createNumericId($setting);
-				$xmlId = Field::getInstance()->getXmlIdProvider()->getXmlId($userFieldIdObject);
+				$xmlId = Field::getInstance()->getXmlId($userFieldIdObject);
 				$link = clone $this->getReference("SETTINGS.$name");
 				$link->setValue($xmlId);
 				$links["SETTINGS.$name"] = $link;
@@ -161,6 +202,31 @@ abstract class BaseUserField extends BaseData
 		}
 
 		return $links;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Link[] $links
+	 *
+	 * @return array настройки для привязки к сущности
+	 */
+	public function getSettingsLinksFields(array $links)
+	{
+		$settings = array();
+		foreach($links as $entity => $link)
+		{
+			$entity = str_replace("SETTINGS.", "", $entity);
+			$xmlId = $link->getValue();
+			if($entityId = $this->getSettingsReference($entity)->getTargetData()->findRecord($xmlId))
+			{
+				$settings[$entity] = $entityId->getValue();
+			}
+
+			if ($entity == "IBLOCK_ID")
+			{
+				$settings["IBLOCK_TYPE_ID"] = \CIBlock::GetArrayByID($settings[$entity], "IBLOCK_TYPE_ID");
+			}
+		}
+		return $settings;
 	}
 
 	public function getReferences()
@@ -187,6 +253,17 @@ abstract class BaseUserField extends BaseData
 	}
 
 	/**
+	 * @param $key
+	 *
+	 * @return Link
+	 */
+	public function getSettingsReference($key)
+	{
+		$references = $this->getSettingsReferences();
+		return $references[$key];
+	}
+
+	/**
 	 * @param \Intervolga\Migrato\Data\Runtime $runtime
 	 * @param \Intervolga\Migrato\Data\Record $field
 	 * @param mixed $value
@@ -195,23 +272,23 @@ abstract class BaseUserField extends BaseData
 	{
 		$runtimeValue = null;
 		$runtimeLink = null;
-		if ($field->getFieldValue("USER_TYPE_ID") == "iblock_element")
+		if ($field->getFieldRaw("USER_TYPE_ID") == "iblock_element")
 		{
 			$runtimeLink = $this->getIblockElementLink($value);
 		}
-		elseif ($field->getFieldValue("USER_TYPE_ID") == "hlblock")
+		elseif ($field->getFieldRaw("USER_TYPE_ID") == "hlblock")
 		{
 			$runtimeLink = $this->getHlblockElementLink($field, $value);
 		}
-		elseif ($field->getFieldValue("USER_TYPE_ID") == "iblock_section")
+		elseif ($field->getFieldRaw("USER_TYPE_ID") == "iblock_section")
 		{
 			$runtimeLink = $this->getIblockSectionLink($value);
 		}
-		elseif ($field->getFieldValue("USER_TYPE_ID") == "enumeration")
+		elseif ($field->getFieldRaw("USER_TYPE_ID") == "enumeration")
 		{
 			$runtimeLink = $this->getEnumerationLink($value);
 		}
-		elseif (in_array($field->getFieldValue("USER_TYPE_ID"), array("string", "double", "boolean", "integer", "datetime", "date", "string_formatted")))
+		elseif (in_array($field->getFieldRaw("USER_TYPE_ID"), array("string", "double", "boolean", "integer", "datetime", "date", "string_formatted")))
 		{
 			$runtimeValue = new Value($value);
 		}
@@ -222,7 +299,7 @@ abstract class BaseUserField extends BaseData
 		}
 		if ($runtimeLink)
 		{
-			if ($field->getFieldValue("MANDATORY") == "Y")
+			if ($field->getFieldRaw("MANDATORY") == "Y")
 			{
 				$runtime->setDependency($field->getXmlId(), $runtimeLink);
 			}
@@ -233,6 +310,28 @@ abstract class BaseUserField extends BaseData
 		}
 	}
 
+	public function getXmlIds(Basedata $instance, $value)
+	{
+		$values = is_array($value) ? $value : array($value);
+		$xmlIds = array();
+		foreach($values as $value)
+		{
+			$inObject = RecordId::createNumericId($value);
+			$xmlIds[] = $instance->getXmlId($inObject);
+		}
+		if(count($xmlIds) == 1)
+		{
+			return new Link($instance, $xmlIds[0]);
+		}
+		else
+		{
+			$link = new Link($instance);
+			$link->setValues($xmlIds);
+			return $link;
+		}
+
+	}
+
 	/**
 	 * @param int $value
 	 *
@@ -240,10 +339,7 @@ abstract class BaseUserField extends BaseData
 	 */
 	protected function getIblockElementLink($value)
 	{
-		$inObject = RecordId::createNumericId($value);
-		$elementXmlId = Element::getInstance()->getXmlIdProvider()->getXmlId($inObject);
-
-		return new Link(Element::getInstance(), $elementXmlId);
+		return $this->getXmlIds(Element::getInstance(), $value);
 	}
 
 	/**
@@ -253,10 +349,10 @@ abstract class BaseUserField extends BaseData
 	 */
 	protected function getIblockSectionLink($value)
 	{
-		// todo
+		return $this->getXmlIds(Section::getInstance(), $value);
 	}
 
-	/**
+	/** TODO Сделать для множественных значений
 	 * @param \Intervolga\Migrato\Data\Record $field
 	 * @param int $value
 	 *
@@ -278,7 +374,7 @@ abstract class BaseUserField extends BaseData
 					"ID" => intval($value),
 					"HLBLOCK_ID" => intval($hlblockId),
 				));
-				$hlbElementXmlId = Module\Highloadblock\Element::getInstance()->getXmlIdProvider()->getXmlId($elementIdObject);
+				$hlbElementXmlId = Module\Highloadblock\Element::getInstance()->getXmlId($elementIdObject);
 			}
 		}
 
@@ -292,6 +388,102 @@ abstract class BaseUserField extends BaseData
 	 */
 	protected function getEnumerationLink($value)
 	{
-		// todo
+		return $this->getXmlIds(FieldEnum::getInstance(), $value);
+	}
+
+	/**
+	 * @return string
+	 */
+	abstract public function getDependencyString();
+
+	/**
+	 * @param $id
+	 * @return string
+	 */
+	abstract public function getDependencyNameKey($id);
+
+	public function update(Record $record)
+	{
+		$fields = $record->getFieldsRaw();
+
+		$blockIdXml = $record->getDependency($this->getDependencyString());
+
+		$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
+		foreach($this->getLangFieldsNames() as $lang)
+		{
+			$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
+		}
+
+		if(!$blockIdXml)
+		{
+			$fields["SETTINGS"] = array_merge($fields["SETTINGS"], $this->getSettingsLinksFields($record->getReferences()));
+		}
+
+		$fieldObject = new \CAllUserTypeEntity();
+		$isUpdated = $fieldObject->Update($record->getId()->getValue(), $fields);
+		if (!$isUpdated)
+		{
+			throw new \Exception("Unknown error");
+		}
+	}
+
+	public function create(Record $record)
+	{
+		$fields = $record->getFieldsRaw();
+
+		if($iblockId = $record->getDependency($this->getDependencyString())->getId())
+		{
+			$userTypeEntity = new \CUserTypeEntity();
+			$userTypeEntity->CreatePropertyTables("iblock_" . $iblockId->getValue() . "_section");
+
+			$fields["XML_ID"] = $record->getXmlId();
+			$fields["ENTITY_ID"] = $this->getDependencyNameKey($iblockId->getValue());
+
+			$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
+			foreach($this->getLangFieldsNames() as $lang)
+			{
+				$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
+			}
+
+			$fieldObject = new \CAllUserTypeEntity();
+			$fieldId = $fieldObject->add($fields);
+			if ($fieldId)
+			{
+				return $this->createId($fieldId);
+			}
+			else
+			{
+				throw new \Exception("Unknown error");
+			}
+		}
+		else
+		{
+			throw new \Exception("Create iblock/field: record haven`t the dependence for element " . $record->getXmlId());
+		}
+	}
+
+	public function delete($xmlId)
+	{
+		if($id = $this->findRecord($xmlId))
+		{
+			$fieldObject = new \CAllUserTypeEntity();
+			if (!$fieldObject->delete($id->getValue()))
+			{
+				throw new \Exception("Unknown error");
+			}
+		}
+	}
+
+	public function setXmlId($id, $xmlId)
+	{
+		$userFieldObject = new \CUserTypeEntity();
+		$userFieldObject->update($id->getValue(), array("XML_ID" => $xmlId));
+	}
+
+	public function getXmlId($id)
+	{
+		$userField = \CUserTypeEntity::getById($id->getValue());
+
+		return $userField["XML_ID"];
 	}
 }

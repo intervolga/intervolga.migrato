@@ -38,7 +38,7 @@ class TableXmlIdProvider extends BaseXmlIdProvider
 	/**
 	 * @param RecordId $id
 	 */
-	private function getTableXmlIdRecordId($id)
+	protected function getTableXmlIdRecordId($id)
 	{
 		$parameters = array(
 			"select" => array(
@@ -103,5 +103,38 @@ class TableXmlIdProvider extends BaseXmlIdProvider
 		}
 
 		return $filter;
+	}
+
+	public function findRecords(array $xmlIds)
+	{
+		$result = array();
+		$parameters = array(
+			"select" => array(
+				"DATA_XML_ID",
+				"DATA_ID_NUM",
+				"DATA_ID_STR",
+				"DATA_ID_COMPLEX",
+			),
+			"filter" => array(
+				"=DATA_XML_ID" => $xmlIds,
+			),
+		);
+		$getList = XmlIdTable::getList($parameters);
+		while ($record = $getList->fetch())
+		{
+			if ($record["DATA_ID_NUM"])
+			{
+				$result[$record["DATA_XML_ID"]] = RecordId::createNumericId($record["DATA_ID_NUM"]);
+			}
+			elseif (strlen($record["DATA_ID_STR"]))
+			{
+				$result[$record["DATA_XML_ID"]] = RecordId::createStringId($record["DATA_ID_STR"]);
+			}
+			elseif ($record["DATA_ID_COMPLEX"])
+			{
+				$result[$record["DATA_XML_ID"]] = RecordId::createComplexId($record["DATA_ID_COMPLEX"]);
+			}
+		}
+		return $result;
 	}
 }

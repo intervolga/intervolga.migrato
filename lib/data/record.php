@@ -1,6 +1,6 @@
 <? namespace Intervolga\Migrato\Data;
 
-class Record
+class Record extends BaseDataObject
 {
 	protected $xmlId = "";
 	/**
@@ -8,33 +8,13 @@ class Record
 	 */
 	protected $id;
 	/**
-	 * @var \Intervolga\Migrato\Data\Value[]
-	 */
-	protected $fields = array();
-	/**
-	 * @var \Intervolga\Migrato\Data\Link[]
-	 */
-	protected $dependencies = array();
-	/**
-	 * @var \Intervolga\Migrato\Data\Link[]
-	 */
-	protected $references = array();
-	/**
-	 * @var \Intervolga\Migrato\Data\BaseData
-	 */
-	protected $data;
-	/**
-	 * @var Runtime[]
+	 * @var \Intervolga\Migrato\Data\Runtime[]
 	 */
 	protected $runtimes = array();
-
 	/**
-	 * @param BaseData $data
+	 * @var bool
 	 */
-	public function __construct(BaseData $data = null)
-	{
-		$this->data = $data;
-	}
+	protected $deleteMark = false;
 
 	/**
 	 * @param string $xmlId
@@ -55,11 +35,11 @@ class Record
 	/**
 	 * @param array $fields string[] or string[][]
 	 */
-	public function setFields(array $fields)
+	public function addFieldsRaw(array $fields)
 	{
 		foreach ($fields as $name => $field)
 		{
-			$this->setField($name, $field);
+			$this->setFieldRaw($name, $field);
 		}
 	}
 
@@ -67,7 +47,7 @@ class Record
 	 * @param string $name
 	 * @param string|string[] $field
 	 */
-	public function setField($name, $field)
+	public function setFieldRaw($name, $field)
 	{
 		if (is_array($field))
 		{
@@ -80,17 +60,12 @@ class Record
 	}
 
 	/**
-	 * @return Value[]
+	 * @param string[] $treeRoots
+	 *
+	 * @return \string[]
+	 * @throws \Exception
 	 */
-	public function getFields()
-	{
-		return $this->fields;
-	}
-
-	/**
-	 * @return string[]
-	 */
-	public function getFieldsStrings()
+	public function getFieldsRaw($treeRoots = array())
 	{
 		$result = array();
 		foreach ($this->fields as $name => $field)
@@ -104,18 +79,23 @@ class Record
 				$result[$name] = $field->getValue();
 			}
 		}
+		if ($treeRoots)
+		{
+			$tree = Value::listToTree($result);
+			foreach ($tree as $root => $treeFields)
+			{
+				if (in_array($root, $treeRoots))
+				{
+					foreach (array_keys($treeFields) as $treeFieldName)
+					{
+						unset($result[$root . "." . $treeFieldName]);
+					}
+					$result[$root] = $treeFields;
+				}
+			}
+		}
 
 		return $result;
-	}
-
-	/**
-	 * @param string $name
-	 *
-	 * @return Value
-	 */
-	public function getField($name)
-	{
-		return $this->fields[$name];
 	}
 
 	/**
@@ -124,7 +104,7 @@ class Record
 	 * @return string
 	 * @throws \Exception
 	 */
-	public function getFieldValue($name)
+	public function getFieldRaw($name)
 	{
 		$field = $this->fields[$name];
 		if ($field)
@@ -143,7 +123,7 @@ class Record
 	 * @return string[]
 	 * @throws \Exception
 	 */
-	public function getFieldValues($name)
+	public function getFieldRaws($name)
 	{
 		$field = $this->fields[$name];
 		if ($field)
@@ -157,76 +137,6 @@ class Record
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\Link[] $dependencies
-	 */
-	public function setDependencies(array $dependencies)
-	{
-		$this->dependencies = $dependencies;
-	}
-
-	/**
-	 * @param string $key
-	 * @param \Intervolga\Migrato\Data\Link $dependency
-	 */
-	public function addDependency($key, Link $dependency)
-	{
-		$this->dependencies[$key] = $dependency;
-	}
-
-	/**
-	 * @return \Intervolga\Migrato\Data\Link[]
-	 */
-	public function getDependencies()
-	{
-		return $this->dependencies;
-	}
-
-	/**
-	 * @param $key string
-	 *
-	 * @return \Intervolga\Migrato\Data\Link
-	 */
-	public function getDependency($key)
-	{
-		$dependencies = $this->getDependencies();
-		return $dependencies[$key];
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Link[] $references
-	 */
-	public function setReferences(array $references)
-	{
-		$this->references = $references;
-	}
-
-	/**
-	 * @param string $key
-	 * @param \Intervolga\Migrato\Data\Link $reference
-	 */
-	public function addReference($key, Link $reference)
-	{
-		$this->references[$key] = $reference;
-	}
-
-	/**
-	 * @return \Intervolga\Migrato\Data\Link[]
-	 */
-	public function getReferences()
-	{
-		return $this->references;
-	}
-
-	/**
-	 * @return \Intervolga\Migrato\Data\Link
-	 */
-	public function getReference($key)
-	{
-		$references = $this->getReferences();
-		return $references[$key];
-	}
-
-	/**
 	 * @param \Intervolga\Migrato\Data\RecordId $id
 	 */
 	public function setId(RecordId $id)
@@ -235,7 +145,7 @@ class Record
 	}
 
 	/**
-	 * @return RecordId
+	 * @return \Intervolga\Migrato\Data\RecordId
 	 */
 	public function getId()
 	{
@@ -243,19 +153,11 @@ class Record
 	}
 
 	/**
-	 * @param BaseData $dataObject
+	 * @param \Intervolga\Migrato\Data\BaseData $dataObject
 	 */
 	public function setData(BaseData $dataObject)
 	{
-		$this->data = $dataObject;
-	}
-
-	/**
-	 * @return BaseData
-	 */
-	public function getData()
-	{
-		return $this->data;
+		$this->dataClass = $dataObject;
 	}
 
 	public function update()
@@ -296,7 +198,7 @@ class Record
 	/**
 	 * @param string $name
 	 *
-	 * @return Runtime
+	 * @return \Intervolga\Migrato\Data\Runtime
 	 */
 	public function getRuntime($name)
 	{
@@ -304,10 +206,84 @@ class Record
 	}
 
 	/**
-	 * @return Runtime[]
+	 * @return \Intervolga\Migrato\Data\Runtime[]
 	 */
 	public function getRuntimes()
 	{
 		return $this->runtimes;
+	}
+
+	/**
+	 * @param bool $deleteMark
+	 */
+	public function setDeleteMark($deleteMark)
+	{
+		$this->deleteMark = $deleteMark;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function getDeleteMark()
+	{
+		return $this->deleteMark;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function info()
+	{
+		$info = array(
+			"data" => $this->getData()->getModule() . ":" . $this->getData()->getEntityName(),
+			"xmlId" => $this->getXmlId(),
+			"id" => $this->getId() ? $this->getId()->getValue() : false,
+			"deleted" => $this->getDeleteMark(),
+			"fields" => $this->getFieldsRaw(),
+		);
+		if ($this->getDependencies())
+		{
+			$info["dependencies"] = $this->infoLinks($this->getDependencies());
+		}
+		if ($this->getReferences())
+		{
+			$info["references"] = $this->infoLinks($this->getReferences());
+		}
+		return $info;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Link[] $links
+	 * @return array
+	 */
+	protected function infoLinks(array $links)
+	{
+		$info = array();
+		if ($links)
+		{
+			foreach ($links as $name => $dependency)
+			{
+				if ($dependency->getTargetData())
+				{
+					$data = $dependency->getTargetData()->getModule() . ":" . $dependency->getTargetData()->getEntityName();
+				}
+				else
+				{
+					$data = false;
+				}
+				$info[$name]["data"] = $data;
+
+				if ($dependency->isMultiple())
+				{
+					$info[$name] += $dependency->getValues();
+				}
+				else
+				{
+					$info[$name][] = $dependency->getValue();
+				}
+			}
+		}
+
+		return $info;
 	}
 }

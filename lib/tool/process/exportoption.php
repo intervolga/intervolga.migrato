@@ -12,17 +12,20 @@ class ExportOption extends BaseProcess
 		$options = Config::getInstance()->getModulesOptions();
 		foreach ($options as $module => $moduleOptions)
 		{
+			$count = 0;
 			$export = array();
 			foreach ($moduleOptions as $option)
 			{
 				$optionValue = Option::get($module, $option);
 				$export[$option] = $optionValue;
+				$count++;
 			}
 			ksort($export);
 
 			$path = static::getModuleOptionsDirectory($module);
 			OptionFileViewXml::writeToFileSystem($export, $path);
-			static::report("Module $module options exported");
+			static::report("Module $module export $count option(s)");
 		}
+		static::report("Process completed");
 	}
 }

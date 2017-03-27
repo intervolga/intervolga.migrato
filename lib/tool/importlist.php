@@ -10,7 +10,7 @@ class ImportList
 	 */
 	protected $existingRecords = array();
 	/**
-	 * @var \Intervolga\Migrato\Data\Record[]
+	 * @var \Intervolga\Migrato\Data\Record[][]
 	 */
 	protected $recordsToImport = array();
 	/**
@@ -53,8 +53,32 @@ class ImportList
 	{
 		$class = get_class($dataRecord->getData());
 		$xmlId = $dataRecord->getXmlId();
+		if ($xmlId)
+		{
+			$this->createdXmlIds[$class][$xmlId] = "Y";
+		}
+	}
 
-		$this->createdXmlIds[$class][$xmlId] = true;
+	public function addCreatedRecordRuntimes()
+	{
+		foreach ($this->recordsToImport as $records)
+		{
+			foreach ($records as $record)
+			{
+				foreach ($record->getRuntimes() as $runtime)
+				{
+					foreach ($runtime->getDependencies() as $dependency)
+					{
+						$class = get_class($dependency->getTargetData());
+						$xmlId = $dependency->getValue();
+						if ($xmlId)
+						{
+							$this->createdXmlIds[$class][$xmlId] = "Y";
+						}
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -68,26 +92,6 @@ class ImportList
 			foreach ($dataRecords as $dataRecord)
 			{
 				if ($this->canCreate($dataRecord))
-				{
-					$result[] = $dataRecord;
-				}
-			}
-		}
-
-		return $result;
-	}
-
-	/**
-	 * @return \Intervolga\Migrato\Data\Record[]
-	 */
-	public function getRecordsToDelete()
-	{
-		$result = array();
-		foreach ($this->existingRecords as $class => $xmlIds)
-		{
-			foreach ($xmlIds as $xmlId => $dataRecord)
-			{
-				if (!$this->createdXmlIds[$class][$xmlId])
 				{
 					$result[] = $dataRecord;
 				}
@@ -121,6 +125,19 @@ class ImportList
 	 *
 	 * @return bool
 	 */
+	protected function isCreated(Record $dataRecord)
+	{
+		$class = get_class($dataRecord->getData());
+		$xmlId = $dataRecord->getXmlId();
+
+		return $this->createdXmlIds[$class][$xmlId] == "Y";
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $dataRecord
+	 *
+	 * @return bool
+	 */
 	protected function isAllDependenciesResolved(Record $dataRecord)
 	{
 		$result = true;
@@ -133,19 +150,6 @@ class ImportList
 		}
 
 		return $result;
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Record $dataRecord
-	 *
-	 * @return bool
-	 */
-	protected function isCreated(Record $dataRecord)
-	{
-		$class = get_class($dataRecord->getData());
-		$xmlId = $dataRecord->getXmlId();
-
-		return !!$this->createdXmlIds[$class][$xmlId];
 	}
 
 	/**
@@ -172,6 +176,54 @@ class ImportList
 			$xmlId = $dependency->getValue();
 			$isResolved = ($this->createdXmlIds[$class][$xmlId] == "Y");
 		}
+
 		return $isResolved;
+	}
+
+	/**
+	 * @return \Intervolga\Migrato\Data\Record[]
+	 */
+	public function getRecordsToDelete()
+	{
+		$result = array();
+		foreach ($this->existingRecords as $class => $xmlIds)
+		{
+			/**
+			 * @var \Intervolga\Migrato\Data\Record $dataRecord
+			 */
+			foreach ($xmlIds as $xmlId => $dataRecord)
+			{
+				$configFilter = Config::getInstance()->getDataClassFilter($dataRecord->getData());
+				if (!$configFilter || in_array($xmlId, $xmlId))
+				{
+					if ($this->createdXmlIds[$class][$xmlId] != "Y")
+					{
+						$result[] = $dataRecord;
+					}
+				}
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * @return \Intervolga\Migrato\Data\Record[]
+	 */
+	public function getNotResolvedRecords()
+	{
+		$result = array();
+		foreach ($this->recordsToImport as $dataRecords)
+		{
+			foreach ($dataRecords as $dataRecord)
+			{
+				if (!$this->isCreated($dataRecord))
+				{
+					$result[] = $dataRecord;
+				}
+			}
+		}
+
+		return $result;
 	}
 }

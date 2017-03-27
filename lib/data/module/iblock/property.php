@@ -6,6 +6,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
+use Intervolga\Migrato\Data\Value;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 class Property extends BaseData
@@ -30,7 +31,7 @@ class Property extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($property["XML_ID"]);
 			$record->setId(RecordId::createNumericId($property["ID"]));
-			$record->setFields(array(
+			$record->addFieldsRaw(array(
 				"NAME" => $property["NAME"],
 				"ACTIVE" => $property["ACTIVE"],
 				"SORT" => $property["SORT"],
@@ -48,23 +49,29 @@ class Property extends BaseData
 				"FILTRABLE" => $property["FILTRABLE"],
 				"IS_REQUIRED" => $property["IS_REQUIRED"],
 				"USER_TYPE" => $property["USER_TYPE"],
-				"USER_TYPE_SETTINGS" => $property["USER_TYPE_SETTINGS"],
 				"HINT" => $property["HINT"],
 			));
+			if ($property["USER_TYPE_SETTINGS"])
+			{
+				if ($userTypeSettings = unserialize($property["USER_TYPE_SETTINGS"]))
+				{
+					$record->addFieldsRaw(Value::treeToList($userTypeSettings, "USER_TYPE_SETTINGS"));
+				}
+			}
 
 			$dependency = clone $this->getDependency("IBLOCK_ID");
 			$dependency->setValue(
-				Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($property["IBLOCK_ID"]))
+				Iblock::getInstance()->getXmlId(RecordId::createNumericId($property["IBLOCK_ID"]))
 			);
-			$record->addDependency("IBLOCK_ID", $dependency);
+			$record->setDependency("IBLOCK_ID", $dependency);
 
 			if ($property["LINK_IBLOCK_ID"])
 			{
 				$reference = clone $this->getReference("LINK_IBLOCK_ID");
 				$reference->setValue(
-					Iblock::getInstance()->getXmlIdProvider()->getXmlId(RecordId::createNumericId($property["LINK_IBLOCK_ID"]))
+					Iblock::getInstance()->getXmlId(RecordId::createNumericId($property["LINK_IBLOCK_ID"]))
 				);
-				$record->addReference("LINK_IBLOCK_ID", $reference);
+				$record->setReference("LINK_IBLOCK_ID", $reference);
 			}
 			$result[] = $record;
 		}
@@ -89,11 +96,16 @@ class Property extends BaseData
 	public function getIBlock(Record $record)
 	{
 		$iblockId = null;
-		if($iblockIdXml = $record->getDependency("IBLOCK_ID"))
+		if($iblock = $record->getDependency("IBLOCK_ID"))
 		{
-			$iblockId = Iblock::getInstance()->findRecord($iblockIdXml->getValue())->getValue();
+			if($iblock->getId())
+			{
+				$iblockId = $iblock->getId()->getValue();
+			}
+			else
+				throw new \Exception("Not found IBlock " . $iblock->getValue());
 		}
-		else
+		elseif($record->getId())
 		{
 			$rsProperty = \CIBlockProperty::GetByID($record->getId()->getValue());
 			if($arProperty = $rsProperty->Fetch())
@@ -101,22 +113,14 @@ class Property extends BaseData
 		}
 		if(!$iblockId)
 		{
-			throw new \Exception("Not found IBlock for the element " . $record->getId()->getValue());
+			throw new \Exception("Not found IBlock for the element " . $record->getXmlId());
 		}
 		return $iblockId;
 	}
 
 	public function update(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
-
-		$fields["IBLOCK_ID"] = $this->getIBlock($record);
-
-		if($reference = $record->getReference("LINK_IBLOCK_ID"))
-		{
-			$fields["LINK_IBLOCK_ID"] = Iblock::getInstance()->findRecord($reference->getValue())->getValue();
-		}
-
+		$fields = $this->recordToArray($record);
 		$propertyObject = new \CIBlockProperty();
 		$isUpdated = $propertyObject->update($record->getId()->getValue(), $fields);
 		if (!$isUpdated)
@@ -125,20 +129,39 @@ class Property extends BaseData
 		}
 	}
 
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return \string[]
+	 * @throws \Exception
+	 */
+	protected function recordToArray(Record $record)
+	{
+		$fields = $record->getFieldsRaw(array("USER_TYPE_SETTINGS"));
+		$fields["IBLOCK_ID"] = $this->getIBlock($record);
+		if ($reference = $record->getReference("LINK_IBLOCK_ID"))
+		{
+			if ($reference->getId())
+			{
+				$fields["LINK_IBLOCK_ID"] = $reference->getId()->getValue();
+			}
+		}
+		if ($fields["MULTIPLE_CNT"] === "")
+		{
+			$fields["MULTIPLE_CNT"] = false;
+		}
+
+		return $fields;
+	}
+
 	public function create(Record $record)
 	{
-		$fields = $record->getFieldsStrings();
-
-		$fields["IBLOCK_ID"] = $this->getIBlock($record);
-
+		$fields = $this->recordToArray($record);
 		$propertyObject = new \CIBlockProperty();
 		$propertyId = $propertyObject->add($fields);
 		if ($propertyId)
 		{
-			$id = RecordId::createNumericId($propertyId);
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-			return $id;
+			return RecordId::createNumericId($propertyId);
 		}
 		else
 		{
@@ -150,7 +173,7 @@ class Property extends BaseData
 	{
 		$id = $this->findRecord($xmlId);
 		$propertyObject = new \CIBlockProperty();
-		if (!$propertyObject->delete($id->getValue()))
+		if (!$propertyObject->delete($id))
 		{
 			throw new \Exception("Unknown error");
 		}

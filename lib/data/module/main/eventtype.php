@@ -2,27 +2,27 @@
 
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Data\RecordId;
-use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
 
 class EventType extends BaseData
 {
-	public function __construct()
-	{
-		$this->xmlIdProvider = new UfXmlIdProvider($this);
-	}
+	const XML_ID_SEPARATOR = "___";
 
 	public function getList(array $filter = array())
 	{
 		$result = array();
-		$getList = \CEventType::getList();
+		$getList = \CEventType::getList(
+			array(),
+			array(
+				"LID" => "ASC",
+			)
+		);
 		while ($type = $getList->fetch())
 		{
 			$record = new Record($this);
-			$id = RecordId::createNumericId($type["ID"]);
-			$record->setXmlId($this->getXmlIdProvider()->getXmlId($id));
+			$id = $this->createId($type["ID"]);
+			$record->setXmlId($this->getXmlId($id));
 			$record->setId($id);
-			$record->setFields(array(
+			$record->addFieldsRaw(array(
 				"LID" => $type["LID"],
 				"EVENT_NAME" => $type["EVENT_NAME"],
 				"NAME" => $type["NAME"],
@@ -36,7 +36,7 @@ class EventType extends BaseData
 
 	public function update(Record $record)
 	{
-		$isUpdated = \CEventType::update(array("ID" => $record->getId()->getValue()), $record->getFieldsStrings());
+		$isUpdated = \CEventType::update(array("ID" => $record->getId()->getValue()), $record->getFieldsRaw());
 		if (!$isUpdated)
 		{
 			global $APPLICATION;
@@ -49,21 +49,15 @@ class EventType extends BaseData
 
 	public function create(Record $record)
 	{
-		$eventTypeId = \CEventType::add($record->getFieldsStrings());
+		$eventTypeId = \CEventType::add($record->getFieldsRaw());
 		if ($eventTypeId)
 		{
-			$id = RecordId::createNumericId($eventTypeId);
-			$this->getXmlIdProvider()->setXmlId($id, $record->getXmlId());
-
-			return $id;
+			return $this->createId($eventTypeId);
 		}
 		else
 		{
 			global $APPLICATION;
-			if($exception = $APPLICATION->GetException())
-			{
-				throw new \Exception(trim(strip_tags($exception->GetString())));
-			}
+			throw new \Exception(trim(strip_tags($APPLICATION->getException()->getString())));
 		}
 	}
 
@@ -74,5 +68,48 @@ class EventType extends BaseData
 		{
 			throw new \Exception("Unknown error");
 		}
+	}
+
+	public function setXmlId($id, $xmlId)
+	{
+		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		$isUpdated = \CEventType::update(
+			array("ID" => $id->getValue()),
+			array("LID" => $fields[0], "EVENT_NAME" => $fields[1])
+		);
+		if (!$isUpdated)
+		{
+			global $APPLICATION;
+			throw new \Exception(trim(strip_tags($APPLICATION->getException()->getString())));
+		}
+	}
+
+	public function getXmlId($id)
+	{
+		$eventType = \CEventType::GetList(array("ID" => $id->getValue()));
+		if ($type = $eventType->Fetch())
+		{
+			return $type["LID"] . static::XML_ID_SEPARATOR .  $type["EVENT_NAME"];
+		}
+		else
+		{
+			return "";
+		}
+	}
+
+	public function findRecords(array $xmlIds)
+	{
+		$result = array();
+		foreach ($xmlIds as $xmlId)
+		{
+			$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+			$filter = array("LID" => $fields[0], "EVENT_NAME" => $fields[1]);
+			$record = \CEventType::getList($filter)->fetch();
+			if ($record["ID"])
+			{
+				$result[$xmlId] = $this->createId($record["ID"]);
+			}
+		}
+		return $result;
 	}
 }

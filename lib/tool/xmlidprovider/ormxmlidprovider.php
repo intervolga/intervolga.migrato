@@ -2,6 +2,7 @@
 
 use Bitrix\Main\Entity\DataManager;
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\RecordId;
 
 class OrmXmlIdProvider extends BaseXmlIdProvider
 {
@@ -23,7 +24,11 @@ class OrmXmlIdProvider extends BaseXmlIdProvider
 	public function setXmlId($id, $xmlId)
 	{
 		$dataManager = $this->dataManager;
-		$dataManager::update($id->getValue(), array("XML_ID" => $xmlId));
+		$updateResult = $dataManager::update($id->getValue(), array("XML_ID" => $xmlId));
+		if (!$updateResult->isSuccess())
+		{
+			throw new \Exception(implode(";", $updateResult->getErrorMessages()));
+		}
 	}
 
 	public function getXmlId($id)
@@ -45,5 +50,26 @@ class OrmXmlIdProvider extends BaseXmlIdProvider
 		{
 			return "";
 		}
+	}
+
+	public function findRecords(array $xmlIds)
+	{
+		$result = array();
+		$parameters = array(
+			"select" => array(
+				"ID",
+				"XML_ID",
+			),
+			"filter" => array(
+				"=XML_ID" => $xmlIds,
+			),
+		);
+		$dataManager = $this->dataManager;
+		$getList = $dataManager::getList($parameters);
+		while ($record = $getList->fetch())
+		{
+			$result[$record["XML_ID"]] = RecordId::createNumericId($record["ID"]);
+		}
+		return $result;
 	}
 }

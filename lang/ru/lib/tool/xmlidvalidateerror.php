@@ -1,0 +1,6 @@
+<?
+$MESS["INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_EMPTY"] = "Xml id is not set";
+$MESS["INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_REPEAT"] = "Xml id is duplicated";
+$MESS["INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_INVALID"] = "Xml id is invalid, it has restricted symbols";
+$MESS["INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_SIMPLE"] = "Xml id is too simple (numeric)";
+$MESS["INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_UNKNOWN"] = "Unknown error";

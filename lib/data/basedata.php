@@ -6,6 +6,9 @@ use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 abstract class BaseData
 {
 	protected static $instances = array();
+	/**
+	 * @var \Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider
+	 */
 	protected $xmlIdProvider = null;
 
 	/**
@@ -29,35 +32,35 @@ abstract class BaseData
 	abstract public function getList(array $filter = array());
 
 	/**
-	 * @param Record $record
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 *
-	 * @throws NotImplementedException
+	 * @throws \Bitrix\Main\NotImplementedException
 	 */
 	public function update(Record $record)
 	{
-		throw new NotImplementedException("Update for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
+		throw new NotImplementedException("Update for " . $record->getData()->getModule() . "/" . $record->getData()->getEntityName() . " is not yet implemented");
 	}
 
 	/**
-	 * @param Record $record
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 *
-	 * @throws NotImplementedException
+	 * @throws \Bitrix\Main\NotImplementedException
 	 *
 	 * @return \Intervolga\Migrato\Data\RecordId
 	 */
 	public function create(Record $record)
 	{
-		throw new NotImplementedException("Create for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
+		throw new NotImplementedException("Create for " . $record->getData()->getModule() . "/" . $record->getData()->getEntityName() . " is not yet implemented");
 	}
 
 	/**
 	 * @param string $xmlId
 	 *
-	 * @throws NotImplementedException
+	 * @throws \Bitrix\Main\NotImplementedException
 	 */
 	public function delete($xmlId)
 	{
-		throw new NotImplementedException("Delete for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
+		throw new NotImplementedException("Delete for " . $this->getModule() . "/" . $this->getEntityName() . " ($xmlId) is not yet implemented");
 	}
 
 	/**
@@ -67,15 +70,35 @@ abstract class BaseData
 	 */
 	public function findRecord($xmlId)
 	{
-		foreach (static::getList() as $dbRecord)
-		{
-			if ($dbRecord->getXmlId() == $xmlId)
-			{
-				return $dbRecord->getId();
-			}
-		}
+		$findRecords = static::findRecords(array($xmlId));
+		return $findRecords[$xmlId];
+	}
 
-		return null;
+	/**
+	 * @param string[] $xmlIds
+	 *
+	 * @return \Intervolga\Migrato\Data\RecordId[]
+	 */
+	public function findRecords(array $xmlIds)
+	{
+		if ($this->xmlIdProvider)
+		{
+			return $this->xmlIdProvider->findRecords($xmlIds);
+		}
+		else
+		{
+			$result = array();
+			$allRecords = static::getList();
+			foreach ($allRecords as $dbRecord)
+			{
+				if (in_array($dbRecord->getXmlId(), $xmlIds))
+				{
+					$result[$dbRecord->getXmlId()] = $dbRecord->getId();
+				}
+			}
+
+			return $result;
+		}
 	}
 
 	/**
@@ -132,7 +155,7 @@ abstract class BaseData
 	}
 
 	/**
-	 * @return Link[]
+	 * @return \Intervolga\Migrato\Data\Link[]
 	 */
 	public function getDependencies()
 	{
@@ -142,7 +165,7 @@ abstract class BaseData
 	/**
 	 * @param string $name
 	 *
-	 * @return Link
+	 * @return \Intervolga\Migrato\Data\Link
 	 */
 	public function getDependency($name)
 	{
@@ -152,7 +175,7 @@ abstract class BaseData
 	}
 
 	/**
-	 * @return Link[]
+	 * @return \Intervolga\Migrato\Data\Link[]
 	 */
 	public function getReferences()
 	{
@@ -162,7 +185,7 @@ abstract class BaseData
 	/**
 	 * @param string $name
 	 *
-	 * @return Link
+	 * @return \Intervolga\Migrato\Data\Link
 	 */
 	public function getReference($name)
 	{
@@ -172,10 +195,113 @@ abstract class BaseData
 	}
 
 	/**
-	 * @return BaseXmlIdProvider
+	 * @return \Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider
 	 */
 	public function getXmlIdProvider()
 	{
 		return $this->xmlIdProvider;
+	}
+
+	/**
+	 * @param mixed $id
+	 *
+	 * @return \Intervolga\Migrato\Data\RecordId
+	 */
+	public function createId($id)
+	{
+		return RecordId::createNumericId($id);
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $id
+	 * @param string $xmlId
+	 *
+	 * @throws \Bitrix\Main\NotImplementedException
+	 */
+	public function setXmlId($id, $xmlId)
+	{
+		if ($this->xmlIdProvider)
+		{
+			$this->xmlIdProvider->setXmlId($id, $xmlId);
+		}
+		else
+		{
+			throw new NotImplementedException("Not implemented yet");
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $id
+	 *
+	 * @return string
+	 * @throws \Bitrix\Main\NotImplementedException
+	 */
+	public function getXmlId($id)
+	{
+		if ($this->xmlIdProvider)
+		{
+			return $this->xmlIdProvider->getXmlId($id);
+		}
+		else
+		{
+			throw new NotImplementedException("Not implemented yet");
+		}
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isXmlIdFieldExists()
+	{
+		if ($this->xmlIdProvider)
+		{
+			return $this->xmlIdProvider->isXmlIdFieldExists();
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	public function createXmlIdField()
+	{
+		if ($this->xmlIdProvider)
+		{
+			$this->xmlIdProvider->createXmlIdField();
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $id
+	 *
+	 * @return string
+	 */
+	public function generateXmlId($id)
+	{
+		if ($this->xmlIdProvider)
+		{
+			return $this->xmlIdProvider->generateXmlId($id);
+		}
+		else
+		{
+			$xmlId = $this->makeXmlId();
+			$this->setXmlId($id, $xmlId);
+			return $xmlId;
+		}
+	}
+
+	/**
+	 * @return string
+	 */
+	protected function makeXmlId()
+	{
+		if ($this->xmlIdProvider)
+		{
+			return $this->xmlIdProvider->makeXmlId();
+		}
+		else
+		{
+			return BaseXmlIdProvider::makeDefaultXmlId($this);
+		}
 	}
 }

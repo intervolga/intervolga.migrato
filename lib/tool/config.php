@@ -1,12 +1,11 @@
 <? namespace Intervolga\Migrato\Tool;
 
-
 use Intervolga\Migrato\Data\BaseData;
 
 class Config
 {
-	protected static $configArray = array();
-	protected static $dataClassesFilter = array();
+	protected $configArray = array();
+	protected $dataClassesFilter = array();
 	protected static $instance = null;
 
 	/**
@@ -31,16 +30,16 @@ class Config
 	{
 		$xmlParser = new \CDataXML();
 		$xmlParser->load(INTERVOLGA_MIGRATO_CONFIG_PATH);
-		static::$configArray = $xmlParser->getArray();
+		$this->configArray = $xmlParser->getArray();
 	}
 
 	/**
-	 * @return array|string[]
+	 * @return string[]
 	 */
 	public function getModules()
 	{
 		$result = array();
-		foreach (static::$configArray["config"]["#"]["module"] as $moduleArray)
+		foreach ($this->configArray["config"]["#"]["module"] as $moduleArray)
 		{
 			$moduleName = $moduleArray["#"]["name"][0]["#"];
 			$result[] = $moduleName;
@@ -55,7 +54,7 @@ class Config
 	public function getModulesOptions()
 	{
 		$options = array();
-		foreach (static::$configArray["config"]["#"]["module"] as $moduleArray)
+		foreach ($this->configArray["config"]["#"]["module"] as $moduleArray)
 		{
 			$moduleName = $moduleArray["#"]["name"][0]["#"];
 			foreach ($moduleArray["#"]["options"][0]["#"]["name"] as $optionArray)
@@ -68,30 +67,30 @@ class Config
 	}
 
 	/**
-	 * @return array|BaseData[]
+	 * @return BaseData[]
 	 */
 	public function getDataClasses()
 	{
-		$entities = array();
-		foreach (static::$configArray["config"]["#"]["module"] as $moduleArray)
+		static $entities = array();
+		if (!$entities)
 		{
-			$moduleName = $moduleArray["#"]["name"][0]["#"];
-			foreach ($moduleArray["#"]["entity"] as $entityArray)
+			foreach ($this->configArray["config"]["#"]["module"] as $moduleArray)
 			{
-				$className = $entityArray["#"]["name"][0]["#"];
-				$name = "\\Intervolga\\Migrato\\Data\\Module\\" . $moduleName . "\\" . $className;
-				if (class_exists($name))
+				$moduleName = $moduleArray["#"]["name"][0]["#"];
+				foreach ($moduleArray["#"]["entity"] as $entityArray)
 				{
-					/**
-					 * @var BaseData $name
-					 */
-					$dataObject = $name::getInstance();
-					$entities[] = $dataObject;
-					if ($entityArray["#"]["filter"])
+					$className = $entityArray["#"]["name"][0]["#"];
+					$name = "\\Intervolga\\Migrato\\Data\\Module\\" . $moduleName . "\\" . $className;
+					if (class_exists($name))
 					{
-						foreach ($entityArray["#"]["filter"] as $filterArray)
+						/**
+						 * @var BaseData $name
+						 */
+						$dataObject = $name::getInstance();
+						$entities[] = $dataObject;
+						if ($entityArray["#"]["filter"])
 						{
-							static::$dataClassesFilter[$dataObject->getModule()][$dataObject->getEntityName()][] = $filterArray["#"];
+							$this->registerDataFilter($dataObject, $entityArray["#"]["filter"]);
 						}
 					}
 				}
@@ -102,15 +101,27 @@ class Config
 	}
 
 	/**
+	 * @param BaseData $dataObject
+	 * @param array $filterNodes
+	 */
+	protected function registerDataFilter(BaseData $dataObject, array $filterNodes)
+	{
+		foreach ($filterNodes as $filterArray)
+		{
+			$this->dataClassesFilter[$dataObject->getModule()][$dataObject->getEntityName()][] = $filterArray["#"];
+		}
+	}
+
+	/**
 	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
 	 *
 	 * @return array|string[]
 	 */
 	public function getDataClassFilter(BaseData $dataClass)
 	{
-		if (static::$dataClassesFilter[$dataClass->getModule()][$dataClass->getEntityName()])
+		if ($this->dataClassesFilter[$dataClass->getModule()][$dataClass->getEntityName()])
 		{
-			return static::$dataClassesFilter[$dataClass->getModule()][$dataClass->getEntityName()];
+			return array_unique($this->dataClassesFilter[$dataClass->getModule()][$dataClass->getEntityName()]);
 		}
 		else
 		{

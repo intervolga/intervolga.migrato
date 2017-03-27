@@ -1,11 +1,14 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Data\Runtime;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\ImportList;
+use Intervolga\Migrato\Tool\Orm\LogTable;
 
 class ImportData extends BaseProcess
 {
@@ -17,6 +20,10 @@ class ImportData extends BaseProcess
 	 * @var \Intervolga\Migrato\Tool\ImportList
 	 */
 	protected static $list = null;
+	/**
+	 * @var \Intervolga\Migrato\Data\Record[]
+	 */
+	protected static $deleteRecords = array();
 
 	public static function run()
 	{
@@ -24,9 +31,11 @@ class ImportData extends BaseProcess
 
 		static::init();
 		static::importWithDependencies();
+		static::logNotResolved();
 		static::deleteNotImported();
+		static::deleteMarked();
 		static::resolveReferences();
-		static::report("finishing");
+		static::report("Process completed");
 	}
 
 	protected static function init()
@@ -46,6 +55,9 @@ class ImportData extends BaseProcess
 				static::prepareConfigData($data);
 			}
 		}
+
+		// Добавить dependencies of runtimes
+		static::$list->addCreatedRecordRuntimes();
 	}
 
 	/**
@@ -53,7 +65,8 @@ class ImportData extends BaseProcess
 	 */
 	protected static function prepareNonConfigData(BaseData $data)
 	{
-		foreach ($data->getList() as $localDataRecord)
+		$dataGetList = $data->getList();
+		foreach ($dataGetList as $localDataRecord)
 		{
 			static::$list->addCreatedRecord($localDataRecord);
 		}
@@ -65,7 +78,20 @@ class ImportData extends BaseProcess
 	protected static function prepareConfigData(BaseData $data)
 	{
 		static::$list->addExistingRecords($data->getList());
-		static::$list->addRecordsToImport(static::readFromFile($data));
+		$records = array();
+		foreach (static::readFromFile($data) as $record)
+		{
+			if ($record->getDeleteMark())
+			{
+				static::$deleteRecords[] = $record;
+			}
+			else
+			{
+				$records[] = $record;
+			}
+		}
+
+		static::$list->addRecordsToImport($records);
 	}
 
 	protected static function importWithDependencies()
@@ -74,10 +100,11 @@ class ImportData extends BaseProcess
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		for ($i = 0; $i < count($configDataClasses); $i++)
 		{
+			static::$step = __FUNCTION__;
 			$creatableDataRecords = static::$list->getCreatableRecords();
-			static::report("Import depenency step $i, count=" . count($creatableDataRecords) . " record(s)");
 			if ($creatableDataRecords)
 			{
+				static::report("Import step $i, count=" . count($creatableDataRecords) . " record(s)");
 				foreach ($creatableDataRecords as $dataRecord)
 				{
 					static::saveDataRecord($dataRecord);
@@ -88,13 +115,14 @@ class ImportData extends BaseProcess
 			{
 				break;
 			}
+			static::reportStep(static::$step);
 		}
+
 		if (static::$list->getCreatableRecords())
 		{
-			static::report("Not enough import depenency steps!");
+			static::report("Not enough import depenency steps!", "fail");
 		}
 	}
-
 
 	/**
 	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
@@ -129,17 +157,17 @@ class ImportData extends BaseProcess
 					{
 						foreach ($runtime->getFields() as $runtimeFieldName => $runtimeFieldValue)
 						{
-							$data[$i]->addDependency("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
+							$data[$i]->setReference("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
 						}
 						foreach ($runtime->getReferences() as $runtimeFieldName => $runtimeFieldValue)
 						{
-							$data[$i]->addDependency("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
-							$data[$i]->addReference("RUNTIME.$name." . $runtimeFieldName, $runtimeFieldValue);
+							$data[$i]->setReference("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
+							$data[$i]->setReference("RUNTIME.$name." . $runtimeFieldName, $runtimeFieldValue);
 						}
 						foreach ($runtime->getDependencies() as $runtimeFieldName => $runtimeFieldValue)
 						{
-							$data[$i]->addDependency("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
-							$data[$i]->addDependency("RUNTIME.$name." . $runtimeFieldName, $runtimeFieldValue);
+							$data[$i]->setReference("RUNTIME.$name", new Link($runtime->getData(), $runtimeFieldName));
+							$data[$i]->setDependency("RUNTIME.$name." . $runtimeFieldName, $runtimeFieldValue);
 						}
 					}
 				}
@@ -164,7 +192,14 @@ class ImportData extends BaseProcess
 			if ($dependencyModel)
 			{
 				$clone = clone $dependencyModel;
-				$clone->setValue($dependency->getValue());
+				if ($dependency->isMultiple())
+				{
+					$clone->setValues($dependency->getValues());
+				}
+				else
+				{
+					$clone->setValue($dependency->getValue());
+				}
 				$result[$key] = $clone;
 			}
 		}
@@ -187,7 +222,14 @@ class ImportData extends BaseProcess
 			if ($referenceModel)
 			{
 				$clone = clone $referenceModel;
-				$clone->setValue($reference->getValue());
+				if ($reference->isMultiple())
+				{
+					$clone->setValues($reference->getValues());
+				}
+				else
+				{
+					$clone->setValue($reference->getValue());
+				}
 				$result[$key] = $clone;
 			}
 		}
@@ -231,74 +273,220 @@ class ImportData extends BaseProcess
 		}
 		if ($dataRecordId = $dataRecord->getData()->findRecord($dataRecord->getXmlId()))
 		{
-			try
-			{
-				$dataRecord->setId($dataRecordId);
-				$dataRecord->update();
-				static::reportRecord($dataRecord, "updated");
-			}
-			catch (\Exception $exception)
-			{
-				static::reportRecordException($dataRecord, $exception, "update");
-			}
+			static::updateWithLog($dataRecordId, $dataRecord);
 		}
 		else
 		{
-			try
+			static::createWithLog($dataRecord);
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $dataRecordId
+	 * @param \Intervolga\Migrato\Data\Record $dataRecord
+	 */
+	protected static function updateWithLog(RecordId $dataRecordId, Record $dataRecord)
+	{
+		try
+		{
+			foreach ($dataRecord->getDependencies() as $dependency)
 			{
-				$id = $dataRecord->create();
-				$dataRecord->setId($id);
-				static::reportRecord($dataRecord, "created");
+				self::setLinkId($dependency);
 			}
-			catch (\Exception $exception)
+			self::setRuntimesId($dataRecord->getRuntimes());
+
+			$dataRecord->setId($dataRecordId);
+			$dataRecord->update();
+			LogTable::add(array(
+				"RECORD" => $dataRecord,
+				"OPERATION" => "update",
+				"STEP" => static::$step,
+			));
+		}
+		catch (\Exception $exception)
+		{
+			LogTable::add(array(
+				"RECORD" => $dataRecord,
+				"EXCEPTION" => $exception,
+				"OPERATION" => "update",
+				"STEP" => static::$step,
+			));
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $dataRecord
+	 */
+	protected static function createWithLog(Record $dataRecord)
+	{
+		try
+		{
+			foreach($dataRecord->getDependencies() as $dependency)
 			{
-				static::reportRecordException($dataRecord, $exception, "create");
+				self::setLinkId($dependency);
 			}
+			$dataRecord->setId($dataRecord->create());
+			$dataRecord->getData()->setXmlId(
+				$dataRecord->getId(),
+				$dataRecord->getXmlId()
+			);
+			LogTable::add(array(
+				"RECORD" => $dataRecord,
+				"OPERATION" => "create",
+				"STEP" => static::$step,
+			));
+		}
+		catch (\Exception $exception)
+		{
+			LogTable::add(array(
+				"RECORD" => $dataRecord,
+				"EXCEPTION" => $exception,
+				"OPERATION" => "create",
+				"STEP" => static::$step,
+			));
+		}
+	}
+
+	protected static function logNotResolved()
+	{
+		static::report(__FUNCTION__);
+		static::$step = __FUNCTION__;
+		foreach (static::$list->getNotResolvedRecords() as $notResolvedRecord)
+		{
+			LogTable::add(array(
+				"RECORD" => $notResolvedRecord,
+				"EXCEPTION" => new \Exception("Dependencies not resolved"),
+				"OPERATION" => "resolve",
+				"STEP" => static::$step,
+			));
 		}
 	}
 
 	protected static function deleteNotImported()
 	{
 		static::report(__FUNCTION__);
+		static::$step = __FUNCTION__;
 		foreach (static::$list->getRecordsToDelete() as $dataRecord)
 		{
-			try
-			{
-				$dataRecord->delete();
-				static::reportRecord($dataRecord, "deleted");
-			}
-			catch (\Exception $exception)
-			{
-				static::reportRecordException($dataRecord, $exception, "delete");
-			}
+			static::deleteRecordWithLog($dataRecord);
 		}
+		static::reportStep(static::$step);
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 */
+	protected static function deleteRecordWithLog(Record $record)
+	{
+		try
+		{
+			$record->delete();
+			LogTable::add(array(
+				"RECORD" => $record,
+				"OPERATION" => "delete",
+				"STEP" => static::$step,
+			));
+		}
+		catch (\Exception $exception)
+		{
+			LogTable::add(array(
+				"RECORD" => $record,
+				"EXCEPTION" => $exception,
+				"OPERATION" => "delete",
+				"STEP" => static::$step,
+			));
+		}
+	}
+
+	protected static function deleteMarked()
+	{
+		static::report(__FUNCTION__);
+		static::$step = __FUNCTION__;
+		foreach (static::$deleteRecords as $record)
+		{
+			static::deleteRecordWithLog($record);
+		}
+		static::reportStep(static::$step);
 	}
 
 	protected static function resolveReferences()
 	{
 		static::report(__FUNCTION__);
+		static::$step = __FUNCTION__;
+		/**
+		 * @var Record $dataRecord
+		 */
 		foreach (static::$recordsWithReferences as $dataRecord)
 		{
 			$clone = clone $dataRecord;
-			$clone->setFields(array());
-			$clone->setDependencies(array());
+			$clone->removeFields();
+			$clone->removeDependencies();
 			foreach ($clone->getReferences() as $reference)
 			{
-				$id = $reference->getTargetData()->findRecord($reference->getValue());
-				if ($id)
-				{
-					$reference->setId($id);
-				}
+				self::setLinkId($reference);
 			}
+			self::setRuntimesId($clone->getRuntimes());
 			try
 			{
+				$id = $dataRecord->getData()->findRecord($dataRecord->getXmlId());
+				if (!$id)
+				{
+					throw new \Exception("Record not found");
+				}
+				$clone->setId($id);
 				$clone->update();
-				static::reportRecord($dataRecord, "updated references");
+				LogTable::add(array(
+					"RECORD" => $dataRecord,
+					"OPERATION" => "update references",
+					"STEP" => static::$step,
+				));
 			}
 			catch (\Exception $exception)
 			{
-				static::reportRecordException($dataRecord, $exception, "update reference");
+				LogTable::add(array(
+					"RECORD" => $dataRecord,
+					"EXCEPTION" => $exception,
+					"OPERATION" => "update reference",
+					"STEP" => static::$step,
+				));
 			}
+		}
+	}
+
+	/**
+	 * @param Runtime[] $runtimes
+	 */
+	protected static function setRuntimesId(array $runtimes)
+	{
+		foreach($runtimes as &$runtime)
+		{
+			foreach($runtime->getDependencies() as $link)
+			{
+				self::setLinkId($link);
+			}
+			foreach($runtime->getReferences() as $link)
+			{
+				self::setLinkId($link);
+			}
+		}
+	}
+
+	/**
+	 * @param Link $link
+	 */
+	protected static function setLinkId($link)
+	{
+		if(!$link->isMultiple())
+		{
+			$id = $link->findId();
+			if($id)
+			{
+				$link->setId($link->findId());
+			}
+		}
+		else
+		{
+			$link->setIds($link->findIds());
 		}
 	}
 }

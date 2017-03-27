@@ -2,6 +2,7 @@
 
 use Bitrix\Main;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\IO\Directory;
 
 Loc::loadMessages(__FILE__);
 
@@ -18,6 +19,7 @@ class intervolga_migrato extends CModule
 	public function __construct()
 	{
 		$arModuleVersion = array();
+		include(dirname(__DIR__) . "/include.php");
 		include(dirname(__FILE__) . "/version.php");
 		$this->MODULE_ID = self::getModuleId();
 		$this->MODULE_VERSION = $arModuleVersion["VERSION"];
@@ -34,6 +36,7 @@ class intervolga_migrato extends CModule
 		try
 		{
 			$this->installDb();
+			$this->copyPublicFiles();
 			Main\ModuleManager::registerModule($this->MODULE_ID);
 		}
 		catch (\Exception $e)
@@ -59,6 +62,16 @@ class intervolga_migrato extends CModule
 		return true;
 	}
 
+	public function copyPublicFiles()
+	{
+		if(!Directory::isDirectoryExists(INTERVOLGA_MIGRATO_DIRECTORY))
+		{
+			Directory::createDirectory(INTERVOLGA_MIGRATO_DIRECTORY);
+
+			CopyDirFiles(__DIR__ . "/public", INTERVOLGA_MIGRATO_DIRECTORY);
+		}
+	}
+
 	public function doUninstall()
 	{
 		try
@@ -70,11 +83,7 @@ class intervolga_migrato extends CModule
 		{
 			global $APPLICATION;
 			$APPLICATION->ThrowException($e->getMessage());
-
-			return false;
 		}
-
-		return true;
 	}
 
 	public function unInstallDb()

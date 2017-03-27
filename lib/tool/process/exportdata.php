@@ -3,6 +3,7 @@
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
+use Intervolga\Migrato\Tool\Orm\LogTable;
 
 class ExportData extends BaseProcess
 {
@@ -26,6 +27,8 @@ class ExportData extends BaseProcess
 		{
 			static::exportData($data);
 		}
+		static::reportStep("Export");
+		static::report("Process completed");
 	}
 
 	/**
@@ -33,24 +36,32 @@ class ExportData extends BaseProcess
 	 */
 	protected static function exportData(BaseData $dataClass)
 	{
-		try
-		{
-			$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . "/";
-			checkDirPath($path);
-			DataFileViewXml::markDataDeleted($path);
+		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . "/";
+		checkDirPath($path);
+		DataFileViewXml::markDataDeleted($path);
 
-			$filter = Config::getInstance()->getDataClassFilter($dataClass);
-			$records = $dataClass->getList($filter);
-			foreach ($records as $record)
+		$filter = Config::getInstance()->getDataClassFilter($dataClass);
+		$records = $dataClass->getList($filter);
+		foreach ($records as $record)
+		{
+			try
 			{
 				DataFileViewXml::writeToFileSystem($record, $path);
+				LogTable::add(array(
+					"RECORD" => $record,
+					"OPERATION" => "export",
+					"STEP" => "Export",
+				));
 			}
-
-			static::reportData($dataClass, "exported");
-		}
-		catch (\Exception $exception)
-		{
-			static::reportDataException($dataClass, $exception, "export");
+			catch (\Exception $exception)
+			{
+				LogTable::add(array(
+					"RECORD" => $record,
+					"EXCEPTION" => $exception,
+					"OPERATION" => "export",
+					"STEP" => "Export",
+				));
+			}
 		}
 	}
 }

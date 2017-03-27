@@ -20,6 +20,54 @@ class Value
 	protected $descriptionIsSet = false;
 
 	/**
+	 * @param array $tree
+	 * @param string $root
+	 *
+	 * @return string[]
+	 */
+	public static function treeToList(array $tree, $root)
+	{
+		$list = array();
+		foreach ($tree as $key => $value)
+		{
+			$list["$root.$key"] = $value;
+		}
+		ksort($list);
+		return $list;
+	}
+
+	/**
+	 * @param array $list
+	 *
+	 * @return array
+	 */
+	public static function listToTree(array $list)
+	{
+		$tree = array();
+		foreach ($list as $key => $value)
+		{
+			$explode = explode(".", $key);
+			if (count($explode) == 2)
+			{
+				$tree[$explode[0]][$explode[1]] = $value;
+			}
+		}
+		return $tree;
+	}
+
+	/**
+	 * @param array $tree
+	 * @param string $root
+	 *
+	 * @return array
+	 */
+	public static function listToTreeGet(array $tree, $root)
+	{
+		$result = static::listToTree($tree);
+		return $result[$root];
+	}
+
+	/**
 	 * @param string[] $values
 	 *
 	 * @return static
@@ -75,6 +123,27 @@ class Value
 	}
 
 	/**
+	 * @param string $value
+	 */
+	public function addValue($value)
+	{
+		$this->values[] = $value;
+		$this->multiple = true;
+	}
+
+	/**
+	 * @param string[] $values
+	 */
+	public function addValues(array $values)
+	{
+		foreach ($values as $value)
+		{
+			$this->values[] = $value;
+		}
+		$this->multiple = true;
+	}
+
+	/**
 	 * @return \string[]
 	 * @throws \Exception
 	 */
@@ -100,7 +169,6 @@ class Value
 		$this->descriptionIsSet = true;
 	}
 
-
 	/**
 	 * @return string
 	 * @throws \Exception
@@ -123,6 +191,29 @@ class Value
 	public function setDescriptions(array $descriptions)
 	{
 		$this->descriptions = $descriptions;
+		$this->multiple = true;
+		$this->descriptionIsSet = true;
+	}
+
+	/**
+	 * @param string $description
+	 */
+	public function addDescription($description)
+	{
+		$this->descriptions[] = $description;
+		$this->multiple = true;
+		$this->descriptionIsSet = true;
+	}
+
+	/**
+	 * @param string[] $descriptions
+	 */
+	public function addDescriptions(array $descriptions)
+	{
+		foreach ($descriptions as $description)
+		{
+			$this->descriptions[] = $description;
+		}
 		$this->multiple = true;
 		$this->descriptionIsSet = true;
 	}
