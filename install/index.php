@@ -2,7 +2,6 @@
 
 use Bitrix\Main;
 use Bitrix\Main\Localization\Loc;
-use Intervolga\Migrato\Tool\XmlIdProvider\UfXmlIdProvider;
 use Bitrix\Main\IO\Directory;
 
 Loc::loadMessages(__FILE__);
@@ -75,45 +74,22 @@ class intervolga_migrato extends CModule
 
 	public function doUninstall()
 	{
-		global $APPLICATION, $step;
-
-		$step = intval($step);
-		if ($step < 2)
+		try
 		{
-			$APPLICATION->includeAdminFile(
-				Loc::getMessage("INTERVOLGA_MIGRATO.UNINSTALL_STEP_N", array("#N#" => 1)),
-				__DIR__ . "/unstep1.php"
-			);
+			$this->unInstallDb();
+			Main\ModuleManager::unRegisterModule($this->MODULE_ID);
 		}
-		elseif ($step == 2)
+		catch (\Exception $e)
 		{
-			try
-			{
-				Main\Loader::includeModule("intervolga.migrato");
-				$this->unInstallDb($_REQUEST["savedata"] == "Y");
-				Main\ModuleManager::unRegisterModule($this->MODULE_ID);
-			}
-			catch (\Exception $e)
-			{
-				global $APPLICATION;
-				$APPLICATION->ThrowException($e->getMessage());
-			}
-			$APPLICATION->includeAdminFile(
-				Loc::getMessage("INTERVOLGA_MIGRATO.UNINSTALL_STEP_N", array("#N#" => 2)),
-				__DIR__ . "/unstep2.php"
-			);
+			global $APPLICATION;
+			$APPLICATION->ThrowException($e->getMessage());
 		}
 	}
 
-	public function unInstallDb($saveData = false)
+	public function unInstallDb()
 	{
 		global $DB, $DBType;
-		$errors = array();
-		if (!$saveData)
-		{
-			UfXmlIdProvider::deleteXmlIdFields();
-			$errors = $DB->RunSQLBatch(__DIR__. "/db/" . strtolower($DBType) . "/uninstall.sql");
-		}
+		$errors = $DB->RunSQLBatch(__DIR__. "/db/" . strtolower($DBType) . "/uninstall.sql");
 		if ($errors)
 		{
 			throw new \Exception(implode("<br>", $errors));
