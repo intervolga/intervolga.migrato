@@ -131,15 +131,13 @@ class Event extends BaseData
 	public function delete($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		$eventMessageObject = new \CEventMessage();
-		if (!$eventMessageObject->delete($id->getValue()))
+		if ($id)
 		{
-			throw new \Exception("Unknown error");
+			$eventMessageObject = new \CEventMessage();
+			if (!$eventMessageObject->delete($id->getValue()))
+			{
+				throw new \Exception("Unknown error");
+			}
 		}
-	}
-
-	public function findRecord($xmlId)
-	{
-		return $this->xmlIdProvider->findRecord($xmlId);
 	}
 }
