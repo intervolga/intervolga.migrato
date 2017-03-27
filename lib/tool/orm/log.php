@@ -123,6 +123,7 @@ class LogTable extends DataManager
 		{
 			$log["COMMENT"] .= " (" . $exception->getCode() . ")";
 		}
+		$log["COMMENT"] .= "\n\n" . $exception->getTraceAsString();
 		return $log;
 	}
 
