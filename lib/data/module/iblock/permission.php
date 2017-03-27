@@ -119,7 +119,7 @@ class Permission extends BaseData
 
 		$arGroups = \CIBlock::GetGroupPermissions($iblockId);
 
-		$arGroups[$groupId] = $record->getField("PERMISSION");
+		$arGroups[$groupId] = $record->getField("PERMISSION")->getValue();
 		$iblock = new \CIBlock();
 		$iblock->SetPermission($iblockId, $arGroups);
 
