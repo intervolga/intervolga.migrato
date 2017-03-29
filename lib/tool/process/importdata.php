@@ -32,7 +32,6 @@ class ImportData extends BaseProcess
 		static::init();
 		static::importWithDependencies();
 		static::logNotResolved();
-		static::deleteNotImported();
 		static::deleteMarked();
 		static::resolveReferences();
 		static::reportSeparator();
@@ -120,12 +119,12 @@ class ImportData extends BaseProcess
 					static::saveDataRecord($dataRecord);
 					static::$list->addCreatedRecord($dataRecord);
 				}
+				static::reportStep(static::$step);
 			}
 			else
 			{
 				break;
 			}
-			static::reportStep(static::$step);
 		}
 
 		if (static::$list->getCreatableRecords())
@@ -359,9 +358,7 @@ class ImportData extends BaseProcess
 
 	protected static function logNotResolved()
 	{
-		static::reportSeparator();
 		static::$step = __FUNCTION__;
-		static::report(static::$step);
 		foreach (static::$list->getNotResolvedRecords() as $notResolvedRecord)
 		{
 			LogTable::add(array(
@@ -371,18 +368,6 @@ class ImportData extends BaseProcess
 				"STEP" => static::$step,
 			));
 		}
-	}
-
-	protected static function deleteNotImported()
-	{
-		static::reportSeparator();
-		static::$step = __FUNCTION__;
-		static::report(static::$step);
-		foreach (static::$list->getRecordsToDelete() as $dataRecord)
-		{
-			static::deleteRecordWithLog($dataRecord);
-		}
-		static::reportStep(static::$step);
 	}
 
 	/**
