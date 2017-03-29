@@ -404,23 +404,35 @@ abstract class BaseUserField extends BaseData
 
 	public function update(Record $record)
 	{
-		$fields = $record->getFieldsRaw();
-
-		$blockIdXml = $record->getDependency($this->getDependencyString());
-
-		$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
-		foreach($this->getLangFieldsNames() as $lang)
+		$isUpdated = false;
+		if ($record->getId()->getValue())
 		{
-			$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
-		}
+			$fields = $record->getFieldsRaw();
 
-		if(!$blockIdXml)
-		{
-			$fields["SETTINGS"] = array_merge($fields["SETTINGS"], $this->getSettingsLinksFields($record->getReferences()));
-		}
+			$blockIdXml = $record->getDependency($this->getDependencyString());
 
-		$fieldObject = new \CAllUserTypeEntity();
-		$isUpdated = $fieldObject->Update($record->getId()->getValue(), $fields);
+			$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
+			foreach($this->getLangFieldsNames() as $lang)
+			{
+				$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
+			}
+
+			if(!$blockIdXml)
+			{
+				$fields["SETTINGS"] = array_merge($fields["SETTINGS"], $this->getSettingsLinksFields($record->getReferences()));
+			}
+
+			$fieldObject = new \CUserTypeEntity();
+			if ($fields["SETTINGS"])
+			{
+				$dbUserField = $fieldObject->getList(array(), array("ID" => $record->getId()->getValue()))->fetch();
+				if ($dbUserField["SETTINGS"])
+				{
+					$fields["SETTINGS"] = array_merge($dbUserField["SETTINGS"], $fields["SETTINGS"]);
+				}
+			}
+			$isUpdated = $fieldObject->Update($record->getId()->getValue(), $fields);
+		}
 		if (!$isUpdated)
 		{
 			throw new \Exception("Unknown error");
@@ -430,35 +442,23 @@ abstract class BaseUserField extends BaseData
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
-
-		if($iblockId = $record->getDependency($this->getDependencyString())->getId())
+		$fields["XML_ID"] = $record->getXmlId();
+		$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
+		foreach($this->getLangFieldsNames() as $lang)
 		{
-			$userTypeEntity = new \CUserTypeEntity();
-			$userTypeEntity->CreatePropertyTables("iblock_" . $iblockId->getValue() . "_section");
+			$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
+		}
 
-			$fields["XML_ID"] = $record->getXmlId();
-			$fields["ENTITY_ID"] = $this->getDependencyNameKey($iblockId->getValue());
-
-			$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
-			foreach($this->getLangFieldsNames() as $lang)
-			{
-				$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
-			}
-
-			$fieldObject = new \CAllUserTypeEntity();
-			$fieldId = $fieldObject->add($fields);
-			if ($fieldId)
-			{
-				return $this->createId($fieldId);
-			}
-			else
-			{
-				throw new \Exception("Unknown error");
-			}
+		$fieldObject = new \CUserTypeEntity();
+		$fieldId = $fieldObject->add($fields);
+		if ($fieldId)
+		{
+			return $this->createId($fieldId);
 		}
 		else
 		{
-			throw new \Exception("Create iblock/field: record haven`t the dependence for element " . $record->getXmlId());
+			global $APPLICATION;
+			throw new \Exception($APPLICATION->getException()->getString());
 		}
 	}
 
@@ -466,7 +466,7 @@ abstract class BaseUserField extends BaseData
 	{
 		if($id = $this->findRecord($xmlId))
 		{
-			$fieldObject = new \CAllUserTypeEntity();
+			$fieldObject = new \CUserTypeEntity();
 			if (!$fieldObject->delete($id->getValue()))
 			{
 				throw new \Exception("Unknown error");
