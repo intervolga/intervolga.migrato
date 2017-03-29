@@ -72,4 +72,20 @@ class Field extends BaseUserField
 	{
 		return "HLBLOCK_" . $id;
 	}
+
+	public function create(Record $record)
+	{
+		if ($hlblockId = $record->getDependency($this->getDependencyString())->getId())
+		{
+			$record->setFieldRaw("ENTITY_ID", $this->getDependencyNameKey($hlblockId->getValue()));
+
+			return parent::create($record);
+		}
+		else
+		{
+			$module = static::getModule();
+			$entity = static::getEntityName();
+			throw new \Exception("Create $module/$entity: record haven`t the dependence for element " . $record->getXmlId());
+		}
+	}
 }
