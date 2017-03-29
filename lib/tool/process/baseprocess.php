@@ -237,8 +237,8 @@ class BaseProcess
 		$type = trim($type);
 		if ($type)
 		{
-			$type = "[" . $type . "] ";
 			static::$reportTypeCounter[$type]++;
+			$type = "[" . $type . "] ";
 		}
 		static::$reports[] = date("d.m.Y H:i:s") . ":" . $microSec . " " . $type . $message;
 	}

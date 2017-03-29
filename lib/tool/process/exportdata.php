@@ -1,6 +1,8 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\Link;
+use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Tool\Orm\LogTable;
@@ -28,7 +30,14 @@ class ExportData extends BaseProcess
 			static::exportData($data);
 		}
 		static::reportStep("Export");
-		static::report("Process completed");
+		if (static::$reportTypeCounter["fail"])
+		{
+			static::report("Process completed with errors");
+		}
+		else
+		{
+			static::report("Process completed, no errors");
+		}
 	}
 
 	/**
@@ -44,23 +53,84 @@ class ExportData extends BaseProcess
 		$records = $dataClass->getList($filter);
 		foreach ($records as $record)
 		{
-			try
+			static::exportRecord($record);
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 */
+	protected static function exportRecord(Record $record)
+	{
+		$path = INTERVOLGA_MIGRATO_DIRECTORY
+			. $record->getData()->getModule()
+			. $record->getData()->getFilesSubdir()
+			. $record->getData()->getEntityName()
+			. "/";
+		try
+		{
+			static::checkRuntimesDependencies($record->getRuntimes());
+			static::checkDependencies($record->getDependencies());
+			DataFileViewXml::writeToFileSystem($record, $path);
+			LogTable::add(array(
+				"RECORD" => $record,
+				"OPERATION" => "export",
+				"STEP" => "Export",
+			));
+		}
+		catch (\Exception $exception)
+		{
+			LogTable::add(array(
+				"RECORD" => $record,
+				"EXCEPTION" => $exception,
+				"OPERATION" => "export",
+				"STEP" => "Export",
+			));
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Runtime[] $runtimes
+	 */
+	protected static function checkRuntimesDependencies(array $runtimes)
+	{
+		foreach ($runtimes as $runtime)
+		{
+			static::checkDependencies($runtime->getDependencies());
+		}
+	}
+
+	/**
+	 * @param Link[] $dependencies
+	 */
+	protected static function checkDependencies(array $dependencies)
+	{
+		foreach ($dependencies as $name => $dependency)
+		{
+			static::checkDependency($dependency, $name);
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Link $dependency
+	 * @param string $name
+	 *
+	 * @throws \Exception
+	 */
+	protected static function checkDependency(Link $dependency, $name)
+	{
+		if ($dependency->isMultiple())
+		{
+			if (!$dependency->getValues())
 			{
-				DataFileViewXml::writeToFileSystem($record, $path);
-				LogTable::add(array(
-					"RECORD" => $record,
-					"OPERATION" => "export",
-					"STEP" => "Export",
-				));
+				throw new \Exception("Values for dependency <$name> are not set!");
 			}
-			catch (\Exception $exception)
+		}
+		else
+		{
+			if (!$dependency->getValue())
 			{
-				LogTable::add(array(
-					"RECORD" => $record,
-					"EXCEPTION" => $exception,
-					"OPERATION" => "export",
-					"STEP" => "Export",
-				));
+				throw new \Exception("Value for dependency <$name> is not set!");
 			}
 		}
 	}
