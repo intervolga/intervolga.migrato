@@ -35,11 +35,20 @@ class ImportData extends BaseProcess
 		static::deleteNotImported();
 		static::deleteMarked();
 		static::resolveReferences();
-		static::report("Process completed");
+		static::reportSeparator();
+		if (static::$reportTypeCounter["fail"])
+		{
+			static::report("Process completed with errors");
+		}
+		else
+		{
+			static::report("Process completed, no errors");
+		}
 	}
 
 	protected static function init()
 	{
+		static::reportSeparator();
 		static::report(__FUNCTION__);
 		static::$list = new ImportList();
 		$configDataClasses = Config::getInstance()->getDataClasses();
@@ -96,11 +105,12 @@ class ImportData extends BaseProcess
 
 	protected static function importWithDependencies()
 	{
-		static::report(__FUNCTION__);
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		for ($i = 0; $i < count($configDataClasses); $i++)
 		{
-			static::$step = __FUNCTION__;
+			static::$step = __FUNCTION__ . " $i";
+			static::reportSeparator();
+			static::report(static::$step);
 			$creatableDataRecords = static::$list->getCreatableRecords();
 			if ($creatableDataRecords)
 			{
@@ -349,8 +359,9 @@ class ImportData extends BaseProcess
 
 	protected static function logNotResolved()
 	{
-		static::report(__FUNCTION__);
+		static::reportSeparator();
 		static::$step = __FUNCTION__;
+		static::report(static::$step);
 		foreach (static::$list->getNotResolvedRecords() as $notResolvedRecord)
 		{
 			LogTable::add(array(
@@ -364,8 +375,9 @@ class ImportData extends BaseProcess
 
 	protected static function deleteNotImported()
 	{
-		static::report(__FUNCTION__);
+		static::reportSeparator();
 		static::$step = __FUNCTION__;
+		static::report(static::$step);
 		foreach (static::$list->getRecordsToDelete() as $dataRecord)
 		{
 			static::deleteRecordWithLog($dataRecord);
@@ -400,8 +412,9 @@ class ImportData extends BaseProcess
 
 	protected static function deleteMarked()
 	{
-		static::report(__FUNCTION__);
+		static::reportSeparator();
 		static::$step = __FUNCTION__;
+		static::report(static::$step);
 		foreach (static::$deleteRecords as $record)
 		{
 			static::deleteRecordWithLog($record);
@@ -411,8 +424,9 @@ class ImportData extends BaseProcess
 
 	protected static function resolveReferences()
 	{
-		static::report(__FUNCTION__);
+		static::reportSeparator();
 		static::$step = __FUNCTION__;
+		static::report(static::$step);
 		/**
 		 * @var Record $dataRecord
 		 */
@@ -451,6 +465,7 @@ class ImportData extends BaseProcess
 				));
 			}
 		}
+		static::reportStep(static::$step);
 	}
 
 	/**

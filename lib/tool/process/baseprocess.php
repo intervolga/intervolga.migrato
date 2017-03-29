@@ -20,6 +20,10 @@ class BaseProcess
 	 * @var string
 	 */
 	protected static $step = "";
+	/**
+	 * @var int[]
+	 */
+	protected static $reportTypeCounter = array();
 
 	public static function run()
 	{
@@ -234,8 +238,14 @@ class BaseProcess
 		if ($type)
 		{
 			$type = "[" . $type . "] ";
+			static::$reportTypeCounter[$type]++;
 		}
 		static::$reports[] = date("d.m.Y H:i:s") . ":" . $microSec . " " . $type . $message;
+	}
+
+	protected static function reportSeparator()
+	{
+		static::$reports[] = str_repeat("-", 80);
 	}
 
 	/**
