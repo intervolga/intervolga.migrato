@@ -127,7 +127,7 @@ class BaseProcess
 			if ($record->getXmlId())
 			{
 				$matches = array();
-				if (preg_match_all("/^[a-z0-9\-_#]*$/i", $record->getXmlId(), $matches))
+				if (preg_match_all("/^[a-z0-9\-_#.]+$/i", $record->getXmlId(), $matches))
 				{
 					if (!in_array($record->getXmlId(), $xmlIds))
 					{
