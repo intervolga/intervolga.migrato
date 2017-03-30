@@ -70,6 +70,11 @@ class LogTable extends DataManager
 
 	public static function add(array $data)
 	{
+		if (!static::$migrationTime)
+		{
+			static::$migrationTime = time();
+		}
+		$data["MIGRATION_DATETIME"] = DateTime::createFromTimestamp(static::$migrationTime);
 		if (!array_key_exists("RESULT", $data))
 		{
 			$data["RESULT"] = true;
@@ -135,29 +140,13 @@ class LogTable extends DataManager
 	 */
 	protected static function recordToLog(Record $record)
 	{
-		$log = static::prepareLog();
+		$log = array();
 		$log["DATA_XML_ID"] = $record->getXmlId();
 		$log = array_merge($log, static::dataToLog($record->getData()));
 		if ($id = $record->getId())
 		{
 			$log = array_merge($log, static::idToLog($id));
 		}
-		return $log;
-	}
-
-	/**
-	 * @return array
-	 */
-	protected static function prepareLog()
-	{
-		if (!static::$migrationTime)
-		{
-			static::$migrationTime = time();
-		}
-		$log = array(
-			"MIGRATION_DATETIME" => DateTime::createFromTimestamp(static::$migrationTime),
-			"RESULT" => true,
-		);
 		return $log;
 	}
 
