@@ -28,6 +28,6 @@ class ImportOption extends BaseProcess
 				static::report("Module $module import $count option(s)");
 			}
 		}
-		static::report("Process completed");
+		parent::finalReport();
 	}
 }

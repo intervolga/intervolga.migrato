@@ -32,7 +32,7 @@ class BaseProcess
 
 	public static function finalReport()
 	{
-		static::reportSeparator();
+		static::$reports[] = str_repeat("-", 80);
 		if (static::$reportTypeCounter["fail"])
 		{
 			static::report("Process completed with errors");
@@ -109,6 +109,16 @@ class BaseProcess
 	}
 
 	/**
+	 * @param string $step
+	 */
+	protected static function startStep($step)
+	{
+		static::$step = $step;
+		static::$reports[] = str_repeat("-", 80);
+		static::report("step: " . static::$step);
+	}
+
+	/**
 	 * @param string $message
 	 * @param string $type
 	 */
@@ -126,19 +136,11 @@ class BaseProcess
 		static::$reports[] = date("d.m.Y H:i:s") . ":" . $microSec . " " . $type . $message;
 	}
 
-	protected static function reportSeparator()
-	{
-		static::$reports[] = str_repeat("-", 80);
-	}
-
-	/**
-	 * @param string $step
-	 */
-	protected static function reportStep($step)
+	protected static function reportStepLogs()
 	{
 		$getList = LogTable::getList(array(
 			"filter" => array(
-				"=STEP" => $step,
+				"=STEP" => static::$step,
 			),
 			"select" => array(
 				"MODULE_NAME",

@@ -23,9 +23,7 @@ class Validate extends BaseProcess
 	 */
 	public static function validate()
 	{
-		static::$step = __FUNCTION__;
-		static::reportSeparator();
-		static::report(static::$step);
+		static::startStep("validate");
 
 		$result = array();
 		$configDataClasses = Config::getInstance()->getDataClasses();
@@ -40,7 +38,7 @@ class Validate extends BaseProcess
 			$result = array_merge($result, static::validateData($data, $filter));
 		}
 
-		static::reportStep(static::$step);
+		static::reportStepLogs();
 		return $result;
 	}
 

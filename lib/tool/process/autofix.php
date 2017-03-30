@@ -10,12 +10,9 @@ class AutoFix extends BaseProcess
 		$errors = Validate::validate();
 		parent::run();
 
-		static::$step = "autofix";
-		static::reportSeparator();
-		static::report(static::$step);
-
+		static::startStep("autofix");
 		static::fixErrors($errors);
-		static::reportStep(static::$step);
+		static::reportStepLogs();
 
 		static::finalReport();
 	}

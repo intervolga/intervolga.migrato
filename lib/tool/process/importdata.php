@@ -34,21 +34,13 @@ class ImportData extends BaseProcess
 		static::logNotResolved();
 		static::deleteMarked();
 		static::resolveReferences();
-		static::reportSeparator();
-		if (static::$reportTypeCounter["fail"])
-		{
-			static::report("Process completed with errors");
-		}
-		else
-		{
-			static::report("Process completed, no errors");
-		}
+
+		parent::finalReport();
 	}
 
 	protected static function init()
 	{
-		static::reportSeparator();
-		static::report(__FUNCTION__);
+		static::startStep("init");
 		static::$list = new ImportList();
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		$dataClasses = static::recursiveGetDependentDataClasses($configDataClasses);
@@ -107,9 +99,7 @@ class ImportData extends BaseProcess
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		for ($i = 0; $i < count($configDataClasses); $i++)
 		{
-			static::$step = __FUNCTION__ . " $i";
-			static::reportSeparator();
-			static::report(static::$step);
+			static::startStep(__FUNCTION__ . " $i");
 			$creatableDataRecords = static::$list->getCreatableRecords();
 			if ($creatableDataRecords)
 			{
@@ -119,7 +109,7 @@ class ImportData extends BaseProcess
 					static::saveDataRecord($dataRecord);
 					static::$list->addCreatedRecord($dataRecord);
 				}
-				static::reportStep(static::$step);
+				static::reportStepLogs();
 			}
 			else
 			{
@@ -397,21 +387,17 @@ class ImportData extends BaseProcess
 
 	protected static function deleteMarked()
 	{
-		static::reportSeparator();
-		static::$step = __FUNCTION__;
-		static::report(static::$step);
+		static::startStep(__FUNCTION__);
 		foreach (static::$deleteRecords as $record)
 		{
 			static::deleteRecordWithLog($record);
 		}
-		static::reportStep(static::$step);
+		static::reportStepLogs();
 	}
 
 	protected static function resolveReferences()
 	{
-		static::reportSeparator();
-		static::$step = __FUNCTION__;
-		static::report(static::$step);
+		static::startStep(__FUNCTION__);
 		/**
 		 * @var Record $dataRecord
 		 */
@@ -450,7 +436,7 @@ class ImportData extends BaseProcess
 				));
 			}
 		}
-		static::reportStep(static::$step);
+		static::reportStepLogs();
 	}
 
 	/**
