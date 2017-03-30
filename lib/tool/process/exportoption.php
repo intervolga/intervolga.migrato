@@ -23,7 +23,7 @@ class ExportOption extends BaseProcess
 			ksort($export);
 
 			$path = static::getModuleOptionsDirectory($module);
-			OptionFileViewXml::writeToFileSystem($export, $path);
+			OptionFileViewXml::write($export, $path);
 			static::report("Module $module export $count option(s)");
 		}
 		parent::finalReport();

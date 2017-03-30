@@ -55,7 +55,7 @@ class ExportData extends BaseProcess
 		{
 			static::checkRuntimesDependencies($record->getRuntimes());
 			static::checkDependencies($record->getDependencies());
-			DataFileViewXml::writeToFileSystem($record, $path);
+			DataFileViewXml::write($record, $path);
 			LogTable::add(array(
 				"RECORD" => $record,
 				"OPERATION" => "export",
