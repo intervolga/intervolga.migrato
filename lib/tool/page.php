@@ -8,12 +8,11 @@ class Page
 	public static function checkRights()
 	{
 		global $USER;
-		$isCli = php_sapi_name() == "cli";
-		if($isCli)
+		if(static::isCli())
 		{
 			$USER->Authorize(1);
 		}
-		if (!$isCli && !$USER->IsAdmin())
+		if (!static::isCli() && !$USER->IsAdmin())
 		{
 			throw new \Exception("Need cli or admin login");
 		}
@@ -40,8 +39,7 @@ class Page
 	 */
 	public static function showReport(array $report)
 	{
-		$isCli = php_sapi_name() == "cli";
-		if ($isCli)
+		if (static::isCli())
 		{
 			foreach ($report as $i => $string)
 			{
@@ -56,5 +54,13 @@ class Page
 		{
 			echo "<pre>" . implode("<br>", $report) . "</pre>";
 		}
+	}
+
+	/**
+	 * @return bool
+	 */
+	public static function isCli()
+	{
+		return php_sapi_name() == "cli";
 	}
 }
