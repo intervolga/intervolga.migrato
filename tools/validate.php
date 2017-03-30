@@ -3,16 +3,8 @@ include dirname(__DIR__) . "/include/tools_before.php";
 
 try
 {
-	$report = array();
-	\Intervolga\Migrato\Tool\Process\BaseProcess::run();
-	foreach (\Intervolga\Migrato\Tool\Process\BaseProcess::validate() as $error)
-	{
-		$report[] = $error->toString();
-	}
-	if (!$report)
-	{
-		$report[] = "No validation errors";
-	}
+	\Intervolga\Migrato\Tool\Process\Validate::run();
+	$report = \Intervolga\Migrato\Tool\Process\Validate::getReports();
 	\Intervolga\Migrato\Tool\Page::showReport($report);
 }
 catch (\Exception $exception)

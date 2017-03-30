@@ -13,31 +13,17 @@ class ExportData extends BaseProcess
 	{
 		parent::run();
 
-		$errors = static::validate();
-		if ($errors)
-		{
-			static::fixErrors($errors);
-			$errors = static::validate();
-		}
-		if ($errors)
-		{
-			throw new \Exception("Validated with errors (" . count($errors) . ")");
-		}
-
+		static::$step = "export";
+		static::reportSeparator();
+		static::report(static::$step);
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		foreach ($configDataClasses as $data)
 		{
 			static::exportData($data);
 		}
-		static::reportStep("Export");
-		if (static::$reportTypeCounter["fail"])
-		{
-			static::report("Process completed with errors");
-		}
-		else
-		{
-			static::report("Process completed, no errors");
-		}
+		static::reportStep(static::$step);
+
+		parent::finalReport();
 	}
 
 	/**
