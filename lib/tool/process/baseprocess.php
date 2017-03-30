@@ -5,7 +5,6 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool;
 use Intervolga\Migrato\Tool\Orm\LogTable;
-use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 Loc::loadMessages(__FILE__);
 
@@ -97,41 +96,6 @@ class BaseProcess
 		{
 			return $dataClasses;
 		}
-	}
-
-	/**
-	 * @param XmlIdValidateError[] $errors
-	 *
-	 * @return int
-	 */
-	public static function fixErrors(array $errors)
-	{
-		$counter = 0;
-		foreach ($errors as $error)
-		{
-			try
-			{
-				$xmlId = $error->getDataClass()->generateXmlId($error->getId());
-				$error->setXmlId($xmlId);
-				LogTable::add(array(
-					"XML_ID_ERROR" => $error,
-					"OPERATION" => "xmlid error fix",
-					"STEP" => __FUNCTION__,
-				));
-				$counter++;
-			}
-			catch (\Exception $exception)
-			{
-				LogTable::add(array(
-					"XML_ID_ERROR" => $error,
-					"EXCEPTION" => $exception,
-					"OPERATION" => "xmlid error fix",
-					"STEP" => __FUNCTION__,
-				));
-			}
-		}
-
-		return $counter;
 	}
 
 	/**
