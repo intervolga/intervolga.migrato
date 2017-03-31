@@ -12,14 +12,17 @@ class ExportData extends BaseProcess
 	public static function run()
 	{
 		parent::run();
-
-		static::startStep("export");
-		$configDataClasses = Config::getInstance()->getDataClasses();
-		foreach ($configDataClasses as $data)
+		$errors = Validate::validate();
+		if (!$errors)
 		{
-			static::exportData($data);
+			static::startStep("export");
+			$configDataClasses = Config::getInstance()->getDataClasses();
+			foreach ($configDataClasses as $data)
+			{
+				static::exportData($data);
+			}
+			static::reportStepLogs();
 		}
-		static::reportStepLogs();
 
 		parent::finalReport();
 	}

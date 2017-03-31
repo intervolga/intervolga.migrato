@@ -29,11 +29,15 @@ class ImportData extends BaseProcess
 	{
 		parent::run();
 
-		static::init();
-		static::importWithDependencies();
-		static::logNotResolved();
-		static::deleteMarked();
-		static::resolveReferences();
+		$errors = Validate::validate();
+		if (!$errors)
+		{
+			static::init();
+			static::importWithDependencies();
+			static::logNotResolved();
+			static::deleteMarked();
+			static::resolveReferences();
+		}
 
 		parent::finalReport();
 	}
