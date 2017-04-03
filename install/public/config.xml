@@ -47,5 +47,8 @@
         <entity>
             <name>enum</name>
         </entity>
+        <entity>
+            <name>permission</name>
+        </entity>
     </module>
 </config>
