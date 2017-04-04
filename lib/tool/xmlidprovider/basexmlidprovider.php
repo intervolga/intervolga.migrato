@@ -75,6 +75,7 @@ abstract class BaseXmlIdProvider
 			"property" => "prop",
 			"group" => "grp",
 			"event" => "evt",
+			"permission" => "perm",
 		);
 		$prefix = str_replace(
 			array_keys($replace),
