@@ -7,7 +7,6 @@ class ClearCache extends BaseProcess
 {
 	public static function run()
 	{
-		$errors = Validate::validate();
 		parent::run();
 
 		static::startStep("clearcache");
