@@ -29,10 +29,10 @@ class ReindexUrlRewriter extends BaseProcess
 		{
 			$res = \Bitrix\Main\UrlRewriter::reindexAll();
 
-			static::report("reindex urlrewrite: " . $res);
+			static::report("reindex urlrewrite: " . $res . " шт.");
 
 			LogTable::add(array(
-				"OPERATION" => "success clear cache",
+				"OPERATION" => "success reindex urlrewrite",
 				"STEP" => static::$step,
 				"COMMENT" => "Обработано документов: " . $res,
 			));
