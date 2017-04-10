@@ -29,18 +29,22 @@ class ImportData extends BaseProcess
 	{
 		parent::run();
 
-		static::init();
-		static::importWithDependencies();
-		static::logNotResolved();
-		static::deleteNotImported();
-		static::deleteMarked();
-		static::resolveReferences();
-		static::report("Process completed");
+		$errors = Validate::validate();
+		if (!$errors)
+		{
+			static::init();
+			static::importWithDependencies();
+			static::logNotResolved();
+			static::deleteMarked();
+			static::resolveReferences();
+		}
+
+		parent::finalReport();
 	}
 
 	protected static function init()
 	{
-		static::report(__FUNCTION__);
+		static::startStep("init");
 		static::$list = new ImportList();
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		$dataClasses = static::recursiveGetDependentDataClasses($configDataClasses);
@@ -96,11 +100,10 @@ class ImportData extends BaseProcess
 
 	protected static function importWithDependencies()
 	{
-		static::report(__FUNCTION__);
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		for ($i = 0; $i < count($configDataClasses); $i++)
 		{
-			static::$step = __FUNCTION__;
+			static::startStep(__FUNCTION__ . " $i");
 			$creatableDataRecords = static::$list->getCreatableRecords();
 			if ($creatableDataRecords)
 			{
@@ -110,12 +113,12 @@ class ImportData extends BaseProcess
 					static::saveDataRecord($dataRecord);
 					static::$list->addCreatedRecord($dataRecord);
 				}
+				static::reportStepLogs();
 			}
 			else
 			{
 				break;
 			}
-			static::reportStep(static::$step);
 		}
 
 		if (static::$list->getCreatableRecords())
@@ -349,7 +352,6 @@ class ImportData extends BaseProcess
 
 	protected static function logNotResolved()
 	{
-		static::report(__FUNCTION__);
 		static::$step = __FUNCTION__;
 		foreach (static::$list->getNotResolvedRecords() as $notResolvedRecord)
 		{
@@ -360,17 +362,6 @@ class ImportData extends BaseProcess
 				"STEP" => static::$step,
 			));
 		}
-	}
-
-	protected static function deleteNotImported()
-	{
-		static::report(__FUNCTION__);
-		static::$step = __FUNCTION__;
-		foreach (static::$list->getRecordsToDelete() as $dataRecord)
-		{
-			static::deleteRecordWithLog($dataRecord);
-		}
-		static::reportStep(static::$step);
 	}
 
 	/**
@@ -400,19 +391,17 @@ class ImportData extends BaseProcess
 
 	protected static function deleteMarked()
 	{
-		static::report(__FUNCTION__);
-		static::$step = __FUNCTION__;
+		static::startStep(__FUNCTION__);
 		foreach (static::$deleteRecords as $record)
 		{
 			static::deleteRecordWithLog($record);
 		}
-		static::reportStep(static::$step);
+		static::reportStepLogs();
 	}
 
 	protected static function resolveReferences()
 	{
-		static::report(__FUNCTION__);
-		static::$step = __FUNCTION__;
+		static::startStep(__FUNCTION__);
 		/**
 		 * @var Record $dataRecord
 		 */
@@ -451,6 +440,7 @@ class ImportData extends BaseProcess
 				));
 			}
 		}
+		static::reportStepLogs();
 	}
 
 	/**

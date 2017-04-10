@@ -1,34 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Раскомментируйте сущности которые вам необходимо мигрировать -->
 <config>
     <module>
         <name>main</name>
-        <!--entity>
+        <entity>
             <name>group</name>
+        </entity>
+        <entity>
+            <name>event</name>
         </entity>
         <entity>
             <name>eventtype</name>
         </entity>
+    </module>
+    <module>
+        <name>catalog</name>
         <entity>
-            <name>event</name>
-        </entity-->
+            <name>pricetype</name>
+        </entity>
+    </module>
+    <module>
+        <name>sale</name>
+        <entity>
+            <name>persontype</name>
+        </entity>
+        <entity>
+            <name>propertygroup</name>
+        </entity>
+        <entity>
+            <name>property</name>
+        </entity>
+        <entity>
+            <name>propertyvariant</name>
+        </entity>
     </module>
     <module>
         <name>iblock</name>
-        <!--entity>
+        <entity>
             <name>type</name>
         </entity>
         <entity>
-            <name>typelang</name>
-        </entity>
-        <entity>
             <name>iblock</name>
-        </entity>
-        <entity>
-            <name>permission</name>
-        </entity>
-        <entity>
-            <name>section</name>
         </entity>
         <entity>
             <name>property</name>
@@ -37,28 +48,19 @@
             <name>enum</name>
         </entity>
         <entity>
-            <name>field</name>
+            <name>permission</name>
         </entity>
-        <entity>
-            <name>fieldenum</name>
-        </entity>
-        <entity>
-            <name>element</name>
-        </entity-->
     </module>
     <module>
         <name>highloadblock</name>
-        <!--entity>
-            <name>highloadblock</name>
-        </entity>
         <entity>
-            <name>element</name>
+            <name>highloadblock</name>
         </entity>
         <entity>
             <name>field</name>
         </entity>
         <entity>
             <name>fieldenum</name>
-        </entity-->
+        </entity>
     </module>
 </config>

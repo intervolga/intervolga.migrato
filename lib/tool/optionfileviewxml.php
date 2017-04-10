@@ -11,7 +11,7 @@ class OptionFileViewXml
 	 * @param array $options
 	 * @param string $path
 	 */
-	public static function writeToFileSystem(array $options, $path)
+	public static function write(array $options, $path)
 	{
 		$content = "";
 		$content .= "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";

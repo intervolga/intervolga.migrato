@@ -4,9 +4,7 @@ use Bitrix\Main\Entity\ExpressionField;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool;
-use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Orm\LogTable;
-use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 Loc::loadMessages(__FILE__);
 
@@ -20,6 +18,10 @@ class BaseProcess
 	 * @var string
 	 */
 	protected static $step = "";
+	/**
+	 * @var int[]
+	 */
+	protected static $reportTypeCounter = array();
 
 	public static function run()
 	{
@@ -28,35 +30,25 @@ class BaseProcess
 		static::report("Process started");
 	}
 
+	public static function finalReport()
+	{
+		static::$reports[] = str_repeat("-", 80);
+		if (static::$reportTypeCounter["fail"])
+		{
+			static::report("Process completed with errors");
+		}
+		else
+		{
+			static::report("Process completed, no errors");
+		}
+	}
+
 	/**
 	 * @return string[]
 	 */
 	public static function getReports()
 	{
 		return static::$reports;
-	}
-
-	/**
-	 * @return \Intervolga\Migrato\Tool\XmlIdValidateError[]
-	 * @throws \Exception
-	 */
-	public static function validate()
-	{
-		$result = array();
-		$configDataClasses = Config::getInstance()->getDataClasses();
-		$dataClasses = static::recursiveGetDependentDataClasses($configDataClasses);
-		foreach ($dataClasses as $data)
-		{
-			$filter = Config::getInstance()->getDataClassFilter($data);
-			if (!$data->isXmlIdFieldExists())
-			{
-				$data->createXmlIdField();
-			}
-			$result = array_merge($result, static::validateData($data, $filter));
-		}
-
-		static::reportStep("Validate");
-		return $result;
 	}
 
 	/**
@@ -107,111 +99,6 @@ class BaseProcess
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
-	 * @param string[] $filter
-	 *
-	 * @return \Intervolga\Migrato\Tool\XmlIdValidateError[]
-	 */
-	protected static function validateData(BaseData $dataClass, array $filter = array())
-	{
-		$errors = array();
-		$records = $dataClass->getList($filter);
-		$xmlIds[] = array();
-		foreach ($records as $record)
-		{
-			$errorType = 0;
-			if ($record->getXmlId())
-			{
-				$matches = array();
-				if (preg_match_all("/^[a-z0-9\-_]*$/i", $record->getXmlId(), $matches))
-				{
-					if (!in_array($record->getXmlId(), $xmlIds))
-					{
-						if (static::isSimpleXmlId($record->getXmlId()))
-						{
-							$errorType = XmlIdValidateError::TYPE_SIMPLE;
-						}
-						else
-						{
-							$xmlIds[] = $record->getXmlId();
-						}
-					}
-					else
-					{
-						$errorType = XmlIdValidateError::TYPE_REPEAT;
-					}
-				}
-				else
-				{
-					$errorType = XmlIdValidateError::TYPE_INVALID;
-				}
-			}
-			else
-			{
-				$errorType = XmlIdValidateError::TYPE_EMPTY;
-
-			}
-			if ($errorType)
-			{
-				$errors[] = new XmlIdValidateError($dataClass, $errorType, $record->getId(), $record->getXmlId());
-				LogTable::add(array(
-					"RECORD" => $record,
-					"OPERATION" => "validate",
-					"COMMENT" => XmlIdValidateError::typeToString($errorType),
-					"STEP" => "Validate",
-				));
-			}
-		}
-
-		return $errors;
-	}
-
-	/**
-	 * @param string $xmlId
-	 *
-	 * @return bool
-	 */
-	protected static function isSimpleXmlId($xmlId)
-	{
-		return is_numeric($xmlId);
-	}
-
-	/**
-	 * @param XmlIdValidateError[] $errors
-	 *
-	 * @return int
-	 */
-	public static function fixErrors(array $errors)
-	{
-		$counter = 0;
-		foreach ($errors as $error)
-		{
-			try
-			{
-				$xmlId = $error->getDataClass()->generateXmlId($error->getId());
-				$error->setXmlId($xmlId);
-				LogTable::add(array(
-					"XML_ID_ERROR" => $error,
-					"OPERATION" => "xmlid error fix",
-					"STEP" => __FUNCTION__,
-				));
-				$counter++;
-			}
-			catch (\Exception $exception)
-			{
-				LogTable::add(array(
-					"XML_ID_ERROR" => $error,
-					"EXCEPTION" => $exception,
-					"OPERATION" => "xmlid error fix",
-					"STEP" => __FUNCTION__,
-				));
-			}
-		}
-
-		return $counter;
-	}
-
-	/**
 	 * @param string $module
 	 *
 	 * @return string
@@ -219,6 +106,16 @@ class BaseProcess
 	protected static function getModuleOptionsDirectory($module)
 	{
 		return INTERVOLGA_MIGRATO_DIRECTORY . $module . "/";
+	}
+
+	/**
+	 * @param string $step
+	 */
+	protected static function startStep($step)
+	{
+		static::$step = $step;
+		static::$reports[] = str_repeat("-", 80);
+		static::report("step: " . static::$step);
 	}
 
 	/**
@@ -233,19 +130,17 @@ class BaseProcess
 		$type = trim($type);
 		if ($type)
 		{
+			static::$reportTypeCounter[$type]++;
 			$type = "[" . $type . "] ";
 		}
 		static::$reports[] = date("d.m.Y H:i:s") . ":" . $microSec . " " . $type . $message;
 	}
 
-	/**
-	 * @param string $step
-	 */
-	protected static function reportStep($step)
+	protected static function reportStepLogs()
 	{
 		$getList = LogTable::getList(array(
 			"filter" => array(
-				"=STEP" => $step,
+				"=STEP" => static::$step,
 			),
 			"select" => array(
 				"MODULE_NAME",

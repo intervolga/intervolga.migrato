@@ -72,4 +72,22 @@ class Field extends BaseUserField
 	{
 		return "IBLOCK_" . $id . "_SECTION";
 	}
+
+	public function create(Record $record)
+	{
+		if ($iblockId = $record->getDependency($this->getDependencyString())->getId())
+		{
+			$userTypeEntity = new \CUserTypeEntity();
+			$userTypeEntity->CreatePropertyTables("iblock_" . $iblockId->getValue() . "_section");
+			$record->setFieldRaw("ENTITY_ID", $this->getDependencyNameKey($iblockId->getValue()));
+
+			return parent::create($record);
+		}
+		else
+		{
+			$module = static::getModule();
+			$entity = static::getEntityName();
+			throw new \Exception("Create $module/$entity: record haven`t the dependence for element " . $record->getXmlId());
+		}
+	}
 }

@@ -41,7 +41,7 @@ class DataFileViewXml
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @param string $path
 	 */
-	public static function writeToFileSystem(Record $record, $path)
+	public static function write(Record $record, $path)
 	{
 		$content = "";
 		$content .= "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";

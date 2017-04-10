@@ -11,6 +11,7 @@ class ClearData extends BaseProcess
 	public static function run()
 	{
 		parent::run();
+		static::startStep("clear");
 		static::$cleared = array();
 
 		$configDataClasses = Config::getInstance()->getDataClasses();
@@ -18,7 +19,8 @@ class ClearData extends BaseProcess
 		{
 			static::clearData($data);
 		}
-		static::report("Process completed");
+
+		parent::finalReport();
 	}
 
 	/**
@@ -30,24 +32,27 @@ class ClearData extends BaseProcess
 		{
 			$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . "/";
 			$moduleDirectory = new Directory($path);
-			$hasFiles = false;
-			foreach ($moduleDirectory->getChildren() as $child)
+			if ($moduleDirectory->isExists())
 			{
-				if ($child->isDirectory())
+				$hasFiles = false;
+				foreach ($moduleDirectory->getChildren() as $child)
 				{
-					$child->delete();
+					if ($child->isDirectory())
+					{
+						$child->delete();
+					}
+					if ($child->isFile())
+					{
+						$hasFiles = true;
+					}
 				}
-				if ($child->isFile())
+				if (!$hasFiles)
 				{
-					$hasFiles = true;
+					$moduleDirectory->delete();
 				}
+				static::report("Clear for module " . $dataClass->getModule());
+				static::$cleared[$dataClass->getModule()] = true;
 			}
-			if (!$hasFiles)
-			{
-				$moduleDirectory->delete();
-			}
-			static::report("Clear for module " . $dataClass->getModule());
-			static::$cleared[$dataClass->getModule()] = true;
 		}
 	}
 }

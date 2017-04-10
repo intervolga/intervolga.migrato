@@ -1,5 +1,6 @@
 <? namespace Intervolga\Migrato\Tool;
 
+use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 
 class Config
@@ -87,10 +88,13 @@ class Config
 						 * @var BaseData $name
 						 */
 						$dataObject = $name::getInstance();
-						$entities[] = $dataObject;
-						if ($entityArray["#"]["filter"])
+						if (Loader::includeModule($dataObject->getModule()))
 						{
-							$this->registerDataFilter($dataObject, $entityArray["#"]["filter"]);
+							$entities[] = $dataObject;
+							if ($entityArray["#"]["filter"])
+							{
+								$this->registerDataFilter($dataObject, $entityArray["#"]["filter"]);
+							}
 						}
 					}
 				}
