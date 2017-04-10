@@ -43,6 +43,9 @@ $processes = array(
 	"importdata" => "\\Intervolga\\Migrato\\Tool\\Process\\ImportData",
 	"importoption" => "\\Intervolga\\Migrato\\Tool\\Process\\ImportOption",
 	"validate" => "\\Intervolga\\Migrato\\Tool\\Process\\Validate",
+	"clearcache" => "\\Intervolga\\Migrato\\Tool\\Process\\ClearCache",
+	"reindex" => "\\Intervolga\\Migrato\\Tool\\Process\\Reindex",
+	"reindexurlrewrite" => "\\Intervolga\\Migrato\\Tool\\Process\\ReindexUrlRewriter",
 );
 if (\Intervolga\Migrato\Tool\Page::isCli())
 {
