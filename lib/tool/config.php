@@ -1,5 +1,7 @@
 <? namespace Intervolga\Migrato\Tool;
 
+use Bitrix\Main\Authentication\Application;
+use Bitrix\Main\IO\Directory;
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 
@@ -65,6 +67,39 @@ class Config
 		}
 
 		return $options;
+	}
+
+	/**
+	 * @return BaseData[]
+	 */
+	public function getAllDateClasses()
+	{
+		$entities = array();
+		$dir = new Directory(\Bitrix\Main\Application::getDocumentRoot() . "/local/modules/intervolga.migrato/lib/data/module/");
+		foreach ($dir->getChildren() as $module)
+		{
+			/**
+			 * @var Directory $module директория с сущностями
+			 */
+			foreach ($module->getChildren() as $entityArray)
+			{
+				$entityName = str_replace(".php", "", $entityArray->getName());
+				$name = "\\Intervolga\\Migrato\\Data\\Module\\" . $module->getName() . "\\" . $entityName;
+				if (class_exists($name))
+				{
+					/**
+					 * @var BaseData $name
+					 */
+					$dataObject = $name::getInstance();
+					if (Loader::includeModule($dataObject->getModule()))
+					{
+						$entities[] = $dataObject;
+					}
+				}
+			}
+		}
+
+		return $entities;
 	}
 
 	/**

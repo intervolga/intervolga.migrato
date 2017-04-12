@@ -14,6 +14,7 @@ class Validate extends BaseProcess
 	{
 		parent::run();
 		static::validate();
+		static::findUseNotClasses();
 		static::finalReport();
 	}
 
@@ -27,6 +28,7 @@ class Validate extends BaseProcess
 
 		$result = array();
 		$configDataClasses = Config::getInstance()->getDataClasses();
+
 		$dataClasses = static::recursiveGetDependentDataClasses($configDataClasses);
 		foreach ($dataClasses as $data)
 		{
@@ -40,6 +42,28 @@ class Validate extends BaseProcess
 
 		static::reportStepLogs();
 		return $result;
+	}
+
+	public static function findUseNotClasses()
+	{
+		static::addSeparator();
+		$configDataClasses = Config::getInstance()->getDataClasses();
+		$allConfigDataClasses = Config::getInstance()->getAllDateClasses();
+
+		$configDataClassesString = array();
+		foreach($configDataClasses as $conf)
+		{
+			$configDataClassesString[] = $conf->getModule() . ":" . $conf->getEntityName();
+		}
+
+		foreach($allConfigDataClasses as $conf)
+		{
+			$entity = $conf->getModule() . ":" . $conf->getEntityName();
+			if(!in_array($entity, $configDataClassesString))
+			{
+				static::report("Entity " . $entity . " not use.");
+			}
+		}
 	}
 
 	/**
@@ -64,7 +88,7 @@ class Validate extends BaseProcess
 	/**
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 *
-	 * @return \Intervolga\Migrato\Tool\XmlIdValidateError|null
+	 * @return \Intervolga\Migrato\Tool\XmlIdValidateError[]|null
 	 */
 	protected static function getRecordXmlIdErrors(Record $record)
 	{

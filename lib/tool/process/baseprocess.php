@@ -32,7 +32,7 @@ class BaseProcess
 
 	public static function finalReport()
 	{
-		static::$reports[] = str_repeat("-", 80);
+		static::addSeparator();
 		if (static::$reportTypeCounter["fail"])
 		{
 			static::report("Process completed with errors");
@@ -41,6 +41,11 @@ class BaseProcess
 		{
 			static::report("Process completed, no errors");
 		}
+	}
+
+	public static function addSeparator($symbol = "-")
+	{
+		static::$reports[] = str_repeat($symbol, 80);
 	}
 
 	/**
@@ -114,7 +119,7 @@ class BaseProcess
 	protected static function startStep($step)
 	{
 		static::$step = $step;
-		static::$reports[] = str_repeat("-", 80);
+		static::addSeparator();
 		static::report("step: " . static::$step);
 	}
 
