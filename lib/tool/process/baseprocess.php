@@ -5,6 +5,7 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool;
 use Intervolga\Migrato\Tool\Orm\LogTable;
+use Intervolga\Migrato\Tool\Orm\ColorLog;
 
 Loc::loadMessages(__FILE__);
 
@@ -129,16 +130,13 @@ class BaseProcess
 	 */
 	protected static function report($message, $type = "")
 	{
-		list($microSec,) = explode(" ", microtime());
-		$microSec = round($microSec, 3)*1000;
-		$microSec = str_pad($microSec, 3, "0", STR_PAD_RIGHT);
 		$type = trim($type);
 		if ($type)
 		{
 			static::$reportTypeCounter[$type]++;
-			$type = "[" . $type . "] ";
+			$type = ColorLog::getColoredString("[" . $type . "] ", $type);
 		}
-		static::$reports[] = date("d.m.Y H:i:s") . ":" . $microSec . " " . $type . $message;
+		static::$reports[] = $type . $message;
 	}
 
 	protected static function reportStepLogs()
