@@ -32,8 +32,12 @@ catch (\Exception $exception)
  * @see \Intervolga\Migrato\Tool\Process\ExportData
  * @see \Intervolga\Migrato\Tool\Process\ExportOption
  * @see \Intervolga\Migrato\Tool\Process\ImportData
+ * @see \Intervolga\Migrato\Tool\Process\ImportDataHard
  * @see \Intervolga\Migrato\Tool\Process\ImportOption
  * @see \Intervolga\Migrato\Tool\Process\Validate
+ * @see \Intervolga\Migrato\Tool\Process\ClearCache
+ * @see \Intervolga\Migrato\Tool\Process\Reindex
+ * @see \Intervolga\Migrato\Tool\Process\ReindexUrlRewriter
  */
 $processes = array(
 	"autofix" => "\\Intervolga\\Migrato\\Tool\\Process\\AutoFix",
@@ -41,6 +45,7 @@ $processes = array(
 	"exportdata" => "\\Intervolga\\Migrato\\Tool\\Process\\ExportData",
 	"exportoption" => "\\Intervolga\\Migrato\\Tool\\Process\\ExportOption",
 	"importdata" => "\\Intervolga\\Migrato\\Tool\\Process\\ImportData",
+	"importdatahard" => "\\Intervolga\\Migrato\\Tool\\Process\\ImportDataHard",
 	"importoption" => "\\Intervolga\\Migrato\\Tool\\Process\\ImportOption",
 	"validate" => "\\Intervolga\\Migrato\\Tool\\Process\\Validate",
 	"clearcache" => "\\Intervolga\\Migrato\\Tool\\Process\\ClearCache",
