@@ -1,5 +1,6 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Runtime;
@@ -35,6 +36,7 @@ class ImportData extends BaseProcess
 			static::init();
 			static::importWithDependencies();
 			static::logNotResolved();
+			static::showNotImported();
 			static::deleteMarked();
 			static::resolveReferences();
 		}
@@ -361,6 +363,35 @@ class ImportData extends BaseProcess
 				"OPERATION" => "resolve",
 				"STEP" => static::$step,
 			));
+		}
+	}
+
+	protected static function showNotImported()
+	{
+		static::startStep(__FUNCTION__);
+		foreach (static::$list->getRecordsToDelete() as $dataRecord)
+		{
+			LogTable::add(array(
+				"RECORD" => $dataRecord,
+				"OPERATION" => "not import",
+				"STEP" => static::$step,
+			));
+		}
+		$getList = LogTable::getList(array("filter" => array("=STEP" => static::$step)));
+		while ($logs = $getList->fetch())
+		{
+			static::report(
+				Loc::getMessage(
+					"INTERVOLGA_MIGRATO.STATISTIC_ONE_RECORD",
+					array(
+						"#MODULE#" => $logs["MODULE_NAME"],
+						"#ENTITY#" => $logs["ENTITY_NAME"],
+						"#OPERATION#" => $logs["OPERATION"],
+						"#DATA_XML_ID#" => $logs["DATA_XML_ID"],
+					)
+				),
+				$logs["RESULT"] ? "ok" : "fail"
+			);
 		}
 	}
 
