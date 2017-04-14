@@ -84,7 +84,7 @@ abstract class BaseXmlIdProvider
 		);
 		$xmlid = strrev(uniqid("", true));
 		$xmlid = str_replace(".", "", $xmlid);
-		$xmlid = implode("-", str_split($xmlid, 6));
+		$xmlid = strtolower(implode("-", str_split($xmlid, 6)));
 		return $prefix.$xmlid;
 	}
 
