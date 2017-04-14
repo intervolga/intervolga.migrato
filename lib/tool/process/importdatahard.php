@@ -4,7 +4,7 @@ class ImportDataHard extends ImportData
 {
 	public static function run()
 	{
-		parent::run();
+		BaseProcess::run();
 
 		$errors = Validate::validate();
 		if (!$errors)
