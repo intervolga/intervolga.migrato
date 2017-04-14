@@ -161,17 +161,13 @@ class Form extends BaseData
 
 	public function delete($xmlId)
 	{
-		$id = $this->findRecord($xmlId);
-		$typeObject = new \CIBlockType();
-		if($id)
+		$arUserName = explode(self::SEPARATOR, $xmlId);
+		$iblockId = $this->getIblockId(str_replace("form_element_", "", $arUserName[1]));
+
+		if (!\CUserOptions::DeleteOption(self::DEFAULT_CATEGORY, "form_element_" . $iblockId, false, $arUserName[0]))
 		{
-			if (!$typeObject->delete($id->getValue()))
-			{
-				throw new \Exception("Unknown error");
-			}
+			throw new \Exception("Unknown error");
 		}
-		else
-			throw new \Exception("Элемент с id " . $xmlId . " не существует");
 	}
 
 	public function getXmlId($id)
