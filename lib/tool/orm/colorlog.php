@@ -25,6 +25,7 @@ class ColorLog {
 		$this->foreground_colors['light_gray'] = '0;37';
 		$this->foreground_colors['white'] = '1;37';
 		$this->foreground_colors['ok'] = '0;32';
+		$this->foreground_colors['warning'] = '1;33';
 		$this->foreground_colors['fail'] = '0;31';
 
 		$this->background_colors['black'] = '40';
