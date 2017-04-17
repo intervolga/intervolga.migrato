@@ -52,9 +52,17 @@ $processes = array(
 	"reindex" => "\\Intervolga\\Migrato\\Tool\\Process\\Reindex",
 	"reindexurlrewrite" => "\\Intervolga\\Migrato\\Tool\\Process\\ReindexUrlRewriter",
 );
+$encodingUtf8 = false;
 if (\Intervolga\Migrato\Tool\Page::isCli())
 {
 	$cmdProcess = $argv[1];
+	foreach($argv as $arg)
+	{
+		if(strstr("-u", $arg) !== false)
+		{
+			$encodingUtf8 = true;
+		}
+	}
 }
 else
 {
@@ -73,7 +81,7 @@ foreach ($processes as $process => $processClass)
 		{
 			$processClass::run();
 			$report = $processClass::getReports();
-			\Intervolga\Migrato\Tool\Page::showReport($report);
+			\Intervolga\Migrato\Tool\Page::showReport($report, $encodingUtf8);
 		}
 		catch (\Exception $exception)
 		{
