@@ -1,5 +1,5 @@
 <?
-$MESS["INTERVOLGA_MIGRATO.STATISTICS_RECORD"]       = "#MODULE#: #ENTITY# #OPERATION# #COUNT# записей(и)";
+$MESS["INTERVOLGA_MIGRATO.STATISTICS_RECORD"]       = "#MODULE#: #ENTITY# #OPERATION# #COUNT# записи(ей)";
 $MESS["INTERVOLGA_MIGRATO.STATISTIC_ONE_RECORD"]    = "#MODULE#: #ENTITY# #OPERATION# record #DATA_XML_ID#";
 
 $MESS["INTERVOLGA_MIGRATO.PROCESS_BEGIN"]           = "Начало работы процесса";
@@ -20,7 +20,7 @@ $MESS["INTERVOLGA_MIGRATO.STEP_DELETEMARKED"]       = "Удаление марк
 $MESS["INTERVOLGA_MIGRATO.STEP_RESOLVEREFERENCES"]  = "Обновить ссылки у записей";
 
 $MESS["INTERVOLGA_MIGRATO.VALIDATE.NOT_MIGRATE"]    = "Сущности, которые НЕ будут мигрироваться:";
-$MESS["INTERVOLGA_MIGRATO.VALIDATE.WARNING"]        = "Детальное описание ошибок можно посмотреть на этой странице:";
+$MESS["INTERVOLGA_MIGRATO.VALIDATE.WARNING"]        = "Детальное описание ошибок можно посмотреть на данной странице:";
 
 $MESS["INTERVOLGA_MIGRATO.MODULE_MAIN"]             = "Главный модуль";
 $MESS["INTERVOLGA_MIGRATO.MODULE_IBLOCK"]           = "Информационные блоки";
@@ -52,6 +52,8 @@ $MESS["INTERVOLGA_MIGRATO.ENTITY_PROPERTYGROUP"]    = "Группы свойст
 $MESS["INTERVOLGA_MIGRATO.ENTITY_PROPERTYVARIANT"]  = "Варианты значений свойств заказов";
 
 $MESS["INTERVOLGA_MIGRATO.OPERATION_VALIDATE"]      = "проверка";
+$MESS["INTERVOLGA_MIGRATO.OPERATION_IMPORT"]        = "импорт";
+$MESS["INTERVOLGA_MIGRATO.OPERATION_EXPORT"]        = "экспорт";
 $MESS["INTERVOLGA_MIGRATO.OPERATION_CREATE"]        = "создание";
 $MESS["INTERVOLGA_MIGRATO.OPERATION_UPDATE"]        = "обновление";
 $MESS["INTERVOLGA_MIGRATO.OPERATION_UPDATE_REFERENCES"]  = "обновление ссылок";
