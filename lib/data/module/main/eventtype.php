@@ -64,7 +64,7 @@ class EventType extends BaseData
 	public function delete($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		if (!\CEventType::delete(array("ID" => $id->getValue())))
+		if ($id && !\CEventType::delete(array("ID" => $id->getValue())))
 		{
 			throw new \Exception("Unknown error");
 		}

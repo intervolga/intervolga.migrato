@@ -109,7 +109,7 @@ class ImportData extends BaseProcess
 			$creatableDataRecords = static::$list->getCreatableRecords();
 			if ($creatableDataRecords)
 			{
-				static::report("Import step $i, count=" . count($creatableDataRecords) . " record(s)");
+				static::report(Loc::getMessage("INTERVOLGA_MIGRATO.IMPORT_DEPENDENCY_STEP", array("#STEP#" => $i, "#COUNT#" => count($creatableDataRecords))));
 				foreach ($creatableDataRecords as $dataRecord)
 				{
 					static::saveDataRecord($dataRecord);

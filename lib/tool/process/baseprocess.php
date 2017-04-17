@@ -28,7 +28,7 @@ class BaseProcess
 	{
 		static::$reports = array();
 		LogTable::deleteAll();
-		static::report("Process started");
+		static::report(ColorLog::getColoredString(Loc::getMessage("INTERVOLGA_MIGRATO.PROCESS_BEGIN"), "light_green"));
 	}
 
 	public static function finalReport()
@@ -36,11 +36,11 @@ class BaseProcess
 		static::addSeparator();
 		if (static::$reportTypeCounter["fail"])
 		{
-			static::report("Process completed with errors");
+			static::report(Loc::getMessage("INTERVOLGA_MIGRATO.PROCESS_END_ERROR"), "error");
 		}
 		else
 		{
-			static::report("Process completed, no errors");
+			static::report(Loc::getMessage("INTERVOLGA_MIGRATO.PROCESS_END_SUCCESS"), "ok");
 		}
 	}
 
@@ -121,7 +121,7 @@ class BaseProcess
 	{
 		static::$step = $step;
 		static::addSeparator();
-		static::report("step: " . static::$step);
+		static::report(ColorLog::getColoredString(Loc::getMessage("INTERVOLGA_MIGRATO.STEP_TITLE") . self::getStepMessage(static::$step), "light_blue"));
 	}
 
 	/**
@@ -165,14 +165,34 @@ class BaseProcess
 				Loc::getMessage(
 					"INTERVOLGA_MIGRATO.STATISTICS_RECORD",
 					array(
-						"#MODULE#" => $logs["MODULE_NAME"],
-						"#ENTITY#" => $logs["ENTITY_NAME"],
-						"#OPERATION#" => $logs["OPERATION"],
+						"#MODULE#" => self::getModuleMessage($logs["MODULE_NAME"]),
+						"#ENTITY#" => self::getEntityMessage($logs["ENTITY_NAME"]),
+						"#OPERATION#" => self::getOperationMessage($logs["OPERATION"]),
 						"#COUNT#" => $logs["CNT"],
 					)
 				),
 				$logs["RESULT"] ? "ok" : "fail"
 			);
 		}
+	}
+
+	protected static function getModuleMessage($moduleName)
+	{
+		return Loc::getMessage("INTERVOLGA_MIGRATO.MODULE_" . strtoupper($moduleName));
+	}
+
+	protected static function getEntityMessage($entityName)
+	{
+		return Loc::getMessage("INTERVOLGA_MIGRATO.ENTITY_" . strtoupper($entityName));
+	}
+
+	protected static function getStepMessage($stepName)
+	{
+		return Loc::getMessage("INTERVOLGA_MIGRATO.STEP_" . strtoupper(preg_replace("/\s\d+/", "", $stepName)));
+	}
+
+	protected static function getOperationMessage($operationName)
+	{
+		return Loc::getMessage("INTERVOLGA_MIGRATO.OPERATION_" . strtoupper(str_replace(" ", "_", $operationName)));
 	}
 }
