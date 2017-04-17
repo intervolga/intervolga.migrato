@@ -13,6 +13,7 @@ class ExportData extends BaseProcess
 	{
 		parent::run();
 		$errors = Validate::validate();
+		Validate::findUseNotClasses();
 		if (!$errors)
 		{
 			static::startStep("export");

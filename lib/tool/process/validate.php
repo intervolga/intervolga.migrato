@@ -63,7 +63,7 @@ class Validate extends BaseProcess
 
 		foreach($allConfigDataClasses as $conf)
 		{
-			$entity = static::getModule($conf->getModule()) . ": " . static::getEntity($conf->getEntityName());
+			$entity = static::getModuleMessage($conf->getModule()) . ": " . static::getEntityMessage($conf->getEntityName());
 			if(!in_array($entity, $configDataClassesString))
 			{
 				static::report($entity);
