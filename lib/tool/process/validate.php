@@ -5,6 +5,7 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
+use Bitrix\Main\Localization\Loc;
 
 class Validate extends BaseProcess
 {
@@ -41,12 +42,16 @@ class Validate extends BaseProcess
 		}
 
 		static::reportStepLogs();
+		static::report(self::getValidateMessage("warning"), "warning");
+		static::report(INTERVOLGA_MIGRATO_TABLE_PATH
+			. "?set_filter=Y&adm_filter_applied=0&table_name=intervolga_migrato_log&find=0&find_type=RESULT&lang=" . LANGUAGE_ID);
 		return $result;
 	}
 
 	public static function findUseNotClasses()
 	{
 		static::addSeparator();
+		static::report(Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE.NOT_MIGRATE"));
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		$allConfigDataClasses = Config::getInstance()->getAllDateClasses();
 
@@ -58,10 +63,10 @@ class Validate extends BaseProcess
 
 		foreach($allConfigDataClasses as $conf)
 		{
-			$entity = $conf->getModule() . ":" . $conf->getEntityName();
+			$entity = static::getModule($conf->getModule()) . ": " . static::getEntity($conf->getEntityName());
 			if(!in_array($entity, $configDataClassesString))
 			{
-				static::report("Entity " . $entity . " not use.");
+				static::report($entity);
 			}
 		}
 	}
@@ -161,5 +166,14 @@ class Validate extends BaseProcess
 	protected static function isSimpleXmlId($xmlId)
 	{
 		return is_numeric($xmlId);
+	}
+
+	/**
+	 * @param string $message
+	 * @return string
+	 */
+	protected static function getValidateMessage($message)
+	{
+		return Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE." . strtoupper($message));
 	}
 }

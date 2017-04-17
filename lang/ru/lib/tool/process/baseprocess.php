@@ -5,6 +5,7 @@ $MESS["INTERVOLGA_MIGRATO.STATISTIC_ONE_RECORD"]    = "#MODULE#/#ENTITY# #OPERAT
 $MESS["INTERVOLGA_MIGRATO.STEP_VALIDATE"]           = "Валидация данных";
 $MESS["INTERVOLGA_MIGRATO.STEP_EXPORT"]             = "Экспорт данных";
 $MESS["INTERVOLGA_MIGRATO.VALIDATE.NOT_MIGRATE"]    = "Сущности, которые НЕ будут мигрироваться:";
+$MESS["INTERVOLGA_MIGRATO.VALIDATE.WARNING"]        = "Детальное описание ошибок можно посмотреть на этой странице:";
 
 $MESS["INTERVOLGA_MIGRATO.MODULE_MAIN"]             = "Главный модуль";
 $MESS["INTERVOLGA_MIGRATO.MODULE_IBLOCK"]           = "Информационные блоки";
