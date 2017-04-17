@@ -2,10 +2,15 @@
 $MESS["INTERVOLGA_MIGRATO.STATISTICS_RECORD"]       = "#MODULE#: #ENTITY# #OPERATION# #COUNT# записей(и)";
 $MESS["INTERVOLGA_MIGRATO.STATISTIC_ONE_RECORD"]    = "#MODULE#: #ENTITY# #OPERATION# record #DATA_XML_ID#";
 
+$MESS["INTERVOLGA_MIGRATO.PROCESS_BEGIN"]           = "Начало работы процесса";
+$MESS["INTERVOLGA_MIGRATO.PROCESS_END_SUCCESS"]     = "Процесс завершен без ошибок";
+$MESS["INTERVOLGA_MIGRATO.PROCESS_END_ERROR"]       = "Процес завершен с ошибками";
+
 $MESS["INTERVOLGA_MIGRATO.STEP_TITLE"]              = "Шаг: ";
 $MESS["INTERVOLGA_MIGRATO.IMPORT_DEPENDENCY_STEP"]  = "Импорт шаг #STEP#, количество=#COUNT# шт.";
 
 $MESS["INTERVOLGA_MIGRATO.STEP_VALIDATE"]           = "Валидация данных";
+$MESS["INTERVOLGA_MIGRATO.STEP_AUTOFIX"]            = "Автоисправление ошибок валидации";
 $MESS["INTERVOLGA_MIGRATO.STEP_EXPORT"]             = "Экспорт данных";
 $MESS["INTERVOLGA_MIGRATO.STEP_INIT"]               = "Инициализация процесса";
 $MESS["INTERVOLGA_MIGRATO.STEP_IMPORTWITHDEPENDENCIES"] = "Импорт сущностей с жесткими зависимостями";

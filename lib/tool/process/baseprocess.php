@@ -28,7 +28,7 @@ class BaseProcess
 	{
 		static::$reports = array();
 		LogTable::deleteAll();
-		static::report("Process started");
+		static::report(ColorLog::getColoredString(Loc::getMessage("INTERVOLGA_MIGRATO.PROCESS_BEGIN"), "light_green"));
 	}
 
 	public static function finalReport()
@@ -36,11 +36,11 @@ class BaseProcess
 		static::addSeparator();
 		if (static::$reportTypeCounter["fail"])
 		{
-			static::report("Process completed with errors");
+			static::report(Loc::getMessage("INTERVOLGA_MIGRATO.PROCESS_END_ERROR"), "error");
 		}
 		else
 		{
-			static::report("Process completed, no errors");
+			static::report(Loc::getMessage("INTERVOLGA_MIGRATO.PROCESS_END_SUCCESS"), "ok");
 		}
 	}
 

@@ -6,6 +6,7 @@ use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Tool\Orm\ColorLog;
 
 class Validate extends BaseProcess
 {
@@ -51,7 +52,7 @@ class Validate extends BaseProcess
 	public static function findUseNotClasses()
 	{
 		static::addSeparator();
-		static::report(Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE.NOT_MIGRATE"));
+		static::report(ColorLog::getColoredString(Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE.NOT_MIGRATE"), "warning"), "warning");
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		$allConfigDataClasses = Config::getInstance()->getAllDateClasses();
 
