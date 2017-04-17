@@ -37,13 +37,16 @@ class Page
 	/**
 	 * @param string[] $report
 	 */
-	public static function showReport(array $report)
+	public static function showReport(array $report, $encodingUtf8 = false)
 	{
 		if (static::isCli())
 		{
-			foreach ($report as $i => $string)
+			if(!$encodingUtf8)
 			{
-				$report[$i] = iconv("UTF-8", "cp1251", $string);
+				foreach ($report as $i => $string)
+				{
+					$report[$i] = iconv("UTF-8", "cp1251", $string);
+				}
 			}
 
 			echo implode("\r\n", $report)."\r\n";
