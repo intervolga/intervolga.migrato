@@ -61,7 +61,7 @@ class Validate extends BaseProcess
 			$entity = $conf->getModule() . ":" . $conf->getEntityName();
 			if(!in_array($entity, $configDataClassesString))
 			{
-				static::report("Entity " . $entity . " not use.");
+				static::report($entity . " not used");
 			}
 		}
 	}
