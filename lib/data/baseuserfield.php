@@ -71,7 +71,10 @@ abstract class BaseUserField extends BaseData
 			"EDIT_IN_LIST" => $userField["EDIT_IN_LIST"],
 			"IS_SEARCHABLE" => $userField["IS_SEARCHABLE"],
 		);
-		$fields = array_merge($fields, $this->getSettingsFields($userField["SETTINGS"]));
+		if ($userField["SETTINGS"])
+		{
+			$fields = array_merge($fields, $this->getSettingsFields($userField["SETTINGS"]));
+		}
 		$fields = array_merge($fields, $this->getLangFields($userField));
 		$record->addFieldsRaw($fields);
 		foreach ($this->getSettingsLinks($userField["SETTINGS"]) as $name => $link)
