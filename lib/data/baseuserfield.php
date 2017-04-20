@@ -77,9 +77,12 @@ abstract class BaseUserField extends BaseData
 		}
 		$fields = array_merge($fields, $this->getLangFields($userField));
 		$record->addFieldsRaw($fields);
-		foreach ($this->getSettingsLinks($userField["SETTINGS"]) as $name => $link)
+		if ($userField["SETTINGS"])
 		{
-			$record->setReference($name, $link);
+			foreach ($this->getSettingsLinks($userField["SETTINGS"]) as $name => $link)
+			{
+				$record->setReference($name, $link);
+			}
 		}
 
 		return $record;
