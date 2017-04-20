@@ -29,6 +29,7 @@ class BaseProcess
 	public static function run()
 	{
 		static::$reports = array();
+		static::$reportTypeCounter = array();
 		LogTable::deleteAll();
 		static::checkFiles();
 		static::report(Loc::getMessage('INTERVOLGA_MIGRATO.PROCESS_STARTED'));
