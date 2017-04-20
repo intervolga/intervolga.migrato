@@ -7,7 +7,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Orm\LogTable;
-use Intervolga\Migrato\Tool\Orm\ColorLog;
+use Intervolga\Migrato\Tool\ColorLog;
 
 Loc::loadMessages(__FILE__);
 

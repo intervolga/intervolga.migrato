@@ -1,5 +1,9 @@
 <?namespace Intervolga\Migrato\Tool;
 
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
+
 class Page
 {
 	/**
@@ -14,7 +18,7 @@ class Page
 		}
 		if (!static::isCli() && !$USER->IsAdmin())
 		{
-			throw new \Exception("Need cli or admin login");
+			throw new \Exception('Need cli or admin login');
 		}
 	}
 
@@ -23,12 +27,25 @@ class Page
 	 */
 	public static function handleException(\Exception $exception)
 	{
+		$formattedName = Loc::getMessage(
+			'INTERVOLGA_MIGRATO.EXCEPTION',
+			array(
+				'#CLASS#' => get_class($exception)
+			)
+		);
+		$formattedMessage = Loc::getMessage(
+			'INTERVOLGA_MIGRATO.EXCEPTION_MESSAGE_CODE',
+			array(
+				'#MESSAGE#' => $exception->getMessage(),
+				'#CODE#' => $exception->getCode(),
+			)
+		);
 		$report = array(
-			"EXCEPTION (Class: " . get_class($exception) . ")",
-			"Message: " . $exception->getMessage() . " (Code: " . $exception->getCode() . ")",
-			"Location: " . $exception->getFile() . ":" . $exception->getLine(),
-			"Trace:",
-			"",
+			ColorLog::getColoredString($formattedName, 'fail'),
+			ColorLog::getColoredString($formattedMessage, 'fail'),
+			'',
+			Loc::getMessage('INTERVOLGA_MIGRATO.BACKTRACE'),
+			'## ' . $exception->getFile() . '(' . $exception->getLine() . ')',
 			$exception->getTraceAsString(),
 		);
 		static::showReport($report);
@@ -45,7 +62,7 @@ class Page
 			{
 				foreach ($report as $i => $string)
 				{
-					$report[$i] = iconv("UTF-8", "cp1251", $string);
+					$report[$i] = iconv('UTF-8', 'cp1251', $string);
 				}
 			}
 
@@ -55,7 +72,7 @@ class Page
 		}
 		else
 		{
-			echo "<pre>" . implode("<br>", $report) . "</pre>";
+			echo '<pre>' . implode('<br>', $report) . '</pre>';
 		}
 	}
 
@@ -64,6 +81,6 @@ class Page
 	 */
 	public static function isCli()
 	{
-		return php_sapi_name() == "cli";
+		return php_sapi_name() == 'cli';
 	}
 }
