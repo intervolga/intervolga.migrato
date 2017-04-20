@@ -36,6 +36,7 @@ class ColorLog
 		$this->foregroundColors['ok'] = $this->foregroundColors['green'];
 		$this->foregroundColors['warning'] = $this->foregroundColors['yellow'];
 		$this->foregroundColors['fail'] = $this->foregroundColors['red'];
+		$this->foregroundColors['info'] = $this->foregroundColors['light_blue'];
 
 		$this->backgroundColors['ok'] = $this->backgroundColors['green'];
 		$this->backgroundColors['fail'] = $this->backgroundColors['red'];
