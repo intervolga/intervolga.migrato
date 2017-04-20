@@ -98,4 +98,14 @@ abstract class BaseXmlIdProvider
 	{
 		throw new NotImplementedException("Not implemented yet");
 	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $id
+	 *
+	 * @throws \Bitrix\Main\NotImplementedException
+	 */
+	public function deleteId($id)
+	{
+		throw new NotImplementedException("Not implemented yet");
+	}
 }

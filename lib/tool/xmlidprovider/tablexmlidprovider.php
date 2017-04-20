@@ -137,4 +137,35 @@ class TableXmlIdProvider extends BaseXmlIdProvider
 		}
 		return $result;
 	}
+
+	public function deleteId($id)
+	{
+		$filter = array(
+			"MODULE_NAME" => $this->dataClass->getModule(),
+			"ENTITY_NAME" => $this->dataClass->getEntityName(),
+		);
+		if ($id->getType() == RecordId::TYPE_NUMERIC)
+		{
+			$filter["DATA_ID_NUM"] = $id->getValue();
+		}
+		if ($id->getType() == RecordId::TYPE_STRING)
+		{
+			$filter["DATA_ID_STR"] = $id->getValue();
+		}
+		if ($id->getType() == RecordId::TYPE_COMPLEX)
+		{
+			$filter["DATA_ID_COMPLEX"] = $id->getValue();
+		}
+		$parameters = array(
+			'filter' => $filter,
+			'select' => array(
+				'ID',
+			)
+		);
+		$records = XmlIdTable::getList($parameters);
+		while ($record = $records->fetch())
+		{
+			XmlIdTable::delete($record['ID']);
+		}
+	}
 }

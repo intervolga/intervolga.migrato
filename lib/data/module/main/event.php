@@ -22,6 +22,11 @@ class Event extends BaseData
 		return "/eventtype/";
 	}
 
+	public function isIdExists($id)
+	{
+		return !!\CEventMessage::getById($id->getValue())->fetch();
+	}
+
 	public function getList(array $filter = array())
 	{
 		$result = array();
