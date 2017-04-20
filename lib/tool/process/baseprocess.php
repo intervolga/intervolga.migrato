@@ -31,7 +31,7 @@ class BaseProcess
 		static::$reports = array();
 		LogTable::deleteAll();
 		static::checkFiles();
-		static::report("Process started");
+		static::report(Loc::getMessage('INTERVOLGA_MIGRATO.PROCESS_STARTED'));
 	}
 
 	protected static function checkFiles()
@@ -137,7 +137,14 @@ class BaseProcess
 	{
 		static::$step = $step;
 		static::addSeparator();
-		static::report("step: " . static::$step);
+		static::report(
+			Loc::getMessage(
+				'INTERVOLGA_MIGRATO.STEP',
+				array(
+					'#STEP#' => static::$step
+				)
+			)
+		);
 	}
 
 	/**
