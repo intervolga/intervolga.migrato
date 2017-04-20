@@ -52,11 +52,11 @@ class BaseProcess
 		static::addSeparator();
 		if (static::$reportTypeCounter["fail"])
 		{
-			static::report("Process completed with errors");
+			static::report(Loc::getMessage('INTERVOLGA_MIGRATO.PROCESS_COMPLETED_ERRORS'));
 		}
 		else
 		{
-			static::report("Process completed, no errors");
+			static::report(Loc::getMessage('INTERVOLGA_MIGRATO.PROCESS_COMPLETED_OK'));
 		}
 	}
 

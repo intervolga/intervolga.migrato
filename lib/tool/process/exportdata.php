@@ -1,11 +1,14 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Tool\Orm\LogTable;
+
+Loc::loadMessages(__FILE__);
 
 class ExportData extends BaseProcess
 {
@@ -15,7 +18,7 @@ class ExportData extends BaseProcess
 		$errors = Validate::validate();
 		if (!$errors)
 		{
-			static::startStep("export");
+			static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_EXPORT'));
 			$configDataClasses = Config::getInstance()->getDataClasses();
 			foreach ($configDataClasses as $data)
 			{
@@ -23,6 +26,7 @@ class ExportData extends BaseProcess
 			}
 			static::reportStepLogs();
 		}
+		Validate::findUseNotClasses();
 
 		parent::finalReport();
 	}
@@ -61,8 +65,8 @@ class ExportData extends BaseProcess
 			DataFileViewXml::write($record, $path);
 			LogTable::add(array(
 				"RECORD" => $record,
-				"OPERATION" => "export",
-				"STEP" => "Export",
+				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_EXPORT'),
+				"STEP" => Loc::getMessage('INTERVOLGA_MIGRATO.STEP_EXPORT'),
 			));
 		}
 		catch (\Exception $exception)
@@ -70,8 +74,8 @@ class ExportData extends BaseProcess
 			LogTable::add(array(
 				"RECORD" => $record,
 				"EXCEPTION" => $exception,
-				"OPERATION" => "export",
-				"STEP" => "Export",
+				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_EXPORT'),
+				"STEP" => Loc::getMessage('INTERVOLGA_MIGRATO.STEP_EXPORT'),
 			));
 		}
 	}

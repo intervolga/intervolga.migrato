@@ -1,7 +1,10 @@
 <?namespace Intervolga\Migrato\Tool\Process;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
+
+Loc::loadMessages(__FILE__);
 
 class AutoFix extends BaseProcess
 {
@@ -10,7 +13,7 @@ class AutoFix extends BaseProcess
 		$errors = Validate::validate();
 		parent::run();
 
-		static::startStep("autofix");
+		static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_AUTOFIX'));
 		static::fixErrors($errors);
 		static::reportStepLogs();
 
@@ -33,7 +36,7 @@ class AutoFix extends BaseProcess
 				$error->setXmlId($xmlId);
 				LogTable::add(array(
 					"XML_ID_ERROR" => $error,
-					"OPERATION" => "xmlid error fix",
+					"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_AUTOFIX'),
 					"STEP" => static::$step,
 				));
 				$counter++;
@@ -43,7 +46,7 @@ class AutoFix extends BaseProcess
 				LogTable::add(array(
 					"XML_ID_ERROR" => $error,
 					"EXCEPTION" => $exception,
-					"OPERATION" => "xmlid error fix",
+					"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_AUTOFIX'),
 					"STEP" => static::$step,
 					"RESULT" => false,
 				));
