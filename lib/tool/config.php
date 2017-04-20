@@ -1,7 +1,7 @@
 <? namespace Intervolga\Migrato\Tool;
 
-use Bitrix\Main\Authentication\Application;
 use Bitrix\Main\IO\Directory;
+use Bitrix\Main\IO\File;
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 
@@ -10,6 +10,14 @@ class Config
 	protected $configArray = array();
 	protected $dataClassesFilter = array();
 	protected static $instance = null;
+
+	/**
+	 * @return bool
+	 */
+	public static function isExists()
+	{
+		return File::isFileExists(INTERVOLGA_MIGRATO_CONFIG_PATH);
+	}
 
 	/**
 	 * @return Config
@@ -29,7 +37,7 @@ class Config
 		$this->readFile();
 	}
 
-	public function readFile()
+	protected function readFile()
 	{
 		$xmlParser = new \CDataXML();
 		$xmlParser->load(INTERVOLGA_MIGRATO_CONFIG_PATH);

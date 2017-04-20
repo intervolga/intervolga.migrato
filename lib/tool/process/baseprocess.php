@@ -1,9 +1,11 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
 use Bitrix\Main\Entity\ExpressionField;
+use Bitrix\Main\IO\Directory;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool;
+use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Intervolga\Migrato\Tool\Orm\ColorLog;
 
@@ -28,7 +30,21 @@ class BaseProcess
 	{
 		static::$reports = array();
 		LogTable::deleteAll();
+		static::checkFiles();
 		static::report("Process started");
+	}
+
+	protected static function checkFiles()
+	{
+		if (!Directory::isDirectoryExists(INTERVOLGA_MIGRATO_DIRECTORY))
+		{
+			Directory::createDirectory(INTERVOLGA_MIGRATO_DIRECTORY);
+			CopyDirFiles(dirname(dirname(dirname(__DIR__))) . "/install/public", INTERVOLGA_MIGRATO_DIRECTORY);
+		}
+		if (!Config::isExists())
+		{
+			throw new \Exception(Loc::getMessage("INTERVOLGA_MIGRATO.CONFIG_NOT_FOUND"));
+		}
 	}
 
 	public static function finalReport()
