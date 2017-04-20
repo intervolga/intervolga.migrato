@@ -1,9 +1,12 @@
 <? namespace Intervolga\Migrato\Data\Module\Main;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
+
+Loc::loadMessages(__FILE__);
 
 class Event extends BaseData
 {
@@ -44,6 +47,18 @@ class Event extends BaseData
 
 			$dependency = clone $this->getDependency(static::DEPENDENCY_EVENT_NAME);
 			$dependency->setValue($this->getEventTypeXmlId($message["EVENT_NAME"]));
+			if (!$dependency->getValue())
+			{
+				throw new \Exception(
+					Loc::getMessage(
+						'INTERVOLGA_MIGRATO.EVENT_TYPE_NOT_FOUND',
+						array(
+							'#ID#' => $message["ID"],
+							'#NAME#' => $message['EVENT_NAME'],
+						)
+					)
+				);
+			}
 			$record->setDependency(static::DEPENDENCY_EVENT_NAME, $dependency);
 
 			if ($record->getDependencies())
