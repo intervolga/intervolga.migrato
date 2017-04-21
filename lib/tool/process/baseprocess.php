@@ -53,11 +53,21 @@ class BaseProcess
 		static::addSeparator();
 		if (static::$reportTypeCounter["fail"])
 		{
-			static::report(Loc::getMessage('INTERVOLGA_MIGRATO.PROCESS_COMPLETED_ERRORS'));
+			static::report(
+				ColorLog::getColoredString(
+					Loc::getMessage('INTERVOLGA_MIGRATO.PROCESS_COMPLETED_ERRORS'),
+					'fail'
+				)
+			);
 		}
 		else
 		{
-			static::report(Loc::getMessage('INTERVOLGA_MIGRATO.PROCESS_COMPLETED_OK'));
+			static::report(
+				ColorLog::getColoredString(
+					Loc::getMessage('INTERVOLGA_MIGRATO.PROCESS_COMPLETED_OK'),
+					'ok'
+				)
+			);
 		}
 	}
 
