@@ -12,10 +12,15 @@ Loc::loadMessages(__FILE__);
 class Form extends BaseData
 {
 	const CATEGORY = 'form';
-	const TYPE_ELEMENT = 'E';
-	const TYPE_SECTION = 'S';
-
 	const USER_ADMIN = 1;
+
+	const NAME_ELEMENT = 'form_element_';
+	const NAME_SECTION = 'form_section_';
+
+	const XML_ALL = 'all';
+	const XML_ADMIN = 'admin';
+	const XML_ELEMENT = 'el';
+	const XML_SECTION = 'sec';
 
 	protected function __construct()
 	{
@@ -59,16 +64,12 @@ class Form extends BaseData
 	 */
 	protected function arrayToRecord(array $form)
 	{
-		if ($formXmlId = $this->getFormXmlId($form))
+		if ($formXmlId = $this->fieldsToXmlId($form))
 		{
 			$record = new Record($this);
 			$record->setXmlId($formXmlId);
 			$record->setId($this->createId($form['ID']));
-			$record->addFieldsRaw(array(
-				'IS_ADMIN' => ($form['USER_ID'] == static::USER_ADMIN ? 'Y' : 'N'),
-				'TYPE' => $this->getType($form['NAME']),
-				'COMMON' => $form['COMMON'],
-			));
+			$record->setFieldRaw('VALUE', $form['VALUE']);
 			$this->addIblockDependency($record, $form['NAME']);
 			$this->addPropsDependencies($record, $form['VALUE']);
 
@@ -165,31 +166,33 @@ class Form extends BaseData
 	 *
 	 * @return string
 	 */
-	protected function getFormXmlId(array $form)
+	protected function fieldsToXmlId(array $form)
 	{
 		$xmlIdParts = array();
 		if (!$form['USER_ID'] || $form['USER_ID'] == static::USER_ADMIN)
 		{
-			if ($form['CATEGORY'] == 'form')
+			if ($form['CATEGORY'] == static::CATEGORY)
 			{
-				if ($type = $this->getType($form['NAME']))
+				$type = '';
+				if (is_int(strpos($form['NAME'], static::NAME_ELEMENT)))
 				{
-					if ($type == static::TYPE_ELEMENT)
-					{
-						$xmlIdParts[] = 'el';
-					}
-					elseif ($type == static::TYPE_SECTION)
-					{
-						$xmlIdParts[] = 'sec';
-					}
+					$type = static::XML_ELEMENT;
+				}
+				elseif (is_int(strpos($form['NAME'], static::NAME_SECTION)))
+				{
+					$type = static::XML_SECTION;
+				}
+				if ($type)
+				{
+					$xmlIdParts[] = $type;
 
 					if ($form['COMMON'] == 'Y')
 					{
-						$xmlIdParts[] = 'all';
+						$xmlIdParts[] = static::XML_ALL;
 					}
 					else
 					{
-						$xmlIdParts[] = 'admin';
+						$xmlIdParts[] = static::XML_ADMIN;
 					}
 
 					$iblockId = substr($form['NAME'], strripos($form['NAME'], '_') + 1);
@@ -202,23 +205,40 @@ class Form extends BaseData
 		return strtolower(implode('-', $xmlIdParts));
 	}
 
-	/**
-	 * @param string $name
-	 *
-	 * @return string
-	 */
-	protected function getType($name)
+	protected function parseXmlId($xmlId)
 	{
-		if (substr_count($name, 'form_element'))
+		$result = array();
+		$pattern = '/^(?<type>el|sec)-(?<user>admin|all)-(?<iblock>.*)$/';
+		$matches = array();
+		if (preg_match($pattern, $xmlId, $matches))
 		{
-			return static::TYPE_ELEMENT;
-		}
-		elseif (substr_count($name, 'form_section'))
-		{
-			return static::TYPE_SECTION;
+			if ($iblockXmlId = $matches['iblock'])
+			{
+				if ($id = Iblock::getInstance()->findRecord($iblockXmlId))
+				{
+					$type = '';
+					if ($matches['type'] == static::XML_ELEMENT)
+					{
+						$type = static::NAME_ELEMENT;
+					}
+					elseif ($matches['type'] == static::XML_SECTION)
+					{
+						$type = static::NAME_SECTION;
+					}
+					if ($type)
+					{
+						$result = array(
+							'CATEGORY' => static::CATEGORY,
+							'NAME' => $type . $id->getValue(),
+							'COMMON' => ($matches['user'] == static::XML_ALL ? 'Y' : 'N'),
+							'USER_ID' => ($matches['user'] == static::XML_ADMIN ? static::USER_ADMIN : 0),
+						);
+					}
+				}
+			}
 		}
 
-		return '';
+		return $result;
 	}
 
 	/**
@@ -229,86 +249,28 @@ class Form extends BaseData
 	 */
 	protected function recordToArray(Record $record)
 	{
-		$fields = $record->getFieldsRaw();
-		$result = array(
-			'CATEGORY' => static::CATEGORY,
-		);
-		if (array_key_exists('COMMON', $fields))
+		$result = $this->parseXmlId($record->getXmlId());
+		if ($value = $record->getFieldRaw('VALUE'))
 		{
-			$result['COMMON'] = $fields['COMMON'];
-		}
-		if (array_key_exists('IS_ADMIN', $fields))
-		{
-			$result['USER_ID'] = ($fields['IS_ADMIN'] == 'Y' ? static::USER_ADMIN : 0);
-		}
-		if ($name = $this->restoreName($fields, $record->getDependency('IBLOCK_ID')))
-		{
-			$result['NAME'] = $name;
-		}
-		if ($fields['VALUE'])
-		{
-			$result['VALUE'] = $this->updateValueField($fields['VALUE'], $this->getIblockProperties(false));
+			foreach ($this->getIblockProperties(false) as $xmlId => $id)
+			{
+				$find = '--PROPERTY_' . $xmlId . '--';
+				$replace = '--PROPERTY_' . $id . '--';
+				$value = str_replace($find, $replace, $value);
+			}
+			$result['VALUE'] = $value;
 		}
 
 		return $result;
 	}
 
-	/**
-	 * @param array $form
-	 * @param \Intervolga\Migrato\Data\Link|null $iblockLink
-	 *
-	 * @return string
-	 */
-	protected function restoreName($form, Link $iblockLink = null)
-	{
-		$name = '';
-		if ($iblockLink && ($iblockId = $iblockLink->findId()))
-		{
-			$nameParts = array(
-				'prefix' => 'form',
-				'type' => '',
-				'iblock' => $iblockId->getValue(),
-			);
-			if ($form['TYPE'] == static::TYPE_ELEMENT)
-			{
-				$nameParts['type'] = 'element';
-			}
-			elseif ($form['TYPE'] == static::TYPE_SECTION)
-			{
-				$nameParts['type'] = 'section';
-			}
-			if ($nameParts['type'])
-			{
-				$name = implode('_', $nameParts);
-			}
-		}
-
-		return $name;
-	}
-
-	/**
-	 * @param string $value
-	 * @param array $properties
-	 *
-	 * @return mixed
-	 */
-	protected function updateValueField($value, $properties)
-	{
-		foreach ($properties as $from => $to)
-		{
-			$value = str_replace($from, $to, $value);
-		}
-
-		return $value;
-	}
-
 	public function getXmlId($id)
 	{
-		$arFilter = array('ID' => $id);
-		$getList = \CUserOptions::getList(array(), $arFilter);
+		$filter = array('ID' => $id, 'CATEGORY' => static::CATEGORY);
+		$getList = \CUserOptions::getList(array(), $filter);
 		if ($form = $getList->fetch())
 		{
-			return $this->getFormXmlId($form);
+			return $this->fieldsToXmlId($form);
 		}
 
 		return '';
@@ -369,4 +331,24 @@ class Form extends BaseData
 			throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_NOT_CREATED');
 		}
 	}
+
+	/**
+	 * @param string $xmlId
+	 *
+	 * @throws \Exception
+	 */
+	public function delete($xmlId)
+	{
+		$fields = $this->parseXmlId($xmlId);
+		if ($fields)
+		{
+			if (!\CUserOptions::deleteOption($fields['CATEGORY'], $fields['NAME'], $fields['COMMON'] == 'Y', $fields['USER_ID']))
+			{
+				throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_DELETE_ERROR');
+			}
+		}
+	}
+
+	public function setXmlId($id, $xmlId)
+	{}
 }
