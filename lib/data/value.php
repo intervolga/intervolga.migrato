@@ -30,7 +30,14 @@ class Value
 		$list = array();
 		foreach ($tree as $key => $value)
 		{
-			$list["$root.$key"] = $value;
+			if (is_array($value))
+			{
+				$list = array_merge($list, static::treeToList($value, "$root.$key"));
+			}
+			else
+			{
+				$list["$root.$key"] = $value;
+			}
 		}
 		ksort($list);
 		return $list;
