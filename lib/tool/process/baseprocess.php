@@ -55,7 +55,12 @@ class BaseProcess
 		{
 			static::report(
 				ColorLog::getColoredString(
-					Loc::getMessage('INTERVOLGA_MIGRATO.PROCESS_COMPLETED_ERRORS'),
+					Loc::getMessage(
+						'INTERVOLGA_MIGRATO.PROCESS_COMPLETED_ERRORS',
+						array(
+							'#CNT#' => static::$reportTypeCounter["fail"],
+						)
+					),
 					'fail'
 				)
 			);
@@ -161,13 +166,14 @@ class BaseProcess
 	/**
 	 * @param string $message
 	 * @param string $type
+	 * @param int $count
 	 */
-	protected static function report($message, $type = "")
+	protected static function report($message, $type = "", $count = 1)
 	{
 		$type = trim($type);
 		if ($type)
 		{
-			static::$reportTypeCounter[$type]++;
+			static::$reportTypeCounter[$type] += $count;
 			$type = ColorLog::getColoredString("[" . $type . "] ", $type);
 		}
 		static::$reports[] = $type . $message;
@@ -205,7 +211,8 @@ class BaseProcess
 						"#COUNT#" => $logs["CNT"],
 					)
 				),
-				$logs["RESULT"] ? "ok" : "fail"
+				$logs["RESULT"] ? "ok" : "fail",
+				$logs["CNT"]
 			);
 		}
 	}

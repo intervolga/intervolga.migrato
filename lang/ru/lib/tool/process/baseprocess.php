@@ -5,4 +5,4 @@ $MESS["INTERVOLGA_MIGRATO.CONFIG_NOT_FOUND"] = "Отсутствует файл 
 $MESS['INTERVOLGA_MIGRATO.STEP'] = 'Шаг: #STEP#';
 $MESS['INTERVOLGA_MIGRATO.PROCESS_STARTED'] = 'Команда выполняется...';
 $MESS['INTERVOLGA_MIGRATO.PROCESS_COMPLETED_OK'] = 'Команда выполнена, ошибок нет';
-$MESS['INTERVOLGA_MIGRATO.PROCESS_COMPLETED_ERRORS'] = 'Команда выполнена с ошибками';
+$MESS['INTERVOLGA_MIGRATO.PROCESS_COMPLETED_ERRORS'] = 'Команда выполнена, ошибок: #CNT#';
