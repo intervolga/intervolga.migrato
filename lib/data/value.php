@@ -58,6 +58,15 @@ class Value
 			{
 				$tree[$explode[0]][$explode[1]] = $value;
 			}
+			elseif (count($explode) > 2)
+			{
+				$foo = $value;
+				foreach (array_reverse($explode) as $part)
+				{
+					$foo = array($part => $foo);
+				}
+				$tree = array_merge_recursive($tree, $foo);
+			}
 		}
 		return $tree;
 	}
