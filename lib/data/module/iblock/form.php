@@ -1,61 +1,41 @@
-<?namespace Intervolga\Migrato\Data\Module\Iblock;
+<? namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Bitrix\Iblock\PropertyTable;
 
 class Form extends BaseData
 {
-	const SEPARATOR = "___";
+	const SEPARATOR = '___';
 
-	const DEFAULT_CATEGORY  = "form";
+	const CATEGORY = 'form';
+	const TYPE_ELEMENT = 'E';
+	const TYPE_SECTION = 'S';
+
+	const USER_ADMIN = 1;
 
 	protected function __construct()
 	{
-		Loader::includeModule("iblock");
+		Loader::includeModule('iblock');
 	}
 
 	public function getFilesSubdir()
 	{
-		return "/type/iblock/";
+		return '/type/iblock/';
 	}
 
 	public function getList(array $filter = array())
 	{
-
-		$properties = $this->getIblockProperties();
-
 		$result = array();
-		$arFilter = array("CATEGORY" => self::DEFAULT_CATEGORY);
-		$getList = \CUserOptions::GetList(array(), $arFilter);
+		$arFilter = array('CATEGORY' => self::CATEGORY);
+		$getList = \CUserOptions::getList(array(), $arFilter);
 		while ($form = $getList->fetch())
 		{
-			if(intval($form["USER_ID"]) == 0 || intval($form["USER_ID"]) == 1)
+			if ($record = $this->arrayToRecord($form))
 			{
-				foreach($properties as $id => $xmlId)
-				{
-					$form["VALUE"] = str_replace($id, $xmlId, $form["VALUE"]);
-				}
-
-				$iblockId = substr($form["NAME"], strripos($form["NAME"], "_") + 1);
-				$iblockXmlId = \CIBlock::GetByID($iblockId)->Fetch();
-				$iblockXmlId = $iblockXmlId["XML_ID"];
-
-				$name = preg_replace("/(\d)+$/", $iblockXmlId, $form["NAME"]);
-
-				$record = new Record($this);
-				$id = RecordId::createStringId($form["USER_ID"] . self::SEPARATOR  . $name);
-				$record->setXmlId($this->getXmlId($id));
-				$record->setId($id);
-
-				$record->addFieldsRaw(array(
-					"NAME" => $name,
-					"CATEGORY" => $form["CATEGORY"],
-					"COMMON" => $form["COMMON"],
-					"VALUE" => $form["VALUE"],
-				));
 				$result[] = $record;
 			}
 		}
@@ -64,114 +44,265 @@ class Form extends BaseData
 	}
 
 	/**
-	 * @return array
-	*/
-	private function getIblockProperties($idToXmlId = true)
+	 * @param array $form
+	 *
+	 * @return \Intervolga\Migrato\Data\Record|null
+	 * @throws \Bitrix\Main\NotImplementedException
+	 */
+	protected function arrayToRecord(array $form)
 	{
-		$properties = array();
-
-		$rsProperties = PropertyTable::getList(array("select" => array("ID", "XML_ID")));
-		while($prop = $rsProperties->fetch())
+		if ($formXmlId = $this->getFormXmlId($form))
 		{
-			if($idToXmlId)
-				$properties["PROPERTY_" . $prop["ID"]] = "PROPERTY_" . $prop["XML_ID"];
-			else
-				$properties["PROPERTY_" . $prop["XML_ID"]] = "PROPERTY_" . $prop["ID"];
+			$record = new Record($this);
+			$id = RecordId::createStringId($form['ID']);
+			$record->setXmlId($formXmlId);
+			$record->setId($id);
+			$record->addFieldsRaw(array(
+				'IS_ADMIN' => ($form['USER_ID'] == static::USER_ADMIN ? 'Y' : 'N'),
+				'TYPE' => $this->getType($form['NAME']),
+				'COMMON' => $form['COMMON'],
+			));
+			$this->addIblockDependency($record, $form['NAME']);
+			$this->addPropsDependencies($record, $form['VALUE']);
+
+			return $record;
 		}
 
-		return $properties;
+		return null;
 	}
 
-	private function updateValueField($value, $properties)
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @param string $name
+	 *
+	 * @throws \Bitrix\Main\NotImplementedException
+	 */
+	protected function addIblockDependency(Record $record, $name)
 	{
-		foreach($properties as $from => $to)
+		$iblockId = substr($name, strripos($name, '_') + 1);
+		if ($iblockId)
+		{
+			$dependency = clone $this->getDependency('IBLOCK_ID');
+			$dependency->setValue(
+				Iblock::getInstance()->getXmlId(Iblock::getInstance()->createId($iblockId))
+			);
+			$record->setDependency('IBLOCK_ID', $dependency);
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @param string $value
+	 */
+	protected function addPropsDependencies(Record $record, $value)
+	{
+		$propertyXmlIds = array();
+		foreach ($this->getIblockProperties() as $id => $xmlId)
+		{
+			$find = '--PROPERTY_' . $id . '--';
+			$replace = '--PROPERTY_' . $xmlId . '--';
+			if (is_int(strpos($value, $find)))
+			{
+				$value = str_replace($find, $replace, $value);
+				$propertyXmlIds[] = $xmlId;
+			}
+		}
+		if ($propertyXmlIds)
+		{
+			$record->setFieldRaw('VALUE', $value);
+
+			$dependency = clone $this->getDependency('PROPERTY_ID');
+			$dependency->setValues($propertyXmlIds);
+			$record->setDependency('PROPERTY_ID', $dependency);
+		}
+	}
+
+	/**
+	 * @param bool $idToXmlId
+	 *
+	 * @return array
+	 * @throws \Bitrix\Main\ArgumentException
+	 */
+	protected function getIblockProperties($idToXmlId = true)
+	{
+		static $properties = array();
+
+		if (!$properties[$idToXmlId])
+		{
+			$propertiesGetList = PropertyTable::getList(
+				array(
+					'select' => array(
+						'ID',
+						'XML_ID',
+					)
+				)
+			);
+			while ($property = $propertiesGetList->fetch())
+			{
+				if ($idToXmlId)
+				{
+					$properties[$idToXmlId][$property['ID']] = $property['XML_ID'];
+				}
+				else
+				{
+					$properties[$idToXmlId][$property['XML_ID']] = $property['ID'];
+				}
+			}
+		}
+
+		return $properties[$idToXmlId];
+	}
+
+	/**
+	 * @param array $form
+	 *
+	 * @return string
+	 */
+	protected function getFormXmlId(array $form)
+	{
+		$xmlIdParts = array();
+		if (!$form['USER_ID'] || $form['USER_ID'] == static::USER_ADMIN)
+		{
+			if ($form['CATEGORY'] == 'form')
+			{
+				if ($type = $this->getType($form['NAME']))
+				{
+					if ($type == static::TYPE_ELEMENT)
+					{
+						$xmlIdParts[] = 'el';
+					}
+					elseif ($type == static::TYPE_SECTION)
+					{
+						$xmlIdParts[] = 'sec';
+					}
+
+					if ($form['COMMON'] == 'Y')
+					{
+						$xmlIdParts[] = 'all';
+					}
+					else
+					{
+						$xmlIdParts[] = 'admin';
+					}
+
+					$iblockId = substr($form['NAME'], strripos($form['NAME'], '_') + 1);
+					$iblockXmlId = \CIBlock::getByID($iblockId)->fetch();
+					$xmlIdParts[] = $iblockXmlId['XML_ID'];
+				}
+			}
+		}
+
+		return strtolower(implode('-', $xmlIdParts));
+	}
+
+	/**
+	 * @param string $name
+	 *
+	 * @return string
+	 */
+	protected function getType($name)
+	{
+		if (substr_count($name, 'form_element'))
+		{
+			return static::TYPE_ELEMENT;
+		}
+		elseif (substr_count($name, 'form_section'))
+		{
+			return static::TYPE_SECTION;
+		}
+
+		return '';
+	}
+
+	public function getDependencies()
+	{
+		return array(
+			'IBLOCK_ID' => new Link(Iblock::getInstance()),
+			'PROPERTY_ID' => new Link(Property::getInstance()),
+		);
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return array
+	 * @throws \Exception
+	 */
+	protected function recordToArray(Record $record)
+	{
+		$result = array(
+			'CATEGORY' => 'form',
+		);
+		$fields = $record->getFieldsRaw();
+		$nameParts = array(
+			'prefix' => 'form',
+			'type' => '',
+			'iblock' => 0,
+		);
+		if ($fields['TYPE'] == static::TYPE_ELEMENT)
+		{
+			$nameParts['type'] = 'element';
+		}
+		elseif ($fields['TYPE'] == static::TYPE_SECTION)
+		{
+			$nameParts['type'] = 'section';
+		}
+		$iblockDependency = $record->getDependency('IBLOCK_ID');
+		if ($iblockDependency)
+		{
+			if ($iblockId = $iblockDependency->findId())
+			{
+				$nameParts['iblock'] = $iblockId->getValue();
+			}
+		}
+		if ($nameParts['type'] && $nameParts['iblock'])
+		{
+			$result['NAME'] = implode('_', $nameParts);
+			if ($fields['VALUE'])
+			{
+				$result['VALUE'] = $this->updateValueField($fields['VALUE'], $this->getIblockProperties(false));
+			}
+
+			if ($fields['COMMON'])
+			{
+				$result['COMMON'] = $fields['COMMON'];
+			}
+			if ($fields['IS_ADMIN'] == 'Y')
+			{
+				$result['USER_ID'] = static::USER_ADMIN;
+			}
+			elseif ($fields['IS_ADMIN'] == 'N')
+			{
+				$result['USER_ID'] = 0;
+			}
+		}
+		else
+		{
+			throw new \Exception('Cannot restore form option id');
+		}
+
+		return $result;
+	}
+
+	protected function updateValueField($value, $properties)
+	{
+		foreach ($properties as $from => $to)
 		{
 			$value = str_replace($from, $to, $value);
 		}
+
 		return $value;
-	}
-
-	private function getIblockId($iblockXmlId)
-	{
-		if($iblockId = Iblock::getInstance()->findRecord($iblockXmlId))
-		{
-			return $iblockId->getValue();
-		}
-		else
-			throw new \Exception("Error: not found iblock with xml: " . $iblockXmlId);
-	}
-
-	public function update(Record $record)
-	{
-		$fields = $record->getFieldsRaw();
-
-		$fields["VALUE"] = $this->updateValueField($fields["VALUE"], $this->getIblockProperties(false));
-
-		$arUserName = explode(self::SEPARATOR, $record->getXmlId());
-		$iblockXmlId = str_replace("form_element_", "", $arUserName[1]);
-
-		$iblockId = $this->getIblockId($iblockXmlId);
-
-		$options = new \CUserOptions();
-		$isUpdated = $options->SetOption(
-			$fields["CATEGORY"],
-			str_replace($iblockXmlId, $iblockId, $fields["NAME"]),
-			unserialize($fields["VALUE"]),
-			$fields["COMMON"] == "Y",
-			$arUserName[0]
-		);
-
-		if (!$isUpdated)
-		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->GetException()->GetString());
-		}
-	}
-
-	public function create(Record $record)
-	{
-		$fields = $record->getFieldsRaw();
-
-		$fields["VALUE"] = $this->updateValueField($fields["VALUE"], $this->getIblockProperties(false));
-
-		$arUserName = explode(self::SEPARATOR, $record->getXmlId());
-		$iblockXmlId = str_replace("form_element_", "", $arUserName[1]);
-
-		$iblockId = $this->getIblockId($iblockXmlId);
-
-		$options = new \CUserOptions();
-		$isAdded = $options->SetOption(
-			$fields["CATEGORY"],
-			str_replace($iblockXmlId, $iblockId, $fields["NAME"]),
-			unserialize($fields["VALUE"]),
-			$fields["COMMON"] == "Y",
-			$arUserName[0]
-		);
-
-		if ($isAdded)
-		{
-			return RecordId::createStringId($record->getXmlId());
-		}
-		else
-		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->GetException()->GetString());
-		}
-	}
-
-	public function delete($xmlId)
-	{
-		$arUserName = explode(self::SEPARATOR, $xmlId);
-		$iblockId = $this->getIblockId(str_replace("form_element_", "", $arUserName[1]));
-
-		if (!\CUserOptions::DeleteOption(self::DEFAULT_CATEGORY, "form_element_" . $iblockId, false, $arUserName[0]))
-		{
-			throw new \Exception("Unknown error");
-		}
 	}
 
 	public function getXmlId($id)
 	{
-		return $id->getValue();
+		$arFilter = array('ID' => $id);
+		$getList = \CUserOptions::getList(array(), $arFilter);
+		if ($form = $getList->fetch())
+		{
+			return $this->getFormXmlId($form);
+		}
+
+		return '';
 	}
 }
