@@ -39,14 +39,25 @@ class Event extends BaseData
 			$id = $this->createId($message["ID"]);
 			$record->setXmlId($this->getXmlId($id));
 			$record->setId($id);
+
+			$sites = array();
+			$sitesGetList = \CEventMessage::getSite($message["ID"]);
+			while ($site = $sitesGetList->fetch())
+			{
+				$sites[] = $site["SITE_ID"];
+			}
 			$record->addFieldsRaw(array(
-				"LID" => $message["LID"],
+				"LID" => $sites,
 				"ACTIVE" => $message["ACTIVE"],
 				"EMAIL_FROM" => $message["EMAIL_FROM"],
 				"EMAIL_TO" => $message["EMAIL_TO"],
 				"SUBJECT" => $message["SUBJECT"],
 				"MESSAGE" => $message["MESSAGE"],
 				"BODY_TYPE" => $message["BODY_TYPE"],
+				"BCC" => $message["BCC"],
+				"CC" => $message["CC"],
+				"PRIORITY" => $message["PRIORITY"],
+				"ADDITIONAL_FIELD" => serialize($message["ADDITIONAL_FIELD"]),
 				"SITE_TEMPLATE_ID" => $message["SITE_TEMPLATE_ID"],
 			));
 
@@ -113,8 +124,10 @@ class Event extends BaseData
 
 	public function update(Record $record)
 	{
+		$fields = $record->getFieldsRaw();
+		$fields = unserialize($fields["ADDITIONAL_FIELD"]);
 		$eventMessageObject = new \CEventMessage();
-		$isUpdated = $eventMessageObject->update($record->getId()->getValue(), $record->getFieldsRaw());
+		$isUpdated = $eventMessageObject->update($record->getId()->getValue(), $fields);
 		if (!$isUpdated)
 		{
 			throw new \Exception(trim(strip_tags($eventMessageObject->LAST_ERROR)));
@@ -124,6 +137,7 @@ class Event extends BaseData
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
+		$fields = unserialize($fields["ADDITIONAL_FIELD"]);
 
 		if($eventType = $record->getDependency("EVENT_NAME")->getId())
 		{
