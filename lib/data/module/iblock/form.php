@@ -1,16 +1,16 @@
 <? namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Main\Loader;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Data\RecordId;
 use Bitrix\Iblock\PropertyTable;
+
+Loc::loadMessages(__FILE__);
 
 class Form extends BaseData
 {
-	const SEPARATOR = '___';
-
 	const CATEGORY = 'form';
 	const TYPE_ELEMENT = 'E';
 	const TYPE_SECTION = 'S';
@@ -27,11 +27,19 @@ class Form extends BaseData
 		return '/type/iblock/';
 	}
 
+	public function getDependencies()
+	{
+		return array(
+			'IBLOCK_ID' => new Link(Iblock::getInstance()),
+			'PROPERTY_ID' => new Link(Property::getInstance()),
+		);
+	}
+
 	public function getList(array $filter = array())
 	{
 		$result = array();
-		$arFilter = array('CATEGORY' => self::CATEGORY);
-		$getList = \CUserOptions::getList(array(), $arFilter);
+		$filter = array('CATEGORY' => self::CATEGORY);
+		$getList = \CUserOptions::getList(array(), $filter);
 		while ($form = $getList->fetch())
 		{
 			if ($record = $this->arrayToRecord($form))
@@ -54,9 +62,8 @@ class Form extends BaseData
 		if ($formXmlId = $this->getFormXmlId($form))
 		{
 			$record = new Record($this);
-			$id = RecordId::createStringId($form['ID']);
 			$record->setXmlId($formXmlId);
-			$record->setId($id);
+			$record->setId($this->createId($form['ID']));
 			$record->addFieldsRaw(array(
 				'IS_ADMIN' => ($form['USER_ID'] == static::USER_ADMIN ? 'Y' : 'N'),
 				'TYPE' => $this->getType($form['NAME']),
@@ -214,14 +221,6 @@ class Form extends BaseData
 		return '';
 	}
 
-	public function getDependencies()
-	{
-		return array(
-			'IBLOCK_ID' => new Link(Iblock::getInstance()),
-			'PROPERTY_ID' => new Link(Property::getInstance()),
-		);
-	}
-
 	/**
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 *
@@ -230,60 +229,69 @@ class Form extends BaseData
 	 */
 	protected function recordToArray(Record $record)
 	{
-		$result = array(
-			'CATEGORY' => 'form',
-		);
 		$fields = $record->getFieldsRaw();
-		$nameParts = array(
-			'prefix' => 'form',
-			'type' => '',
-			'iblock' => 0,
+		$result = array(
+			'CATEGORY' => static::CATEGORY,
 		);
-		if ($fields['TYPE'] == static::TYPE_ELEMENT)
+		if (array_key_exists('COMMON', $fields))
 		{
-			$nameParts['type'] = 'element';
+			$result['COMMON'] = $fields['COMMON'];
 		}
-		elseif ($fields['TYPE'] == static::TYPE_SECTION)
+		if (array_key_exists('IS_ADMIN', $fields))
 		{
-			$nameParts['type'] = 'section';
+			$result['USER_ID'] = ($fields['IS_ADMIN'] == 'Y' ? static::USER_ADMIN : 0);
 		}
-		$iblockDependency = $record->getDependency('IBLOCK_ID');
-		if ($iblockDependency)
+		if ($name = $this->restoreName($fields, $record->getDependency('IBLOCK_ID')))
 		{
-			if ($iblockId = $iblockDependency->findId())
-			{
-				$nameParts['iblock'] = $iblockId->getValue();
-			}
+			$result['NAME'] = $name;
 		}
-		if ($nameParts['type'] && $nameParts['iblock'])
+		if ($fields['VALUE'])
 		{
-			$result['NAME'] = implode('_', $nameParts);
-			if ($fields['VALUE'])
-			{
-				$result['VALUE'] = $this->updateValueField($fields['VALUE'], $this->getIblockProperties(false));
-			}
-
-			if ($fields['COMMON'])
-			{
-				$result['COMMON'] = $fields['COMMON'];
-			}
-			if ($fields['IS_ADMIN'] == 'Y')
-			{
-				$result['USER_ID'] = static::USER_ADMIN;
-			}
-			elseif ($fields['IS_ADMIN'] == 'N')
-			{
-				$result['USER_ID'] = 0;
-			}
-		}
-		else
-		{
-			throw new \Exception('Cannot restore form option id');
+			$result['VALUE'] = $this->updateValueField($fields['VALUE'], $this->getIblockProperties(false));
 		}
 
 		return $result;
 	}
 
+	/**
+	 * @param array $form
+	 * @param \Intervolga\Migrato\Data\Link|null $iblockLink
+	 *
+	 * @return string
+	 */
+	protected function restoreName($form, Link $iblockLink = null)
+	{
+		$name = '';
+		if ($iblockLink && ($iblockId = $iblockLink->findId()))
+		{
+			$nameParts = array(
+				'prefix' => 'form',
+				'type' => '',
+				'iblock' => $iblockId->getValue(),
+			);
+			if ($form['TYPE'] == static::TYPE_ELEMENT)
+			{
+				$nameParts['type'] = 'element';
+			}
+			elseif ($form['TYPE'] == static::TYPE_SECTION)
+			{
+				$nameParts['type'] = 'section';
+			}
+			if ($nameParts['type'])
+			{
+				$name = implode('_', $nameParts);
+			}
+		}
+
+		return $name;
+	}
+
+	/**
+	 * @param string $value
+	 * @param array $properties
+	 *
+	 * @return mixed
+	 */
 	protected function updateValueField($value, $properties)
 	{
 		foreach ($properties as $from => $to)
@@ -304,5 +312,61 @@ class Form extends BaseData
 		}
 
 		return '';
+	}
+
+	public function update(Record $record)
+	{
+		$array = $this->recordToArray($record);
+
+		$options = new \CUserOptions();
+		$isUpdated = $options->setOption(
+			$array['CATEGORY'],
+			$array['NAME'],
+			unserialize($array['VALUE']),
+			$array['COMMON'] == 'Y',
+			$array['USER_ID']
+		);
+
+		if (!$isUpdated)
+		{
+			throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_NOT_UPDATED');
+		}
+	}
+
+	public function create(Record $record)
+	{
+		$array = $this->recordToArray($record);
+
+		$options = new \CUserOptions();
+		$isAdded = $options->setOption(
+			$array['CATEGORY'],
+			$array['NAME'],
+			unserialize($array['VALUE']),
+			$array['COMMON'] == 'Y',
+			$array['USER_ID']
+		);
+
+		if ($isAdded)
+		{
+			$filter = array(
+				'CATEGORY' => $array['CATEGORY'],
+				'NAME' => $array['NAME'],
+				'COMMON' => $array['COMMON'],
+				'USER_ID' => $array['USER_ID'],
+			);
+			$userOption = \CUserOptions::getList(array(), $filter)->fetch();
+			if ($userOption)
+			{
+				return $this->createId($userOption['ID']);
+			}
+			else
+			{
+				throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_NOT_CREATED');
+			}
+		}
+		else
+		{
+			throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_NOT_CREATED');
+		}
 	}
 }
