@@ -125,7 +125,7 @@ class Event extends BaseData
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
-		$fields = unserialize($fields["ADDITIONAL_FIELD"]);
+		$fields["ADDITIONAL_FIELD"] = unserialize($fields["ADDITIONAL_FIELD"]);
 		$eventMessageObject = new \CEventMessage();
 		$isUpdated = $eventMessageObject->update($record->getId()->getValue(), $fields);
 		if (!$isUpdated)
@@ -137,7 +137,7 @@ class Event extends BaseData
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
-		$fields = unserialize($fields["ADDITIONAL_FIELD"]);
+		$fields["ADDITIONAL_FIELD"] = unserialize($fields["ADDITIONAL_FIELD"]);
 
 		if($eventType = $record->getDependency("EVENT_NAME")->getId())
 		{
