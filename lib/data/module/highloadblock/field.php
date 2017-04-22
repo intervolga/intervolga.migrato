@@ -36,10 +36,6 @@ class Field extends BaseUserField
 	 */
 	protected function userFieldToRecord(array $userField)
 	{
-		if ($userField["FIELD_NAME"] == "UF_XML_ID")
-		{
-			return null;
-		}
 		$record = parent::userFieldToRecord($userField);
 		$hlBlockId = str_replace("HLBLOCK_", "", $userField["ENTITY_ID"]);
 		$hlBlockRecordId = RecordId::createNumericId($hlBlockId);
@@ -75,7 +71,8 @@ class Field extends BaseUserField
 
 	public function create(Record $record)
 	{
-		if ($hlblockId = $record->getDependency($this->getDependencyString())->getId())
+		$hlblockLink = $record->getDependency($this->getDependencyString());
+		if ($hlblockLink && ($hlblockId = $hlblockLink->getId()))
 		{
 			$record->setFieldRaw("ENTITY_ID", $this->getDependencyNameKey($hlblockId->getValue()));
 

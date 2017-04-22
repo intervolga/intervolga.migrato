@@ -36,17 +36,13 @@ class Field extends BaseUserField
 	 */
 	protected function userFieldToRecord(array $userField)
 	{
-		if ($userField["FIELD_NAME"] == "UF_XML_ID")
-		{
-			return null;
-		}
 		$record = parent::userFieldToRecord($userField);
-		$hlBlockId = str_replace("IBLOCK_", "", $userField["ENTITY_ID"]);
-		$hlBlockRecordId = RecordId::createNumericId($hlBlockId);
-		$hlBlockXmlId = Iblock::getInstance()->getXmlId($hlBlockRecordId);
+		$iBlockId = str_replace("IBLOCK_", "", $userField["ENTITY_ID"]);
+		$iBlockRecordId = RecordId::createNumericId($iBlockId);
+		$iBlockXmlId = Iblock::getInstance()->getXmlId($iBlockRecordId);
 
 		$dependency = clone $this->getDependency("IBLOCK_ID");
-		$dependency->setValue($hlBlockXmlId);
+		$dependency->setValue($iBlockXmlId);
 		$record->setDependency("IBLOCK_ID", $dependency);
 
 		return $record;
