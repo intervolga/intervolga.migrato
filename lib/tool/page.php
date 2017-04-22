@@ -52,6 +52,35 @@ class Page
 	}
 
 	/**
+	 * @param \Error $error
+	 */
+	public static function handleError(\Error $error)
+	{
+		$formattedName = Loc::getMessage(
+			'INTERVOLGA_MIGRATO.EXCEPTION',
+			array(
+				'#CLASS#' => get_class($error)
+			)
+		);
+		$formattedMessage = Loc::getMessage(
+			'INTERVOLGA_MIGRATO.EXCEPTION_MESSAGE_CODE',
+			array(
+				'#MESSAGE#' => $error->getMessage(),
+				'#CODE#' => $error->getCode(),
+			)
+		);
+		$report = array(
+			ColorLog::getColoredString($formattedName, 'fail'),
+			ColorLog::getColoredString($formattedMessage, 'fail'),
+			'',
+			Loc::getMessage('INTERVOLGA_MIGRATO.BACKTRACE'),
+			'## ' . $error->getFile() . '(' . $error->getLine() . ')',
+			$error->getTraceAsString(),
+		);
+		static::showReport($report);
+	}
+
+	/**
 	 * @param string[] $report
 	 */
 	public static function showReport(array $report, $encodingUtf8 = false)

@@ -19,6 +19,12 @@ try
 {
 	\Intervolga\Migrato\Tool\Page::checkRights();
 }
+catch(\Error $error)
+{
+	\Intervolga\Migrato\Tool\Page::handleError($error);
+	require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");
+	die;
+}
 catch (\Exception $exception)
 {
 	\Intervolga\Migrato\Tool\Page::handleException($exception);
@@ -82,6 +88,10 @@ foreach ($processes as $process => $processClass)
 			$processClass::run();
 			$report = $processClass::getReports();
 			\Intervolga\Migrato\Tool\Page::showReport($report, $encodingUtf8);
+		}
+		catch(\Error $error)
+		{
+			\Intervolga\Migrato\Tool\Page::handleError($error);
 		}
 		catch (\Exception $exception)
 		{
