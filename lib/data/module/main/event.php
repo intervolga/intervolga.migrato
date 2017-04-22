@@ -56,6 +56,8 @@ class Event extends BaseData
 				"BODY_TYPE" => $message["BODY_TYPE"],
 				"BCC" => $message["BCC"],
 				"CC" => $message["CC"],
+				"REPLY_TO" => $message["REPLY_TO"],
+				"IN_REPLY_TO" => $message["IN_REPLY_TO"],
 				"PRIORITY" => $message["PRIORITY"],
 				"ADDITIONAL_FIELD" => serialize($message["ADDITIONAL_FIELD"]),
 				"SITE_TEMPLATE_ID" => $message["SITE_TEMPLATE_ID"],
