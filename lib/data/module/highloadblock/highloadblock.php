@@ -1,25 +1,12 @@
 <? namespace Intervolga\Migrato\Data\Module\Highloadblock;
 
 use Bitrix\Highloadblock\HighloadBlockTable;
-use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
-use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
 
 class HighloadBlock extends BaseData
 {
-	protected function __construct()
-	{
-		Loader::includeModule("highloadblock");
-		$this->xmlIdProvider = new TableXmlIdProvider($this);
-	}
-
-	public function isIdExists($id)
-	{
-		return !!HighloadBlockTable::getById($id->getValue())->fetch();
-	}
-
 	public function getList(array $filter = array())
 	{
 		$hlBlocks = HighloadBlockTable::getList();
@@ -42,6 +29,13 @@ class HighloadBlock extends BaseData
 		return $result;
 	}
 
+	public function getXmlId($id)
+	{
+		$record = HighloadBlockTable::getById($id->getValue())->fetch();
+
+		return strtolower($record['TABLE_NAME']);
+	}
+
 	public function update(Record $record)
 	{
 		$result = HighloadBlockTable::update($record->getId()->getValue(), $record->getFieldsRaw());
@@ -57,10 +51,11 @@ class HighloadBlock extends BaseData
 		if ($result->isSuccess())
 		{
 			$id = RecordId::createNumericId($result->getId());
-			$this->setXmlId($id, $record->getXmlId());
 
 			return $id;
-		} else {
+		}
+		else
+		{
 			throw new \Exception(trim(strip_tags($result->getErrorMessages())));
 		}
 	}
