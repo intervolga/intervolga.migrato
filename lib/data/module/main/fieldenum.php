@@ -5,6 +5,11 @@ use Intervolga\Migrato\Data\Link;
 
 class FieldEnum extends BaseUserFieldEnum
 {
+	public function getFilesSubdir()
+	{
+		return '/field/';
+	}
+
 	public function getList(array $filter = array())
 	{
 		$filter["USER_FIELD_ID"] = array();
