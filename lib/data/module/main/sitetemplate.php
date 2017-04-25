@@ -4,6 +4,7 @@ use Bitrix\Main\SiteTemplateTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 class SiteTemplate extends BaseData
 {
@@ -71,7 +72,7 @@ class SiteTemplate extends BaseData
 	{
 		$md5 = md5($tpl['CONDITION']);
 
-		return strtolower($tpl['SITE_ID'] . '-' . $tpl['TEMPLATE'] . '-' . implode('-', str_split($md5, 6)));
+		return BaseXmlIdProvider::formatXmlId($md5, $tpl['SITE_ID'] . '-' . $tpl['TEMPLATE'] . '-');
 	}
 
 	public function setXmlId($id, $xmlId)

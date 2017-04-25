@@ -83,8 +83,20 @@ abstract class BaseXmlIdProvider
 			$prefix
 		);
 		$xmlid = strrev(uniqid("", true));
+		return static::formatXmlId($xmlid, $prefix);
+	}
+
+	/**
+	 * @param string $xmlid
+	 * @param string $prefix
+	 *
+	 * @return string
+	 */
+	public static function formatXmlId($xmlid, $prefix = "")
+	{
 		$xmlid = str_replace(".", "", $xmlid);
 		$xmlid = strtolower(implode("-", str_split($xmlid, 6)));
+
 		return $prefix.$xmlid;
 	}
 
@@ -95,16 +107,6 @@ abstract class BaseXmlIdProvider
 	 * @throws \Bitrix\Main\NotImplementedException
 	 */
 	public function findRecords(array $xmlIds)
-	{
-		throw new NotImplementedException("Not implemented yet");
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\RecordId $id
-	 *
-	 * @throws \Bitrix\Main\NotImplementedException
-	 */
-	public function deleteId($id)
 	{
 		throw new NotImplementedException("Not implemented yet");
 	}

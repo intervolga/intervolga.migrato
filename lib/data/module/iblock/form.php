@@ -1,6 +1,5 @@
 <? namespace Intervolga\Migrato\Data\Module\Iblock;
 
-use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
@@ -21,11 +20,6 @@ class Form extends BaseData
 	const XML_ADMIN = 'admin';
 	const XML_ELEMENT = 'el';
 	const XML_SECTION = 'sec';
-
-	protected function __construct()
-	{
-		Loader::includeModule('iblock');
-	}
 
 	public function getFilesSubdir()
 	{

@@ -1,20 +1,13 @@
-<?namespace Intervolga\Migrato\Data\Module\Sale;
+<? namespace Intervolga\Migrato\Data\Module\Sale;
 
-use Bitrix\Main\Loader;
 use Bitrix\Sale\Internals\OrderPropsVariantTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 class PropertyVariant extends BaseData
 {
-	public function __construct()
-	{
-		Loader::includeModule("sale");
-		$this->xmlIdProvider = new TableXmlIdProvider($this);
-	}
-
 	public function getFilesSubdir()
 	{
 		return "/persontype/propertygroup/property/";
@@ -25,11 +18,6 @@ class PropertyVariant extends BaseData
 		return array(
 			"ORDER_PROPS_ID" => new Link(Property::getInstance()),
 		);
-	}
-
-	public function isIdExists($id)
-	{
-		return !!OrderPropsVariantTable::getById($id->getValue())->fetch();
 	}
 
 	public function getList(array $filter = array())
@@ -63,6 +51,19 @@ class PropertyVariant extends BaseData
 		return $result;
 	}
 
+	public function getXmlId($id)
+	{
+		$record = OrderPropsVariantTable::getById($id->getValue())->fetch();
+		$propId = Property::getInstance()->createId($record["ORDER_PROPS_ID"]);
+		$propXmlId = Property::getInstance()->getXmlId($propId);
+		$md5 = md5(serialize(array(
+			$record['VALUE'],
+			$propXmlId,
+		)));
+
+		return BaseXmlIdProvider::formatXmlId($md5);
+	}
+
 	public function create(Record $record)
 	{
 		$create = $this->recordToArray($record);
@@ -74,16 +75,6 @@ class PropertyVariant extends BaseData
 		else
 		{
 			throw new \Exception(implode("<br>", $addResult->getErrorMessages()));
-		}
-	}
-
-	public function update(Record $record)
-	{
-		$array = $this->recordToArray($record);
-		$updateResult = OrderPropsVariantTable::update($record->getId()->getValue(), $array);
-		if (!$updateResult)
-		{
-			throw new \Exception(implode("<br>", $updateResult->getErrorMessages()));
 		}
 	}
 
@@ -102,6 +93,16 @@ class PropertyVariant extends BaseData
 		}
 
 		return $array;
+	}
+
+	public function update(Record $record)
+	{
+		$array = $this->recordToArray($record);
+		$updateResult = OrderPropsVariantTable::update($record->getId()->getValue(), $array);
+		if (!$updateResult)
+		{
+			throw new \Exception(implode("<br>", $updateResult->getErrorMessages()));
+		}
 	}
 
 	public function delete($xmlId)

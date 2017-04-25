@@ -4,25 +4,15 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\Link;
-use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
 
 class Event extends BaseData
 {
-	public function __construct()
-	{
-		$this->xmlIdProvider = new TableXmlIdProvider($this);
-	}
-
 	public function getFilesSubdir()
 	{
 		return "/eventtype/";
-	}
-
-	public function isIdExists($id)
-	{
-		return !!\CEventMessage::getById($id->getValue())->fetch();
 	}
 
 	public function getList(array $filter = array())
@@ -85,7 +75,21 @@ class Event extends BaseData
 				$result[$message["ID"]] = $record;
 			}
 		}
+
 		return array_values($result);
+	}
+
+	public function getXmlId($id)
+	{
+		$message = \CEventMessage::getByID($id->getValue())->fetch();
+		$md5 = md5(serialize(array(
+			$message["EMAIL_FROM"],
+			$message["EMAIL_FROM"],
+			$message["EMAIL_TO"],
+			$message["EVENT_NAME"],
+		)));
+
+		return BaseXmlIdProvider::formatXmlId($md5);
 	}
 
 	/**
@@ -185,7 +189,9 @@ class Event extends BaseData
 			}
 		}
 		else
+		{
 			throw new \Exception("Не задано поле EVENT_TYPE для почтового шаблона с xmlId " . $record->getXmlId());
+		}
 	}
 
 	public function delete($xmlId)

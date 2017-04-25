@@ -2,7 +2,6 @@
 
 use Bitrix\Main\NotImplementedException;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
-use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
 
 abstract class BaseData
 {
@@ -23,17 +22,6 @@ abstract class BaseData
 		}
 
 		return static::$instances[get_called_class()];
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\RecordId $id
-	 *
-	 * @return bool
-	 * @throws \Bitrix\Main\NotImplementedException
-	 */
-	public function isIdExists($id)
-	{
-		throw new NotImplementedException("Id check for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
 	}
 
 	/**
@@ -96,17 +84,6 @@ abstract class BaseData
 		if ($this->xmlIdProvider)
 		{
 			$result = $this->xmlIdProvider->findRecords($xmlIds);
-			if ($this->xmlIdProvider instanceof TableXmlIdProvider)
-			{
-				foreach ($result as $xmlId => $id)
-				{
-					if (!$this->isIdExists($id))
-					{
-						$this->xmlIdProvider->deleteId($id);
-						unset($result[$xmlId]);
-					}
-				}
-			}
 		}
 		else
 		{
@@ -249,7 +226,7 @@ abstract class BaseData
 		}
 		else
 		{
-			throw new NotImplementedException("Not implemented yet");
+			throw new NotImplementedException("setXmlId for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
 		}
 	}
 
@@ -267,7 +244,7 @@ abstract class BaseData
 		}
 		else
 		{
-			throw new NotImplementedException("Not implemented yet");
+			throw new NotImplementedException("getXmlId for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
 		}
 	}
 

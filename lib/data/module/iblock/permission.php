@@ -1,31 +1,17 @@
 <?namespace Intervolga\Migrato\Data\Module\Iblock;
 
-use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Module\Main\Group;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
-use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 class Permission extends BaseData
 {
-	public function __construct()
-	{
-		Loader::includeModule("iblock");
-		$this->xmlIdProvider = new TableXmlIdProvider($this);
-	}
-
 	public function getFilesSubdir()
 	{
 		return "/type/iblock/";
-	}
-
-	public function isIdExists($id)
-	{
-		$idValue = $id->getValue();
-		$permissions = \CIBlock::getGroupPermissions($idValue['IBLOCK_ID']);
-		return array_key_exists($idValue['GROUP_ID'], $permissions);
 	}
 
 	public function getList(array $filter = array())
@@ -36,9 +22,9 @@ class Permission extends BaseData
 			$permissions = \CIBlock::GetGroupPermissions($iblockId);
 			foreach ($permissions as $groupId => $permission)
 			{
-				$id = RecordId::createComplexId(array(
-					"IBLOCK_ID" => intval($iblockId),
-					"GROUP_ID" => intval($groupId),
+				$id = $this->createId(array(
+					"IBLOCK_ID" => $iblockId,
+					"GROUP_ID" => $groupId,
 				));
 				$record = new Record($this);
 				$record->setXmlId($this->getXmlId($id));
@@ -130,9 +116,9 @@ class Permission extends BaseData
 		$iblock = new \CIBlock();
 		$iblock->SetPermission($iblockId, $arGroups);
 
-		return RecordId::createComplexId(array(
-			"IBLOCK_ID" => intval($iblockId),
-			"GROUP_ID" => intval($groupId),
+		return $this->createId(array(
+			"IBLOCK_ID" => $iblockId,
+			"GROUP_ID" => $groupId,
 		));
 	}
 
@@ -145,5 +131,28 @@ class Permission extends BaseData
 		}
 		else
 			throw new \Exception("Delete permission: not found element for xml id = " . $xmlId);
+	}
+
+	public function createId($id)
+	{
+		return RecordId::createComplexId(array(
+			"IBLOCK_ID" => intval($id['IBLOCK_ID']),
+			"GROUP_ID" => intval($id['GROUP_ID']),
+			)
+		);
+	}
+
+	public function getXmlId($id)
+	{
+		$array = $id->getValue();
+		$iblockData = Iblock::getInstance();
+		$groupData = Group::getInstance();
+		$iblockXmlId = $iblockData->getXmlId($iblockData->createId($array['IBLOCK_ID']));
+		$groupXmlId = $groupData->getXmlId($groupData->createId($array['GROUP_ID']));
+		$md5 = md5(serialize(array(
+			$iblockXmlId,
+			$groupXmlId
+		)));
+		return BaseXmlIdProvider::formatXmlId($md5);
 	}
 }

@@ -1,27 +1,15 @@
-<?namespace Intervolga\Migrato\Data\Module\Sale;
+<? namespace Intervolga\Migrato\Data\Module\Sale;
 
-use Bitrix\Main\Loader;
 use Bitrix\Sale\Internals\PersonTypeSiteTable;
 use Bitrix\Sale\Internals\PersonTypeTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Module\Main\Site;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 class PersonType extends BaseData
 {
-	public function __construct()
-	{
-		Loader::includeModule("sale");
-		$this->xmlIdProvider = new TableXmlIdProvider($this);
-	}
-
-	public function isIdExists($id)
-	{
-		return !!PersonTypeTable::getById($id->getValue())->fetch();
-	}
-
 	public function getList(array $filter = array())
 	{
 		$result = array();
@@ -51,13 +39,6 @@ class PersonType extends BaseData
 		return $result;
 	}
 
-	public function getDependencies()
-	{
-		return array(
-			'SITE' => new Link(Site::getInstance()),
-		);
-	}
-
 	/**
 	 * @return array
 	 */
@@ -71,7 +52,28 @@ class PersonType extends BaseData
 				Site::getInstance()->createId($personTypeSite["SITE_ID"])
 			);
 		}
+
 		return $result;
+	}
+
+	public function getXmlId($id)
+	{
+		$record = PersonTypeTable::getById($id->getValue())->fetch();
+		$personTypesSites = $this->getPersonTypesSites();
+
+		$md5 = md5(serialize(array(
+			$record['NAME'],
+			$personTypesSites[$record['ID']],
+		)));
+
+		return BaseXmlIdProvider::formatXmlId($md5);
+	}
+
+	public function getDependencies()
+	{
+		return array(
+			'SITE' => new Link(Site::getInstance()),
+		);
 	}
 
 	public function update(Record $record)

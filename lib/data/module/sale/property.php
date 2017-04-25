@@ -1,21 +1,14 @@
-<?namespace Intervolga\Migrato\Data\Module\Sale;
+<? namespace Intervolga\Migrato\Data\Module\Sale;
 
-use Bitrix\Main\Loader;
 use Bitrix\Sale\Internals\OrderPropsTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\Value;
-use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 class Property extends BaseData
 {
-	public function __construct()
-	{
-		Loader::includeModule("sale");
-		$this->xmlIdProvider = new TableXmlIdProvider($this);
-	}
-
 	public function getFilesSubdir()
 	{
 		return "/persontype/propertygroup/";
@@ -33,11 +26,6 @@ class Property extends BaseData
 		return array(
 			"PROPS_GROUP_ID" => new Link(PropertyGroup::getInstance()),
 		);
-	}
-
-	public function isIdExists($id)
-	{
-		return !!OrderPropsTable::getById($id->getValue())->fetch();
 	}
 
 	public function getList(array $filter = array())
@@ -83,6 +71,19 @@ class Property extends BaseData
 		return $result;
 	}
 
+	public function getXmlId($id)
+	{
+		$record = OrderPropsTable::getById($id->getValue())->fetch();
+		$personTypeId = PersonType::getInstance()->createId($record["PERSON_TYPE_ID"]);
+		$personTypeXmlId = PersonType::getInstance()->getXmlId($personTypeId);
+		$md5 = md5(serialize(array(
+			$record['NAME'],
+			$personTypeXmlId,
+		)));
+
+		return BaseXmlIdProvider::formatXmlId($md5);
+	}
+
 	/**
 	 * @param Record $record
 	 * @param array $property
@@ -112,6 +113,31 @@ class Property extends BaseData
 		}
 	}
 
+	protected function recordToArray(Record $record)
+	{
+		$array = $record->getFieldsRaw(array("SETTINGS"));
+		if ($link = $record->getDependency("PERSON_TYPE_ID"))
+		{
+			if ($id = $link->findId())
+			{
+				$array["PERSON_TYPE_ID"] = $id->getValue();
+			}
+		}
+		if ($link = $record->getReference("PROPS_GROUP_ID"))
+		{
+			if ($idObject = $link->findId())
+			{
+				$array["PROPS_GROUP_ID"] = $idObject->getValue();
+			}
+			else
+			{
+				$array["PROPS_GROUP_ID"] = false;
+			}
+		}
+
+		return $array;
+	}
+
 	public function create(Record $record)
 	{
 		$array = $this->recordToArray($record);
@@ -136,30 +162,5 @@ class Property extends BaseData
 				throw new \Exception("Unknown error");
 			}
 		}
-	}
-
-	protected function recordToArray(Record $record)
-	{
-		$array = $record->getFieldsRaw(array("SETTINGS"));
-		if ($link = $record->getDependency("PERSON_TYPE_ID"))
-		{
-			if ($id = $link->findId())
-			{
-				$array["PERSON_TYPE_ID"] = $id->getValue();
-			}
-		}
-		if ($link = $record->getReference("PROPS_GROUP_ID"))
-		{
-			if ($idObject = $link->findId())
-			{
-				$array["PROPS_GROUP_ID"] = $idObject->getValue();
-			}
-			else
-			{
-				$array["PROPS_GROUP_ID"] = false;
-			}
-		}
-
-		return $array;
 	}
 }

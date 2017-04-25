@@ -1,20 +1,13 @@
-<?namespace Intervolga\Migrato\Data\Module\Sale;
+<? namespace Intervolga\Migrato\Data\Module\Sale;
 
-use Bitrix\Main\Loader;
 use Bitrix\Sale\Internals\OrderPropsGroupTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
+use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 class PropertyGroup extends BaseData
 {
-	public function __construct()
-	{
-		Loader::includeModule("sale");
-		$this->xmlIdProvider = new TableXmlIdProvider($this);
-	}
-
 	public function getFilesSubdir()
 	{
 		return "/persontype/";
@@ -25,11 +18,6 @@ class PropertyGroup extends BaseData
 		return array(
 			"PERSON_TYPE_ID" => new Link(PersonType::getInstance()),
 		);
-	}
-
-	public function isIdExists($id)
-	{
-		return !!OrderPropsGroupTable::getById($id->getValue())->fetch();
 	}
 
 	public function getList(array $filter = array())
@@ -62,28 +50,26 @@ class PropertyGroup extends BaseData
 		return $result;
 	}
 
+	public function getXmlId($id)
+	{
+		$record = OrderPropsGroupTable::getById($id->getValue())->fetch();
+		$personTypeXmlId = PersonType::getInstance()->getXmlId(
+			PersonType::getInstance()->createId($record["PERSON_TYPE_ID"])
+		);
+		$md5 = md5(serialize(array(
+			$record['NAME'],
+			$personTypeXmlId,
+		)));
+
+		return BaseXmlIdProvider::formatXmlId($md5);
+	}
+
 	public function update(Record $record)
 	{
 		$update = $this->recordToArray($record);
 		$object = new \CSaleOrderPropsGroup();
 		$updateResult = $object->update($record->getId()->getValue(), $update);
 		if (!$updateResult)
-		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->getException()->getString());
-		}
-	}
-
-	public function create(Record $record)
-	{
-		$add = $this->recordToArray($record);
-		$object = new \CSaleOrderPropsGroup();
-		$id = $object->add($add);
-		if ($id)
-		{
-			return $this->createId($id);
-		}
-		else
 		{
 			global $APPLICATION;
 			throw new \Exception($APPLICATION->getException()->getString());
@@ -109,6 +95,22 @@ class PropertyGroup extends BaseData
 		}
 
 		return $array;
+	}
+
+	public function create(Record $record)
+	{
+		$add = $this->recordToArray($record);
+		$object = new \CSaleOrderPropsGroup();
+		$id = $object->add($add);
+		if ($id)
+		{
+			return $this->createId($id);
+		}
+		else
+		{
+			global $APPLICATION;
+			throw new \Exception($APPLICATION->getException()->getString());
+		}
 	}
 
 	public function delete($xmlId)
