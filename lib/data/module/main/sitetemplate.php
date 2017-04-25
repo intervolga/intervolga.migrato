@@ -66,6 +66,7 @@ class SiteTemplate extends BaseData
 	 */
 	protected function getMd5(array $tpl)
 	{
-		return md5($tpl['SITE_ID'] . $tpl['CONDITION'] . $tpl['TEMPLATE']);
+		$md5 = md5($tpl['SITE_ID'] . $tpl['CONDITION'] . $tpl['TEMPLATE']);
+		return strtolower(implode("-", str_split($md5, 6)));
 	}
 }
