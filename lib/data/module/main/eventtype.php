@@ -1,6 +1,7 @@
 <? namespace Intervolga\Migrato\Data\Module\Main;
 
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 
 class EventType extends BaseData
@@ -23,15 +24,28 @@ class EventType extends BaseData
 			$record->setXmlId($this->getXmlId($id));
 			$record->setId($id);
 			$record->addFieldsRaw(array(
-				"LID" => $type["LID"],
 				"EVENT_NAME" => $type["EVENT_NAME"],
 				"NAME" => $type["NAME"],
 				"DESCRIPTION" => $type["DESCRIPTION"],
 				"SORT" => $type["SORT"],
 			));
+
+			$dependency = clone $this->getDependency('LANGUAGE');
+			$dependency->setValue(Language::getInstance()->getXmlId(
+				Language::getInstance()->createId($type['LID'])
+			));
+			$record->setDependency('LANGUAGE', $dependency);
+
 			$result[] = $record;
 		}
 		return $result;
+	}
+
+	public function getDependencies()
+	{
+		return array(
+			'LANGUAGE' => new Link(Language::getInstance()),
+		);
 	}
 
 	public function update(Record $record)
