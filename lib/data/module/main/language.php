@@ -8,6 +8,11 @@ use Intervolga\Migrato\Data\RecordId;
 
 class Language extends BaseData
 {
+	public function getFilesSubdir()
+	{
+		return '/loc/';
+	}
+
 	public function getList(array $filter = array())
 	{
 		$result = array();

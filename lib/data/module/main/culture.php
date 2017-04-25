@@ -6,6 +6,11 @@ use Intervolga\Migrato\Data\Record;
 
 class Culture extends BaseData
 {
+	public function getFilesSubdir()
+	{
+		return '/loc/';
+	}
+
 	public function getList(array $filter = array())
 	{
 		$result = array();
