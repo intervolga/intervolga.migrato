@@ -18,24 +18,27 @@ class SiteTemplate extends BaseData
 		$getList = SiteTemplateTable::getList();
 		while ($siteTemplate = $getList->fetch())
 		{
-			$record = new Record($this);
-			$record->setId($this->createId($siteTemplate['ID']));
-			$record->setXmlId($this->getMd5($siteTemplate));
-			$record->addFieldsRaw(array(
-				'CONDITION' => $siteTemplate['CONDITION'],
-				'SORT' => $siteTemplate['SORT'],
-				'TEMPLATE' => $siteTemplate['TEMPLATE'],
-			));
+			if ($siteTemplate['TEMPLATE'])
+			{
+				$record = new Record($this);
+				$record->setId($this->createId($siteTemplate['ID']));
+				$record->setXmlId($this->getMd5($siteTemplate));
+				$record->addFieldsRaw(array(
+					'CONDITION' => $siteTemplate['CONDITION'],
+					'SORT' => $siteTemplate['SORT'],
+					'TEMPLATE' => $siteTemplate['TEMPLATE'],
+				));
 
-			$link = clone $this->getDependency('SITE');
-			$link->setValue(
-				Site::getInstance()->getXmlId(
-					Site::getInstance()->createId($siteTemplate['SITE_ID'])
-				)
-			);
-			$record->setDependency('SITE', $link);
+				$link = clone $this->getDependency('SITE');
+				$link->setValue(
+					Site::getInstance()->getXmlId(
+						Site::getInstance()->createId($siteTemplate['SITE_ID'])
+					)
+				);
+				$record->setDependency('SITE', $link);
 
-			$result[] = $record;
+				$result[] = $record;
+			}
 		}
 		return $result;
 	}

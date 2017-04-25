@@ -39,7 +39,6 @@ class Event extends BaseData
 			$record->setId($id);
 
 			$record->addFieldsRaw(array(
-				///"LID" => $sites,
 				"ACTIVE" => $message["ACTIVE"],
 				"EMAIL_FROM" => $message["EMAIL_FROM"],
 				"EMAIL_TO" => $message["EMAIL_TO"],
