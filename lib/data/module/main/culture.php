@@ -12,8 +12,9 @@ class Culture extends BaseData
 		$getList = CultureTable::getList();
 		while ($culture = $getList->fetch())
 		{
-			$record = new Record();
-			$record->setId($culture['ID']);
+			$record = new Record($this);
+			$id = $this->createId($culture['ID']);
+			$record->setId($id);
 			$record->setXmlId($culture['NAME']);
 			$record->addFieldsRaw(array(
 				'CODE' => $culture['CODE'],
@@ -28,5 +29,11 @@ class Culture extends BaseData
 		}
 
 		return $result;
+	}
+
+	public function getXmlId($id)
+	{
+		$culture = CultureTable::getById($id->getValue())->fetch();
+		return $culture['NAME'];
 	}
 }

@@ -20,10 +20,10 @@ class Site extends BaseData
 		$sitesGetList = SiteTable::getList();
 		while ($site = $sitesGetList->fetch())
 		{
-			$record = new Record();
+			$record = new Record($this);
 			$id = $this->createId($site['LID']);
 			$record->setId($id);
-			$record->setXmlId($site['NAME']);
+			$record->setXmlId($site['LID']);
 			$record->addFieldsRaw(array(
 				'SORT' => $site['SORT'],
 				'DEF' => $site['DEF'],
@@ -67,5 +67,10 @@ class Site extends BaseData
 	public function createId($id)
 	{
 		return RecordId::createStringId($id);
+	}
+
+	public function getXmlId($id)
+	{
+		return $id->getValue();
 	}
 }

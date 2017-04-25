@@ -14,7 +14,7 @@ class Language extends BaseData
 		$getList = LanguageTable::getList();
 		while ($language = $getList->fetch())
 		{
-			$record = new Record();
+			$record = new Record($this);
 			$id = $this->createId($language['LID']);
 			$record->setId($id);
 			$record->setXmlId($language['LID']);
@@ -49,5 +49,11 @@ class Language extends BaseData
 	public function createId($id)
 	{
 		return RecordId::createStringId($id);
+	}
+
+	public function getXmlId($id)
+	{
+		$language = LanguageTable::getById($id->getValue())->fetch();
+		return $language['LID'];
 	}
 }

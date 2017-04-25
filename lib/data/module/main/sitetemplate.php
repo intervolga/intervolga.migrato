@@ -7,14 +7,19 @@ use Intervolga\Migrato\Data\Record;
 
 class SiteTemplate extends BaseData
 {
+	public function getFilesSubdir()
+	{
+		return '/site/';
+	}
+
 	public function getList(array $filter = array())
 	{
 		$result = array();
 		$getList = SiteTemplateTable::getList();
 		while ($siteTemplate = $getList->fetch())
 		{
-			$record = new Record();
-			$record->setId($siteTemplate['ID']);
+			$record = new Record($this);
+			$record->setId($this->createId($siteTemplate['ID']));
 			$record->setXmlId($this->getMd5($siteTemplate));
 			$record->addFieldsRaw(array(
 				'CONDITION' => $siteTemplate['CONDITION'],
