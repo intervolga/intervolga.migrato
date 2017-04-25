@@ -27,6 +27,11 @@ class PropertyVariant extends BaseData
 		);
 	}
 
+	public function isIdExists($id)
+	{
+		return !!OrderPropsVariantTable::getById($id->getValue())->fetch();
+	}
+
 	public function getList(array $filter = array())
 	{
 		$result = array();

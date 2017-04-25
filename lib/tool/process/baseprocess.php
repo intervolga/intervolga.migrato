@@ -1,10 +1,13 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
 use Bitrix\Main\Entity\ExpressionField;
+use Bitrix\Main\IO\Directory;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Tool;
+use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Orm\LogTable;
+use Intervolga\Migrato\Tool\ColorLog;
 
 Loc::loadMessages(__FILE__);
 
@@ -26,21 +29,56 @@ class BaseProcess
 	public static function run()
 	{
 		static::$reports = array();
+		static::$reportTypeCounter = array();
 		LogTable::deleteAll();
-		static::report("Process started");
+		static::checkFiles();
+		static::report(Loc::getMessage('INTERVOLGA_MIGRATO.PROCESS_STARTED'));
+	}
+
+	protected static function checkFiles()
+	{
+		if (!Directory::isDirectoryExists(INTERVOLGA_MIGRATO_DIRECTORY))
+		{
+			Directory::createDirectory(INTERVOLGA_MIGRATO_DIRECTORY);
+			CopyDirFiles(dirname(dirname(dirname(__DIR__))) . "/install/public", INTERVOLGA_MIGRATO_DIRECTORY);
+		}
+		if (!Config::isExists())
+		{
+			throw new \Exception(Loc::getMessage("INTERVOLGA_MIGRATO.CONFIG_NOT_FOUND"));
+		}
 	}
 
 	public static function finalReport()
 	{
-		static::$reports[] = str_repeat("-", 80);
+		static::addSeparator();
 		if (static::$reportTypeCounter["fail"])
 		{
-			static::report("Process completed with errors");
+			static::report(
+				ColorLog::getColoredString(
+					Loc::getMessage(
+						'INTERVOLGA_MIGRATO.PROCESS_COMPLETED_ERRORS',
+						array(
+							'#CNT#' => static::$reportTypeCounter["fail"],
+						)
+					),
+					'fail'
+				)
+			);
 		}
 		else
 		{
-			static::report("Process completed, no errors");
+			static::report(
+				ColorLog::getColoredString(
+					Loc::getMessage('INTERVOLGA_MIGRATO.PROCESS_COMPLETED_OK'),
+					'ok'
+				)
+			);
 		}
+	}
+
+	public static function addSeparator($symbol = "-")
+	{
+		static::$reports[] = str_repeat($symbol, 80);
 	}
 
 	/**
@@ -114,26 +152,31 @@ class BaseProcess
 	protected static function startStep($step)
 	{
 		static::$step = $step;
-		static::$reports[] = str_repeat("-", 80);
-		static::report("step: " . static::$step);
+		static::addSeparator();
+		static::report(
+			Loc::getMessage(
+				'INTERVOLGA_MIGRATO.STEP',
+				array(
+					'#STEP#' => static::$step
+				)
+			)
+		);
 	}
 
 	/**
 	 * @param string $message
 	 * @param string $type
+	 * @param int $count
 	 */
-	protected static function report($message, $type = "")
+	protected static function report($message, $type = "", $count = 1)
 	{
-		list($microSec,) = explode(" ", microtime());
-		$microSec = round($microSec, 3)*1000;
-		$microSec = str_pad($microSec, 3, "0", STR_PAD_RIGHT);
 		$type = trim($type);
 		if ($type)
 		{
-			static::$reportTypeCounter[$type]++;
-			$type = "[" . $type . "] ";
+			static::$reportTypeCounter[$type] += $count;
+			$type = ColorLog::getColoredString("[" . $type . "] ", $type);
 		}
-		static::$reports[] = date("d.m.Y H:i:s") . ":" . $microSec . " " . $type . $message;
+		static::$reports[] = $type . $message;
 	}
 
 	protected static function reportStepLogs()
@@ -168,7 +211,8 @@ class BaseProcess
 						"#COUNT#" => $logs["CNT"],
 					)
 				),
-				$logs["RESULT"] ? "ok" : "fail"
+				$logs["RESULT"] ? "ok" : "fail",
+				$logs["CNT"]
 			);
 		}
 	}

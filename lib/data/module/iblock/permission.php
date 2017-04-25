@@ -21,6 +21,13 @@ class Permission extends BaseData
 		return "/type/iblock/";
 	}
 
+	public function isIdExists($id)
+	{
+		$idValue = $id->getValue();
+		$permissions = \CIBlock::getGroupPermissions($idValue['IBLOCK_ID']);
+		return array_key_exists($idValue['GROUP_ID'], $permissions);
+	}
+
 	public function getList(array $filter = array())
 	{
 		$result = array();

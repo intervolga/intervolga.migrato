@@ -71,12 +71,18 @@ abstract class BaseUserField extends BaseData
 			"EDIT_IN_LIST" => $userField["EDIT_IN_LIST"],
 			"IS_SEARCHABLE" => $userField["IS_SEARCHABLE"],
 		);
-		$fields = array_merge($fields, $this->getSettingsFields($userField["SETTINGS"]));
+		if ($userField["SETTINGS"])
+		{
+			$fields = array_merge($fields, $this->getSettingsFields($userField["SETTINGS"]));
+		}
 		$fields = array_merge($fields, $this->getLangFields($userField));
 		$record->addFieldsRaw($fields);
-		foreach ($this->getSettingsLinks($userField["SETTINGS"]) as $name => $link)
+		if ($userField["SETTINGS"])
 		{
-			$record->setReference($name, $link);
+			foreach ($this->getSettingsLinks($userField["SETTINGS"]) as $name => $link)
+			{
+				$record->setReference($name, $link);
+			}
 		}
 
 		return $record;
@@ -404,38 +410,55 @@ abstract class BaseUserField extends BaseData
 
 	public function update(Record $record)
 	{
-		$isUpdated = false;
-		if ($record->getId()->getValue())
+		if ($existId = $record->getId()->getValue())
 		{
-			$fields = $record->getFieldsRaw();
+			$fieldObject = new \CUserTypeEntity();
+			$existUserField = $fieldObject->getList(array(), array("ID" => $existId))->fetch();
+			$xmlFields = $record->getFieldsRaw();
 
-			$blockIdXml = $record->getDependency($this->getDependencyString());
-
-			$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
+			$xmlFields["SETTINGS"] = $this->fieldsToArray($xmlFields, "SETTINGS", true);
 			foreach($this->getLangFieldsNames() as $lang)
 			{
-				$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
+				$xmlFields[$lang] = $this->fieldsToArray($xmlFields, $lang, true);
 			}
 
+			$blockIdXml = $record->getDependency($this->getDependencyString());
 			if(!$blockIdXml)
 			{
-				$fields["SETTINGS"] = array_merge($fields["SETTINGS"], $this->getSettingsLinksFields($record->getReferences()));
+				$xmlFields["SETTINGS"] = array_merge($xmlFields["SETTINGS"], $this->getSettingsLinksFields($record->getReferences()));
 			}
 
-			$fieldObject = new \CUserTypeEntity();
-			if ($fields["SETTINGS"])
+			if ($xmlFields["SETTINGS"])
 			{
-				$dbUserField = $fieldObject->getList(array(), array("ID" => $record->getId()->getValue()))->fetch();
-				if ($dbUserField["SETTINGS"])
+				if ($existUserField["SETTINGS"])
 				{
-					$fields["SETTINGS"] = array_merge($dbUserField["SETTINGS"], $fields["SETTINGS"]);
+					$xmlFields["SETTINGS"] = array_merge($existUserField["SETTINGS"], $xmlFields["SETTINGS"]);
 				}
 			}
-			$isUpdated = $fieldObject->Update($record->getId()->getValue(), $fields);
-		}
-		if (!$isUpdated)
-		{
-			throw new \Exception("Unknown error");
+			$isReCreate = false;
+			if ($xmlFields["MULTIPLE"] && ($xmlFields["MULTIPLE"] != $existUserField["MULTIPLE"]))
+			{
+				$isReCreate = true;
+			}
+			if ($xmlFields["USER_TYPE_ID"] && ($xmlFields["USER_TYPE_ID"] != $existUserField["USER_TYPE_ID"]))
+			{
+				$isReCreate = true;
+			}
+
+			if ($isReCreate)
+			{
+				$this->delete($record->getXmlId());
+				$this->create($record);
+			}
+			else
+			{
+				$isUpdated = $fieldObject->Update($existId, $xmlFields);
+				if (!$isUpdated)
+				{
+					global $APPLICATION;
+					throw new \Exception($APPLICATION->getException()->getString());
+				}
+			}
 		}
 	}
 

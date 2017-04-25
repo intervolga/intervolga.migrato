@@ -27,6 +27,11 @@ class PropertyGroup extends BaseData
 		);
 	}
 
+	public function isIdExists($id)
+	{
+		return !!OrderPropsGroupTable::getById($id->getValue())->fetch();
+	}
+
 	public function getList(array $filter = array())
 	{
 		$result = array();

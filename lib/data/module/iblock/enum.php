@@ -96,7 +96,7 @@ class Enum extends BaseData
 	public function delete($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		if (!\CIBlockPropertyEnum::Delete($id))
+		if ($id && !\CIBlockPropertyEnum::Delete($id->getValue()))
 		{
 			throw new \Exception("Unknown error");
 		}

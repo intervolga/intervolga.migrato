@@ -30,7 +30,14 @@ class Value
 		$list = array();
 		foreach ($tree as $key => $value)
 		{
-			$list["$root.$key"] = $value;
+			if (is_array($value))
+			{
+				$list = array_merge($list, static::treeToList($value, "$root.$key"));
+			}
+			else
+			{
+				$list["$root.$key"] = $value;
+			}
 		}
 		ksort($list);
 		return $list;
@@ -50,6 +57,15 @@ class Value
 			if (count($explode) == 2)
 			{
 				$tree[$explode[0]][$explode[1]] = $value;
+			}
+			elseif (count($explode) > 2)
+			{
+				$foo = $value;
+				foreach (array_reverse($explode) as $part)
+				{
+					$foo = array($part => $foo);
+				}
+				$tree = array_merge_recursive($tree, $foo);
 			}
 		}
 		return $tree;

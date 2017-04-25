@@ -15,6 +15,11 @@ class HighloadBlock extends BaseData
 		$this->xmlIdProvider = new TableXmlIdProvider($this);
 	}
 
+	public function isIdExists($id)
+	{
+		return !!HighloadBlockTable::getById($id->getValue())->fetch();
+	}
+
 	public function getList(array $filter = array())
 	{
 		$hlBlocks = HighloadBlockTable::getList();

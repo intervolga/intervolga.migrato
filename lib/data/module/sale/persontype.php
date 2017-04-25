@@ -15,6 +15,11 @@ class PersonType extends BaseData
 		$this->xmlIdProvider = new TableXmlIdProvider($this);
 	}
 
+	public function isIdExists($id)
+	{
+		return !!PersonTypeTable::getById($id->getValue())->fetch();
+	}
+
 	public function getList(array $filter = array())
 	{
 		$result = array();

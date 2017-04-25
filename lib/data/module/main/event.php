@@ -1,9 +1,12 @@
 <? namespace Intervolga\Migrato\Data\Module\Main;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
+
+Loc::loadMessages(__FILE__);
 
 class Event extends BaseData
 {
@@ -19,6 +22,11 @@ class Event extends BaseData
 		return "/eventtype/";
 	}
 
+	public function isIdExists($id)
+	{
+		return !!\CEventMessage::getById($id->getValue())->fetch();
+	}
+
 	public function getList(array $filter = array())
 	{
 		$result = array();
@@ -31,19 +39,44 @@ class Event extends BaseData
 			$id = $this->createId($message["ID"]);
 			$record->setXmlId($this->getXmlId($id));
 			$record->setId($id);
+
+			$sites = array();
+			$sitesGetList = \CEventMessage::getSite($message["ID"]);
+			while ($site = $sitesGetList->fetch())
+			{
+				$sites[] = $site["SITE_ID"];
+			}
 			$record->addFieldsRaw(array(
-				"LID" => $message["LID"],
+				"LID" => $sites,
 				"ACTIVE" => $message["ACTIVE"],
 				"EMAIL_FROM" => $message["EMAIL_FROM"],
 				"EMAIL_TO" => $message["EMAIL_TO"],
 				"SUBJECT" => $message["SUBJECT"],
 				"MESSAGE" => $message["MESSAGE"],
 				"BODY_TYPE" => $message["BODY_TYPE"],
+				"BCC" => $message["BCC"],
+				"CC" => $message["CC"],
+				"REPLY_TO" => $message["REPLY_TO"],
+				"IN_REPLY_TO" => $message["IN_REPLY_TO"],
+				"PRIORITY" => $message["PRIORITY"],
+				"ADDITIONAL_FIELD" => serialize($message["ADDITIONAL_FIELD"]),
 				"SITE_TEMPLATE_ID" => $message["SITE_TEMPLATE_ID"],
 			));
 
 			$dependency = clone $this->getDependency(static::DEPENDENCY_EVENT_NAME);
 			$dependency->setValue($this->getEventTypeXmlId($message["EVENT_NAME"]));
+			if (!$dependency->getValue())
+			{
+				throw new \Exception(
+					Loc::getMessage(
+						'INTERVOLGA_MIGRATO.EVENT_TYPE_NOT_FOUND',
+						array(
+							'#ID#' => $message["ID"],
+							'#NAME#' => $message['EVENT_NAME'],
+						)
+					)
+				);
+			}
 			$record->setDependency(static::DEPENDENCY_EVENT_NAME, $dependency);
 
 			if ($record->getDependencies())
@@ -93,8 +126,10 @@ class Event extends BaseData
 
 	public function update(Record $record)
 	{
+		$fields = $record->getFieldsRaw();
+		$fields["ADDITIONAL_FIELD"] = unserialize($fields["ADDITIONAL_FIELD"]);
 		$eventMessageObject = new \CEventMessage();
-		$isUpdated = $eventMessageObject->update($record->getId()->getValue(), $record->getFieldsRaw());
+		$isUpdated = $eventMessageObject->update($record->getId()->getValue(), $fields);
 		if (!$isUpdated)
 		{
 			throw new \Exception(trim(strip_tags($eventMessageObject->LAST_ERROR)));
@@ -104,6 +139,7 @@ class Event extends BaseData
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
+		$fields["ADDITIONAL_FIELD"] = unserialize($fields["ADDITIONAL_FIELD"]);
 
 		if($eventType = $record->getDependency("EVENT_NAME")->getId())
 		{

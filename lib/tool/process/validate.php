@@ -1,10 +1,13 @@
 <?namespace Intervolga\Migrato\Tool\Process;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
+
+Loc::loadMessages(__FILE__);
 
 class Validate extends BaseProcess
 {
@@ -14,6 +17,7 @@ class Validate extends BaseProcess
 	{
 		parent::run();
 		static::validate();
+		static::findUseNotClasses();
 		static::finalReport();
 	}
 
@@ -23,10 +27,11 @@ class Validate extends BaseProcess
 	 */
 	public static function validate()
 	{
-		static::startStep("validate");
+		static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_VALIDATE'));
 
 		$result = array();
 		$configDataClasses = Config::getInstance()->getDataClasses();
+
 		$dataClasses = static::recursiveGetDependentDataClasses($configDataClasses);
 		foreach ($dataClasses as $data)
 		{
@@ -40,6 +45,36 @@ class Validate extends BaseProcess
 
 		static::reportStepLogs();
 		return $result;
+	}
+
+	public static function findUseNotClasses()
+	{
+		static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_FIND_SKIPPED'));
+		$configDataClasses = Config::getInstance()->getDataClasses();
+		$allConfigDataClasses = Config::getInstance()->getAllDateClasses();
+
+		$configDataClassesString = array();
+		foreach($configDataClasses as $conf)
+		{
+			$configDataClassesString[] = $conf->getModule() . ":" . $conf->getEntityName();
+		}
+
+		foreach($allConfigDataClasses as $conf)
+		{
+			$entity = $conf->getModule() . ":" . $conf->getEntityName();
+			if(!in_array($entity, $configDataClassesString))
+			{
+				static::report(
+					Loc::getMessage(
+						'INTERVOLGA_MIGRATO.DATA_NOT_USED',
+						array(
+							'#ENTITY#' => $entity
+						)
+					),
+					'info'
+				);
+			}
+		}
 	}
 
 	/**
@@ -64,7 +99,7 @@ class Validate extends BaseProcess
 	/**
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 *
-	 * @return \Intervolga\Migrato\Tool\XmlIdValidateError|null
+	 * @return \Intervolga\Migrato\Tool\XmlIdValidateError[]|null
 	 */
 	protected static function getRecordXmlIdErrors(Record $record)
 	{
@@ -101,7 +136,7 @@ class Validate extends BaseProcess
 			$errors[] = new XmlIdValidateError($record->getData(), $errorType, $record->getId(), $record->getXmlId());
 			LogTable::add(array(
 				"RECORD" => $record,
-				"OPERATION" => "validate",
+				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
 				"COMMENT" => XmlIdValidateError::typeToString($errorType),
 				"STEP" => static::$step,
 				"RESULT" => false,
@@ -111,7 +146,7 @@ class Validate extends BaseProcess
 		{
 			LogTable::add(array(
 				"RECORD" => $record,
-				"OPERATION" => "validate",
+				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
 				"STEP" => static::$step,
 			));
 		}

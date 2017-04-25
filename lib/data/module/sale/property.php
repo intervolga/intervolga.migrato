@@ -35,6 +35,11 @@ class Property extends BaseData
 		);
 	}
 
+	public function isIdExists($id)
+	{
+		return !!OrderPropsTable::getById($id->getValue())->fetch();
+	}
+
 	public function getList(array $filter = array())
 	{
 		$result = array();

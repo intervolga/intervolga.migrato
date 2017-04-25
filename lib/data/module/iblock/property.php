@@ -1,6 +1,7 @@
-<?namespace Intervolga\Migrato\Data\Module\Iblock;
+<? namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Iblock\PropertyTable;
+use Bitrix\Iblock\SectionPropertyTable;
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
@@ -31,26 +32,33 @@ class Property extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($property["XML_ID"]);
 			$record->setId(RecordId::createNumericId($property["ID"]));
-			$record->addFieldsRaw(array(
-				"NAME" => $property["NAME"],
-				"ACTIVE" => $property["ACTIVE"],
-				"SORT" => $property["SORT"],
-				"CODE" => $property["CODE"],
-				"DEFAULT_VALUE" => $property["DEFAULT_VALUE"],
-				"PROPERTY_TYPE" => $property["PROPERTY_TYPE"],
-				"ROW_COUNT" => $property["ROW_COUNT"],
-				"COL_COUNT" => $property["COL_COUNT"],
-				"LIST_TYPE" => $property["LIST_TYPE"],
-				"MULTIPLE" => $property["MULTIPLE"],
-				"FILE_TYPE" => $property["FILE_TYPE"],
-				"MULTIPLE_CNT" => $property["MULTIPLE_CNT"],
-				"WITH_DESCRIPTION" => $property["WITH_DESCRIPTION"],
-				"SEARCHABLE" => $property["SEARCHABLE"],
-				"FILTRABLE" => $property["FILTRABLE"],
-				"IS_REQUIRED" => $property["IS_REQUIRED"],
-				"USER_TYPE" => $property["USER_TYPE"],
-				"HINT" => $property["HINT"],
+
+			$smartFilterOptions = $this->getSmartFilterOptions($property["IBLOCK_ID"], $property["ID"]);
+
+			$record->addFieldsRaw(array_merge(
+				$smartFilterOptions,
+				array(
+					"NAME" => $property["NAME"],
+					"ACTIVE" => $property["ACTIVE"],
+					"SORT" => $property["SORT"],
+					"CODE" => $property["CODE"],
+					"DEFAULT_VALUE" => $property["DEFAULT_VALUE"],
+					"PROPERTY_TYPE" => $property["PROPERTY_TYPE"],
+					"ROW_COUNT" => $property["ROW_COUNT"],
+					"COL_COUNT" => $property["COL_COUNT"],
+					"LIST_TYPE" => $property["LIST_TYPE"],
+					"MULTIPLE" => $property["MULTIPLE"],
+					"FILE_TYPE" => $property["FILE_TYPE"],
+					"MULTIPLE_CNT" => $property["MULTIPLE_CNT"],
+					"WITH_DESCRIPTION" => $property["WITH_DESCRIPTION"],
+					"SEARCHABLE" => $property["SEARCHABLE"],
+					"FILTRABLE" => $property["FILTRABLE"],
+					"IS_REQUIRED" => $property["IS_REQUIRED"],
+					"USER_TYPE" => $property["USER_TYPE"],
+					"HINT" => $property["HINT"],
+				)
 			));
+
 			if ($property["USER_TYPE_SETTINGS"])
 			{
 				if ($userTypeSettings = unserialize($property["USER_TYPE_SETTINGS"]))
@@ -79,6 +87,43 @@ class Property extends BaseData
 		return $result;
 	}
 
+	/**
+	 * @param int $iblockId
+	 * @param int $propertyId
+	 *
+	 * @return array
+	 */
+	private function getSmartFilterOptions($iblockId, $propertyId)
+	{
+		$sectionPropertyGetList = SectionPropertyTable::getList(array(
+			"filter" => array(
+				"IBLOCK_ID" => $iblockId,
+				"PROPERTY_ID" => $propertyId,
+				"SECTION_ID" => 0,
+			),
+		));
+
+		$result = array();
+		if ($property = $sectionPropertyGetList->fetch())
+		{
+			$result["SMART_FILTER"] = $property["SMART_FILTER"];
+			$result["DISPLAY_TYPE"] = $property["DISPLAY_TYPE"];
+			$result["DISPLAY_EXPANDED"] = $property["DISPLAY_EXPANDED"];
+			$result["FILTER_HINT"] = $property["FILTER_HINT"];
+		}
+		else
+		{
+			$result = array(
+				"SMART_FILTER" => "",
+				"DISPLAY_TYPE" => "",
+				"DISPLAY_EXPANDED" => "",
+				"FILTER_HINT" => "",
+			);
+		}
+
+		return $result;
+	}
+
 	public function getDependencies()
 	{
 		return array(
@@ -93,31 +138,6 @@ class Property extends BaseData
 		);
 	}
 
-	public function getIBlock(Record $record)
-	{
-		$iblockId = null;
-		if($iblock = $record->getDependency("IBLOCK_ID"))
-		{
-			if($iblock->getId())
-			{
-				$iblockId = $iblock->getId()->getValue();
-			}
-			else
-				throw new \Exception("Not found IBlock " . $iblock->getValue());
-		}
-		elseif($record->getId())
-		{
-			$rsProperty = \CIBlockProperty::GetByID($record->getId()->getValue());
-			if($arProperty = $rsProperty->Fetch())
-				$iblockId = intval($arProperty["IBLOCK_ID"]);
-		}
-		if(!$iblockId)
-		{
-			throw new \Exception("Not found IBlock for the element " . $record->getXmlId());
-		}
-		return $iblockId;
-	}
-
 	public function update(Record $record)
 	{
 		$fields = $this->recordToArray($record);
@@ -127,6 +147,7 @@ class Property extends BaseData
 		{
 			throw new \Exception(trim(strip_tags($propertyObject->LAST_ERROR)));
 		}
+		$this->updateSmartFilter($fields["IBLOCK_ID"], $record->getId()->getValue(), $fields);
 	}
 
 	/**
@@ -154,6 +175,80 @@ class Property extends BaseData
 		return $fields;
 	}
 
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return int
+	 * @throws \Exception
+	 */
+	public function getIBlock(Record $record)
+	{
+		$iblockId = 0;
+		if ($iblock = $record->getDependency("IBLOCK_ID"))
+		{
+			if ($iblock->getId())
+			{
+				$iblockId = $iblock->getId()->getValue();
+			}
+			else
+			{
+				throw new \Exception("Not found IBlock " . $iblock->getValue());
+			}
+		}
+		elseif ($record->getId())
+		{
+			$rsProperty = \CIBlockProperty::GetByID($record->getId()->getValue());
+			if ($arProperty = $rsProperty->Fetch())
+			{
+				$iblockId = intval($arProperty["IBLOCK_ID"]);
+			}
+		}
+		if (!$iblockId)
+		{
+			throw new \Exception("Not found IBlock for the element " . $record->getXmlId());
+		}
+
+		return $iblockId;
+	}
+
+	/**
+	 * @param $iblockId
+	 * @param $propertyId
+	 * @param $property
+	 *
+	 * @throws \Exception
+	 */
+	protected function updateSmartFilter($iblockId, $propertyId, $property)
+	{
+		$fields = array(
+			"SMART_FILTER" => $property["SMART_FILTER"],
+			"DISPLAY_TYPE" => $property["DISPLAY_TYPE"],
+			"DISPLAY_EXPANDED" => $property["DISPLAY_EXPANDED"],
+			"FILTER_HINT" => $property["FILTER_HINT"],
+		);
+
+		$id = array(
+			"IBLOCK_ID" => $iblockId,
+			"PROPERTY_ID" => $propertyId,
+			"SECTION_ID" => 0,
+		);
+		if ($fields["DISPLAY_TYPE"])
+		{
+			if (SectionPropertyTable::getRowById($id))
+			{
+				SectionPropertyTable::update($id, $fields);
+			}
+			else
+			{
+				SectionPropertyTable::add(array_merge($id, $fields));
+			}
+		}
+		else
+		{
+			SectionPropertyTable::delete($id);
+		}
+	}
+
 	public function create(Record $record)
 	{
 		$fields = $this->recordToArray($record);
@@ -161,6 +256,8 @@ class Property extends BaseData
 		$propertyId = $propertyObject->add($fields);
 		if ($propertyId)
 		{
+			$this->updateSmartFilter($fields["IBLOCK_ID"], $propertyId, $fields);
+
 			return RecordId::createNumericId($propertyId);
 		}
 		else
@@ -173,7 +270,7 @@ class Property extends BaseData
 	{
 		$id = $this->findRecord($xmlId);
 		$propertyObject = new \CIBlockProperty();
-		if (!$propertyObject->delete($id))
+		if ($id && !$propertyObject->delete($id->getValue()))
 		{
 			throw new \Exception("Unknown error");
 		}
