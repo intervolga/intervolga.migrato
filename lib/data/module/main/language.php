@@ -28,7 +28,6 @@ class Language extends BaseData
 				'DEF' => $language['DEF'],
 				'ACTIVE' => $language['ACTIVE'],
 				'NAME' => $language['NAME'],
-				'DIRECTION' => $language['DIRECTION'],
 			));
 
 			$link = clone $this->getDependency('CULTURE');
@@ -60,5 +59,73 @@ class Language extends BaseData
 	{
 		$language = LanguageTable::getById($id->getValue())->fetch();
 		return $language['LID'];
+	}
+
+	public function setXmlId($id, $xmlId)
+	{
+		LanguageTable::update($id->getValue(), array('LID' => $xmlId));
+	}
+
+	public function update(Record $record)
+	{
+		$data = $this->recordToArray($record);
+		$id = $record->getId()->getValue();
+		$result = LanguageTable::update($id, $data);
+		if ($result->getErrorMessages())
+		{
+			throw new \Exception(implode(', ', $result->getErrorMessages()));
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return array
+	 * @throws \Exception
+	 */
+	protected function recordToArray(Record $record)
+	{
+		$array = array(
+			'LID' => $record->getXmlId(),
+			'SORT' => $record->getFieldRaw('SORT'),
+			'DEF' => $record->getFieldRaw('DEF'),
+			'ACTIVE' => $record->getFieldRaw('ACTIVE'),
+			'NAME' => $record->getFieldRaw('NAME'),
+		);
+
+		if ($dependency = $record->getDependency('CULTURE'))
+		{
+			$linkXmlId = $dependency->getValue();
+			$idObject = Culture::getInstance()->findRecord($linkXmlId);
+			if ($idObject)
+			{
+				$array['CULTURE_ID'] = $idObject->getValue();
+			}
+		}
+
+		return $array;
+	}
+
+	public function create(Record $record)
+	{
+		$data = $this->recordToArray($record);
+		$result = LanguageTable::add($data);
+		if ($result->getErrorMessages())
+		{
+			throw new \Exception(implode(', ', $result->getErrorMessages()));
+		}
+		else
+		{
+			return $this->createId($result->getId());
+		}
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId);
+		if ($id)
+		{
+			LanguageTable::delete($id->getValue());
+		}
 	}
 }

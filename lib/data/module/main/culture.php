@@ -41,4 +41,64 @@ class Culture extends BaseData
 		$culture = CultureTable::getById($id->getValue())->fetch();
 		return $culture['NAME'];
 	}
+
+	public function setXmlId($id, $xmlId)
+	{
+		CultureTable::update($id->getValue(), array('NAME' => $xmlId));
+	}
+
+	public function update(Record $record)
+	{
+		$data = $this->recordToArray($record);
+		$id = $record->getId()->getValue();
+		$result = CultureTable::update($id, $data);
+		if ($result->getErrorMessages())
+		{
+			throw new \Exception(implode(', ', $result->getErrorMessages()));
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return array
+	 */
+	protected function recordToArray(Record $record)
+	{
+		$array = array(
+			'NAME' => $record->getXmlId(),
+			'CODE' => $record->getFieldRaw('CODE'),
+			'FORMAT_DATE' => $record->getFieldRaw('FORMAT_DATE'),
+			'FORMAT_DATETIME' => $record->getFieldRaw('FORMAT_DATETIME'),
+			'FORMAT_NAME' => $record->getFieldRaw('FORMAT_NAME'),
+			'WEEK_START' => $record->getFieldRaw('WEEK_START'),
+			'CHARSET' => $record->getFieldRaw('CHARSET'),
+			'DIRECTION' => $record->getFieldRaw('DIRECTION'),
+		);
+
+		return $array;
+	}
+
+	public function create(Record $record)
+	{
+		$data = $this->recordToArray($record);
+		$result = CultureTable::add($data);
+		if ($result->getErrorMessages())
+		{
+			throw new \Exception(implode(', ', $result->getErrorMessages()));
+		}
+		else
+		{
+			return $this->createId($result->getId());
+		}
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId);
+		if ($id)
+		{
+			CultureTable::delete($id->getValue());
+		}
+	}
 }

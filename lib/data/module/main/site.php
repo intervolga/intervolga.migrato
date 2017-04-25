@@ -73,4 +73,84 @@ class Site extends BaseData
 	{
 		return $id->getValue();
 	}
+
+	public function setXmlId($id, $xmlId)
+	{
+		SiteTable::update($id->getValue(), array('LID' => $xmlId));
+	}
+
+	public function update(Record $record)
+	{
+		$data = $this->recordToArray($record);
+		$id = $record->getId()->getValue();
+		$result = SiteTable::update($id, $data);
+		if ($result->getErrorMessages())
+		{
+			throw new \Exception(implode(', ', $result->getErrorMessages()));
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return array
+	 * @throws \Exception
+	 */
+	protected function recordToArray(Record $record)
+	{
+		$array = array(
+			'LID' => $record->getXmlId(),
+			'SORT' => $record->getFieldRaw('SORT'),
+			'DEF' => $record->getFieldRaw('DEF'),
+			'ACTIVE' => $record->getFieldRaw('ACTIVE'),
+			'NAME' => $record->getFieldRaw('NAME'),
+			'DIR' => $record->getFieldRaw('DIR'),
+			'DOMAIN_LIMITED' => $record->getFieldRaw('DOMAIN_LIMITED'),
+			'SITE_NAME' => $record->getFieldRaw('SITE_NAME'),
+		);
+
+		if ($dependency = $record->getDependency('CULTURE'))
+		{
+			$linkXmlId = $dependency->getValue();
+			$idObject = Culture::getInstance()->findRecord($linkXmlId);
+			if ($idObject)
+			{
+				$array['CULTURE_ID'] = $idObject->getValue();
+			}
+		}
+		if ($dependency = $record->getDependency('LANGUAGE'))
+		{
+			$linkXmlId = $dependency->getValue();
+			$idObject = Language::getInstance()->findRecord($linkXmlId);
+			if ($idObject)
+			{
+				$array['LANGUAGE_ID'] = $idObject->getValue();
+			}
+		}
+
+		return $array;
+	}
+
+	public function create(Record $record)
+	{
+		$data = $this->recordToArray($record);
+		$result = SiteTable::add($data);
+		if ($result->getErrorMessages())
+		{
+			throw new \Exception(implode(', ', $result->getErrorMessages()));
+		}
+		else
+		{
+			return $this->createId($result->getId());
+		}
+	}
+
+	public function delete($xmlId)
+	{
+		$id = $this->findRecord($xmlId);
+		if ($id)
+		{
+			SiteTable::delete($id->getValue());
+		}
+	}
 }
