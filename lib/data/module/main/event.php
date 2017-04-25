@@ -10,8 +10,6 @@ Loc::loadMessages(__FILE__);
 
 class Event extends BaseData
 {
-	const DEPENDENCY_EVENT_NAME = "EVENT_NAME";
-
 	public function __construct()
 	{
 		$this->xmlIdProvider = new TableXmlIdProvider($this);
@@ -40,14 +38,8 @@ class Event extends BaseData
 			$record->setXmlId($this->getXmlId($id));
 			$record->setId($id);
 
-			$sites = array();
-			$sitesGetList = \CEventMessage::getSite($message["ID"]);
-			while ($site = $sitesGetList->fetch())
-			{
-				$sites[] = $site["SITE_ID"];
-			}
 			$record->addFieldsRaw(array(
-				"LID" => $sites,
+				///"LID" => $sites,
 				"ACTIVE" => $message["ACTIVE"],
 				"EMAIL_FROM" => $message["EMAIL_FROM"],
 				"EMAIL_TO" => $message["EMAIL_TO"],
@@ -63,7 +55,7 @@ class Event extends BaseData
 				"SITE_TEMPLATE_ID" => $message["SITE_TEMPLATE_ID"],
 			));
 
-			$dependency = clone $this->getDependency(static::DEPENDENCY_EVENT_NAME);
+			$dependency = clone $this->getDependency('EVENT_NAME');
 			$dependency->setValue($this->getEventTypeXmlId($message["EVENT_NAME"]));
 			if (!$dependency->getValue())
 			{
@@ -77,7 +69,17 @@ class Event extends BaseData
 					)
 				);
 			}
-			$record->setDependency(static::DEPENDENCY_EVENT_NAME, $dependency);
+			$record->setDependency('EVENT_NAME', $dependency);
+
+			$dependency = clone $this->getDependency('SITE');
+			$sites = array();
+			$sitesGetList = \CEventMessage::getSite($message['ID']);
+			while ($site = $sitesGetList->fetch())
+			{
+				$sites[] = Site::getInstance()->getXmlId(Site::getInstance()->createId($site['SITE_ID']));
+			}
+			$dependency->setValues($sites);
+			$record->setDependency('SITE', $dependency);
 
 			if ($record->getDependencies())
 			{
@@ -116,18 +118,18 @@ class Event extends BaseData
 	public function getDependencies()
 	{
 		return array(
-			static::DEPENDENCY_EVENT_NAME => new Link(
+			'EVENT_NAME' => new Link(
 				EventType::getInstance(),
 				"",
 				"EVENT_NAME"
 			),
+			'SITE' => new Link(Site::getInstance()),
 		);
 	}
 
 	public function update(Record $record)
 	{
-		$fields = $record->getFieldsRaw();
-		$fields["ADDITIONAL_FIELD"] = unserialize($fields["ADDITIONAL_FIELD"]);
+		$fields = $this->recordToArray($record);
 		$eventMessageObject = new \CEventMessage();
 		$isUpdated = $eventMessageObject->update($record->getId()->getValue(), $fields);
 		if (!$isUpdated)
@@ -136,19 +138,42 @@ class Event extends BaseData
 		}
 	}
 
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return array
+	 * @throws \Exception
+	 */
+	protected function recordToArray(Record $record)
+	{
+		$array = $record->getFieldsRaw();
+		$array['ADDITIONAL_FIELD'] = unserialize($array['ADDITIONAL_FIELD']);
+		if ($eventType = $record->getDependency('EVENT_NAME')->getId())
+		{
+			$getList = \CEventType::GetList(array('ID' => $eventType->getValue()));
+			if ($eventType = $getList->Fetch())
+			{
+				$array['EVENT_NAME'] = $eventType['EVENT_NAME'];
+			}
+		}
+		$link = $record->getDependency('SITE');
+		if ($link && $link->getValues())
+		{
+			foreach ($link->findIds() as $siteIdObject)
+			{
+				$array['LID'][] = $siteIdObject->getValue();
+			}
+		}
+
+		return $array;
+	}
+
 	public function create(Record $record)
 	{
-		$fields = $record->getFieldsRaw();
-		$fields["ADDITIONAL_FIELD"] = unserialize($fields["ADDITIONAL_FIELD"]);
+		$fields = $this->recordToArray($record);
 
-		if($eventType = $record->getDependency("EVENT_NAME")->getId())
+		if ($fields['EVENT_NAME'])
 		{
-			$rsEventType = \CEventType::GetList(array("ID" => $eventType->getValue()));
-			if($arEventType = $rsEventType->Fetch())
-			{
-				$fields["EVENT_NAME"] = $arEventType["EVENT_NAME"];
-			}
-
 			$eventMessageObject = new \CEventMessage();
 			$eventMessageId = $eventMessageObject->add($fields);
 			if ($eventMessageId)
