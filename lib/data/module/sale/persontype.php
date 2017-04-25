@@ -4,6 +4,8 @@ use Bitrix\Main\Loader;
 use Bitrix\Sale\Internals\PersonTypeSiteTable;
 use Bitrix\Sale\Internals\PersonTypeTable;
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\Link;
+use Intervolga\Migrato\Data\Module\Main\Site;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\XmlIdProvider\TableXmlIdProvider;
 
@@ -37,12 +39,23 @@ class PersonType extends BaseData
 				"NAME" => $personType["NAME"],
 				"SORT" => $personType["SORT"],
 				"ACTIVE" => $personType["ACTIVE"],
-				"LID" => $personTypesSites[$personType["ID"]],
 			));
+
+			$link = clone $this->getDependency('SITE');
+			$link->setValues($personTypesSites[$personType["ID"]]);
+			$record->setDependency('SITE', $link);
+
 			$result[] = $record;
 		}
 
 		return $result;
+	}
+
+	public function getDependencies()
+	{
+		return array(
+			'SITE' => new Link(Site::getInstance()),
+		);
 	}
 
 	/**
@@ -54,7 +67,9 @@ class PersonType extends BaseData
 		$getList = PersonTypeSiteTable::getList();
 		while ($personTypeSite = $getList->fetch())
 		{
-			$result[$personTypeSite["PERSON_TYPE_ID"]][] = $personTypeSite["SITE_ID"];
+			$result[$personTypeSite["PERSON_TYPE_ID"]][] = Site::getInstance()->getXmlId(
+				Site::getInstance()->createId($personTypeSite["SITE_ID"])
+			);
 		}
 		return $result;
 	}
@@ -62,12 +77,7 @@ class PersonType extends BaseData
 	public function update(Record $record)
 	{
 		$id = $record->getId()->getValue();
-		$update = array(
-			"NAME" => $record->getFieldRaw("NAME"),
-			"SORT" => $record->getFieldRaw("SORT"),
-			"ACTIVE" => $record->getFieldRaw("ACTIVE"),
-			"LID" => $record->getFieldRaws("LID"),
-		);
+		$update = $this->recordToArray($record);
 		$object = new \CSalePersonType();
 		$updateResult = $object->update($id, $update);
 		if (!$updateResult)
@@ -77,14 +87,35 @@ class PersonType extends BaseData
 		}
 	}
 
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return array
+	 * @throws \Exception
+	 */
+	protected function recordToArray(Record $record)
+	{
+		$array = array(
+			'NAME' => $record->getFieldRaw('NAME'),
+			'SORT' => $record->getFieldRaw('SORT'),
+			'ACTIVE' => $record->getFieldRaw('ACTIVE'),
+			'LID' => $record->getFieldRaws('LID'),
+		);
+		$link = $record->getDependency('SITE');
+		if ($link && $link->getValues())
+		{
+			foreach ($link->findIds() as $siteIdObject)
+			{
+				$array['LID'][] = $siteIdObject->getValue();
+			}
+		}
+
+		return $array;
+	}
+
 	public function create(Record $record)
 	{
-		$add = array(
-			"NAME" => $record->getFieldRaw("NAME"),
-			"SORT" => $record->getFieldRaw("SORT"),
-			"ACTIVE" => $record->getFieldRaw("ACTIVE"),
-			"LID" => $record->getFieldRaws("LID"),
-		);
+		$add = $this->recordToArray($record);
 		$object = new \CSalePersonType();
 		$id = $object->add($add);
 		if ($id)
