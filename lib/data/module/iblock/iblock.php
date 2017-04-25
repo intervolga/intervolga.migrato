@@ -3,6 +3,7 @@
 use Bitrix\Iblock\InheritedProperty\IblockTemplates;
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\Module\Main\Site;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
@@ -38,7 +39,6 @@ class Iblock extends BaseData
 			$record->setXmlId($iblock["XML_ID"]);
 			$record->setId(RecordId::createNumericId($iblock["ID"]));
 			$record->addFieldsRaw(array(
-				"SITE_ID" => $iblock["LID"],
 				"CODE" => $iblock["CODE"],
 				"NAME" => $iblock["NAME"],
 				"ACTIVE" => $iblock["ACTIVE"],
@@ -65,12 +65,7 @@ class Iblock extends BaseData
 			$this->addLanguageStrings($record);
 			$this->addFieldsSettings($record);
 			$this->addSeoSettings($record);
-
-			$dependency = clone $this->getDependency("IBLOCK_TYPE_ID");
-			$dependency->setValue(
-				Type::getInstance()->getXmlId(RecordId::createStringId($iblock["IBLOCK_TYPE_ID"]))
-			);
-			$record->setDependency("IBLOCK_TYPE_ID", $dependency);
+			$this->addDependencies($record, $iblock);
 
 			$result[] = $record;
 		}
@@ -157,10 +152,36 @@ class Iblock extends BaseData
 		);
 	}
 
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @param array $iblock
+	 */
+	protected function addDependencies(Record $record, array $iblock)
+	{
+		$dependency = clone $this->getDependency("IBLOCK_TYPE_ID");
+		$dependency->setValue(
+			Type::getInstance()->getXmlId(RecordId::createStringId($iblock["IBLOCK_TYPE_ID"]))
+		);
+		$record->setDependency("IBLOCK_TYPE_ID", $dependency);
+
+		$dependency = clone $this->getDependency('SITE');
+		$sites = array();
+		$sitesGetList = \CIBlock::GetSite($iblock['ID']);
+		while ($site = $sitesGetList->fetch())
+		{
+			$sites[] = Site::getInstance()->getXmlId(
+				Site::getInstance()->createId($site['SITE_ID'])
+			);
+		}
+		$dependency->setValues($sites);
+		$record->setDependency('SITE', $dependency);
+	}
+
 	public function getDependencies()
 	{
 		return array(
 			"IBLOCK_TYPE_ID" => new Link(Type::getInstance()),
+			'SITE' => new Link(Site::getInstance()),
 		);
 	}
 
@@ -173,11 +194,8 @@ class Iblock extends BaseData
 		unset($fields["SEO"]);
 		unset($fields["FIELDS"]);
 		unset($fields["MESSAGES"]);
+		$fields = $this->restoreDependencies($record, $fields);
 
-		if($typeId = $this->getDependency("IBLOCK_TYPE_ID")->getId())
-		{
-			$fields["IBLOCK_TYPE_ID"] = $typeId->getValue();
-		}
 		$iblockObject = new \CIBlock();
 		$isUpdated = $iblockObject->update($record->getId()->getValue(), $fields);
 		if ($isUpdated)
@@ -192,6 +210,30 @@ class Iblock extends BaseData
 		}
 	}
 
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @param array $fields
+	 *
+	 * @return array
+	 * @throws \Exception
+	 */
+	protected function restoreDependencies(Record $record, array $fields)
+	{
+		if ($typeXmlId = $record->getDependency('IBLOCK_TYPE_ID')->getValue())
+		{
+			$fields['IBLOCK_TYPE_ID'] = $record->getDependency('IBLOCK_TYPE_ID')->findId()->getValue();
+		}
+		if ($typeXmlId = $record->getDependency('SITE')->getValues())
+		{
+			foreach ($record->getDependency('SITE')->findIds() as $idObject)
+			{
+				$fields['SITE_ID'][] = $idObject->getValue();
+			}
+		}
+
+		return $fields;
+	}
+
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsRaw(array("SEO", "FIELDS", "MESSAGES"));
@@ -201,11 +243,10 @@ class Iblock extends BaseData
 		unset($fields["SEO"]);
 		unset($fields["FIELDS"]);
 		unset($fields["MESSAGES"]);
+		$fields = $this->restoreDependencies($record, $fields);
 
-		if($iblockTypeId = $record->getDependency("IBLOCK_TYPE_ID")->getId())
+		if ($fields["IBLOCK_TYPE_ID"])
 		{
-			$fields["IBLOCK_TYPE_ID"] = $iblockTypeId->getValue();
-
 			$iblockObject = new \CIBlock();
 			$iblockId = $iblockObject->add($fields);
 			if ($iblockId)
