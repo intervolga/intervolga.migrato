@@ -95,9 +95,9 @@ abstract class BaseXmlIdProvider
 	public static function formatXmlId($xmlid, $prefix = "")
 	{
 		$xmlid = str_replace(".", "", $xmlid);
-		$xmlid = strtolower(implode("-", str_split($xmlid, 6)));
+		$xmlid = implode("-", str_split($xmlid, 6));
 
-		return $prefix.$xmlid;
+		return strtolower($prefix.$xmlid);
 	}
 
 	/**
