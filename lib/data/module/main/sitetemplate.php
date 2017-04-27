@@ -100,9 +100,9 @@ class SiteTemplate extends BaseData
 	protected function recordToArray(Record $record)
 	{
 		$array = array(
-			'CONDITION' => $record->getFieldRaw('SORT'),
-			'SORT' => $record->getFieldRaw('DEF'),
-			'TEMPLATE' => $record->getFieldRaw('ACTIVE'),
+			'CONDITION' => $record->getFieldRaw('CONDITION'),
+			'SORT' => $record->getFieldRaw('SORT'),
+			'TEMPLATE' => $record->getFieldRaw('TEMPLATE'),
 		);
 
 		if ($dependency = $record->getDependency('SITE'))
