@@ -6,6 +6,7 @@ use Intervolga\Migrato\Data\Module\Iblock\Element;
 use Intervolga\Migrato\Data\Module\Iblock\Iblock;
 use Intervolga\Migrato\Data\Module\Iblock\Section;
 use Intervolga\Migrato\Data\Module\Iblock\FieldEnum;
+use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 abstract class BaseUserField extends BaseData
 {
@@ -57,11 +58,12 @@ abstract class BaseUserField extends BaseData
 	protected function userFieldToRecord(array $userField)
 	{
 		$record = new Record($this);
-		$id = RecordId::createNumericId($userField["ID"]);
+		$id = $this->createId($userField["ID"]);
 		$record->setId($id);
-		$record->setXmlId($userField["XML_ID"]);
+		$record->setXmlId($this->getXmlId($id));
 		$fields = array(
 			"FIELD_NAME" => $userField["FIELD_NAME"],
+			"XML_ID" => $userField["XML_ID"],
 			"USER_TYPE_ID" => $userField["USER_TYPE_ID"],
 			"SORT" => $userField["SORT"],
 			"MULTIPLE" => $userField["MULTIPLE"],
@@ -71,12 +73,18 @@ abstract class BaseUserField extends BaseData
 			"EDIT_IN_LIST" => $userField["EDIT_IN_LIST"],
 			"IS_SEARCHABLE" => $userField["IS_SEARCHABLE"],
 		);
-		$fields = array_merge($fields, $this->getSettingsFields($userField["SETTINGS"]));
+		if ($userField["SETTINGS"])
+		{
+			$fields = array_merge($fields, $this->getSettingsFields($userField["SETTINGS"]));
+		}
 		$fields = array_merge($fields, $this->getLangFields($userField));
 		$record->addFieldsRaw($fields);
-		foreach ($this->getSettingsLinks($userField["SETTINGS"]) as $name => $link)
+		if ($userField["SETTINGS"])
 		{
-			$record->setReference($name, $link);
+			foreach ($this->getSettingsLinks($userField["SETTINGS"]) as $name => $link)
+			{
+				$record->setReference($name, $link);
+			}
 		}
 
 		return $record;
@@ -84,6 +92,7 @@ abstract class BaseUserField extends BaseData
 
 	/**
 	 * @param array $settings
+	 * @param string $fullname
 	 *
 	 * @return array
 	 */
@@ -101,12 +110,57 @@ abstract class BaseUserField extends BaseData
 				}
 				else
 				{
-					$fields = array_merge($fields, $this->getSettingsFields($setting, $name));
+					$fields = array_merge($fields, $this->addSerializedField("SETTINGS." . $name, $setting));
 				}
 			}
 		}
 
 		return $fields;
+	}
+
+	/**
+	 * @param string $key
+	 * @param array $value
+	 *
+	 * @return array
+	 */
+	protected function addSerializedField($key, $value)
+	{
+		return array($key . ":serialized" => serialize($value));
+	}
+
+	/**
+	 * @param string $key
+	 *
+	 * @return bool
+	 */
+	protected function isSerializedField($key)
+	{
+		$trimName = $this->getSerializeFieldName($key);
+		return ($trimName != $key);
+	}
+
+	/**
+	 * @param string $key
+	 *
+	 * @return string
+	 */
+	protected function getSerializeFieldName($key)
+	{
+		$re = '/:serialized$/';
+		return preg_replace($re, "", $key);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $value
+	 *
+	 * @return array
+	 */
+	protected function unserializeField($key, $value)
+	{
+		$unserialize = array($this->getSerializeFieldName($key) => unserialize($value));
+		return $unserialize;
 	}
 
 	/**
@@ -128,7 +182,14 @@ abstract class BaseUserField extends BaseData
 				{
 					if(end($keys) == $pathKey)
 					{
-						$workSetting[$pathKey] = $field;
+						if ($this->isSerializedField($pathKey))
+						{
+							$workSetting = array_merge($workSetting, $this->unserializeField($pathKey, $field));
+						}
+						else
+						{
+							$workSetting[$pathKey] = $field;
+						}
 					}
 					else
 					{
@@ -404,45 +465,61 @@ abstract class BaseUserField extends BaseData
 
 	public function update(Record $record)
 	{
-		$isUpdated = false;
-		if ($record->getId()->getValue())
+		if ($existId = $record->getId()->getValue())
 		{
-			$fields = $record->getFieldsRaw();
+			$fieldObject = new \CUserTypeEntity();
+			$existUserField = $fieldObject->getList(array(), array("ID" => $existId))->fetch();
+			$xmlFields = $record->getFieldsRaw();
 
-			$blockIdXml = $record->getDependency($this->getDependencyString());
-
-			$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
+			$xmlFields["SETTINGS"] = $this->fieldsToArray($xmlFields, "SETTINGS", true);
 			foreach($this->getLangFieldsNames() as $lang)
 			{
-				$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
+				$xmlFields[$lang] = $this->fieldsToArray($xmlFields, $lang, true);
 			}
 
+			$blockIdXml = $record->getDependency($this->getDependencyString());
 			if(!$blockIdXml)
 			{
-				$fields["SETTINGS"] = array_merge($fields["SETTINGS"], $this->getSettingsLinksFields($record->getReferences()));
+				$xmlFields["SETTINGS"] = array_merge($xmlFields["SETTINGS"], $this->getSettingsLinksFields($record->getReferences()));
 			}
 
-			$fieldObject = new \CUserTypeEntity();
-			if ($fields["SETTINGS"])
+			if ($xmlFields["SETTINGS"])
 			{
-				$dbUserField = $fieldObject->getList(array(), array("ID" => $record->getId()->getValue()))->fetch();
-				if ($dbUserField["SETTINGS"])
+				if ($existUserField["SETTINGS"])
 				{
-					$fields["SETTINGS"] = array_merge($dbUserField["SETTINGS"], $fields["SETTINGS"]);
+					$xmlFields["SETTINGS"] = array_merge($existUserField["SETTINGS"], $xmlFields["SETTINGS"]);
 				}
 			}
-			$isUpdated = $fieldObject->Update($record->getId()->getValue(), $fields);
-		}
-		if (!$isUpdated)
-		{
-			throw new \Exception("Unknown error");
+			$isReCreate = false;
+			if ($xmlFields["MULTIPLE"] && ($xmlFields["MULTIPLE"] != $existUserField["MULTIPLE"]))
+			{
+				$isReCreate = true;
+			}
+			if ($xmlFields["USER_TYPE_ID"] && ($xmlFields["USER_TYPE_ID"] != $existUserField["USER_TYPE_ID"]))
+			{
+				$isReCreate = true;
+			}
+
+			if ($isReCreate)
+			{
+				$this->delete($record->getXmlId());
+				$this->create($record);
+			}
+			else
+			{
+				$isUpdated = $fieldObject->Update($existId, $xmlFields);
+				if (!$isUpdated)
+				{
+					global $APPLICATION;
+					throw new \Exception($APPLICATION->getException()->getString());
+				}
+			}
 		}
 	}
 
 	public function create(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
-		$fields["XML_ID"] = $record->getXmlId();
 		$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
 		foreach($this->getLangFieldsNames() as $lang)
 		{
@@ -476,14 +553,17 @@ abstract class BaseUserField extends BaseData
 
 	public function setXmlId($id, $xmlId)
 	{
-		$userFieldObject = new \CUserTypeEntity();
-		$userFieldObject->update($id->getValue(), array("XML_ID" => $xmlId));
+		// XML ID is autogenerated, cannot be modified
 	}
 
 	public function getXmlId($id)
 	{
 		$userField = \CUserTypeEntity::getById($id->getValue());
+		$md5 = md5(serialize(array(
+			$userField['ENTITY_ID'],
+			$userField['FIELD_NAME'],
+		)));
 
-		return $userField["XML_ID"];
+		return BaseXmlIdProvider::formatXmlId($md5);
 	}
 }

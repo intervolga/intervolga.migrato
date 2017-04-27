@@ -83,7 +83,7 @@ abstract class BaseData
 	{
 		if ($this->xmlIdProvider)
 		{
-			return $this->xmlIdProvider->findRecords($xmlIds);
+			$result = $this->xmlIdProvider->findRecords($xmlIds);
 		}
 		else
 		{
@@ -96,9 +96,9 @@ abstract class BaseData
 					$result[$dbRecord->getXmlId()] = $dbRecord->getId();
 				}
 			}
-
-			return $result;
 		}
+
+		return $result;
 	}
 
 	/**
@@ -226,7 +226,7 @@ abstract class BaseData
 		}
 		else
 		{
-			throw new NotImplementedException("Not implemented yet");
+			throw new NotImplementedException("setXmlId for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
 		}
 	}
 
@@ -244,7 +244,7 @@ abstract class BaseData
 		}
 		else
 		{
-			throw new NotImplementedException("Not implemented yet");
+			throw new NotImplementedException("getXmlId for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
 		}
 	}
 

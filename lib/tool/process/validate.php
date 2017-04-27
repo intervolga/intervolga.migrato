@@ -8,6 +8,8 @@ use Intervolga\Migrato\Tool\XmlIdValidateError;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Orm\ColorLog;
 
+Loc::loadMessages(__FILE__);
+
 class Validate extends BaseProcess
 {
 	protected static $allXmlIds = array();
@@ -26,7 +28,7 @@ class Validate extends BaseProcess
 	 */
 	public static function validate()
 	{
-		static::startStep("validate");
+		static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_VALIDATE'));
 
 		$result = array();
 		$configDataClasses = Config::getInstance()->getDataClasses();
@@ -51,8 +53,7 @@ class Validate extends BaseProcess
 
 	public static function findUseNotClasses()
 	{
-		static::addSeparator();
-		static::report(ColorLog::getColoredString(Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE.NOT_MIGRATE"), "warning"), "warning");
+		static::startStep(ColorLog::getColoredString(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_FIND_SKIPPED')));
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		$allConfigDataClasses = Config::getInstance()->getAllDateClasses();
 
@@ -67,7 +68,15 @@ class Validate extends BaseProcess
 			$entity = static::getModuleMessage($conf->getModule()) . ": " . static::getEntityMessage($conf->getEntityName());
 			if(!in_array($entity, $configDataClassesString))
 			{
-				static::report($entity);
+				static::report(
+					Loc::getMessage(
+						'INTERVOLGA_MIGRATO.DATA_NOT_USED',
+						array(
+							'#ENTITY#' => $entity
+						)
+					),
+					'info'
+				);
 			}
 		}
 	}
@@ -131,7 +140,7 @@ class Validate extends BaseProcess
 			$errors[] = new XmlIdValidateError($record->getData(), $errorType, $record->getId(), $record->getXmlId());
 			LogTable::add(array(
 				"RECORD" => $record,
-				"OPERATION" => "validate",
+				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
 				"COMMENT" => XmlIdValidateError::typeToString($errorType),
 				"STEP" => static::$step,
 				"RESULT" => false,
@@ -141,7 +150,7 @@ class Validate extends BaseProcess
 		{
 			LogTable::add(array(
 				"RECORD" => $record,
-				"OPERATION" => "validate",
+				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
 				"STEP" => static::$step,
 			));
 		}

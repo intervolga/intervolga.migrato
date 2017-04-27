@@ -1,26 +1,20 @@
-<? namespace Intervolga\Migrato\Data\Module\Highloadblock;
+<? namespace Intervolga\Migrato\Data\Module\Main;
 
 use Intervolga\Migrato\Data\BaseUserFieldEnum;
 use Intervolga\Migrato\Data\Link;
-use Intervolga\Migrato\Data\Record;
 
 class FieldEnum extends BaseUserFieldEnum
 {
 	public function getFilesSubdir()
 	{
-		return "/highloadblock/field/";
+		return '/field/';
 	}
 
-	/**
-	 * @param string[] $filter
-	 *
-	 * @return \Intervolga\Migrato\Data\Record[]
-	 */
 	public function getList(array $filter = array())
 	{
 		$filter["USER_FIELD_ID"] = array();
 
-		/** @var Record $record */
+		/** @var \Intervolga\Migrato\Data\Record $record */
 		foreach(Field::getInstance()->getList() as $record)
 		{
 			$fields = $record->getFieldsRaw();

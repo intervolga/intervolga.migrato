@@ -11,6 +11,24 @@
         <entity>
             <name>eventtype</name>
         </entity>
+        <entity>
+            <name>field</name>
+        </entity>
+        <entity>
+            <name>fieldenum</name>
+        </entity>
+        <entity>
+            <name>site</name>
+        </entity>
+        <entity>
+            <name>culture</name>
+        </entity>
+        <entity>
+            <name>language</name>
+        </entity>
+        <entity>
+            <name>sitetemplate</name>
+        </entity>
     </module>
     <module>
         <name>catalog</name>
@@ -49,6 +67,15 @@
         </entity>
         <entity>
             <name>permission</name>
+        </entity>
+        <entity>
+            <name>field</name>
+        </entity>
+        <entity>
+            <name>fieldenum</name>
+        </entity>
+        <entity>
+            <name>form</name>
         </entity>
     </module>
     <module>

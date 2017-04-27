@@ -1,18 +1,15 @@
 <? namespace Intervolga\Migrato\Data\Module\Iblock;
 
-use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseUserFieldEnum;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Data\RecordId;
-use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 class FieldEnum extends BaseUserFieldEnum
 {
 
 	public function getFilesSubdir()
 	{
-		return "/type/iblock/section/";
+		return "/type/iblock/section/field/";
 	}
 
 	/**

@@ -11,6 +11,8 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\ImportList;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 
+Loc::loadMessages(__FILE__);
+
 class ImportData extends BaseProcess
 {
 	/**
@@ -28,7 +30,7 @@ class ImportData extends BaseProcess
 
 	public static function run()
 	{
-		parent::run();
+		BaseProcess::run();
 
 		$errors = Validate::validate();
 		if (!$errors)
@@ -46,7 +48,7 @@ class ImportData extends BaseProcess
 
 	protected static function init()
 	{
-		static::startStep("init");
+		static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_INIT'));
 		static::$list = new ImportList();
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		$dataClasses = static::recursiveGetDependentDataClasses($configDataClasses);
@@ -105,11 +107,25 @@ class ImportData extends BaseProcess
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		for ($i = 0; $i < count($configDataClasses); $i++)
 		{
-			static::startStep(__FUNCTION__ . " $i");
+			static::startStep(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.STEP_ITERATE_IMPORT',
+					array(
+						'#i#' => $i,
+						)
+				)
+			);
 			$creatableDataRecords = static::$list->getCreatableRecords();
 			if ($creatableDataRecords)
 			{
-				static::report(Loc::getMessage("INTERVOLGA_MIGRATO.IMPORT_DEPENDENCY_STEP", array("#STEP#" => $i, "#COUNT#" => count($creatableDataRecords))));
+				static::report(
+					Loc::getMessage(
+						'INTERVOLGA_MIGRATO.STEP_ITERATE_IMPORT_RECORDS',
+						array(
+							'#i#' => count($creatableDataRecords),
+						)
+					)
+				);
 				foreach ($creatableDataRecords as $dataRecord)
 				{
 					static::saveDataRecord($dataRecord);
@@ -125,7 +141,7 @@ class ImportData extends BaseProcess
 
 		if (static::$list->getCreatableRecords())
 		{
-			static::report("Not enough import depenency steps!", "fail");
+			static::report(Loc::getMessage('INTERVOLGA_MIGRATO.NEED_MORE_STEPS'), "fail");
 		}
 	}
 
@@ -304,7 +320,7 @@ class ImportData extends BaseProcess
 			$dataRecord->update();
 			LogTable::add(array(
 				"RECORD" => $dataRecord,
-				"OPERATION" => "update",
+				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_UPDATE'),
 				"STEP" => static::$step,
 			));
 		}
@@ -313,7 +329,7 @@ class ImportData extends BaseProcess
 			LogTable::add(array(
 				"RECORD" => $dataRecord,
 				"EXCEPTION" => $exception,
-				"OPERATION" => "update",
+				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_UPDATE'),
 				"STEP" => static::$step,
 			));
 		}
@@ -337,7 +353,7 @@ class ImportData extends BaseProcess
 			);
 			LogTable::add(array(
 				"RECORD" => $dataRecord,
-				"OPERATION" => "create",
+				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_CREATE'),
 				"STEP" => static::$step,
 			));
 		}
@@ -346,7 +362,7 @@ class ImportData extends BaseProcess
 			LogTable::add(array(
 				"RECORD" => $dataRecord,
 				"EXCEPTION" => $exception,
-				"OPERATION" => "create",
+				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_CREATE'),
 				"STEP" => static::$step,
 			));
 		}
@@ -368,12 +384,12 @@ class ImportData extends BaseProcess
 
 	protected static function showNotImported()
 	{
-		static::startStep(__FUNCTION__);
+		static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_SHOW_NOT_IMPORTED'));
 		foreach (static::$list->getRecordsToDelete() as $dataRecord)
 		{
 			LogTable::add(array(
 				"RECORD" => $dataRecord,
-				"OPERATION" => "not import",
+				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_NOT_IMPORTED'),
 				"STEP" => static::$step,
 			));
 		}
@@ -405,7 +421,7 @@ class ImportData extends BaseProcess
 			$record->delete();
 			LogTable::add(array(
 				"RECORD" => $record,
-				"OPERATION" => "delete",
+				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_DELETE'),
 				"STEP" => static::$step,
 			));
 		}
@@ -414,7 +430,7 @@ class ImportData extends BaseProcess
 			LogTable::add(array(
 				"RECORD" => $record,
 				"EXCEPTION" => $exception,
-				"OPERATION" => "delete",
+				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_DELETE'),
 				"STEP" => static::$step,
 			));
 		}
@@ -422,7 +438,7 @@ class ImportData extends BaseProcess
 
 	protected static function deleteMarked()
 	{
-		static::startStep(__FUNCTION__);
+		static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_DELETE_MARKED'));
 		foreach (static::$deleteRecords as $record)
 		{
 			static::deleteRecordWithLog($record);
@@ -432,7 +448,7 @@ class ImportData extends BaseProcess
 
 	protected static function resolveReferences()
 	{
-		static::startStep(__FUNCTION__);
+		static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_RESOLVE_REFERENCES'));
 		/**
 		 * @var Record $dataRecord
 		 */
@@ -457,7 +473,7 @@ class ImportData extends BaseProcess
 				$clone->update();
 				LogTable::add(array(
 					"RECORD" => $dataRecord,
-					"OPERATION" => "update references",
+					"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_UPDATE_REFERENCES'),
 					"STEP" => static::$step,
 				));
 			}
@@ -466,7 +482,7 @@ class ImportData extends BaseProcess
 				LogTable::add(array(
 					"RECORD" => $dataRecord,
 					"EXCEPTION" => $exception,
-					"OPERATION" => "update reference",
+					"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_UPDATE_REFERENCES'),
 					"STEP" => static::$step,
 				));
 			}
