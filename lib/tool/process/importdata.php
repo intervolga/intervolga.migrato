@@ -38,7 +38,7 @@ class ImportData extends BaseProcess
 			static::init();
 			static::importWithDependencies();
 			static::logNotResolved();
-			static::deleteNotImported();
+			static::showNotImported();
 			static::deleteMarked();
 			static::resolveReferences();
 		}
@@ -434,16 +434,6 @@ class ImportData extends BaseProcess
 				"STEP" => static::$step,
 			));
 		}
-	}
-
-	protected static function deleteNotImported()
-	{
-		static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_DELETE_NOT_IMPORTED'));
-		foreach (static::$list->getRecordsToDelete() as $dataRecord)
-		{
-			static::deleteRecordWithLog($dataRecord);
-		}
-		static::reportStepLogs();
 	}
 
 	protected static function deleteMarked()

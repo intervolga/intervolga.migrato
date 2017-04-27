@@ -16,6 +16,7 @@ class ExportData extends BaseProcess
 	{
 		parent::run();
 		$errors = Validate::validate();
+		Validate::findUseNotClasses();
 		if (!$errors)
 		{
 			static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_EXPORT'));
@@ -26,7 +27,6 @@ class ExportData extends BaseProcess
 			}
 			static::reportStepLogs();
 		}
-		Validate::findUseNotClasses();
 
 		parent::finalReport();
 	}

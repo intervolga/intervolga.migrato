@@ -153,13 +153,13 @@ class BaseProcess
 	{
 		static::$step = $step;
 		static::addSeparator();
-		static::report(
+		static::report(ColorLog::getColoredString(
 			Loc::getMessage(
 				'INTERVOLGA_MIGRATO.STEP',
 				array(
 					'#STEP#' => static::$step
 				)
-			)
+			), "light_blue")
 		);
 	}
 
@@ -205,8 +205,8 @@ class BaseProcess
 				Loc::getMessage(
 					"INTERVOLGA_MIGRATO.STATISTICS_RECORD",
 					array(
-						"#MODULE#" => $logs["MODULE_NAME"],
-						"#ENTITY#" => $logs["ENTITY_NAME"],
+						"#MODULE#" => self::getModuleMessage($logs["MODULE_NAME"]),
+						"#ENTITY#" => self::getEntityMessage($logs["ENTITY_NAME"]),
 						"#OPERATION#" => $logs["OPERATION"],
 						"#COUNT#" => $logs["CNT"],
 					)
@@ -215,5 +215,20 @@ class BaseProcess
 				$logs["CNT"]
 			);
 		}
+	}
+
+	protected static function getModuleMessage($moduleName)
+	{
+		return Loc::getMessage("INTERVOLGA_MIGRATO.MODULE_" . strtoupper($moduleName));
+	}
+
+	protected static function getEntityMessage($entityName)
+	{
+		return Loc::getMessage("INTERVOLGA_MIGRATO.ENTITY_" . strtoupper($entityName));
+	}
+
+	protected static function getStepMessage($stepName)
+	{
+		return Loc::getMessage("INTERVOLGA_MIGRATO.STEP_" . strtoupper(preg_replace("/\s\d+/", "", $stepName)));
 	}
 }
