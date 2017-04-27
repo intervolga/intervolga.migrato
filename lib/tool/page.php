@@ -16,9 +16,9 @@ class Page
 		{
 			$USER->Authorize(1);
 		}
-		if (!static::isCli() && !$USER->IsAdmin())
+		else
 		{
-			throw new \Exception('Need cli or admin login');
+			throw new \Exception('Use command line interface');
 		}
 	}
 
@@ -85,24 +85,17 @@ class Page
 	 */
 	public static function showReport(array $report, $encodingUtf8 = false)
 	{
-		if (static::isCli())
+		if(!$encodingUtf8)
 		{
-			if(!$encodingUtf8)
+			foreach ($report as $i => $string)
 			{
-				foreach ($report as $i => $string)
-				{
-					$report[$i] = iconv('UTF-8', 'cp1251', $string);
-				}
+				$report[$i] = iconv('UTF-8', 'cp1251', $string);
 			}
+		}
 
-			echo implode("\r\n", $report)."\r\n";
-			global $USER;
-			$USER->Logout();
-		}
-		else
-		{
-			echo '<pre>' . implode('<br>', $report) . '</pre>';
-		}
+		echo implode("\r\n", $report)."\r\n";
+		global $USER;
+		$USER->Logout();
 	}
 
 	/**

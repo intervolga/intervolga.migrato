@@ -60,20 +60,13 @@ $processes = array(
 	"unittest"          => "\\Intervolga\\Migrato\\Tool\\Process\\UnitTest",
 );
 $encodingUtf8 = false;
-if (\Intervolga\Migrato\Tool\Page::isCli())
+$cmdProcess = $argv[1];
+foreach($argv as $arg)
 {
-	$cmdProcess = $argv[1];
-	foreach($argv as $arg)
+	if(strstr("-u", $arg) !== false)
 	{
-		if(strstr("-u", $arg) !== false)
-		{
-			$encodingUtf8 = true;
-		}
+		$encodingUtf8 = true;
 	}
-}
-else
-{
-	$cmdProcess = $_GET["process"];
 }
 $found = false;
 foreach ($processes as $process => $processClass)
@@ -103,14 +96,7 @@ foreach ($processes as $process => $processClass)
 
 if (!$found)
 {
-	if (\Intervolga\Migrato\Tool\Page::isCli())
-	{
-		$message = "Use first argv";
-	}
-	else
-	{
-		$message = "Use Get variable 'process'";
-	}
+	$message = "Use first argv";
 	$message .= " to run process (" . implode(", ", array_keys($processes)) . ")";
 	\Intervolga\Migrato\Tool\Page::showReport(array($message));
 }

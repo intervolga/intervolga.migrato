@@ -1,4 +1,0 @@
-<?
-$MESS["INTERVOLGA_MIGRATO.UNINSTALL_ERROR"] = "Ошибка удаления";
-$MESS["INTERVOLGA_MIGRATO.UNINSTALLED"] = "Модуль миграций удалён";
-$MESS["INTERVOLGA_MIGRATO.GO_BACK"] = "Вернуться";

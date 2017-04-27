@@ -1,7 +1,7 @@
 <? if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 
 use Bitrix\Main;
-use Bitrix\Main\Application;
+use Bitrix\Main\EventManager;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\IO\Directory;
 
@@ -39,6 +39,7 @@ class intervolga_migrato extends CModule
 			$this->installDb();
 			$this->copyPublicFiles();
 			Main\ModuleManager::registerModule($this->MODULE_ID);
+			$this->installEvents();
 		}
 		catch (\Exception $e)
 		{
@@ -73,32 +74,50 @@ class intervolga_migrato extends CModule
 		}
 	}
 
+	function installEvents()
+	{
+		/**
+		 * @see \Intervolga\Migrato\Tool\EventHandlers\Sale::onBeforePersonTypeUpdate
+		 */
+		EventManager::getInstance()->registerEventHandler(
+			'sale',
+			'OnBeforePersonTypeUpdate',
+			$this->MODULE_ID,
+			'\Intervolga\Migrato\Tool\EventHandlers\Sale',
+			'onBeforePersonTypeUpdate'
+		);
+
+		/**
+		 * @see \Intervolga\Migrato\Tool\EventHandlers\Sale::onBeforeUpdateOrderPropsTable
+		 */
+		EventManager::getInstance()->registerEventHandler(
+			'sale',
+			'\Bitrix\Sale\Internals\OrderProps::OnBeforeUpdate',
+			$this->MODULE_ID,
+			'\Intervolga\Migrato\Tool\EventHandlers\Sale',
+			'onBeforeUpdateOrderPropsTable'
+		);
+
+		return true;
+	}
+
 	public function doUninstall()
 	{
-		global $APPLICATION;
-		$request = Application::getInstance()->getContext()->getRequest();
 		try
 		{
-			$step = $request->getPost('step');
-			if(!$step || $step < 2)
-			{
-				$APPLICATION->IncludeAdminFile(Loc::GetMessage("MIGRATO_UNINSTALL_TITLE"), __DIR__ . "/unstep1.php");
-			}
-			else
-			{
-				$saveTables = $request->getPost("save_tables") == "Y";
-				if(!$saveTables)
-				{
-					$this->unInstallDb();
-				}
-				Main\ModuleManager::unRegisterModule($this->MODULE_ID);
-				$APPLICATION->IncludeAdminFile(GetMessage("MIGRATO_UNINSTALL_TITLE"), __DIR__ . "/unstep2.php");
-			}
+			$this->unInstallDb();
+			Main\ModuleManager::unRegisterModule($this->MODULE_ID);
+			$this->unInstallEvents();
 		}
 		catch (\Exception $e)
 		{
+			global $APPLICATION;
 			$APPLICATION->ThrowException($e->getMessage());
+
+			return false;
 		}
+
+		return true;
 	}
 
 	public function unInstallDb()
@@ -109,6 +128,33 @@ class intervolga_migrato extends CModule
 		{
 			throw new \Exception(implode("<br>", $errors));
 		}
+
+		return true;
+	}
+
+	function unInstallEvents()
+	{
+		/**
+		 * @see \Intervolga\Migrato\Tool\EventHandlers\Sale::onBeforePersonTypeUpdate
+		 */
+		EventManager::getInstance()->unRegisterEventHandler(
+			'sale',
+			'OnBeforePersonTypeUpdate',
+			$this->MODULE_ID,
+			'\Intervolga\Migrato\Tool\EventHandlers\Sale',
+			'onBeforePersonTypeUpdate'
+		);
+
+		/**
+		 * @see \Intervolga\Migrato\Tool\EventHandlers\Sale::onBeforeUpdateOrderPropsTable
+		 */
+		EventManager::getInstance()->unRegisterEventHandler(
+			'sale',
+			'\Bitrix\Sale\Internals\OrderProps::OnBeforeUpdate',
+			$this->MODULE_ID,
+			'\Intervolga\Migrato\Tool\EventHandlers\Sale',
+			'onBeforeUpdateOrderPropsTable'
+		);
 
 		return true;
 	}
