@@ -1,5 +1,0 @@
-<?
-$MESS["INTERVOLGA_MIGRATO.UNINSTALL_WARNING"] = "Интерволга Миграто";
-$MESS["INTERVOLGA_MIGRATO.UNINSTALL_SAVE"] = "Сохранение данных";
-$MESS["INTERVOLGA_MIGRATO.UNINSTALL_SAVE_TABLES"] = "Сохранить таблицы с xml id";
-$MESS["INTERVOLGA_MIGRATO.UNINSTALL_DEL"] = "Удалить модуль";
