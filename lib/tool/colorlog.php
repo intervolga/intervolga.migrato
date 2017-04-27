@@ -52,25 +52,18 @@ class ColorLog
 	public static function getColoredString($string, $foregroundColor = "", $backgroundColor = "")
 	{
 		$colored_string = "";
-		if (Page::isCli())
-		{
-			$instance = new self();
+		$instance = new self();
 
-			if ($instance->foregroundColors[$foregroundColor])
-			{
-				$colored_string .= "\033[" . $instance->foregroundColors[$foregroundColor] . "m";
-			}
-			if ($instance->backgroundColors[$backgroundColor])
-			{
-				$colored_string .= "\033[" . $instance->backgroundColors[$backgroundColor] . "m";
-			}
-
-			$colored_string .= $string . "\033[0m";
-		}
-		else
+		if ($instance->foregroundColors[$foregroundColor])
 		{
-			$colored_string = $string;
+			$colored_string .= "\033[" . $instance->foregroundColors[$foregroundColor] . "m";
 		}
+		if ($instance->backgroundColors[$backgroundColor])
+		{
+			$colored_string .= "\033[" . $instance->backgroundColors[$backgroundColor] . "m";
+		}
+
+		$colored_string .= $string . "\033[0m";
 
 		return $colored_string;
 	}
