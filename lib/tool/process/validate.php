@@ -6,7 +6,7 @@ use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 use Bitrix\Main\Localization\Loc;
-use Intervolga\Migrato\Tool\Orm\ColorLog;
+use Intervolga\Migrato\Tool\ColorLog;
 
 Loc::loadMessages(__FILE__);
 
@@ -66,7 +66,8 @@ class Validate extends BaseProcess
 		foreach($allConfigDataClasses as $conf)
 		{
 			$entity = static::getModuleMessage($conf->getModule()) . ": " . static::getEntityMessage($conf->getEntityName());
-			if(!in_array($entity, $configDataClassesString))
+
+			if(!in_array($conf->getModule() . ":" . $conf->getEntityName(), $configDataClassesString))
 			{
 				static::report(
 					Loc::getMessage(

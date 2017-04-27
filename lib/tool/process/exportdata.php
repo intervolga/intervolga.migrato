@@ -27,7 +27,6 @@ class ExportData extends BaseProcess
 			}
 			static::reportStepLogs();
 		}
-		Validate::findUseNotClasses();
 
 		parent::finalReport();
 	}
