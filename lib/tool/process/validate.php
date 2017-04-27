@@ -1,5 +1,7 @@
 <?namespace Intervolga\Migrato\Tool\Process;
 
+use Bitrix\Main\Loader;
+use Bitrix\Main\LoaderException;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
@@ -35,15 +37,41 @@ class Validate extends BaseProcess
 		$dataClasses = static::recursiveGetDependentDataClasses($configDataClasses);
 		foreach ($dataClasses as $data)
 		{
-			$filter = Config::getInstance()->getDataClassFilter($data);
-			if (!$data->isXmlIdFieldExists())
+			if (Loader::includeModule($data->getModule()))
 			{
-				$data->createXmlIdField();
+				$filter = Config::getInstance()->getDataClassFilter($data);
+				if (!$data->isXmlIdFieldExists())
+				{
+					$data->createXmlIdField();
+				}
+				$result = array_merge($result, static::validateData($data, $filter));
 			}
-			$result = array_merge($result, static::validateData($data, $filter));
-		}
+			else
+			{
+				if (in_array($data, $configDataClasses))
+				{
+					$error = Loc::getMessage(
+						'INTERVOLGA_MIGRTO.CONFIG_MODULE_NOT_INSTALLED',
+						array(
+							'#MODULE#' => $data->getModule(),
+						)
+					);
 
+				}
+				else
+				{
+					$error = Loc::getMessage(
+						'INTERVOLGA_MIGRTO.DEPENDANT_MODULE_NOT_INSTALLED',
+						array(
+							'#MODULE#' => $data->getModule(),
+						)
+					);
+				}
+				throw new LoaderException($error);
+			}
+		}
 		static::reportStepLogs();
+
 		return $result;
 	}
 
