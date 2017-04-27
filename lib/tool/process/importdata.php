@@ -30,7 +30,7 @@ class ImportData extends BaseProcess
 
 	public static function run()
 	{
-		parent::run();
+		BaseProcess::run();
 
 		$errors = Validate::validate();
 		if (!$errors)
@@ -38,7 +38,7 @@ class ImportData extends BaseProcess
 			static::init();
 			static::importWithDependencies();
 			static::logNotResolved();
-			static::showNotImported();
+			static::deleteNotImported();
 			static::deleteMarked();
 			static::resolveReferences();
 		}
@@ -434,6 +434,16 @@ class ImportData extends BaseProcess
 				"STEP" => static::$step,
 			));
 		}
+	}
+
+	protected static function deleteNotImported()
+	{
+		static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_DELETE_NOT_IMPORTED'));
+		foreach (static::$list->getRecordsToDelete() as $dataRecord)
+		{
+			static::deleteRecordWithLog($dataRecord);
+		}
+		static::reportStepLogs();
 	}
 
 	protected static function deleteMarked()

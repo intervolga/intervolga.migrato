@@ -51,7 +51,6 @@ $processes = array(
 	"exportdata" => "\\Intervolga\\Migrato\\Tool\\Process\\ExportData",
 	"exportoption" => "\\Intervolga\\Migrato\\Tool\\Process\\ExportOption",
 	"importdata" => "\\Intervolga\\Migrato\\Tool\\Process\\ImportData",
-	"importdatahard" => "\\Intervolga\\Migrato\\Tool\\Process\\ImportDataHard",
 	"importoption" => "\\Intervolga\\Migrato\\Tool\\Process\\ImportOption",
 	"validate" => "\\Intervolga\\Migrato\\Tool\\Process\\Validate",
 	"clearcache" => "\\Intervolga\\Migrato\\Tool\\Process\\ClearCache",
