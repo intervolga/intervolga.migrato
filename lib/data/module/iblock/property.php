@@ -33,7 +33,7 @@ class Property extends BaseData
 			$record->setXmlId($property["XML_ID"]);
 			$record->setId(RecordId::createNumericId($property["ID"]));
 
-			$smartFilterOptions = $this->getSmartFilterOptions($property["IBLOCK_ID"], $property["ID"]);
+			$smartFilterOptions = $this->getSmartFilterOptions($property["ID"]);
 
 			$record->addFieldsRaw(array_merge(
 				$smartFilterOptions,
@@ -88,16 +88,14 @@ class Property extends BaseData
 	}
 
 	/**
-	 * @param int $iblockId
 	 * @param int $propertyId
 	 *
 	 * @return array
 	 */
-	private function getSmartFilterOptions($iblockId, $propertyId)
+	private function getSmartFilterOptions($propertyId)
 	{
 		$sectionPropertyGetList = SectionPropertyTable::getList(array(
 			"filter" => array(
-				"IBLOCK_ID" => $iblockId,
 				"PROPERTY_ID" => $propertyId,
 				"SECTION_ID" => 0,
 			),
@@ -106,6 +104,7 @@ class Property extends BaseData
 		$result = array();
 		if ($property = $sectionPropertyGetList->fetch())
 		{
+			$result["HAS_SMART_FILTER_SETTINGS"] = "Y";
 			$result["SMART_FILTER"] = $property["SMART_FILTER"];
 			$result["DISPLAY_TYPE"] = $property["DISPLAY_TYPE"];
 			$result["DISPLAY_EXPANDED"] = $property["DISPLAY_EXPANDED"];
@@ -114,6 +113,7 @@ class Property extends BaseData
 		else
 		{
 			$result = array(
+				"HAS_SMART_FILTER_SETTINGS" => "N",
 				"SMART_FILTER" => "",
 				"DISPLAY_TYPE" => "",
 				"DISPLAY_EXPANDED" => "",
@@ -147,7 +147,10 @@ class Property extends BaseData
 		{
 			throw new \Exception(trim(strip_tags($propertyObject->LAST_ERROR)));
 		}
-		$this->updateSmartFilter($fields["IBLOCK_ID"], $record->getId()->getValue(), $fields);
+		if ($fields["IBLOCK_ID"])
+		{
+			$this->updateSmartFilter($fields["IBLOCK_ID"], $record->getId()->getValue(), $fields);
+		}
 	}
 
 	/**
@@ -159,7 +162,17 @@ class Property extends BaseData
 	protected function recordToArray(Record $record)
 	{
 		$fields = $record->getFieldsRaw(array("USER_TYPE_SETTINGS"));
-		$fields["IBLOCK_ID"] = $this->getIBlock($record);
+		if ($iblock = $record->getDependency("IBLOCK_ID"))
+		{
+			if ($iblock->getId())
+			{
+				$fields["IBLOCK_ID"] = $iblock->getId()->getValue();
+			}
+			else
+			{
+				throw new \Exception("Not found IBlock " . $iblock->getValue());
+			}
+		}
 		if ($reference = $record->getReference("LINK_IBLOCK_ID"))
 		{
 			if ($reference->getId())
@@ -176,42 +189,6 @@ class Property extends BaseData
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\Record $record
-	 *
-	 * @return int
-	 * @throws \Exception
-	 */
-	public function getIBlock(Record $record)
-	{
-		$iblockId = 0;
-		if ($iblock = $record->getDependency("IBLOCK_ID"))
-		{
-			if ($iblock->getId())
-			{
-				$iblockId = $iblock->getId()->getValue();
-			}
-			else
-			{
-				throw new \Exception("Not found IBlock " . $iblock->getValue());
-			}
-		}
-		elseif ($record->getId())
-		{
-			$rsProperty = \CIBlockProperty::GetByID($record->getId()->getValue());
-			if ($arProperty = $rsProperty->Fetch())
-			{
-				$iblockId = intval($arProperty["IBLOCK_ID"]);
-			}
-		}
-		if (!$iblockId)
-		{
-			throw new \Exception("Not found IBlock for the element " . $record->getXmlId());
-		}
-
-		return $iblockId;
-	}
-
-	/**
 	 * @param $iblockId
 	 * @param $propertyId
 	 * @param $property
@@ -220,32 +197,47 @@ class Property extends BaseData
 	 */
 	protected function updateSmartFilter($iblockId, $propertyId, $property)
 	{
-		$fields = array(
-			"SMART_FILTER" => $property["SMART_FILTER"],
-			"DISPLAY_TYPE" => $property["DISPLAY_TYPE"],
-			"DISPLAY_EXPANDED" => $property["DISPLAY_EXPANDED"],
-			"FILTER_HINT" => $property["FILTER_HINT"],
-		);
-
-		$id = array(
-			"IBLOCK_ID" => $iblockId,
-			"PROPERTY_ID" => $propertyId,
-			"SECTION_ID" => 0,
-		);
-		if ($fields["DISPLAY_TYPE"])
+		if ($property['HAS_SMART_FILTER_SETTINGS'])
 		{
-			if (SectionPropertyTable::getRowById($id))
+			$this->deleteSmartFilterSettings($propertyId);
+			if ($property['HAS_SMART_FILTER_SETTINGS'] == 'Y')
 			{
-				SectionPropertyTable::update($id, $fields);
-			}
-			else
-			{
-				SectionPropertyTable::add(array_merge($id, $fields));
+				$fields = array(
+					'IBLOCK_ID' => $iblockId,
+					'PROPERTY_ID' => $propertyId,
+					'SECTION_ID' => 0,
+					'SMART_FILTER' => $property['SMART_FILTER'],
+					'DISPLAY_TYPE' => $property['DISPLAY_TYPE'],
+					'DISPLAY_EXPANDED' => $property['DISPLAY_EXPANDED'],
+					'FILTER_HINT' => $property['FILTER_HINT'],
+				);
+				SectionPropertyTable::add($fields);
 			}
 		}
-		else
+	}
+
+	/**
+	 * @param int $propertyId
+	 *
+	 * @throws \Bitrix\Main\ArgumentException
+	 * @throws \Exception
+	 */
+	protected function deleteSmartFilterSettings($propertyId)
+	{
+		$getList = SectionPropertyTable::getList(array(
+			'filter' => array(
+				'PROPERTY_ID' => $propertyId,
+				'SECTION_ID' => 0,
+			),
+			'select' => array(
+				'IBLOCK_ID',
+				'PROPERTY_ID',
+				'SECTION_ID',
+			),
+		));
+		while ($record = $getList->fetch())
 		{
-			SectionPropertyTable::delete($id);
+			SectionPropertyTable::delete($record);
 		}
 	}
 
