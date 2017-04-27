@@ -44,18 +44,20 @@ catch (\Exception $exception)
  * @see \Intervolga\Migrato\Tool\Process\ClearCache
  * @see \Intervolga\Migrato\Tool\Process\Reindex
  * @see \Intervolga\Migrato\Tool\Process\ReindexUrlRewriter
+ * @see \Intervolga\Migrato\Tool\Process\UnitTest
  */
 $processes = array(
-	"autofix" => "\\Intervolga\\Migrato\\Tool\\Process\\AutoFix",
-	"cleardata" => "\\Intervolga\\Migrato\\Tool\\Process\\ClearData",
-	"exportdata" => "\\Intervolga\\Migrato\\Tool\\Process\\ExportData",
-	"exportoption" => "\\Intervolga\\Migrato\\Tool\\Process\\ExportOption",
-	"importdata" => "\\Intervolga\\Migrato\\Tool\\Process\\ImportData",
-	"importoption" => "\\Intervolga\\Migrato\\Tool\\Process\\ImportOption",
-	"validate" => "\\Intervolga\\Migrato\\Tool\\Process\\Validate",
-	"clearcache" => "\\Intervolga\\Migrato\\Tool\\Process\\ClearCache",
-	"reindex" => "\\Intervolga\\Migrato\\Tool\\Process\\Reindex",
+	"autofix"           => "\\Intervolga\\Migrato\\Tool\\Process\\AutoFix",
+	"cleardata"         => "\\Intervolga\\Migrato\\Tool\\Process\\ClearData",
+	"exportdata"        => "\\Intervolga\\Migrato\\Tool\\Process\\ExportData",
+	"exportoption"      => "\\Intervolga\\Migrato\\Tool\\Process\\ExportOption",
+	"importdata"        => "\\Intervolga\\Migrato\\Tool\\Process\\ImportData",
+	"importoption"      => "\\Intervolga\\Migrato\\Tool\\Process\\ImportOption",
+	"validate"          => "\\Intervolga\\Migrato\\Tool\\Process\\Validate",
+	"clearcache"        => "\\Intervolga\\Migrato\\Tool\\Process\\ClearCache",
+	"reindex"           => "\\Intervolga\\Migrato\\Tool\\Process\\Reindex",
 	"reindexurlrewrite" => "\\Intervolga\\Migrato\\Tool\\Process\\ReindexUrlRewriter",
+	"unittest"          => "\\Intervolga\\Migrato\\Tool\\Process\\UnitTest",
 );
 $encodingUtf8 = false;
 if (\Intervolga\Migrato\Tool\Page::isCli())

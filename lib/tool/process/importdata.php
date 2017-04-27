@@ -411,6 +411,16 @@ class ImportData extends BaseProcess
 		}
 	}
 
+	protected static function deleteNotImported()
+	{
+		static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_DELETE_NOT_IMPORTED'));
+		foreach (static::$list->getRecordsToDelete() as $dataRecord)
+		{
+			static::deleteRecordWithLog($dataRecord);
+		}
+		static::reportStepLogs();
+	}
+
 	/**
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 */
