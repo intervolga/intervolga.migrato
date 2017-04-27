@@ -40,6 +40,14 @@ class Event extends BaseData
 				"MESSAGE" => $message["MESSAGE"],
 				"BODY_TYPE" => $message["BODY_TYPE"],
 				"SITE_TEMPLATE_ID" => $message["SITE_TEMPLATE_ID"],
+				"LANGUAGE_ID" => $message["LANGUAGE_ID"],
+
+				"CC" => $message["CC"],
+				"BCC" => $message["BCC"],
+				"REPLY_TO" => $message["REPLY_TO"],
+				"IN_REPLY_TO" => $message["IN_REPLY_TO"],
+				"PRIORITY" => $message["PRIORITY"],
+				"ADDITIONAL_FIELD" => serialize($message["ADDITIONAL_FIELD"]),
 			));
 
 			$dependency = clone $this->getDependency(static::DEPENDENCY_EVENT_NAME);
