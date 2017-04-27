@@ -82,7 +82,7 @@ class Property extends BaseData
 		$personTypeId = PersonType::getInstance()->createId($record["PERSON_TYPE_ID"]);
 		$personTypeXmlId = PersonType::getInstance()->getXmlId($personTypeId);
 		$md5 = md5(serialize(array(
-			$record['NAME'],
+			$record['CODE'],
 			$personTypeXmlId,
 		)));
 
