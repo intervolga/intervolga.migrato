@@ -46,6 +46,16 @@ class ImportData extends BaseProcess
 		parent::finalReport();
 	}
 
+	public static function import()
+	{
+		static::init();
+		static::importWithDependencies();
+		static::logNotResolved();
+		static::showNotImported();
+		static::deleteMarked();
+		static::resolveReferences();
+	}
+
 	protected static function init()
 	{
 		static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_INIT'));

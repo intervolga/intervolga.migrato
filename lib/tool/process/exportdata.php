@@ -31,6 +31,17 @@ class ExportData extends BaseProcess
 		parent::finalReport();
 	}
 
+	public static function export()
+	{
+		static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_EXPORT'));
+		$configDataClasses = Config::getInstance()->getDataClasses();
+		foreach ($configDataClasses as $data)
+		{
+			static::exportData($data);
+		}
+		static::reportStepLogs();
+	}
+
 	/**
 	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
 	 */

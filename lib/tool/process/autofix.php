@@ -20,6 +20,15 @@ class AutoFix extends BaseProcess
 		static::finalReport();
 	}
 
+	public static function autofix()
+	{
+		$errors = Validate::validate();
+
+		static::startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_AUTOFIX'));
+		static::fixErrors($errors);
+		static::reportStepLogs();
+	}
+
 	/**
 	 * @param XmlIdValidateError[] $errors
 	 *
