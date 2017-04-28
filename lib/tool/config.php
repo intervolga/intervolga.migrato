@@ -78,6 +78,20 @@ class Config
 	}
 
 	/**
+	 * @return string[]
+	 */
+	public function getOptions()
+	{
+		$options = array();
+		foreach ($this->configArray["options"]["#"]["exclude"] as $excludeItem)
+		{
+			$options[] = $excludeItem["#"];
+		}
+
+		return $options;
+	}
+
+	/**
 	 * @return BaseData[]
 	 */
 	public function getAllDateClasses()
