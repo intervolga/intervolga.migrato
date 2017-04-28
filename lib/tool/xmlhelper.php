@@ -49,7 +49,14 @@ class XmlHelper
 			$content .= str_repeat("\t", $level) . "<$tag>\n";
 			foreach ($map as $innerTag => $value)
 			{
-				$content .= static::tagValue($innerTag, $value, $level + 1);
+				if (is_array($value))
+				{
+					$content .= static::tagMap($innerTag, $value, $level + 1);
+				}
+				else
+				{
+					$content .= static::tagValue($innerTag, $value, $level + 1);
+				}
 			}
 			$content .= str_repeat("\t", $level) . "</$tag>\n";
 			return $content;

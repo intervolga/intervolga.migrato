@@ -83,9 +83,12 @@ class Config
 	public function getOptions()
 	{
 		$options = array();
-		foreach ($this->configArray["options"]["#"]["exclude"] as $excludeItem)
+		if ($optionsArray = $this->configArray["config"]["#"]["options"])
 		{
-			$options[] = $excludeItem["#"];
+			foreach ($optionsArray[0]["#"]["exclude"] as $excludeItem)
+			{
+				$options[] = $excludeItem["#"];
+			}
 		}
 
 		return $options;
