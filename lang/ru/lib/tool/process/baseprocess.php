@@ -22,6 +22,8 @@ $MESS["INTERVOLGA_MIGRATO.MODULE_HIGHLOADBLOCK"]    = "Highload-блоки";
 $MESS["INTERVOLGA_MIGRATO.MODULE_SALE"]             = "Интернет-магазин";
 $MESS["INTERVOLGA_MIGRATO.MODULE_CATALOG"]          = "Торговый каталог";
 
+$MESS["INTERVOLGA_MIGRATO.MODULE_UNKNOWN"]          = "Модуль #MODULE#";
+
 $MESS["INTERVOLGA_MIGRATO.ENTITY_GROUP"]            = "Группы пользователей";
 $MESS["INTERVOLGA_MIGRATO.ENTITY_EVENTTYPE"]        = "Типы почтовых событий";
 $MESS["INTERVOLGA_MIGRATO.ENTITY_EVENT"]            = "Шаблоны почтовых событий";

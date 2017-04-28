@@ -1,8 +1,11 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\OptionFileViewXml;
 use Intervolga\Migrato\Tool\Orm\OptionTable;
+
+Loc::loadMessages(__FILE__);
 
 class ExportOption extends BaseProcess
 {
@@ -14,8 +17,21 @@ class ExportOption extends BaseProcess
 		parent::run();
 		foreach (static::getDbOptions() as $module => $moduleOptions)
 		{
-			OptionFileViewXml::write($moduleOptions, INTERVOLGA_MIGRATO_DIRECTORY . "options/" , $module);
-			static::report("Module $module export " . count($moduleOptions) . " option(s)");
+			OptionFileViewXml::write($moduleOptions, INTERVOLGA_MIGRATO_DIRECTORY . 'options/' , $module);
+			$langModuleName = static::getModuleMessage($module);
+			static::report(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.STATISTICS_RECORD',
+					array(
+						'#MODULE#' => $langModuleName,
+						'#ENTITY#' => Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_NAME_OPTIONS'),
+						'#OPERATION#' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_EXPORT_OPTIONS'),
+						'#COUNT#' => count($moduleOptions),
+					)
+				),
+				'ok',
+				count($moduleOptions)
+			);
 		}
 		parent::finalReport();
 	}
