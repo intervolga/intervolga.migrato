@@ -1,31 +1,53 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
 use Bitrix\Main\Config\Option;
+use Bitrix\Main\IO\Directory;
+use Bitrix\Main\IO\File;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\OptionFileViewXml;
+
+Loc::loadMessages(__FILE__);
 
 class ImportOption extends BaseProcess
 {
 	public static function run()
 	{
 		parent::run();
-		$options = Config::getInstance()->getModulesOptions();
-		foreach ($options as $module => $moduleOptions)
+
+		$directory = new Directory(INTERVOLGA_MIGRATO_DIRECTORY . "options/");
+		if ($directory->isExists())
 		{
-			if ($moduleOptions)
+			foreach ($directory->getChildren() as $dirOrFile)
 			{
-				$count = 0;
-				$path = static::getModuleOptionsDirectory($module);
-				$options = OptionFileViewXml::readFromFileSystem($path);
-				foreach ($options as $name => $value)
+				if ($dirOrFile instanceof File)
 				{
-					if (in_array($name, $moduleOptions))
+					$count = 0;
+					$file = $dirOrFile;
+					$module = str_replace(".xml", "", $file->getName());
+					$options = OptionFileViewXml::readFromFileSystem($file->getPath());
+					foreach ($options as $option)
 					{
-						Option::set($module, $name, $value);
-						$count++;
+						if (Config::getInstance()->isOptionIncluded($option['NAME']))
+						{
+							Option::set($module, $option['NAME'], $option['VALUE'], $option['SITE_ID']);
+							$count++;
+						}
 					}
+					static::report(
+						Loc::getMessage(
+							'INTERVOLGA_MIGRATO.STATISTICS_RECORD',
+							array(
+								'#MODULE#' => static::getModuleMessage($module),
+								'#ENTITY#' => Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_NAME_OPTIONS'),
+								'#OPERATION#' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_IMPORT_OPTIONS'),
+								'#COUNT#' => $count,
+							)
+						),
+						'ok',
+						$count
+					);
 				}
-				static::report("Module $module import $count option(s)");
 			}
 		}
 		parent::finalReport();

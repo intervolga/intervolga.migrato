@@ -78,6 +78,60 @@ class Config
 	}
 
 	/**
+	 * @return string[]
+	 */
+	public function getOptionsRules()
+	{
+		$options = array();
+		if ($optionsArray = $this->configArray["config"]["#"]["options"])
+		{
+			foreach ($optionsArray[0]["#"]["exclude"] as $excludeItem)
+			{
+				$options[] = $excludeItem["#"];
+			}
+		}
+
+		return $options;
+	}
+
+	/**
+	 * @param string $name
+	 *
+	 * @return bool
+	 */
+	public static function isOptionIncluded($name)
+	{
+		$isIncluded = true;
+		$rules = static::getInstance()->getOptionsRules();
+		foreach ($rules as $rule)
+		{
+			$pattern = static::ruleToPattern($rule);
+			$matches = array();
+			if (preg_match_all($pattern, $name, $matches))
+			{
+				$isIncluded = false;
+			}
+		}
+		return $isIncluded;
+	}
+
+	/**
+	 * @param string $rule
+	 *
+	 * @return string
+	 */
+	protected static function ruleToPattern($rule)
+	{
+		$pattern = $rule;
+		if ($pattern[0] != '/')
+		{
+			$pattern = '/' . $rule . '/';
+		}
+
+		return $pattern;
+	}
+
+	/**
 	 * @return BaseData[]
 	 */
 	public function getAllDateClasses()
