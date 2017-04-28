@@ -3,8 +3,11 @@
 use Bitrix\Main\Config\Option;
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\OptionFileViewXml;
+
+Loc::loadMessages(__FILE__);
 
 class ImportOption extends BaseProcess
 {
@@ -31,7 +34,19 @@ class ImportOption extends BaseProcess
 							$count++;
 						}
 					}
-					static::report("Module $module import $count option(s)");
+					static::report(
+						Loc::getMessage(
+							'INTERVOLGA_MIGRATO.STATISTICS_RECORD',
+							array(
+								'#MODULE#' => static::getModuleMessage($module),
+								'#ENTITY#' => Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_NAME_OPTIONS'),
+								'#OPERATION#' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_IMPORT_OPTIONS'),
+								'#COUNT#' => $count,
+							)
+						),
+						'ok',
+						$count
+					);
 				}
 			}
 		}

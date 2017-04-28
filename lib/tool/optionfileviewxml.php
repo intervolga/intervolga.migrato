@@ -13,7 +13,7 @@ class OptionFileViewXml
 	{
 		$content = '';
 		$content .= XmlHelper::xmlHeader();
-		$content .= '<options>\n';
+		$content .= "<options>\n";
 		foreach ($options as $option)
 		{
 			$map = array(

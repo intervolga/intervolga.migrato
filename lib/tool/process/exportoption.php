@@ -18,12 +18,11 @@ class ExportOption extends BaseProcess
 		foreach (static::getDbOptions() as $module => $moduleOptions)
 		{
 			OptionFileViewXml::write($moduleOptions, INTERVOLGA_MIGRATO_DIRECTORY . 'options/' , $module);
-			$langModuleName = static::getModuleMessage($module);
 			static::report(
 				Loc::getMessage(
 					'INTERVOLGA_MIGRATO.STATISTICS_RECORD',
 					array(
-						'#MODULE#' => $langModuleName,
+						'#MODULE#' => static::getModuleMessage($module),
 						'#ENTITY#' => Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_NAME_OPTIONS'),
 						'#OPERATION#' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_EXPORT_OPTIONS'),
 						'#COUNT#' => count($moduleOptions),
