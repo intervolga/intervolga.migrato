@@ -11,7 +11,7 @@ class UnitTest extends BaseProcess
 	public static function run()
 	{
 		parent::run();
-		static::prepareImport();
+		static::beforeImport();
 		static::copyData();
 		static::importExportData();
 		static::compareDirectories();
@@ -19,15 +19,16 @@ class UnitTest extends BaseProcess
 		static::finalReport();
 	}
 
-	protected static function prepareImport()
+	protected static function beforeImport()
 	{
+		static::startStep(Loc::getMessage("INTERVOLGA_MIGRATO.BEFORE_IMPORT"));
 		AutoFix::run();
 		ExportData::run();
 	}
 
 	protected static function copyData()
 	{
-		static::startStep("копирование данных");
+		static::startStep(Loc::getMessage("INTERVOLGA_MIGRATO.COPY_MIGRATION_DATA"));
 		$copyDir = preg_replace("/\/$/", "_old", INTERVOLGA_MIGRATO_DIRECTORY);
 		DeleteDirFilesEx($copyDir);
 
@@ -36,14 +37,14 @@ class UnitTest extends BaseProcess
 
 	protected static function importExportData()
 	{
-		static::startStep("Импорт + экспорт данных");
+		static::startStep(Loc::getMessage("INTERVOLGA_MIGRATO.IMPORT_EXPORT"));
 		ImportData::run();
 		ExportData::run();
 	}
 
 	protected static function compareDirectories()
 	{
-		static::startStep("Сравнивание директорий");
+		static::startStep(Loc::getMessage("INTERVOLGA_MIGRATO.COMPARE_DIRECTORIES"));
 		$copyDir = preg_replace("/\/$/", "_old", INTERVOLGA_MIGRATO_DIRECTORY);
 		$query = "diff --suppress-common-lines -cr " . INTERVOLGA_MIGRATO_DIRECTORY . " " . $copyDir;
 		$output = array();
@@ -51,8 +52,13 @@ class UnitTest extends BaseProcess
 		exec($query, $output, $returnVar);
 		if($returnVar)
 		{
-			file_put_contents($copyDir. "/report." . time(), implode("\n", $output));
+			$reportFileName = $copyDir. "/report_" . time() . ".txt";
+			file_put_contents($reportFileName, implode("\n", $output));
+			static::report(Loc::getMessage("INTERVOLGA_MIGRATO.REPORT_FILE"), "ok");
 		}
-		static::report("Команда завершена: ", $returnVar ? "ok" : "fail");
+		else
+		{
+			static::report(Loc::getMessage("INTERVOLGA_MIGRATO.ERROR_WRITE_FILE"), "fail");
+		}
 	}
 }
