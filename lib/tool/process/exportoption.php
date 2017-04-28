@@ -12,9 +12,7 @@ class ExportOption extends BaseProcess
 	public static function run()
 	{
 		parent::run();
-		$optionsRules = Config::getInstance()->getOptions();
-		$options = static::getDbOptions($optionsRules);
-		foreach ($options as $module => $moduleOptions)
+		foreach (static::getDbOptions() as $module => $moduleOptions)
 		{
 			OptionFileViewXml::write($moduleOptions, INTERVOLGA_MIGRATO_DIRECTORY . "options/" , $module);
 			static::report("Module $module export " . count($moduleOptions) . " option(s)");
@@ -52,11 +50,9 @@ class ExportOption extends BaseProcess
 	}
 
 	/**
-	 * @param array $rules
-	 *
 	 * @return array
 	 */
-	protected static function getDbOptions($rules = array())
+	protected static function getDbOptions()
 	{
 		static::loadDbOptions();
 		$options = array();
@@ -64,17 +60,7 @@ class ExportOption extends BaseProcess
 		{
 			foreach ($moduleOptions as $name => $sameOptions)
 			{
-				$isExcluded = false;
-				foreach ($rules as $rule)
-				{
-					$pattern = static::ruleToPattern($rule);
-					$matches = array();
-					if (preg_match_all($pattern, $name, $matches))
-					{
-						$isExcluded = true;
-					}
-				}
-				if (!$isExcluded)
+				if (Config::getInstance()->isOptionIncluded($name))
 				{
 					foreach ($sameOptions as $siteId => $option)
 					{
@@ -94,21 +80,5 @@ class ExportOption extends BaseProcess
 		}
 
 		return $options;
-	}
-
-	/**
-	 * @param string $rule
-	 *
-	 * @return string
-	 */
-	protected static function ruleToPattern($rule)
-	{
-		$pattern = $rule;
-		if ($pattern[0] != '/')
-		{
-			$pattern = '/' . $rule . '/';
-		}
-
-		return $pattern;
 	}
 }
