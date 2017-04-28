@@ -52,7 +52,7 @@ class UnitTest extends BaseProcess
 		exec($query, $output);
 		if(count($output) > 0)
 		{
-			$reportFileName = $copyDir. "/report_" . time() . ".txt";
+			$reportFileName = $copyDir. "report_" . time() . ".txt";
 			file_put_contents($reportFileName, implode("\n", $output));
 			static::report(Loc::getMessage("INTERVOLGA_MIGRATO.REPORT_FILE", array("#FILE#" => $reportFileName)), "ok");
 		}
