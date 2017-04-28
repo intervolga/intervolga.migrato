@@ -1,5 +1,7 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
+use Bitrix\Main\Localization\CultureTable;
+
 class GenerationData extends BaseProcess
 {
 	public static function run()
@@ -10,11 +12,38 @@ class GenerationData extends BaseProcess
 
 	/********************************************************** Main ***************************************************/
 
-	public static function createMainGroup($count = 2) {
-
+	public static function createMainGroup($count = 2)
+	{
+		for($i = 0; $i < $count; $i++)
+		{
+			$group = new \CGroup();
+			$name = static::generateRandom("STRING0-10");
+			$group->Add(array(
+				"ACTIVE"       => static::generateRandom("STRING_BOOL"),
+				"C_SORT"       => static::generateRandom("NUMBER0-100"),
+				"NAME"         => $name,
+				"DESCRIPTION"  => implode(" ", str_split(static::generateRandom("STRING0-100"), rand(3, 6))),
+				"STRING_ID"    => $name
+			));
+		}
 	}
 
-	public static function createMainCulture($count = 2) {}
+	public static function createMainCulture($count = 2) {
+		for($i = 0; $i < $count; $i++)
+		{
+			$name = strtolower(static::generateRandom("STRING0-2"));
+			CultureTable::add(array(
+				"NAME"              => $name,
+				"CODE"              => $name,
+				"FORMAT_DATE"       => "MM/DD/YYYY",
+				"FORMAT_DATETIME"   => "MM/DD/YYYY H:MI:SS T",
+				"FORMAT_NAME"       => "#NAME# #LAST_NAME#",
+				"WEEK_START"        => static::generateRandom("NUMBER0-6"),
+				"CHARSET"           => "UTF-8",
+				"DIRECTION"         => static::generateRandom("BOOL"),
+			));
+		}
+	}
 
 	public static function createMainLanguage($count = 2) {}
 
