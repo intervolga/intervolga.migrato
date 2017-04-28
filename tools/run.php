@@ -58,6 +58,7 @@ $processes = array(
 	"reindex"           => "\\Intervolga\\Migrato\\Tool\\Process\\Reindex",
 	"reindexurlrewrite" => "\\Intervolga\\Migrato\\Tool\\Process\\ReindexUrlRewriter",
 	"unittest"          => "\\Intervolga\\Migrato\\Tool\\Process\\UnitTest",
+	"generationdata"    => "\\Intervolga\\Migrato\\Tool\\Process\\GenerationData",
 );
 $encodingUtf8 = false;
 $cmdProcess = $argv[1];

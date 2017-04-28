@@ -23,15 +23,15 @@ class UnitTest extends BaseProcess
 	protected static function beforeImport()
 	{
 		static::report(Loc::getMessage("INTERVOLGA_MIGRATO.BEFORE_IMPORT"), "info");
-		AutoFix::run();
-		ExportData::run();
+		AutoFix::autofix();
+		ExportData::export();
 	}
 
 	protected static function copyData()
 	{
 		static::report(Loc::getMessage("INTERVOLGA_MIGRATO.COPY_MIGRATION_DATA"), "info");
-		$copyDir = preg_replace("/\/$/", "_old", INTERVOLGA_MIGRATO_DIRECTORY);
-		DeleteDirFilesEx($copyDir);
+		$copyDir = preg_replace("/\/$/", "_old/", INTERVOLGA_MIGRATO_DIRECTORY);
+		Directory::deleteDirectory($copyDir);
 
 		CopyDirFiles(INTERVOLGA_MIGRATO_DIRECTORY, $copyDir, false, true);
 	}
@@ -39,27 +39,26 @@ class UnitTest extends BaseProcess
 	protected static function importExportData()
 	{
 		static::report(Loc::getMessage("INTERVOLGA_MIGRATO.IMPORT_EXPORT"), "info");
-		ImportData::run();
-		ExportData::run();
+		ImportData::import();
+		ExportData::export();
 	}
 
 	protected static function compareDirectories()
 	{
 		static::startStep(Loc::getMessage("INTERVOLGA_MIGRATO.COMPARE_DIRECTORIES"));
-		$copyDir = preg_replace("/\/$/", "_old", INTERVOLGA_MIGRATO_DIRECTORY);
+		$copyDir = preg_replace("/\/$/", "_old/", INTERVOLGA_MIGRATO_DIRECTORY);
 		$query = "diff --suppress-common-lines -cr " . INTERVOLGA_MIGRATO_DIRECTORY . " " . $copyDir;
 		$output = array();
-		$returnVar = null;
-		exec($query, $output, $returnVar);
-		if($returnVar)
+		exec($query, $output);
+		if(count($output) > 0)
 		{
-			$reportFileName = $copyDir. "/report_" . time() . ".txt";
+			$reportFileName = $copyDir. "report_" . time() . ".txt";
 			file_put_contents($reportFileName, implode("\n", $output));
 			static::report(Loc::getMessage("INTERVOLGA_MIGRATO.REPORT_FILE", array("#FILE#" => $reportFileName)), "ok");
 		}
 		else
 		{
-			static::report(Loc::getMessage("INTERVOLGA_MIGRATO.ERROR_WRITE_FILE"), "fail");
+			static::report(Loc::getMessage("INTERVOLGA_MIGRATO.ERROR_WRITE_FILE"), "ok");
 		}
 	}
 }
