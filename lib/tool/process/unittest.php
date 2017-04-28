@@ -11,6 +11,7 @@ class UnitTest extends BaseProcess
 	public static function run()
 	{
 		parent::run();
+
 		static::beforeImport();
 		static::copyData();
 		static::importExportData();
@@ -21,14 +22,14 @@ class UnitTest extends BaseProcess
 
 	protected static function beforeImport()
 	{
-		static::startStep(Loc::getMessage("INTERVOLGA_MIGRATO.BEFORE_IMPORT"));
+		static::report(Loc::getMessage("INTERVOLGA_MIGRATO.BEFORE_IMPORT"), "info");
 		AutoFix::run();
 		ExportData::run();
 	}
 
 	protected static function copyData()
 	{
-		static::startStep(Loc::getMessage("INTERVOLGA_MIGRATO.COPY_MIGRATION_DATA"));
+		static::report(Loc::getMessage("INTERVOLGA_MIGRATO.COPY_MIGRATION_DATA"), "info");
 		$copyDir = preg_replace("/\/$/", "_old", INTERVOLGA_MIGRATO_DIRECTORY);
 		DeleteDirFilesEx($copyDir);
 
@@ -37,7 +38,7 @@ class UnitTest extends BaseProcess
 
 	protected static function importExportData()
 	{
-		static::startStep(Loc::getMessage("INTERVOLGA_MIGRATO.IMPORT_EXPORT"));
+		static::report(Loc::getMessage("INTERVOLGA_MIGRATO.IMPORT_EXPORT"), "info");
 		ImportData::run();
 		ExportData::run();
 	}
@@ -54,7 +55,7 @@ class UnitTest extends BaseProcess
 		{
 			$reportFileName = $copyDir. "/report_" . time() . ".txt";
 			file_put_contents($reportFileName, implode("\n", $output));
-			static::report(Loc::getMessage("INTERVOLGA_MIGRATO.REPORT_FILE"), "ok");
+			static::report(Loc::getMessage("INTERVOLGA_MIGRATO.REPORT_FILE", array("#FILE#" => $reportFileName)), "ok");
 		}
 		else
 		{
