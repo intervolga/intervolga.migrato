@@ -1,6 +1,7 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
 use Bitrix\Main\Localization\CultureTable;
+use Bitrix\Main\Localization\LanguageTable;
 
 class GenerationData extends BaseProcess
 {
@@ -22,7 +23,7 @@ class GenerationData extends BaseProcess
 				"ACTIVE"       => static::generateRandom("STRING_BOOL"),
 				"C_SORT"       => static::generateRandom("NUMBER0-100"),
 				"NAME"         => $name,
-				"DESCRIPTION"  => implode(" ", str_split(static::generateRandom("STRING0-100"), rand(3, 6))),
+				"DESCRIPTION"  => static::generateRandom("TEXT0-100"),
 				"STRING_ID"    => $name
 			));
 		}
@@ -45,7 +46,20 @@ class GenerationData extends BaseProcess
 		}
 	}
 
-	public static function createMainLanguage($count = 2) {}
+	public static function createMainLanguage($count = 2)
+	{
+		$cultures = static::collectIds(CultureTable::getList(array("select" => "ID")));
+		for($i = 0; $i < $count; $i++)
+		{
+			LanguageTable::add(array(
+				'SORT'      => static::generateRandom("NUMBER0-100"),
+				'DEF'       => static::generateRandom("STRING_BOOL"),
+				'ACTIVE'    => static::generateRandom("STRING_BOOL"),
+				'NAME'      => static::generateRandom("STRING0-10"),
+				'CULTURE_ID'=> $cultures[rand(0, count($cultures) - 1)],
+			));
+		}
+	}
 
 	public static function createMainSite($count = 2) {}
 
@@ -126,6 +140,14 @@ class GenerationData extends BaseProcess
 					$result .= static::$characters[rand(0, strlen(static::$characters) - 1)];
 				}
 			}
+			elseif(strstr($randomType, "TEXT") !== false)
+			{
+				for($i = 0; $i < $count; $i++)
+				{
+					$result .= static::$characters[rand(0, strlen(static::$characters) - 1)];
+				}
+				$result = implode(" ", str_split($result, rand(3, 6)));
+			}
 			elseif(strstr($randomType, "NUMBER") !== false)
 			{
 				$result = rand(0, $count);
@@ -141,5 +163,18 @@ class GenerationData extends BaseProcess
 
 		}
 		return $result;
+	}
+
+	/**
+	 * @param $rsCollection \Bitrix\Main\DB\Result
+	 */
+	public static function collectIds($rsCollection)
+	{
+		$ids = array();
+		while($arItem = $rsCollection->Fetch())
+		{
+			$ids[] = $arItem["ID"];
+		}
+		return $ids;
 	}
 }
