@@ -9,13 +9,16 @@ use Bitrix\Main\Mail\Internal\EventTypeTable;
 use Bitrix\Main\SiteTable;
 use Bitrix\Main\SiteTemplateTable;
 use Bitrix\Main\Loader;
+use Bitrix\Sale\Internals\OrderPropsTable;
+use Bitrix\Sale\Internals\OrderPropsVariantTable;
+use Bitrix\Sale\Internals\PersonTypeTable;
 
 class GenerationData extends BaseProcess
 {
 	public static function run()
 	{
 		parent::run();
-		/*static::createMainGroup();
+		static::createMainGroup();
 		static::createMainCulture();
 		static::createMainLanguage();
 		static::createMainSite();
@@ -23,7 +26,7 @@ class GenerationData extends BaseProcess
 		static::createMainEventType();
 		static::createMainEvent();
 
-		if(\CModule::IncludeModule("iblock"))
+		if(Loader::IncludeModule("iblock"))
 		{
 			static::createIBlockType();
 			static::createIBlockIBlock();
@@ -32,12 +35,24 @@ class GenerationData extends BaseProcess
 			static::createIBlockProperty();
 			static::createIBlockPropertyEnum();
 		}
-		*/
 		if(Loader::IncludeModule("highloadblock"))
 		{
 			static::createHighLoadBlock();
-			//static::createHighLoadField();
-			//static::createHighLoadFieldEnum();
+			static::createHighLoadField();
+			static::createHighLoadFieldEnum();
+		}
+
+		if(Loader::IncludeModule("sale"))
+		{
+			static::createSalePersonType();
+			static::createSalePropertyGroup();
+			static::createSaleProperty();
+			static::createSalePropertyVariant();
+		}
+
+		if(Loader::IncludeModule("catalog"))
+		{
+			static::createCatalogPriceType();
 		}
 
 		parent::finalReport();
@@ -316,7 +331,7 @@ class GenerationData extends BaseProcess
 			if(!$id)
 			{
 				global $APPLICATION;
-				static::report("Exception: " . $APPLICATION->GetException()->GetString(),"warning");
+				static::report("Exception: " . $APPLICATION->GetException()->GetString(), "warning");
 			}
 		}
 	}
@@ -391,34 +406,139 @@ class GenerationData extends BaseProcess
 
 	/******************************************************** Sale *****************************************************/
 
-	public static function createSalePersonType($count = 10)
+	public static function createSalePersonType($count = 1)
 	{
 		static::startStep(__FUNCTION__);
+		$sites = static::collectIds(SiteTable::getList(array("select" => array("LID"))), "LID");
+		for($i = 0; $i < $count; $i++)
+		{
+			$object = new \CSalePersonType();
+			$id = $object->add(array(
+				'NAME'      => static::generateRandom("STRING0-10"),
+				'SORT'      => static::generateRandom("NUMBER0-100"),
+				'ACTIVE'    => static::generateRandom("STRING_BOOL"),
+				'LID'       => static::generateRandom("FROM_LIST", $sites),
+			));
+			static::report("sale:personType №" . $i, $id ? "ok" : "fail");
+			global $APPLICATION;
+			if(!$id && $APPLICATION->GetException())
+			{
+				static::report("Exception: " . $APPLICATION->GetException()->GetString(), "warning");
+			}
+		}
 	}
 
-	public static function createSalePropertyGroup($count = 10)
+	public static function createSalePropertyGroup($count = 1)
 	{
 		static::startStep(__FUNCTION__);
+		$types = static::collectIds(PersonTypeTable::getList(array("select" => array("ID"))));
+		for($i = 0; $i < $count; $i++)
+		{
+			$object = new \CSaleOrderPropsGroup();
+			$id = $object->add(array(
+				"PERSON_TYPE_ID"    => static::generateRandom("FROM_LIST", $types),
+				"NAME"              => ucfirst(strtolower(static::generateRandom("STRING0-10"))),
+				"SORT"              => static::generateRandom("NUMBER0-100"),
+			));
+			static::report("sale:propertyGroup №" . $i, $id ? "ok" : "fail");
+			global $APPLICATION;
+			if (!$id && $APPLICATION->getException())
+			{
+				throw new \Exception($APPLICATION->getException()->getString());
+			}
+		}
+	}
+
+	public static function createSaleProperty($count = 1)
+	{
+		static::startStep(__FUNCTION__);
+		$types = static::collectIds(PersonTypeTable::getList(array("select" => array("ID"))));
+		$obPropsGroup = new \CSaleOrderPropsGroup;
+		$propsGroup = static::collectIds($obPropsGroup->getList(array(), array(), false, false, array("ID")));
+		for($i = 0; $i < $count; $i++)
+		{
+			$name = ucfirst(strtolower(static::generateRandom("STRING0-10")));
+			$type = static::generateRandom("FROM_LIST", array("CHECKBOX", "TEXT", "TEXTAREA", "RADIO"));
+			$result = OrderPropsTable::add(array(
+				"PERSON_TYPE_ID"    => static::generateRandom("FROM_LIST", $types),
+				"PROPS_GROUP_ID"    => static::generateRandom("FROM_LIST", $propsGroup),
+				"NAME"              => $name,
+				"CODE"              => $name,
+				"TYPE"              => $type,
+				"REQUIRED"          => static::generateRandom("STRING_BOOL"),
+				"SORT"              => static::generateRandom("NUMBER0-100"),
+				"USER_PROPS"        => static::generateRandom("STRING_BOOL"),
+				"IS_LOCATION"       => "N",
+				"DESCRIPTION"       => static::generateRandom("TEXT0-100"),
+				"IS_EMAIL"          => static::generateRandom("STRING_BOOL"),
+				"IS_PROFILE_NAME"   => static::generateRandom("STRING_BOOL"),
+				"IS_PAYER"          => static::generateRandom("STRING_BOOL"),
+				"IS_LOCATION4TAX"   => static::generateRandom("STRING_BOOL"),
+				"IS_FILTERED"       => static::generateRandom("STRING_BOOL"),
+				"IS_ZIP"            => static::generateRandom("STRING_BOOL"),
+				"IS_PHONE"          => static::generateRandom("STRING_BOOL"),
+				"IS_ADDRESS"        => static::generateRandom("STRING_BOOL"),
+				"ACTIVE"            => static::generateRandom("STRING_BOOL"),
+				"UTIL"              => static::generateRandom("STRING_BOOL"),
+				"MULTIPLE"          => "N",
+			));
+			static::report("sale:property №" . $i, $result->isSuccess() ? "ok" : "fail");
+			if (!$result->isSuccess())
+			{
+				throw new \Exception(implode("<br>", $result->getErrorMessages()));
+			}
+		}
 
 	}
 
-	public static function createSaleProperty($count = 10)
+	public static function createSalePropertyVariant($count = 1)
 	{
 		static::startStep(__FUNCTION__);
-
-	}
-
-	public static function createSalePropertyVariant($count = 10)
-	{
-		static::startStep(__FUNCTION__);
-
+		/*for($i = 0; $i < $count; $i++)
+		{
+			$result = OrderPropsVariantTable::add(array(
+				"ORDER_PROPS_ID" => $variant["SORT"],
+				"NAME" => $variant["NAME"],
+				"VALUE" => $variant["VALUE"],
+				"SORT" => $variant["SORT"],
+				"DESCRIPTION" => $variant["DESCRIPTION"],
+			));
+			static::report("sale:propertyVariant №" . $i, $result->isSuccess() ? "ok" : "fail");
+			if (!$result->isSuccess())
+			{
+				throw new \Exception(implode("<br>", $addResult->getErrorMessages()));
+			}
+		}*/
 	}
 
 	/***************************************************** Catalog *****************************************************/
 
-	public static function createCatalogPriceType($count = 10)
+	public static function createCatalogPriceType($count = 1)
 	{
 		static::startStep(__FUNCTION__);
+		for($i = 0; $i < $count; $i++)
+		{
+			$object = new \CCatalogGroup();
+			$name = strtoupper(static::generateRandom("STRING0-5"));
+			$id = $object->add(array(
+				"NAME"              => $name,
+				"XML_ID"            => $name,
+				"BASE"              => "N",
+				"SORT"              => static::generateRandom("NUMBER0-100"),
+				"USER_GROUP"        => array(1),
+				"USER_GROUP_BUY"    => array(1),
+				"USER_LANG"         => array(
+					"en" => static::generateRandom("STRING0-5"),
+					"ru" => static::generateRandom("STRING0-5"),
+				)
+			));
+			static::report("catalog:pricetype №" . $i, $id ? "ok" : "fail");
+			global $APPLICATION;
+			if (!$id && $APPLICATION->getException())
+			{
+				static::report("Exception: " . $APPLICATION->GetException()->GetString(), "warning");
+			}
+		}
 	}
 
 	/************************************************ Class methods ****************************************************/
