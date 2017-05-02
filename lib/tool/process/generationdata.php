@@ -1,5 +1,6 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
+use Bitrix\Highloadblock\HighloadBlockTable;
 use Bitrix\Iblock\IblockTable;
 use Bitrix\Iblock\TypeTable;
 use Bitrix\Main\Localization\CultureTable;
@@ -7,13 +8,14 @@ use Bitrix\Main\Localization\LanguageTable;
 use Bitrix\Main\Mail\Internal\EventTypeTable;
 use Bitrix\Main\SiteTable;
 use Bitrix\Main\SiteTemplateTable;
+use Bitrix\Main\Loader;
 
 class GenerationData extends BaseProcess
 {
 	public static function run()
 	{
 		parent::run();
-		static::createMainGroup();
+		/*static::createMainGroup();
 		static::createMainCulture();
 		static::createMainLanguage();
 		static::createMainSite();
@@ -30,6 +32,14 @@ class GenerationData extends BaseProcess
 			static::createIBlockProperty();
 			static::createIBlockPropertyEnum();
 		}
+		*/
+		if(Loader::IncludeModule("highloadblock"))
+		{
+			static::createHighLoadBlock();
+			//static::createHighLoadField();
+			//static::createHighLoadFieldEnum();
+		}
+
 		parent::finalReport();
 	}
 
@@ -325,12 +335,11 @@ class GenerationData extends BaseProcess
 		{
 			$obIBlockProperty = new \CIBlockProperty();
 			$name = static::generateRandom("STRING0-10");
-			$iblock = $iblocks[rand(0, count($iblocks) - 1)];
 			$id = $obIBlockProperty->Add(array(
 				"CODE"              => $name,
 				"NAME"              => $name,
 				"XML_ID"            => $name,
-				"IBLOCK_ID"         => $iblock,
+				"IBLOCK_ID"         => static::generateRandom("FROM_LIST", $iblocks),
 				"IS_REQUIRED"       => static::generateRandom("STRING_BOOL"),
 				"ACTIVE"            => static::generateRandom("STRING_BOOL"),
 				"SORT"              => static::generateRandom("NUMBER0-100"),
@@ -348,9 +357,23 @@ class GenerationData extends BaseProcess
 
 	/************************************************** Highloadblock ***************************************************/
 
-	public static function createHighLoadBlock($count = 10)
+	public static function createHighLoadBlock($count = 1)
 	{
 		static::startStep(__FUNCTION__);
+		for($i = 0; $i < $count; $i++)
+		{
+			$name = static::generateRandom("STRING0-10");
+			$result = HighloadBlockTable::add(array(
+				"NAME"          => ucfirst(strtolower($name)),
+				"TABLE_NAME"    => strtolower($name),
+			));
+
+			static::report("hlblock:hlblock №" . $i, $result->isSuccess() ? "ok" : "fail");
+			if (!$result->isSuccess())
+			{
+				static::report("Exception: " . implode(",", $result->getErrorMessages()), "warning");
+			}
+		}
 
 	}
 
