@@ -1,8 +1,12 @@
 <? namespace Intervolga\Migrato\Tool\Process;
 
+use Bitrix\Iblock\IblockTable;
+use Bitrix\Iblock\TypeTable;
 use Bitrix\Main\Localization\CultureTable;
 use Bitrix\Main\Localization\LanguageTable;
 use Bitrix\Main\Mail\Internal\EventTypeTable;
+use Bitrix\Main\SiteTable;
+use Bitrix\Main\SiteTemplateTable;
 
 class GenerationData extends BaseProcess
 {
@@ -12,11 +16,20 @@ class GenerationData extends BaseProcess
 		static::createMainGroup();
 		static::createMainCulture();
 		static::createMainLanguage();
-		//static::createMainSite();
+		static::createMainSite();
 		static::createMainSiteTemplate();
 		static::createMainEventType();
 		static::createMainEvent();
 
+		if(\CModule::IncludeModule("iblock"))
+		{
+			static::createIBlockType();
+			static::createIBlockIBlock();
+			static::createIBlockField();
+			static::createIBlockFieldEnum();
+			static::createIBlockProperty();
+			static::createIBlockPropertyEnum();
+		}
 		parent::finalReport();
 	}
 
@@ -75,14 +88,13 @@ class GenerationData extends BaseProcess
 		$cultures = static::collectIds(CultureTable::getList(array("select" => array("ID"))));
 		for($i = 0; $i < $count; $i++)
 		{
-			$culture = $cultures[rand(0, count($cultures) - 1)];
 			$id = LanguageTable::add(array(
 				'LID'       => static::generateRandom("STRING0-2"),
 				'SORT'      => static::generateRandom("NUMBER0-100"),
 				'DEF'       => static::generateRandom("STRING_BOOL"),
 				'ACTIVE'    => static::generateRandom("STRING_BOOL"),
 				'NAME'      => static::generateRandom("STRING0-10"),
-				'CULTURE_ID'=> $cultures[rand(0, count($cultures) - 1)],
+				'CULTURE_ID'=> static::generateRandom("FROM_LIST", $cultures),
 			));
 			static::report("main:culture №" . $i, $id ? "ok" : "fail");
 			if(!$id)
@@ -93,15 +105,48 @@ class GenerationData extends BaseProcess
 		}
 	}
 
-	public static function createMainSite($count = 2)
+	public static function createMainSite($count = 1)
 	{
 		static::startStep(__FUNCTION__);
-
+		for($i = 0; $i < $count; $i++)
+		{
+			$lid = strtolower(static::generateRandom("STRING0-2"));
+			$result = SiteTable::add(array(
+				"LID" => $lid,
+				'SORT' => static::generateRandom("NUMBER0-100"),
+				'DEF' => static::generateRandom("STRING_BOOL"),
+				'ACTIVE' => static::generateRandom("STRING_BOOL"),
+				'NAME' => static::generateRandom("TEXT0-20"),
+				'DIR' => "/" . static::generateRandom("STRING0-6"),
+				'DOMAIN_LIMITED' => "N",
+				'SITE_NAME' => static::generateRandom("TEXT0-20"),
+			));
+			static::report("main:site №" . $i, $result->isSuccess() ? "ok" : "fail");
+			if(!$result->isSuccess())
+			{
+				static::report("Exception: " . $result->getErrorMessages(),"warning");
+			}
+		}
 	}
 
-	public static function createMainSiteTemplate($count = 2)
+	public static function createMainSiteTemplate($count = 1)
 	{
 		static::startStep(__FUNCTION__);
+		$sites = static::collectIds(SiteTable::getList(array("select" => array("LID"))), "LID");
+		for($i = 0; $i < $count; $i++)
+		{
+			$result = SiteTemplateTable::add(array(
+				"SITE_ID"   => static::generateRandom("FROM_LIST", $sites),
+				"CONDITION" => "",
+				"SORT"      => static::generateRandom("NUMBER0-100"),
+				"TEMPLATE"  => static::generateRandom("STRING0-15"),
+			));
+			static::report("main:siteTemplate №" . $i, $result->isSuccess() ? "ok" : "fail");
+			if(!$result->isSuccess())
+			{
+				static::report("Exception: " . $result->getErrorMessages(), "warning");
+			}
+		}
 	}
 
 	public static function createMainEventType($count = 2)
@@ -112,10 +157,8 @@ class GenerationData extends BaseProcess
 		{
 			$et = new \CEventType();
 			$name = static::generateRandom("STRING0-10");
-			$rand = rand(0, count($languages) - 1);
-			$lang = $languages[$rand];
 			$id = $et->Add(array(
-				"LID"           => $lang,
+				"LID"           => static::generateRandom("FROM_LIST", $languages),
 				"EVENT_NAME"    => $name,
 				"NAME"          => $name,
 				"SORT"          => static::generateRandom("NUMBER0-100"),
@@ -133,23 +176,26 @@ class GenerationData extends BaseProcess
 	public static function createMainEvent($count = 2)
 	{
 		static::startStep(__FUNCTION__);
-		$eventTypes = static::collectIds(EventTypeTable::getList(array("select" => array("ID"))));
+		$eventTypes = static::collectIds(EventTypeTable::getList(array("select" => array("EVENT_NAME"))), "EVENT_NAME");
+		$sites = static::collectIds(SiteTable::getList(array("select" => array("LID"))), "LID");
 		for($i = 0; $i < $count; $i++)
 		{
 			$et = new \CEventMessage();
-			$id = $et->Add(array(
-				"EVENT_NAME"    => $eventTypes[rand(0, count($eventTypes) - 1)],
+			$fields = array(
+				"EVENT_NAME"    => static::generateRandom("FROM_LIST", $eventTypes),
+				"LID"           => array(static::generateRandom("FROM_LIST", $sites)),
 				"ACTIVE"        => static::generateRandom("STRING_BOOL"),
-				"MESSAGE"       => static::generateRandom("TEXT0-200"),
-				"IN_REPLY_TO"   => static::generateRandom("TEXT0-30"),
+				"EMAIL_FROM"    => "#DEFAULT_EMAIL_FROM#",
+				"EMAIL_TO"      => "#DEFAULT_EMAIL_FROM#",
 				"BODY_TYPE"     => "text",
-				"SITE_ID"       => SITE_ID,
-				"PRIORITY"      => static::generateRandom("NUMBER0-5"),
-			));
+				"SUBJECT"       => static::generateRandom("TEXT0-20"),
+				"MESSAGE"       => static::generateRandom("TEXT0-200"),
+			);
+			$id = $et->Add($fields);
 			static::report("main:event №" . $i, $id ? "ok" : "fail");
-			if(!$id)
+			global $APPLICATION;
+			if(!$id && $APPLICATION->GetException())
 			{
-				global $APPLICATION;
 				static::report("Exception: " . $APPLICATION->GetException()->GetString(),"warning");
 			}
 		}
@@ -157,7 +203,7 @@ class GenerationData extends BaseProcess
 
 	/******************************************************** Iblock ***************************************************/
 
-	public static function createIBlockType($count = 5)
+	public static function createIBlockType($count = 1)
 	{
 		static::startStep(__FUNCTION__);
 		for($i = 0; $i < $count; $i++)
@@ -177,32 +223,125 @@ class GenerationData extends BaseProcess
 					)
 				)
 			));
-			static::report("main:culture №" . $i, $id ? "ok" : "fail");
+			static::report("iblock:type №" . $i, $id ? "ok" : "fail");
+			if(!$id)
+			{
+				global $APPLICATION;
+				static::report("Exception: " . $APPLICATION->GetException()->GetString(),"warning");
+			}
 		}
 	}
 
 
-	public static function createIBlockIBlock($count = 10)
+	public static function createIBlockIBlock($count = 1)
 	{
 		static::startStep(__FUNCTION__);
+		$types = static::collectIds(TypeTable::getList(array("select" => array("ID"))));
+		for($i = 0; $i < $count; $i++)
+		{
+			$obBlock = new \CIBlock();
+			$name = static::generateRandom("STRING0-10");
+			$rand = rand(0, count($types) - 1);
+			$iblockType = $types[$rand];
+			$id = $obBlock->Add(array(
+				"CODE"              => $name,
+				"NAME"              => $name,
+				"IBLOCK_TYPE_ID"    => $iblockType,
+				"ACTIVE"            => static::generateRandom("STRING_BOOL"),
+				"SORT"              => static::generateRandom("NUMBER0-100"),
+				"DESCRIPTION"       => static::generateRandom("TEXT0-200"),
+				"DESCRIPTION_TYPE"  => "text",
+				"RSS_ACTIVE"        => "N",
+				"INDEX_ELEMENT"     => static::generateRandom("STRING_BOOL"),
+				"INDEX_SECTION"     => static::generateRandom("STRING_BOOL"),
+			));
+			static::report("iblock:iblock №" . $i, $id ? "ok" : "fail");
+			global $APPLICATION;
+			if(!$id && $APPLICATION->GetException())
+			{
+				static::report("Exception: " . $APPLICATION->GetException()->GetString(), "warning");
+			}
+		}
 	}
 
-	public static function createIBlockField($count = 10)
+	public static function createIBlockField($count = 1)
 	{
 		static::startStep(__FUNCTION__);
+		$iblocks = static::collectIds(IblockTable::getList(array("select" => array("ID"))));
+		for($i = 0; $i < $count; $i++)
+		{
+			$obIBlockField = new \CUserTypeEntity();
+			$name = static::generateRandom("STRING0-10");
+			$id = $obIBlockField->Add(array(
+				"FIELD_NAME"        => "UF_" . $name,
+				"XML_ID"            => $name,
+				"ENTITY_ID"         => "IBLOCK_" . static::generateRandom("FROM_LIST", $iblocks) . "_SECTION",
+				"MANDATORY"         => static::generateRandom("STRING_BOOL"),
+				"ACTIVE"            => static::generateRandom("STRING_BOOL"),
+				"MULTIPLE"          => "N",
+				"SORT"              => static::generateRandom("NUMBER0-100"),
+				"USER_TYPE_ID"      => static::generateRandom("FROM_LIST", array("enumeration", "double", "integer", "boolean", "string")),
+				'EDIT_FORM_LABEL'   => array(
+					'ru'    => static::generateRandom("TEXT0-10"),
+					'en'    => static::generateRandom("TEXT0-10"),
+				),
+				'LIST_COLUMN_LABEL' => array(
+					'ru'    => static::generateRandom("TEXT0-10"),
+					'en'    => static::generateRandom("TEXT0-10"),
+				),
+				'LIST_FILTER_LABEL' => array(
+					'ru'    => static::generateRandom("TEXT0-10"),
+					'en'    => static::generateRandom("TEXT0-10"),
+				),
+				'ERROR_MESSAGE'     => array(
+					'ru'    => static::generateRandom("TEXT0-10"),
+					'en'    => static::generateRandom("TEXT0-10"),
+				),
+				'HELP_MESSAGE'      => array(
+					'ru'    => static::generateRandom("TEXT0-10"),
+					'en'    => static::generateRandom("TEXT0-10"),
+				),
+			));
+			static::report("iblock:field №" . $i, $id ? "ok" : "fail");
+			if(!$id)
+			{
+				global $APPLICATION;
+				static::report("Exception: " . $APPLICATION->GetException()->GetString(),"warning");
+			}
+		}
 	}
 
-	public static function createIBlockFieldEnum($count = 10)
+	public static function createIBlockFieldEnum($count = 1)
 	{
 		static::startStep(__FUNCTION__);
+
 	}
 
-	public static function createIBlockProperty($count = 10)
+	public static function createIBlockProperty($count = 1)
 	{
 		static::startStep(__FUNCTION__);
+		$iblocks = static::collectIds(IblockTable::getList(array("select" => array("ID"))));
+		for($i = 0; $i < $count; $i++)
+		{
+			$obIBlockProperty = new \CIBlockProperty();
+			$name = static::generateRandom("STRING0-10");
+			$iblock = $iblocks[rand(0, count($iblocks) - 1)];
+			$id = $obIBlockProperty->Add(array(
+				"CODE"              => $name,
+				"NAME"              => $name,
+				"XML_ID"            => $name,
+				"IBLOCK_ID"         => $iblock,
+				"IS_REQUIRED"       => static::generateRandom("STRING_BOOL"),
+				"ACTIVE"            => static::generateRandom("STRING_BOOL"),
+				"SORT"              => static::generateRandom("NUMBER0-100"),
+				"PROPERTY_TYPE"     => static::generateRandom("FROM_LIST", array("S", "N")),
+				"WITH_DESCRIPTION"  => static::generateRandom("STRING_BOOL"),
+			));
+			static::report("iblock:property №" . $i, $id ? "ok" : "fail");
+		}
 	}
 
-	public static function createIBlockPropertyEnum($count = 10)
+	public static function createIBlockPropertyEnum($count = 1)
 	{
 		static::startStep(__FUNCTION__);
 	}
@@ -263,39 +402,39 @@ class GenerationData extends BaseProcess
 
 	private static $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-	public static function generateRandom($randomType) {
+	public static function generateRandom($randomType, $list = array()) {
 		$count = intval(preg_replace("/.*\-/", "" ,$randomType));
 		$result = "";
-		if($count != 0)
+		if(strstr($randomType, "STRING") !== false)
 		{
-			if(strstr($randomType, "STRING") !== false)
+			for($i = 0; $i < $count; $i++)
 			{
-				for($i = 0; $i < $count; $i++)
-				{
-					$result .= static::$characters[rand(0, strlen(static::$characters) - 1)];
-				}
+				$result .= static::$characters[rand(0, strlen(static::$characters) - 1)];
 			}
-			elseif(strstr($randomType, "TEXT") !== false)
+		}
+		elseif(strstr($randomType, "TEXT") !== false)
+		{
+			for($i = 0; $i < $count; $i++)
 			{
-				for($i = 0; $i < $count; $i++)
-				{
-					$result .= static::$characters[rand(0, strlen(static::$characters) - 1)];
-				}
-				$result = implode(" ", str_split($result, rand(3, 6)));
+				$result .= static::$characters[rand(0, strlen(static::$characters) - 1)];
 			}
-			elseif(strstr($randomType, "NUMBER") !== false)
-			{
-				$result = rand(0, $count);
-			}
-			elseif(strstr($randomType, "BOOL") !== false)
-			{
-				$result = !!rand(0, 1);
-			}
-			elseif(strstr($randomType, "STRING_BOOL") !== false)
-			{
-				$result = rand(0, 1) ? "Y" : "N";
-			}
-
+			$result = implode(" ", str_split($result, rand(3, 9)));
+		}
+		elseif(strstr($randomType, "NUMBER") !== false)
+		{
+			$result = rand(0, $count);
+		}
+		elseif(strstr($randomType, "BOOL") !== false)
+		{
+			$result = !!rand(0, 1);
+		}
+		elseif(strstr($randomType, "STRING_BOOL") !== false)
+		{
+			$result = rand(0, 1) ? "Y" : "N";
+		}
+		elseif($randomType == "FROM_LIST")
+		{
+			$result = $list[rand(0, count($list) - 1)];
 		}
 		return $result;
 	}
@@ -303,12 +442,12 @@ class GenerationData extends BaseProcess
 	/**
 	 * @param $rsCollection \Bitrix\Main\DB\Result
 	 */
-	public static function collectIds($rsCollection)
+	public static function collectIds($rsCollection, $field = "ID")
 	{
 		$ids = array();
 		while($arItem = $rsCollection->Fetch())
 		{
-			$ids[] = $arItem["ID"];
+			$ids[] = $arItem[$field];
 		}
 		return $ids;
 	}
