@@ -21,7 +21,7 @@ class GenerationData extends BaseProcess
 		static::createMainGroup();
 		static::createMainCulture();
 		static::createMainLanguage();
-		static::createMainSite();
+		//static::createMainSite();
 		static::createMainSiteTemplate();
 		static::createMainEventType();
 		static::createMainEvent();
@@ -262,16 +262,16 @@ class GenerationData extends BaseProcess
 	{
 		static::startStep(__FUNCTION__);
 		$types = static::collectIds(TypeTable::getList(array("select" => array("ID"))));
+		$sites = static::collectIds(SiteTable::getList(array("select" => array("LID"))), "LID");
 		for($i = 0; $i < $count; $i++)
 		{
 			$obBlock = new \CIBlock();
 			$name = static::generateRandom("STRING0-10");
-			$rand = rand(0, count($types) - 1);
-			$iblockType = $types[$rand];
-			$id = $obBlock->Add(array(
+			$arField = array(
+				"IBLOCK_TYPE_ID"    => static::generateRandom("FROM_LIST", $types),
+				"SITE_ID"           => array(static::generateRandom("FROM_LIST", $sites)),
 				"CODE"              => $name,
 				"NAME"              => $name,
-				"IBLOCK_TYPE_ID"    => $iblockType,
 				"ACTIVE"            => static::generateRandom("STRING_BOOL"),
 				"SORT"              => static::generateRandom("NUMBER0-100"),
 				"DESCRIPTION"       => static::generateRandom("TEXT0-200"),
@@ -279,7 +279,8 @@ class GenerationData extends BaseProcess
 				"RSS_ACTIVE"        => "N",
 				"INDEX_ELEMENT"     => static::generateRandom("STRING_BOOL"),
 				"INDEX_SECTION"     => static::generateRandom("STRING_BOOL"),
-			));
+			);
+			$id = $obBlock->Add($arField);
 			static::report("iblock:iblock №" . $i, $id ? "ok" : "fail");
 			global $APPLICATION;
 			if(!$id && $APPLICATION->GetException())
@@ -296,7 +297,7 @@ class GenerationData extends BaseProcess
 		for($i = 0; $i < $count; $i++)
 		{
 			$obIBlockField = new \CUserTypeEntity();
-			$name = static::generateRandom("STRING0-10");
+			$name = strtoupper(static::generateRandom("STRING0-10"));
 			$id = $obIBlockField->Add(array(
 				"FIELD_NAME"        => "UF_" . $name,
 				"XML_ID"            => $name,
@@ -548,7 +549,11 @@ class GenerationData extends BaseProcess
 	public static function generateRandom($randomType, $list = array()) {
 		$count = intval(preg_replace("/.*\-/", "" ,$randomType));
 		$result = "";
-		if(strstr($randomType, "STRING") !== false)
+		if($randomType == "STRING_BOOL")
+		{
+			$result = rand(0, 1) ? "Y" : "N";
+		}
+		elseif(strstr($randomType, "STRING") !== false)
 		{
 			for($i = 0; $i < $count; $i++)
 			{
@@ -570,10 +575,6 @@ class GenerationData extends BaseProcess
 		elseif(strstr($randomType, "BOOL") !== false)
 		{
 			$result = !!rand(0, 1);
-		}
-		elseif(strstr($randomType, "STRING_BOOL") !== false)
-		{
-			$result = rand(0, 1) ? "Y" : "N";
 		}
 		elseif($randomType == "FROM_LIST")
 		{
