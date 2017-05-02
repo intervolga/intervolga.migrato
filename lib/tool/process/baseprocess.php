@@ -219,7 +219,17 @@ class BaseProcess
 
 	protected static function getModuleMessage($moduleName)
 	{
-		return Loc::getMessage("INTERVOLGA_MIGRATO.MODULE_" . strtoupper($moduleName));
+		$name = Loc::getMessage("INTERVOLGA_MIGRATO.MODULE_" . strtoupper($moduleName));
+		if (!Loc::getMessage("INTERVOLGA_MIGRATO.MODULE_" . strtoupper($moduleName)))
+		{
+			$name = Loc::getMessage(
+				"INTERVOLGA_MIGRATO.MODULE_UNKNOWN",
+				array(
+					"#MODULE#" => $moduleName,
+				)
+			);
+		}
+		return $name;
 	}
 
 	protected static function getEntityMessage($entityName)

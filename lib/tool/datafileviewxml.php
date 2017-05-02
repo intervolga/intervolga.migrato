@@ -33,7 +33,7 @@ class DataFileViewXml
 	protected static function markDataFileDeleted(File $file)
 	{
 		$content = $file->getContents();
-		$content = str_replace("<data>", "<data deleted=\"true\">", $content);
+		XmlHelper::addAttrToTags('data', array('deleted', 'true'), $content);
 		$file->putContents($content);
 	}
 
@@ -44,9 +44,9 @@ class DataFileViewXml
 	public static function write(Record $record, $path)
 	{
 		$content = "";
-		$content .= "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+		$content .= XmlHelper::xmlHeader();
 		$content .= "<data>\n";
-		$content .= static::tagValue("xml_id", $record->getXmlId(), 1);
+		$content .= XmlHelper::tagValue("xml_id", $record->getXmlId(), 1);
 		$content .= static::valuesToXml($record->getDependencies(), "dependency", 1, true);
 		$content .= static::valuesToXml($record->getReferences(), "reference", 1, true);
 		$content .= static::valuesToXml($record->getFields(), "field", 1);
@@ -55,7 +55,7 @@ class DataFileViewXml
 			if ($runtime->getFields() || $runtime->getReferences() || $runtime->getDependencies())
 			{
 				$content .= "\t<runtime>\n";
-				$content .= static::tagValue("name", $name, 2);
+				$content .= XmlHelper::tagValue("name", $name, 2);
 				$content .= static::valuesToXml($runtime->getDependencies(), "dependency", 2);
 				$content .= static::valuesToXml($runtime->getReferences(), "reference", 2);
 				$content .= static::valuesToXml($runtime->getFields(), "field", 2);
@@ -106,7 +106,7 @@ class DataFileViewXml
 						{
 							$map["description"] = $descriptions[$i];
 						}
-						$content .= static::tagMap($tag, $map, $level);
+						$content .= XmlHelper::tagMap($tag, $map, $level);
 					}
 				}
 				else
@@ -128,7 +128,7 @@ class DataFileViewXml
 						}
 					}
 
-					$content .= static::tagMap($tag, $map, $level);
+					$content .= XmlHelper::tagMap($tag, $map, $level);
 				}
 			}
 		}
@@ -371,50 +371,5 @@ class DataFileViewXml
 			return $name::getInstance();
 		}
 		return null;
-	}
-
-	/**
-	 * @param string $tag
-	 * @param array $map
-	 * @param int $level
-	 *
-	 * @return string
-	 */
-	protected static function tagMap($tag, $map = array(), $level = 0)
-	{
-		if (!$map)
-		{
-			return static::tagValue($tag, "", $level);
-		}
-		else
-		{
-			$content = "";
-			$content .= str_repeat("\t", $level) . "<$tag>\n";
-			foreach ($map as $innerTag => $value)
-			{
-				$content .= static::tagValue($innerTag, $value, $level + 1);
-			}
-			$content .= str_repeat("\t", $level) . "</$tag>\n";
-			return $content;
-		}
-	}
-
-	/**
-	 * @param string $tag
-	 * @param string $value
-	 * @param int $level
-	 *
-	 * @return string
-	 */
-	protected static function tagValue($tag, $value = "", $level = 0)
-	{
-		if (!strlen($value))
-		{
-			return str_repeat("\t", $level) . "<$tag/>\n";
-		}
-		else
-		{
-			return str_repeat("\t", $level) . "<$tag>" . htmlspecialchars($value) . "</$tag>\n";
-		}
 	}
 }
