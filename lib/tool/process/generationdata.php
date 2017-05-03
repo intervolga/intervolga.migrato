@@ -22,7 +22,7 @@ class GenerationData extends BaseProcess
 		static::createMainCulture();
 		static::createMainLanguage();
 		//static::createMainSite();
-		static::createMainSiteTemplate();
+		//static::createMainSiteTemplate();
 		static::createMainEventType();
 		static::createMainEvent();
 
@@ -240,26 +240,28 @@ class GenerationData extends BaseProcess
 		static::startStep(__FUNCTION__);
 		for($i = 0; $i < $count; $i++)
 		{
-			$obBlocktype = new \CIBlockType();
-			$id = static::generateRandom("STRING0-10");
-			$id = $obBlocktype->Add(array(
-				'ID'        => static::generateRandom("STRING0-10"),
-				'SECTIONS'  => static::generateRandom("STRING_BOOL"),
-				'IN_RSS'    => static::generateRandom("STRING_BOOL"),
-				'SORT'      => static::generateRandom("NUMBER0-1000"),
-				'LANG'      => Array(
-					'en' =>Array(
-						'NAME' => $id,
-						'SECTION_NAME' => 'Sections',
-						'ELEMENT_NAME' => 'Products'
-					)
-				)
-			));
-			static::report("iblock:type №" . $i, $id ? "ok" : "fail");
-			if(!$id)
+			try
 			{
-				global $APPLICATION;
-				static::report("Exception: " . $APPLICATION->GetException()->GetString(),"warning");
+				$obBlocktype = new \CIBlockType();
+				$id = static::generateRandom("STRING0-10");
+				$id = $obBlocktype->Add(array(
+					'ID' => static::generateRandom("STRING0-10"),
+					'SECTIONS' => static::generateRandom("STRING_BOOL"),
+					'IN_RSS' => static::generateRandom("STRING_BOOL"),
+					'SORT' => static::generateRandom("NUMBER0-1000"),
+					'LANG' => Array(
+						'en' => Array(
+							'NAME' => $id,
+							'SECTION_NAME' => 'Sections',
+							'ELEMENT_NAME' => 'Products'
+						)
+					)
+				));
+				static::report("iblock:type №" . $i, $id ? "ok" : "fail");
+			}
+			catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(),"warning");
 			}
 		}
 	}
@@ -272,27 +274,29 @@ class GenerationData extends BaseProcess
 		$sites = static::collectIds(SiteTable::getList(array("select" => array("LID"))), "LID");
 		for($i = 0; $i < $count; $i++)
 		{
-			$obBlock = new \CIBlock();
-			$name = static::generateRandom("STRING0-10");
-			$arField = array(
-				"IBLOCK_TYPE_ID"    => static::generateRandom("FROM_LIST", $types),
-				"SITE_ID"           => array(static::generateRandom("FROM_LIST", $sites)),
-				"CODE"              => $name,
-				"NAME"              => $name,
-				"ACTIVE"            => static::generateRandom("STRING_BOOL"),
-				"SORT"              => static::generateRandom("NUMBER0-100"),
-				"DESCRIPTION"       => static::generateRandom("TEXT0-200"),
-				"DESCRIPTION_TYPE"  => "text",
-				"RSS_ACTIVE"        => "N",
-				"INDEX_ELEMENT"     => static::generateRandom("STRING_BOOL"),
-				"INDEX_SECTION"     => static::generateRandom("STRING_BOOL"),
-			);
-			$id = $obBlock->Add($arField);
-			static::report("iblock:iblock №" . $i, $id ? "ok" : "fail");
-			global $APPLICATION;
-			if(!$id && $APPLICATION->GetException())
+			try
 			{
-				static::report("Exception: " . $APPLICATION->GetException()->GetString(), "warning");
+				$obBlock = new \CIBlock();
+				$name = static::generateRandom("STRING0-10");
+				$arField = array(
+					"IBLOCK_TYPE_ID" => static::generateRandom("FROM_LIST", $types),
+					"SITE_ID" => array(static::generateRandom("FROM_LIST", $sites)),
+					"CODE" => $name,
+					"NAME" => $name,
+					"ACTIVE" => static::generateRandom("STRING_BOOL"),
+					"SORT" => static::generateRandom("NUMBER0-100"),
+					"DESCRIPTION" => static::generateRandom("TEXT0-200"),
+					"DESCRIPTION_TYPE" => "text",
+					"RSS_ACTIVE" => "N",
+					"INDEX_ELEMENT" => static::generateRandom("STRING_BOOL"),
+					"INDEX_SECTION" => static::generateRandom("STRING_BOOL"),
+				);
+				$id = $obBlock->Add($arField);
+				static::report("iblock:iblock №" . $i, $id ? "ok" : "fail");
+			}
+			catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(), "warning");
 			}
 		}
 	}
@@ -303,43 +307,45 @@ class GenerationData extends BaseProcess
 		$iblocks = static::collectIds(IblockTable::getList(array("select" => array("ID"))));
 		for($i = 0; $i < $count; $i++)
 		{
-			$obIBlockField = new \CUserTypeEntity();
-			$name = strtoupper(static::generateRandom("STRING0-10"));
-			$id = $obIBlockField->Add(array(
-				"FIELD_NAME"        => "UF_" . $name,
-				"XML_ID"            => $name,
-				"ENTITY_ID"         => "IBLOCK_" . static::generateRandom("FROM_LIST", $iblocks) . "_SECTION",
-				"MANDATORY"         => static::generateRandom("STRING_BOOL"),
-				"ACTIVE"            => static::generateRandom("STRING_BOOL"),
-				"MULTIPLE"          => "N",
-				"SORT"              => static::generateRandom("NUMBER0-100"),
-				"USER_TYPE_ID"      => static::generateRandom("FROM_LIST", array("enumeration", "double", "integer", "boolean", "string")),
-				'EDIT_FORM_LABEL'   => array(
-					'ru'    => static::generateRandom("TEXT0-10"),
-					'en'    => static::generateRandom("TEXT0-10"),
-				),
-				'LIST_COLUMN_LABEL' => array(
-					'ru'    => static::generateRandom("TEXT0-10"),
-					'en'    => static::generateRandom("TEXT0-10"),
-				),
-				'LIST_FILTER_LABEL' => array(
-					'ru'    => static::generateRandom("TEXT0-10"),
-					'en'    => static::generateRandom("TEXT0-10"),
-				),
-				'ERROR_MESSAGE'     => array(
-					'ru'    => static::generateRandom("TEXT0-10"),
-					'en'    => static::generateRandom("TEXT0-10"),
-				),
-				'HELP_MESSAGE'      => array(
-					'ru'    => static::generateRandom("TEXT0-10"),
-					'en'    => static::generateRandom("TEXT0-10"),
-				),
-			));
-			static::report("iblock:field №" . $i, $id ? "ok" : "fail");
-			if(!$id)
+			try
 			{
-				global $APPLICATION;
-				static::report("Exception: " . $APPLICATION->GetException()->GetString(), "warning");
+				$obIBlockField = new \CUserTypeEntity();
+				$name = strtoupper(static::generateRandom("STRING0-10"));
+				$id = $obIBlockField->Add(array(
+					"FIELD_NAME" => "UF_" . $name,
+					"XML_ID" => $name,
+					"ENTITY_ID" => "IBLOCK_" . static::generateRandom("FROM_LIST", $iblocks) . "_SECTION",
+					"MANDATORY" => static::generateRandom("STRING_BOOL"),
+					"ACTIVE" => static::generateRandom("STRING_BOOL"),
+					"MULTIPLE" => "N",
+					"SORT" => static::generateRandom("NUMBER0-100"),
+					"USER_TYPE_ID" => static::generateRandom("FROM_LIST", array("enumeration", "double", "integer", "boolean", "string")),
+					'EDIT_FORM_LABEL' => array(
+						'ru' => static::generateRandom("TEXT0-10"),
+						'en' => static::generateRandom("TEXT0-10"),
+					),
+					'LIST_COLUMN_LABEL' => array(
+						'ru' => static::generateRandom("TEXT0-10"),
+						'en' => static::generateRandom("TEXT0-10"),
+					),
+					'LIST_FILTER_LABEL' => array(
+						'ru' => static::generateRandom("TEXT0-10"),
+						'en' => static::generateRandom("TEXT0-10"),
+					),
+					'ERROR_MESSAGE' => array(
+						'ru' => static::generateRandom("TEXT0-10"),
+						'en' => static::generateRandom("TEXT0-10"),
+					),
+					'HELP_MESSAGE' => array(
+						'ru' => static::generateRandom("TEXT0-10"),
+						'en' => static::generateRandom("TEXT0-10"),
+					),
+				));
+				static::report("iblock:field №" . $i, $id ? "ok" : "fail");
+			}
+			catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(), "warning");
 			}
 		}
 	}
@@ -356,20 +362,27 @@ class GenerationData extends BaseProcess
 		$iblocks = static::collectIds(IblockTable::getList(array("select" => array("ID"))));
 		for($i = 0; $i < $count; $i++)
 		{
-			$obIBlockProperty = new \CIBlockProperty();
-			$name = static::generateRandom("STRING0-10");
-			$id = $obIBlockProperty->Add(array(
-				"CODE"              => $name,
-				"NAME"              => $name,
-				"XML_ID"            => $name,
-				"IBLOCK_ID"         => static::generateRandom("FROM_LIST", $iblocks),
-				"IS_REQUIRED"       => static::generateRandom("STRING_BOOL"),
-				"ACTIVE"            => static::generateRandom("STRING_BOOL"),
-				"SORT"              => static::generateRandom("NUMBER0-100"),
-				"PROPERTY_TYPE"     => static::generateRandom("FROM_LIST", array("S", "N")),
-				"WITH_DESCRIPTION"  => static::generateRandom("STRING_BOOL"),
-			));
-			static::report("iblock:property №" . $i, $id ? "ok" : "fail");
+			try
+			{
+				$obIBlockProperty = new \CIBlockProperty();
+				$name = static::generateRandom("STRING0-10");
+				$id = $obIBlockProperty->Add(array(
+					"CODE" => $name,
+					"NAME" => $name,
+					"XML_ID" => $name,
+					"IBLOCK_ID" => static::generateRandom("FROM_LIST", $iblocks),
+					"IS_REQUIRED" => static::generateRandom("STRING_BOOL"),
+					"ACTIVE" => static::generateRandom("STRING_BOOL"),
+					"SORT" => static::generateRandom("NUMBER0-100"),
+					"PROPERTY_TYPE" => static::generateRandom("FROM_LIST", array("S", "N")),
+					"WITH_DESCRIPTION" => static::generateRandom("STRING_BOOL"),
+				));
+				static::report("iblock:property №" . $i, $id ? "ok" : "fail");
+			}
+			catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(), "warning");
+			}
 		}
 	}
 
@@ -385,16 +398,19 @@ class GenerationData extends BaseProcess
 		static::startStep(__FUNCTION__);
 		for($i = 0; $i < $count; $i++)
 		{
-			$name = static::generateRandom("STRING0-10");
-			$result = HighloadBlockTable::add(array(
-				"NAME"          => ucfirst(strtolower($name)),
-				"TABLE_NAME"    => strtolower($name),
-			));
-
-			static::report("hlblock:hlblock №" . $i, $result->isSuccess() ? "ok" : "fail");
-			if (!$result->isSuccess())
+			try
 			{
-				static::report("Exception: " . implode(",", $result->getErrorMessages()), "warning");
+				$name = static::generateRandom("STRING0-10");
+				$result = HighloadBlockTable::add(array(
+					"NAME" => ucfirst(strtolower($name)),
+					"TABLE_NAME" => strtolower($name),
+				));
+
+				static::report("hlblock:hlblock №" . $i, $result->isSuccess() ? "ok" : "fail");
+			}
+			catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(), "warning");
 			}
 		}
 
@@ -420,18 +436,20 @@ class GenerationData extends BaseProcess
 		$sites = static::collectIds(SiteTable::getList(array("select" => array("LID"))), "LID");
 		for($i = 0; $i < $count; $i++)
 		{
-			$object = new \CSalePersonType();
-			$id = $object->add(array(
-				'NAME'      => static::generateRandom("STRING0-10"),
-				'SORT'      => static::generateRandom("NUMBER0-100"),
-				'ACTIVE'    => static::generateRandom("STRING_BOOL"),
-				'LID'       => static::generateRandom("FROM_LIST", $sites),
-			));
-			static::report("sale:personType №" . $i, $id ? "ok" : "fail");
-			global $APPLICATION;
-			if(!$id && $APPLICATION->GetException())
+			try
 			{
-				static::report("Exception: " . $APPLICATION->GetException()->GetString(), "warning");
+				$object = new \CSalePersonType();
+				$id = $object->add(array(
+					'NAME' => static::generateRandom("STRING0-10"),
+					'SORT' => static::generateRandom("NUMBER0-100"),
+					'ACTIVE' => static::generateRandom("STRING_BOOL"),
+					'LID' => static::generateRandom("FROM_LIST", $sites),
+				));
+				static::report("sale:personType №" . $i, $id ? "ok" : "fail");
+			}
+			catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(), "warning");
 			}
 		}
 	}
@@ -442,17 +460,19 @@ class GenerationData extends BaseProcess
 		$types = static::collectIds(PersonTypeTable::getList(array("select" => array("ID"))));
 		for($i = 0; $i < $count; $i++)
 		{
-			$object = new \CSaleOrderPropsGroup();
-			$id = $object->add(array(
-				"PERSON_TYPE_ID"    => static::generateRandom("FROM_LIST", $types),
-				"NAME"              => ucfirst(strtolower(static::generateRandom("STRING0-10"))),
-				"SORT"              => static::generateRandom("NUMBER0-100"),
-			));
-			static::report("sale:propertyGroup №" . $i, $id ? "ok" : "fail");
-			global $APPLICATION;
-			if (!$id && $APPLICATION->getException())
+			try
 			{
-				throw new \Exception($APPLICATION->getException()->getString());
+				$object = new \CSaleOrderPropsGroup();
+				$id = $object->add(array(
+					"PERSON_TYPE_ID" => static::generateRandom("FROM_LIST", $types),
+					"NAME" => ucfirst(strtolower(static::generateRandom("STRING0-10"))),
+					"SORT" => static::generateRandom("NUMBER0-100"),
+				));
+				static::report("sale:propertyGroup №" . $i, $id ? "ok" : "fail");
+			}
+			catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(), "warning");
 			}
 		}
 	}
@@ -465,35 +485,38 @@ class GenerationData extends BaseProcess
 		$propsGroup = static::collectIds($obPropsGroup->getList(array(), array(), false, false, array("ID")));
 		for($i = 0; $i < $count; $i++)
 		{
-			$name = ucfirst(strtolower(static::generateRandom("STRING0-10")));
-			$type = static::generateRandom("FROM_LIST", array("CHECKBOX", "TEXT", "TEXTAREA", "RADIO"));
-			$result = OrderPropsTable::add(array(
-				"PERSON_TYPE_ID"    => static::generateRandom("FROM_LIST", $types),
-				"PROPS_GROUP_ID"    => static::generateRandom("FROM_LIST", $propsGroup),
-				"NAME"              => $name,
-				"CODE"              => $name,
-				"TYPE"              => $type,
-				"REQUIRED"          => static::generateRandom("STRING_BOOL"),
-				"SORT"              => static::generateRandom("NUMBER0-100"),
-				"USER_PROPS"        => static::generateRandom("STRING_BOOL"),
-				"IS_LOCATION"       => "N",
-				"DESCRIPTION"       => static::generateRandom("TEXT0-100"),
-				"IS_EMAIL"          => static::generateRandom("STRING_BOOL"),
-				"IS_PROFILE_NAME"   => static::generateRandom("STRING_BOOL"),
-				"IS_PAYER"          => static::generateRandom("STRING_BOOL"),
-				"IS_LOCATION4TAX"   => static::generateRandom("STRING_BOOL"),
-				"IS_FILTERED"       => static::generateRandom("STRING_BOOL"),
-				"IS_ZIP"            => static::generateRandom("STRING_BOOL"),
-				"IS_PHONE"          => static::generateRandom("STRING_BOOL"),
-				"IS_ADDRESS"        => static::generateRandom("STRING_BOOL"),
-				"ACTIVE"            => static::generateRandom("STRING_BOOL"),
-				"UTIL"              => static::generateRandom("STRING_BOOL"),
-				"MULTIPLE"          => "N",
-			));
-			static::report("sale:property №" . $i, $result->isSuccess() ? "ok" : "fail");
-			if (!$result->isSuccess())
+			try
 			{
-				throw new \Exception(implode("<br>", $result->getErrorMessages()));
+				$name = ucfirst(strtolower(static::generateRandom("STRING0-10")));
+				$type = static::generateRandom("FROM_LIST", array("CHECKBOX", "TEXT", "TEXTAREA", "RADIO"));
+				$result = OrderPropsTable::add(array(
+					"PERSON_TYPE_ID" => static::generateRandom("FROM_LIST", $types),
+					"PROPS_GROUP_ID" => static::generateRandom("FROM_LIST", $propsGroup),
+					"NAME" => $name,
+					"CODE" => $name,
+					"TYPE" => $type,
+					"REQUIRED" => static::generateRandom("STRING_BOOL"),
+					"SORT" => static::generateRandom("NUMBER0-100"),
+					"USER_PROPS" => static::generateRandom("STRING_BOOL"),
+					"IS_LOCATION" => "N",
+					"DESCRIPTION" => static::generateRandom("TEXT0-100"),
+					"IS_EMAIL" => static::generateRandom("STRING_BOOL"),
+					"IS_PROFILE_NAME" => static::generateRandom("STRING_BOOL"),
+					"IS_PAYER" => static::generateRandom("STRING_BOOL"),
+					"IS_LOCATION4TAX" => static::generateRandom("STRING_BOOL"),
+					"IS_FILTERED" => static::generateRandom("STRING_BOOL"),
+					"IS_ZIP" => static::generateRandom("STRING_BOOL"),
+					"IS_PHONE" => static::generateRandom("STRING_BOOL"),
+					"IS_ADDRESS" => static::generateRandom("STRING_BOOL"),
+					"ACTIVE" => static::generateRandom("STRING_BOOL"),
+					"UTIL" => static::generateRandom("STRING_BOOL"),
+					"MULTIPLE" => "N",
+				));
+				static::report("sale:property №" . $i, $result->isSuccess() ? "ok" : "fail");
+			}
+			catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(), "warning");
 			}
 		}
 
@@ -526,25 +549,27 @@ class GenerationData extends BaseProcess
 		static::startStep(__FUNCTION__);
 		for($i = 0; $i < $count; $i++)
 		{
-			$object = new \CCatalogGroup();
-			$name = strtoupper(static::generateRandom("STRING0-5"));
-			$id = $object->add(array(
-				"NAME"              => $name,
-				"XML_ID"            => $name,
-				"BASE"              => "N",
-				"SORT"              => static::generateRandom("NUMBER0-100"),
-				"USER_GROUP"        => array(1),
-				"USER_GROUP_BUY"    => array(1),
-				"USER_LANG"         => array(
-					"en" => static::generateRandom("STRING0-5"),
-					"ru" => static::generateRandom("STRING0-5"),
-				)
-			));
-			static::report("catalog:pricetype №" . $i, $id ? "ok" : "fail");
-			global $APPLICATION;
-			if (!$id && $APPLICATION->getException())
+			try
 			{
-				static::report("Exception: " . $APPLICATION->GetException()->GetString(), "warning");
+				$object = new \CCatalogGroup();
+				$name = strtoupper(static::generateRandom("STRING0-5"));
+				$id = $object->add(array(
+					"NAME" => $name,
+					"XML_ID" => $name,
+					"BASE" => "N",
+					"SORT" => static::generateRandom("NUMBER0-100"),
+					"USER_GROUP" => array(1),
+					"USER_GROUP_BUY" => array(1),
+					"USER_LANG" => array(
+						"en" => static::generateRandom("STRING0-5"),
+						"ru" => static::generateRandom("STRING0-5"),
+					)
+				));
+				static::report("catalog:pricetype №" . $i, $id ? "ok" : "fail");
+			}
+			catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(), "warning");
 			}
 		}
 	}
