@@ -65,20 +65,21 @@ class GenerationData extends BaseProcess
 		static::startStep(__FUNCTION__);
 		for($i = 0; $i < $count; $i++)
 		{
-			$group = new \CGroup();
-			$name = static::generateRandom("STRING0-10");
-			$id = $group->Add(array(
-				"ACTIVE"       => static::generateRandom("STRING_BOOL"),
-				"C_SORT"       => static::generateRandom("NUMBER0-100"),
-				"NAME"         => $name,
-				"DESCRIPTION"  => static::generateRandom("TEXT0-100"),
-				"STRING_ID"    => $name
-			));
-			static::report("main:group №" . $i, $id ? "ok" : "fail");
-			if(!$id)
+			try
 			{
-				global $APPLICATION;
-				static::report("Exception: " . $APPLICATION->GetException()->GetString(),"warning");
+				$group = new \CGroup();
+				$name = static::generateRandom("STRING0-10");
+				$id = $group->Add(array(
+					"ACTIVE"       => static::generateRandom("STRING_BOOL"),
+					"C_SORT"       => static::generateRandom("NUMBER0-100"),
+					"NAME"         => $name,
+					"DESCRIPTION"  => static::generateRandom("TEXT0-100"),
+					"STRING_ID"    => $name
+				));
+				static::report("main:group №" . $i, $id ? "ok" : "fail");
+			} catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(),"warning");
 			}
 		}
 	}
@@ -87,22 +88,23 @@ class GenerationData extends BaseProcess
 		static::startStep(__FUNCTION__);
 		for($i = 0; $i < $count; $i++)
 		{
-			$name = strtolower(static::generateRandom("STRING0-2"));
-			$id = CultureTable::add(array(
-				"NAME"              => $name,
-				"CODE"              => $name,
-				"FORMAT_DATE"       => "MM/DD/YYYY",
-				"FORMAT_DATETIME"   => "MM/DD/YYYY H:MI:SS T",
-				"FORMAT_NAME"       => "#NAME# #LAST_NAME#",
-				"WEEK_START"        => static::generateRandom("NUMBER0-6"),
-				"CHARSET"           => "UTF-8",
-				"DIRECTION"         => static::generateRandom("BOOL"),
-			));
-			static::report("main:culture №" . $i, $id ? "ok" : "fail");
-			if(!$id)
+			try
 			{
-				global $APPLICATION;
-				static::report("Exception: " . $APPLICATION->GetException()->GetString(),"warning");
+				$name = strtolower(static::generateRandom("STRING0-2"));
+				$id = CultureTable::add(array(
+					"NAME"              => $name,
+					"CODE"              => $name,
+					"FORMAT_DATE"       => "MM/DD/YYYY",
+					"FORMAT_DATETIME"   => "MM/DD/YYYY H:MI:SS T",
+					"FORMAT_NAME"       => "#NAME# #LAST_NAME#",
+					"WEEK_START"        => static::generateRandom("NUMBER0-6"),
+					"CHARSET"           => "UTF-8",
+					"DIRECTION"         => static::generateRandom("BOOL"),
+				));
+				static::report("main:culture №" . $i, $id ? "ok" : "fail");
+			} catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(),"warning");
 			}
 		}
 	}
@@ -113,19 +115,20 @@ class GenerationData extends BaseProcess
 		$cultures = static::collectIds(CultureTable::getList(array("select" => array("ID"))));
 		for($i = 0; $i < $count; $i++)
 		{
-			$id = LanguageTable::add(array(
-				'LID'       => static::generateRandom("STRING0-2"),
-				'SORT'      => static::generateRandom("NUMBER0-100"),
-				'DEF'       => static::generateRandom("STRING_BOOL"),
-				'ACTIVE'    => static::generateRandom("STRING_BOOL"),
-				'NAME'      => static::generateRandom("STRING0-10"),
-				'CULTURE_ID'=> static::generateRandom("FROM_LIST", $cultures),
-			));
-			static::report("main:culture №" . $i, $id ? "ok" : "fail");
-			if(!$id)
+			try
 			{
-				global $APPLICATION;
-				static::report("Exception: " . $APPLICATION->GetException()->GetString(),"warning");
+				$id = LanguageTable::add(array(
+					'LID'       => static::generateRandom("STRING0-2"),
+					'SORT'      => static::generateRandom("NUMBER0-100"),
+					'DEF'       => static::generateRandom("STRING_BOOL"),
+					'ACTIVE'    => static::generateRandom("STRING_BOOL"),
+					'NAME'      => static::generateRandom("STRING0-10"),
+					'CULTURE_ID'=> static::generateRandom("FROM_LIST", $cultures),
+				));
+				static::report("main:culture №" . $i, $id ? "ok" : "fail");
+			} catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(),"warning");
 			}
 		}
 	}
@@ -135,21 +138,23 @@ class GenerationData extends BaseProcess
 		static::startStep(__FUNCTION__);
 		for($i = 0; $i < $count; $i++)
 		{
-			$lid = strtolower(static::generateRandom("STRING0-2"));
-			$result = SiteTable::add(array(
-				"LID" => $lid,
-				'SORT' => static::generateRandom("NUMBER0-100"),
-				'DEF' => static::generateRandom("STRING_BOOL"),
-				'ACTIVE' => static::generateRandom("STRING_BOOL"),
-				'NAME' => static::generateRandom("TEXT0-20"),
-				'DIR' => "/" . static::generateRandom("STRING0-6"),
-				'DOMAIN_LIMITED' => "N",
-				'SITE_NAME' => static::generateRandom("TEXT0-20"),
-			));
-			static::report("main:site №" . $i, $result->isSuccess() ? "ok" : "fail");
-			if(!$result->isSuccess())
+			try
 			{
-				static::report("Exception: " . $result->getErrorMessages(),"warning");
+				$lid = strtolower(static::generateRandom("STRING0-2"));
+				$result = SiteTable::add(array(
+					"LID" => $lid,
+					'SORT' => static::generateRandom("NUMBER0-100"),
+					'DEF' => static::generateRandom("STRING_BOOL"),
+					'ACTIVE' => static::generateRandom("STRING_BOOL"),
+					'NAME' => static::generateRandom("TEXT0-20"),
+					'DIR' => "/" . static::generateRandom("STRING0-6"),
+					'DOMAIN_LIMITED' => "N",
+					'SITE_NAME' => static::generateRandom("TEXT0-20"),
+				));
+				static::report("main:site №" . $i, $result->isSuccess() ? "ok" : "fail");
+			} catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(),"warning");
 			}
 		}
 	}
@@ -160,16 +165,17 @@ class GenerationData extends BaseProcess
 		$sites = static::collectIds(SiteTable::getList(array("select" => array("LID"))), "LID");
 		for($i = 0; $i < $count; $i++)
 		{
-			$result = SiteTemplateTable::add(array(
-				"SITE_ID"   => static::generateRandom("FROM_LIST", $sites),
-				"CONDITION" => "",
-				"SORT"      => static::generateRandom("NUMBER0-100"),
-				"TEMPLATE"  => static::generateRandom("STRING0-15"),
-			));
-			static::report("main:siteTemplate №" . $i, $result->isSuccess() ? "ok" : "fail");
-			if(!$result->isSuccess())
+			try
 			{
-				static::report("Exception: " . $result->getErrorMessages(), "warning");
+				$result = SiteTemplateTable::add(array(
+					"SITE_ID"   => static::generateRandom("FROM_LIST", $sites),
+					"CONDITION" => "",
+					"SORT"      => static::generateRandom("NUMBER0-100"),
+					"TEMPLATE"  => static::generateRandom("STRING0-15"),
+				));
+				static::report("main:siteTemplate №" . $i, $result->isSuccess() ? "ok" : "fail");
+			} catch(\Exception $exp) {
+				static::report("Exception: " . $exp->getMessage(),"warning");
 			}
 		}
 	}
@@ -180,20 +186,21 @@ class GenerationData extends BaseProcess
 		$languages = static::collectIds(LanguageTable::getList(array("select" => array("ID"))));
 		for($i = 0; $i < $count; $i++)
 		{
-			$et = new \CEventType();
-			$name = static::generateRandom("STRING0-10");
-			$id = $et->Add(array(
-				"LID"           => static::generateRandom("FROM_LIST", $languages),
-				"EVENT_NAME"    => $name,
-				"NAME"          => $name,
-				"SORT"          => static::generateRandom("NUMBER0-100"),
-				"DESCRIPTION"   => static::generateRandom("TEXT0-50")
-			));
-			static::report("main:eventtype №" . $i, $id ? "ok" : "fail");
-			if(!$id)
+			try
 			{
-				global $APPLICATION;
-				static::report("Exception: " . $APPLICATION->GetException()->GetString(), "warning");
+				$et = new \CEventType();
+				$name = static::generateRandom("STRING0-10");
+				$id = $et->Add(array(
+					"LID" => static::generateRandom("FROM_LIST", $languages),
+					"EVENT_NAME" => $name,
+					"NAME" => $name,
+					"SORT" => static::generateRandom("NUMBER0-100"),
+					"DESCRIPTION" => static::generateRandom("TEXT0-50")
+				));
+				static::report("main:eventtype №" . $i, $id ? "ok" : "fail");
+			} catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(), "warning");
 			}
 		}
 	}
@@ -205,23 +212,23 @@ class GenerationData extends BaseProcess
 		$sites = static::collectIds(SiteTable::getList(array("select" => array("LID"))), "LID");
 		for($i = 0; $i < $count; $i++)
 		{
-			$et = new \CEventMessage();
-			$fields = array(
-				"EVENT_NAME"    => static::generateRandom("FROM_LIST", $eventTypes),
-				"LID"           => array(static::generateRandom("FROM_LIST", $sites)),
-				"ACTIVE"        => static::generateRandom("STRING_BOOL"),
-				"EMAIL_FROM"    => "#DEFAULT_EMAIL_FROM#",
-				"EMAIL_TO"      => "#DEFAULT_EMAIL_FROM#",
-				"BODY_TYPE"     => "text",
-				"SUBJECT"       => static::generateRandom("TEXT0-20"),
-				"MESSAGE"       => static::generateRandom("TEXT0-200"),
-			);
-			$id = $et->Add($fields);
-			static::report("main:event №" . $i, $id ? "ok" : "fail");
-			global $APPLICATION;
-			if(!$id && $APPLICATION->GetException())
+			try
 			{
-				static::report("Exception: " . $APPLICATION->GetException()->GetString(),"warning");
+				$et = new \CEventMessage();
+				$fields = array(
+					"EVENT_NAME"    => static::generateRandom("FROM_LIST", $eventTypes),
+					"LID"           => array(static::generateRandom("FROM_LIST", $sites)),
+					"ACTIVE"        => static::generateRandom("STRING_BOOL"),
+					"EMAIL_FROM"    => "#DEFAULT_EMAIL_FROM#",
+					"EMAIL_TO"      => "#DEFAULT_EMAIL_FROM#",
+					"BODY_TYPE"     => "text",
+					"SUBJECT"       => static::generateRandom("TEXT0-20"),
+					"MESSAGE"       => static::generateRandom("TEXT0-200"),
+				);
+				$id = $et->Add($fields);
+				static::report("main:event №" . $i, $id ? "ok" : "fail");
+			} catch(\Exception $exp) {
+				static::report("Exception: " . $exp->getMessage(),"warning");
 			}
 		}
 	}
