@@ -9,6 +9,7 @@ use Bitrix\Main\Mail\Internal\EventTypeTable;
 use Bitrix\Main\SiteTable;
 use Bitrix\Main\SiteTemplateTable;
 use Bitrix\Main\Loader;
+use Bitrix\Main\UserFieldTable;
 use Bitrix\Sale\Internals\OrderPropsTable;
 use Bitrix\Sale\Internals\OrderPropsVariantTable;
 use Bitrix\Sale\Internals\PersonTypeTable;
@@ -18,27 +19,27 @@ class GenerationData extends BaseProcess
 	public static function run()
 	{
 		parent::run();
-		/*static::createMainGroup();
+		static::createMainGroup();
 		static::createMainCulture();
 		static::createMainLanguage();
 		//static::createMainSite();
 		//static::createMainSiteTemplate();
 		static::createMainEventType();
-		static::createMainEvent();*/
+		static::createMainEvent();
 
 		if(Loader::IncludeModule("iblock"))
 		{
-			/*static::createIBlockType();
+			static::createIBlockType();
 			static::createIBlockIBlock();
-			static::createIBlockField();
-			static::createIBlockFieldEnum();*/
+			static::createUserField("IBLOCK_#ENTITY#_SECTION");
+			static::createUserFieldEnum("iblock", "static::iblockFieldEnumFilter");
 			static::createIBlockProperty();
-		}/*
+		}
 		if(Loader::IncludeModule("highloadblock"))
 		{
-			static::createHighLoadBlock();
-			static::createHighLoadField();
-			static::createHighLoadFieldEnum();
+			//static::createHighLoadBlock();
+			static::createUserField("HLBLOCK_#ENTITY#");
+			static::createUserFieldEnum("highloadblock", "static::hlblockFieldEnumFilter");
 		}
 
 		if(Loader::IncludeModule("sale"))
@@ -52,7 +53,7 @@ class GenerationData extends BaseProcess
 		if(Loader::IncludeModule("catalog"))
 		{
 			static::createCatalogPriceType();
-		}*/
+		}
 
 		parent::finalReport();
 	}
@@ -232,6 +233,12 @@ class GenerationData extends BaseProcess
 		}
 	}
 
+	public static function mainFieldEnumFilter($var)
+	{
+		if(strstr($var["ENTITY_ID"], "IBLOCK") === false && strstr($var["ENTITY_ID"], "HLBLOCK") === false)
+			return $var["ID"];
+	}
+
 	/******************************************************** Iblock ***************************************************/
 
 	public static function createIBlockType($count = 1)
@@ -300,61 +307,6 @@ class GenerationData extends BaseProcess
 		}
 	}
 
-	public static function createIBlockField($count = 1)
-	{
-		static::startStep(__FUNCTION__);
-		$iblocks = static::collectIds(IblockTable::getList(array("select" => array("ID"))));
-		for($i = 0; $i < $count; $i++)
-		{
-			try
-			{
-				$obIBlockField = new \CUserTypeEntity();
-				$name = strtoupper(static::generateRandom("STRING0-10"));
-				$id = $obIBlockField->Add(array(
-					"FIELD_NAME" => "UF_" . $name,
-					"XML_ID" => $name,
-					"ENTITY_ID" => "IBLOCK_" . static::generateRandom("FROM_LIST", $iblocks) . "_SECTION",
-					"MANDATORY" => static::generateRandom("STRING_BOOL"),
-					"ACTIVE" => static::generateRandom("STRING_BOOL"),
-					"MULTIPLE" => "N",
-					"SORT" => static::generateRandom("NUMBER0-100"),
-					"USER_TYPE_ID" => static::generateRandom("FROM_LIST", array("enumeration", "double", "integer", "boolean", "string")),
-					'EDIT_FORM_LABEL' => array(
-						'ru' => static::generateRandom("TEXT0-10"),
-						'en' => static::generateRandom("TEXT0-10"),
-					),
-					'LIST_COLUMN_LABEL' => array(
-						'ru' => static::generateRandom("TEXT0-10"),
-						'en' => static::generateRandom("TEXT0-10"),
-					),
-					'LIST_FILTER_LABEL' => array(
-						'ru' => static::generateRandom("TEXT0-10"),
-						'en' => static::generateRandom("TEXT0-10"),
-					),
-					'ERROR_MESSAGE' => array(
-						'ru' => static::generateRandom("TEXT0-10"),
-						'en' => static::generateRandom("TEXT0-10"),
-					),
-					'HELP_MESSAGE' => array(
-						'ru' => static::generateRandom("TEXT0-10"),
-						'en' => static::generateRandom("TEXT0-10"),
-					),
-				));
-				static::report("iblock:field №" . $i, $id ? "ok" : "fail");
-			}
-			catch(\Exception $exp)
-			{
-				static::report("Exception: " . $exp->getMessage(), "warning");
-			}
-		}
-	}
-
-	public static function createIBlockFieldEnum($count = 1)
-	{
-		static::startStep(__FUNCTION__);
-
-	}
-
 	public static function createIBlockProperty($count = 1)
 	{
 		static::startStep(__FUNCTION__);
@@ -369,7 +321,7 @@ class GenerationData extends BaseProcess
 					"CODE" => $name,
 					"NAME" => $name,
 					"XML_ID" => $name,
-					"IBLOCK_ID" => 1,//static::generateRandom("FROM_LIST", $iblocks),
+					"IBLOCK_ID" => static::generateRandom("FROM_LIST", $iblocks),
 					"IS_REQUIRED" => static::generateRandom("STRING_BOOL"),
 					"ACTIVE" => static::generateRandom("STRING_BOOL"),
 					"SORT" => static::generateRandom("NUMBER0-100"),
@@ -378,7 +330,7 @@ class GenerationData extends BaseProcess
 				);
 				if($arField["PROPERTY_TYPE"] == "L")
 				{
-					$count = rand(2, 4);
+					$count = rand(1, 3);
 					for($i = 0; $i < $count; $i++)
 					{
 						$value = static::generateRandom("STRING0-10");
@@ -398,6 +350,12 @@ class GenerationData extends BaseProcess
 				static::report("Exception: " . $exp->getMessage(), "warning");
 			}
 		}
+	}
+
+	public static function iblockFieldEnumFilter($var)
+	{
+		if (strstr($var["ENTITY_ID"], "IBLOCK") !== false)
+			return $var["ID"];
 	}
 
 	/************************************************** Highloadblock ***************************************************/
@@ -435,6 +393,12 @@ class GenerationData extends BaseProcess
 	{
 		static::startStep(__FUNCTION__);
 
+	}
+
+	public static function hlblockFieldEnumFilter($var)
+	{
+		if (strstr($var["ENTITY_ID"], "HLBLOCK") !== false)
+			return $var["ID"];
 	}
 
 	/******************************************************** Sale *****************************************************/
@@ -584,6 +548,101 @@ class GenerationData extends BaseProcess
 	}
 
 	/************************************************ Class methods ****************************************************/
+
+	public static function createUserField($entity, $count = 1)
+	{
+		static::startStep(__FUNCTION__);
+		$iblocks = static::collectIds(IblockTable::getList(array("select" => array("ID"))));
+		for($i = 0; $i < $count; $i++)
+		{
+			try
+			{
+				$obIBlockField = new \CUserTypeEntity();
+				$name = strtoupper(static::generateRandom("STRING0-10"));
+				$id = $obIBlockField->Add(array(
+					"FIELD_NAME" => "UF_" . $name,
+					"XML_ID" => $name,
+					"ENTITY_ID" => str_replace("#ENTITY#", static::generateRandom("FROM_LIST", $iblocks), $entity),
+					"MANDATORY" => static::generateRandom("STRING_BOOL"),
+					"ACTIVE" => static::generateRandom("STRING_BOOL"),
+					"MULTIPLE" => "N",
+					"SORT" => static::generateRandom("NUMBER0-100"),
+					"USER_TYPE_ID" => static::generateRandom("FROM_LIST", array("enumeration", "double", "integer", "boolean", "string")),
+					'EDIT_FORM_LABEL' => array(
+						'ru' => static::generateRandom("TEXT0-10"),
+						'en' => static::generateRandom("TEXT0-10"),
+					),
+					'LIST_COLUMN_LABEL' => array(
+						'ru' => static::generateRandom("TEXT0-10"),
+						'en' => static::generateRandom("TEXT0-10"),
+					),
+					'LIST_FILTER_LABEL' => array(
+						'ru' => static::generateRandom("TEXT0-10"),
+						'en' => static::generateRandom("TEXT0-10"),
+					),
+					'ERROR_MESSAGE' => array(
+						'ru' => static::generateRandom("TEXT0-10"),
+						'en' => static::generateRandom("TEXT0-10"),
+					),
+					'HELP_MESSAGE' => array(
+						'ru' => static::generateRandom("TEXT0-10"),
+						'en' => static::generateRandom("TEXT0-10"),
+					),
+				));
+				static::report($entity . ":field №" . $i, $id ? "ok" : "fail");
+			}
+			catch(\Exception $exp)
+			{
+				static::report("Exception: " . $exp->getMessage(), "warning");
+			}
+		}
+	}
+
+	/**
+	 * @param $module string
+	 * @param int $count
+	 */
+	public static function createUserFieldEnum($module, $filter, $count = 1)
+	{
+		static::startStep(__FUNCTION__);
+		try
+		{
+			$userFields = array();
+			$rsFields = UserFieldTable::getList(array(
+					"filter" => array("USER_TYPE_ID" => "enumeration"),
+					"select" => array("ID", "ENTITY_ID"),
+				)
+			);
+			while($arField = $rsFields->fetch())
+				$userFields[] = $arField;
+
+			$userFields = array_diff(array_map($filter, $userFields), array(null));
+
+			if(count($userFields) > 0)
+			{
+				$obEnum = new \CUserFieldEnum();
+				$arAddEnum = array();
+				$count = rand(1, 3);
+				for($i = 0; $i < $count; $i++)
+				{
+					$value = static::generateRandom("STRING0-10");
+					$arAddEnum['n' . $i] = array(
+						'XML_ID' => $value,
+						'VALUE' => $value,
+						'DEF' => static::generateRandom("STRING_BOOL"),
+						'SORT' => static::generateRandom("NUMBER0-1000"),
+					);
+				}
+				$ufFieldId = static::generateRandom("FROM_LIST", $userFields);
+				$obEnum->SetEnumValues($ufFieldId, $arAddEnum);
+				static::report($module . ":fieldenum added for userfield " . $ufFieldId, "ok");
+			}
+		}
+		catch(\Exception $exp)
+		{
+			static::report("Exception: " . $exp->getMessage(), "warning");
+		}
+	}
 
 	private static $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
