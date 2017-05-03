@@ -18,23 +18,22 @@ class GenerationData extends BaseProcess
 	public static function run()
 	{
 		parent::run();
-		static::createMainGroup();
+		/*static::createMainGroup();
 		static::createMainCulture();
 		static::createMainLanguage();
 		//static::createMainSite();
 		//static::createMainSiteTemplate();
 		static::createMainEventType();
-		static::createMainEvent();
+		static::createMainEvent();*/
 
 		if(Loader::IncludeModule("iblock"))
 		{
-			static::createIBlockType();
+			/*static::createIBlockType();
 			static::createIBlockIBlock();
 			static::createIBlockField();
-			static::createIBlockFieldEnum();
+			static::createIBlockFieldEnum();*/
 			static::createIBlockProperty();
-			static::createIBlockPropertyEnum();
-		}
+		}/*
 		if(Loader::IncludeModule("highloadblock"))
 		{
 			static::createHighLoadBlock();
@@ -53,7 +52,7 @@ class GenerationData extends BaseProcess
 		if(Loader::IncludeModule("catalog"))
 		{
 			static::createCatalogPriceType();
-		}
+		}*/
 
 		parent::finalReport();
 	}
@@ -366,17 +365,32 @@ class GenerationData extends BaseProcess
 			{
 				$obIBlockProperty = new \CIBlockProperty();
 				$name = static::generateRandom("STRING0-10");
-				$id = $obIBlockProperty->Add(array(
+				$arField = array (
 					"CODE" => $name,
 					"NAME" => $name,
 					"XML_ID" => $name,
-					"IBLOCK_ID" => static::generateRandom("FROM_LIST", $iblocks),
+					"IBLOCK_ID" => 1,//static::generateRandom("FROM_LIST", $iblocks),
 					"IS_REQUIRED" => static::generateRandom("STRING_BOOL"),
 					"ACTIVE" => static::generateRandom("STRING_BOOL"),
 					"SORT" => static::generateRandom("NUMBER0-100"),
-					"PROPERTY_TYPE" => static::generateRandom("FROM_LIST", array("S", "N")),
+					"PROPERTY_TYPE" => static::generateRandom("FROM_LIST", array("S", "N", "L")),
 					"WITH_DESCRIPTION" => static::generateRandom("STRING_BOOL"),
-				));
+				);
+				if($arField["PROPERTY_TYPE"] == "L")
+				{
+					$count = rand(2, 4);
+					for($i = 0; $i < $count; $i++)
+					{
+						$value = static::generateRandom("STRING0-10");
+						$arField["VALUES"][$i] = array(
+							"VALUE"     => $value,
+							"XML_ID"    => $value,
+							"DEF"       => static::generateRandom("STRING_BOOL"),
+							"SORT"      => static::generateRandom("NUMBER0-1000"),
+						);
+					}
+				}
+				$id = $obIBlockProperty->Add($arField);
 				static::report("iblock:property №" . $i, $id ? "ok" : "fail");
 			}
 			catch(\Exception $exp)
@@ -384,11 +398,6 @@ class GenerationData extends BaseProcess
 				static::report("Exception: " . $exp->getMessage(), "warning");
 			}
 		}
-	}
-
-	public static function createIBlockPropertyEnum($count = 1)
-	{
-		static::startStep(__FUNCTION__);
 	}
 
 	/************************************************** Highloadblock ***************************************************/
