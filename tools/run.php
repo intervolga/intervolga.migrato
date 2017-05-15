@@ -45,6 +45,7 @@ catch (\Exception $exception)
  * @see \Intervolga\Migrato\Tool\Process\Reindex
  * @see \Intervolga\Migrato\Tool\Process\ReindexUrlRewriter
  * @see \Intervolga\Migrato\Tool\Process\UnitTest
+ * @see \Intervolga\Migrato\Tool\Process\WarnDelete
  */
 $processes = array(
 	"autofix"           => "\\Intervolga\\Migrato\\Tool\\Process\\AutoFix",
@@ -59,6 +60,7 @@ $processes = array(
 	"reindexurlrewrite" => "\\Intervolga\\Migrato\\Tool\\Process\\ReindexUrlRewriter",
 	"unittest"          => "\\Intervolga\\Migrato\\Tool\\Process\\UnitTest",
 	"generationdata"    => "\\Intervolga\\Migrato\\Tool\\Process\\GenerationData",
+	"warndelete"    => "\\Intervolga\\Migrato\\Tool\\Process\\WarnDelete",
 );
 $encodingUtf8 = false;
 $cmdProcess = $argv[1];
