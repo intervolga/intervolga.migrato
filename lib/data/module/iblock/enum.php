@@ -79,7 +79,6 @@ class Enum extends BaseData
 
 			$enumObject = new \CIBlockPropertyEnum();
 			$enumId = $enumObject->add($fields);
-			// TODO Ошибка с добавлением
 			if ($enumId)
 			{
 				return $this->createId($enumId);
