@@ -86,7 +86,6 @@ class Element extends BaseData
 		{
 			$link = new Link($instance, $valueElementXmlId);
 		}
-		// TODO сделать для множественного поля
 		if($property["DESCRIPTION"])
 		{
 			$link->setDescription($property["DESCRIPTION"]);

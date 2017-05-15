@@ -413,7 +413,7 @@ abstract class BaseUserField extends BaseData
 		return $this->getXmlIds(Section::getInstance(), $value);
 	}
 
-	/** TODO Сделать для множественных значений
+	/**
 	 * @param \Intervolga\Migrato\Data\Record $field
 	 * @param int $value
 	 *
