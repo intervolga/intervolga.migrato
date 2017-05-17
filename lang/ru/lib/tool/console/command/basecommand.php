@@ -1,11 +1,12 @@
 <?
+$MESS['INTERVOLGA_MIGRATO.COMMAND_STARTED'] = 'Выполняется команда <info>#COMMAND#</info>';
 $MESS['INTERVOLGA_MIGRATO.STATISTICS_RECORD'] = '#MODULE#: #ENTITY# -- #OPERATION# (#COUNT# зап.)';
 $MESS['INTERVOLGA_MIGRATO.STATISTIC_ONE_RECORD'] = '#MODULE#: #ENTITY# -- #OPERATION# (зап. #DATA_XML_ID#)';
 $MESS['INTERVOLGA_MIGRATO.CONFIG_NOT_FOUND'] = 'Отсутствует файл конфигурации';
 $MESS['INTERVOLGA_MIGRATO.STEP'] = 'Команда: #STEP#';
 $MESS['INTERVOLGA_MIGRATO.PROCESS_STARTED'] = 'Команда выполняется...';
-$MESS['INTERVOLGA_MIGRATO.PROCESS_COMPLETED_OK'] = 'Команда #CMD# выполнена, ошибок нет';
-$MESS['INTERVOLGA_MIGRATO.PROCESS_COMPLETED_ERRORS'] = 'Команда #CMD# выполнена, ошибок: #CNT#';
+$MESS['INTERVOLGA_MIGRATO.PROCESS_COMPLETED_OK'] = '<ok>Команда <info>#CMD#</info> выполнена, ошибок нет</ok>';
+$MESS['INTERVOLGA_MIGRATO.PROCESS_COMPLETED_ERRORS'] = '<fail>Команда <info>#CMD#</info> выполнена, ошибок: #CNT#</fail>';
 $MESS['INTERVOLGA_MIGRATO.PROCESS_BEGIN'] = 'Начало работы процесса';
 $MESS['INTERVOLGA_MIGRATO.PROCESS_END_SUCCESS'] = 'Процесс завершен без ошибок';
 $MESS['INTERVOLGA_MIGRATO.PROCESS_END_ERROR'] = 'Процес завершен с ошибками';

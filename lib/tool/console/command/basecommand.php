@@ -30,7 +30,7 @@ abstract class BaseCommand extends Command
 	/**
 	 * @var string
 	 */
-	protected $step2 = '';
+	protected $step = '';
 
 	protected $isMainCommand = true;
 
@@ -66,6 +66,15 @@ abstract class BaseCommand extends Command
 			LogTable::deleteAll();
 			static::checkFiles();
 		}
+		$this->separate();
+		$this->output->writeln(Loc::getMessage(
+				'INTERVOLGA_MIGRATO.COMMAND_STARTED',
+				array(
+					'#COMMAND#' => $this->getDescription(),
+				)
+			)
+		);
+		$this->separate();
 		$this->executeInner();
 		if ($this->isMainCommand)
 		{
@@ -76,18 +85,9 @@ abstract class BaseCommand extends Command
 	abstract public function executeInner();
 
 	/**
-	 * ------
-	 * BaseProcess
-	 */
-
-	/**
 	 * @var string[]
 	 */
 	protected static $reports = array();
-	/**
-	 * @var string
-	 */
-	protected static $step = "";
 	/**
 	 * @var int[]
 	 */
@@ -117,7 +117,7 @@ abstract class BaseCommand extends Command
 					'#CNT#' => static::$reportTypeCounter["fail"],
 				)
 			);
-			$this->output->writeln('<error>' . $report);
+			$this->output->writeln($report);
 		}
 		else
 		{
@@ -127,7 +127,7 @@ abstract class BaseCommand extends Command
 					'#CMD#' => $this->getDescription(),
 				)
 			);
-			$this->output->writeln('<ok>' . $report);
+			$this->output->writeln($report);
 		}
 	}
 
@@ -204,33 +204,16 @@ abstract class BaseCommand extends Command
 	/**
 	 * @param string $step
 	 */
-	protected function startStep2($step)
+	protected function startStep($step)
 	{
-		$this->step2 = $step;
+		$this->step = $step;
 		$this->output->writeln(Loc::getMessage(
 				'INTERVOLGA_MIGRATO.STEP',
 				array(
-					'#STEP#' => $this->step2,
+					'#STEP#' => $this->step,
 				)
 			),
 			OutputInterface::VERBOSITY_VERBOSE
-		);
-	}
-
-	/**
-	 * @param string $step
-	 */
-	protected static function startStep($step)
-	{
-		static::$step = $step;
-		static::addSeparator();
-		static::report(ColorLog::getColoredString(
-			Loc::getMessage(
-				'INTERVOLGA_MIGRATO.STEP',
-				array(
-					'#STEP#' => static::$step
-				)
-			), "light_blue")
 		);
 	}
 
