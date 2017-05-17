@@ -28,9 +28,10 @@ class Application extends \Symfony\Component\Console\Application
 		parent::configureIO($input, $output);
 		if (true === $input->hasParameterOption(array('--win', '-W'), true))
 		{
-			if ($output instanceof Output)
+			$formatter = $output->getFormatter();
+			if ($formatter instanceof Formatter)
 			{
-				$output->setWindowsCharset(true);
+				$formatter->setWindowsCharset(true);
 			}
 		}
 	}

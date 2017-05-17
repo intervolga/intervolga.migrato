@@ -2,6 +2,7 @@
 
 use Bitrix\Main\Localization\Loc;
 use Symfony\Component\Console\Formatter\OutputFormatter;
+use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 
 Loc::loadMessages(__FILE__);
 
@@ -9,6 +10,24 @@ class Formatter extends OutputFormatter
 {
 	protected $isWindowsCharset = false;
 	protected $replaces = array();
+
+	public function __construct($decorated = false, array $styles = array())
+	{
+		parent::__construct($decorated, $styles);
+		$this->initStyles();
+	}
+
+	protected function initStyles()
+	{
+		$style = new OutputFormatterStyle('blue', null, array('bold', 'blink'));
+		$this->setStyle('info', $style);
+
+		$style = new OutputFormatterStyle('green');
+		$this->setStyle('ok', $style);
+
+		$style = new OutputFormatterStyle('red');
+		$this->setStyle('fail', $style);
+	}
 
 	public function setWindowsCharset($isWindowsCharset = true)
 	{

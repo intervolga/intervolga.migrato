@@ -1,7 +1,8 @@
 <?php
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Tool\Console\Application;
-use Intervolga\Migrato\Tool\Console\Output;
+use Intervolga\Migrato\Tool\Console\Formatter;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 $_SERVER["DOCUMENT_ROOT"] = realpath(dirname(__FILE__)."/../../../..");
 $DOCUMENT_ROOT = $_SERVER["DOCUMENT_ROOT"];
@@ -21,7 +22,7 @@ if (!Loader::includeModule("intervolga.migrato"))
 else
 {
 	$application = new Application();
-	$application->run(null, new Output());
+	$application->run(null, new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, null, new Formatter()));
 }
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");
