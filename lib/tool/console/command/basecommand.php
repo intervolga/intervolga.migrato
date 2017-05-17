@@ -3,7 +3,7 @@
 use Bitrix\Main\Entity\ExpressionField;
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\Localization\Loc;
-use Intervolga\Migrato\Tool\ColorLog;
+use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Symfony\Component\Console\Command\Command;
@@ -33,6 +33,8 @@ abstract class BaseCommand extends Command
 	protected $step = '';
 
 	protected $isMainCommand = true;
+	protected $shownDetailSummary = false;
+	protected $shownShortSummary = false;
 
 	/**
 	 * @param int $options
@@ -47,10 +49,56 @@ abstract class BaseCommand extends Command
 	 *
 	 * @return \Bitrix\Main\Entity\AddResult
 	 */
-	protected function addLog(array $log)
+	protected function logRecord(array $log)
 	{
 		$result = LogTable::add($log);
-		$this->output->writeln('log', OutputInterface::VERBOSITY_VERY_VERBOSE);
+		if (!array_key_exists('RESULT', $log))
+		{
+			$type = static::REPORT_TYPE_INFO;
+		}
+		else
+		{
+			if ($log['RESULT'])
+			{
+				$type = static::REPORT_TYPE_OK;
+			}
+			else
+			{
+				$type = static::REPORT_TYPE_FAIL;
+			}
+		}
+		/**
+		 * @var Record $record
+		 */
+		if ($record = $log['RECORD'])
+		{
+			if (!$this->shownDetailSummary)
+			{
+				$this->output->writeln(
+					Loc::getMessage('INTERVOLGA_MIGRATO.DETAIL_SUMMARY'),
+					OutputInterface::VERBOSITY_VERY_VERBOSE
+				);
+				$this->shownDetailSummary = true;
+			}
+			$this->report(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.STATISTIC_ONE_RECORD',
+					array(
+						'#OPERATION#' => $log['OPERATION'],
+						'#MODULE#' => self::getModuleMessage($record->getData()->getModule()),
+						'#ENTITY#' => self::getEntityMessage($record->getData()->getEntityName()),
+						'#DATA_XML_ID#' => $record->getXmlId(),
+					)
+				),
+				$type,
+				1,
+				OutputInterface::VERBOSITY_VERY_VERBOSE
+			);
+		}
+		else
+		{
+			die(__FILE__ . ":" . __LINE__);
+		}
 		return $result;
 	}
 
@@ -61,10 +109,9 @@ abstract class BaseCommand extends Command
 
 		if ($this->isMainCommand)
 		{
-			static::$reports = array();
-			static::$reportTypeCounter = array();
+			$this->reportTypeCounter = array();
 			LogTable::deleteAll();
-			static::checkFiles();
+			$this->checkFiles();
 		}
 		$this->separate();
 		$this->output->writeln(Loc::getMessage(
@@ -85,15 +132,11 @@ abstract class BaseCommand extends Command
 	abstract public function executeInner();
 
 	/**
-	 * @var string[]
-	 */
-	protected static $reports = array();
-	/**
 	 * @var int[]
 	 */
-	protected static $reportTypeCounter = array();
+	protected $reportTypeCounter = array();
 
-	protected static function checkFiles()
+	protected function checkFiles()
 	{
 		if (!Directory::isDirectoryExists(INTERVOLGA_MIGRATO_DIRECTORY))
 		{
@@ -108,40 +151,27 @@ abstract class BaseCommand extends Command
 
 	public function finalReport()
 	{
-		if (static::$reportTypeCounter["fail"])
+		$this->output->writeln(
+			Loc::getMessage(
+				'INTERVOLGA_MIGRATO.COMMAND_COMPLETED',
+				array(
+					'#COMMAND#' => $this->getDescription(),
+				)
+			)
+		);
+		if ($this->reportTypeCounter["fail"])
 		{
-			$report = Loc::getMessage(
+			$this->output->writeln(Loc::getMessage(
 				'INTERVOLGA_MIGRATO.PROCESS_COMPLETED_ERRORS',
 				array(
-					'#CMD#' => $this->getDescription(),
-					'#CNT#' => static::$reportTypeCounter["fail"],
+					'#CNT#' => $this->reportTypeCounter["fail"],
 				)
-			);
-			$this->output->writeln($report);
+			));
 		}
 		else
 		{
-			$report = Loc::getMessage(
-				'INTERVOLGA_MIGRATO.PROCESS_COMPLETED_OK',
-				array(
-					'#CMD#' => $this->getDescription(),
-				)
-			);
-			$this->output->writeln($report);
+			$this->output->writeln(Loc::getMessage('INTERVOLGA_MIGRATO.COMPLETED_OK'));
 		}
-	}
-
-	public static function addSeparator($symbol = "-")
-	{
-		static::$reports[] = str_repeat($symbol, 80);
-	}
-
-	/**
-	 * @return string[]
-	 */
-	public static function getReports()
-	{
-		return static::$reports;
 	}
 
 	/**
@@ -196,7 +226,7 @@ abstract class BaseCommand extends Command
 	 *
 	 * @return string
 	 */
-	protected static function getModuleOptionsDirectory($module)
+	protected function getModuleOptionsDirectory($module)
 	{
 		return INTERVOLGA_MIGRATO_DIRECTORY . $module . "/";
 	}
@@ -227,7 +257,7 @@ abstract class BaseCommand extends Command
 	{
 		if ($type)
 		{
-			static::$reportTypeCounter[$type] += $count;
+			$this->reportTypeCounter[$type] += $count;
 		}
 		if ($type == static::REPORT_TYPE_FAIL)
 		{
@@ -244,11 +274,11 @@ abstract class BaseCommand extends Command
 		$this->output->writeln($message, $option);
 	}
 
-	protected static function reportStepLogs()
+	protected function reportShortSummary()
 	{
 		$getList = LogTable::getList(array(
 			"filter" => array(
-				"=STEP" => static::$step,
+				"=STEP" => $this->getDescription(),
 			),
 			"select" => array(
 				"MODULE_NAME",
@@ -266,7 +296,15 @@ abstract class BaseCommand extends Command
 		));
 		while ($logs = $getList->fetch())
 		{
-			static::report(
+			if (!$this->shownShortSummary)
+			{
+				$this->output->writeln(
+					Loc::getMessage('INTERVOLGA_MIGRATO.LOGS_SUMMARY'),
+					OutputInterface::VERBOSITY_VERBOSE
+				);
+				$this->shownShortSummary = true;
+			}
+			$this->report(
 				Loc::getMessage(
 					"INTERVOLGA_MIGRATO.STATISTICS_RECORD",
 					array(
@@ -277,12 +315,13 @@ abstract class BaseCommand extends Command
 					)
 				),
 				$logs["RESULT"] ? "ok" : "fail",
-				$logs["CNT"]
+				0,
+				OutputInterface::VERBOSITY_VERBOSE
 			);
 		}
 	}
 
-	protected static function getModuleMessage($moduleName)
+	protected function getModuleMessage($moduleName)
 	{
 		$name = Loc::getMessage("INTERVOLGA_MIGRATO.MODULE_" . strtoupper($moduleName));
 		if (!Loc::getMessage("INTERVOLGA_MIGRATO.MODULE_" . strtoupper($moduleName)))
@@ -297,12 +336,12 @@ abstract class BaseCommand extends Command
 		return $name;
 	}
 
-	protected static function getEntityMessage($entityName)
+	protected function getEntityMessage($entityName)
 	{
 		return Loc::getMessage("INTERVOLGA_MIGRATO.ENTITY_" . strtoupper($entityName));
 	}
 
-	protected static function getStepMessage($stepName)
+	protected function getStepMessage($stepName)
 	{
 		return Loc::getMessage("INTERVOLGA_MIGRATO.STEP_" . strtoupper(preg_replace("/\s\d+/", "", $stepName)));
 	}

@@ -1,18 +1,19 @@
 <?
 $MESS['INTERVOLGA_MIGRATO.COMMAND_STARTED'] = 'Выполняется команда <info>#COMMAND#</info>';
-$MESS['INTERVOLGA_MIGRATO.STATISTICS_RECORD'] = '#MODULE#: #ENTITY# -- #OPERATION# (#COUNT# зап.)';
-$MESS['INTERVOLGA_MIGRATO.STATISTIC_ONE_RECORD'] = '#MODULE#: #ENTITY# -- #OPERATION# (зап. #DATA_XML_ID#)';
+$MESS['INTERVOLGA_MIGRATO.LOGS_SUMMARY'] = '<info>Краткая сводка:</info>';
+$MESS['INTERVOLGA_MIGRATO.STATISTICS_RECORD'] = '#OPERATION# -- #MODULE#: #ENTITY# (всего записей: #COUNT# шт.)';
+$MESS['INTERVOLGA_MIGRATO.DETAIL_SUMMARY'] = '<info>Подробная сводка:</info>';
+$MESS['INTERVOLGA_MIGRATO.STATISTIC_ONE_RECORD'] = '#OPERATION# -- #MODULE#: #ENTITY# (XML ID=<info>#DATA_XML_ID#</info>)';
 $MESS['INTERVOLGA_MIGRATO.CONFIG_NOT_FOUND'] = 'Отсутствует файл конфигурации';
 $MESS['INTERVOLGA_MIGRATO.STEP'] = 'Команда: #STEP#';
 $MESS['INTERVOLGA_MIGRATO.PROCESS_STARTED'] = 'Команда выполняется...';
-$MESS['INTERVOLGA_MIGRATO.PROCESS_COMPLETED_OK'] = '<ok>Команда <info>#CMD#</info> выполнена, ошибок нет</ok>';
-$MESS['INTERVOLGA_MIGRATO.PROCESS_COMPLETED_ERRORS'] = '<fail>Команда <info>#CMD#</info> выполнена, ошибок: #CNT#</fail>';
+$MESS['INTERVOLGA_MIGRATO.COMMAND_COMPLETED'] = 'Команда <info>#COMMAND#</info> выполнена';
+$MESS['INTERVOLGA_MIGRATO.COMPLETED_OK'] = '<ok>Ошибок нет</ok>';
+$MESS['INTERVOLGA_MIGRATO.COMPLETED_ERRORS'] = '<fail>Ошибок: #CNT#</fail>';
 $MESS['INTERVOLGA_MIGRATO.PROCESS_BEGIN'] = 'Начало работы процесса';
 $MESS['INTERVOLGA_MIGRATO.PROCESS_END_SUCCESS'] = 'Процесс завершен без ошибок';
 $MESS['INTERVOLGA_MIGRATO.PROCESS_END_ERROR'] = 'Процес завершен с ошибками';
 $MESS['INTERVOLGA_MIGRATO.IMPORT_DEPENDENCY_STEP'] = 'Импорт шаг #STEP#, количество=#COUNT# шт.';
-$MESS['INTERVOLGA_MIGRATO.VALIDATE.NOT_MIGRATE'] = 'Сущности, которые НЕ будут мигрироваться:';
-$MESS['INTERVOLGA_MIGRATO.VALIDATE.WARNING'] = 'Детальное описание ошибок можно посмотреть на данной странице:';
 $MESS['INTERVOLGA_MIGRATO.MODULE_MAIN'] = 'Главный модуль';
 $MESS['INTERVOLGA_MIGRATO.MODULE_IBLOCK'] = 'Информационные блоки';
 $MESS['INTERVOLGA_MIGRATO.MODULE_HIGHLOADBLOCK'] = 'Highload-блоки';

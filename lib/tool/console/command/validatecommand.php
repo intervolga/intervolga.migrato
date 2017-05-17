@@ -22,8 +22,6 @@ class ValidateCommand extends BaseCommand
 
 	public function executeInner()
 	{
-		$this->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_VALIDATE'));
-
 		$result = array();
 		$configDataClasses = Config::getInstance()->getDataClasses();
 
@@ -62,10 +60,7 @@ class ValidateCommand extends BaseCommand
 				throw new LoaderException($error);
 			}
 		}
-		$this->reportStepLogs();
-		$this->report(self::getValidateMessage("warning"), "warning");
-		$this->report(INTERVOLGA_MIGRATO_TABLE_PATH
-			. "?set_filter=Y&adm_filter_applied=0&table_name=intervolga_migrato_log&find=0&find_type=RESULT&lang=" . LANGUAGE_ID);
+		$this->reportShortSummary();
 
 		return $result;
 	}
@@ -129,20 +124,21 @@ class ValidateCommand extends BaseCommand
 		if ($errorType)
 		{
 			$errors[] = new XmlIdValidateError($record->getData(), $errorType, $record->getId(), $record->getXmlId());
-			$this->addLog(array(
-				"RECORD" => $record,
-				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
-				"COMMENT" => XmlIdValidateError::typeToString($errorType),
-				"STEP" => $this->step,
-				"RESULT" => false,
+			$this->logRecord(array(
+				'RECORD' => $record,
+				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
+				'COMMENT' => XmlIdValidateError::typeToString($errorType),
+				'STEP' => $this->getDescription(),
+				'RESULT' => false,
 			));
 		}
 		else
 		{
-			$this->addLog(array(
-				"RECORD" => $record,
-				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
-				"STEP" => $this->step,
+			$this->logRecord(array(
+				'RECORD' => $record,
+				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
+				'STEP' => $this->getDescription(),
+				'RESULT' => true,
 			));
 		}
 		return $errors;
@@ -156,7 +152,7 @@ class ValidateCommand extends BaseCommand
 	protected function isValidXmlId($xmlId)
 	{
 		$matches = array();
-		return !!preg_match_all("/^[a-z0-9\-_#.]+$/i", $xmlId, $matches);
+		return !!preg_match_all('/^[a-z0-9\-_#.]+$/i', $xmlId, $matches);
 	}
 
 	/**
@@ -167,14 +163,5 @@ class ValidateCommand extends BaseCommand
 	protected function isSimpleXmlId($xmlId)
 	{
 		return is_numeric($xmlId);
-	}
-
-	/**
-	 * @param string $message
-	 * @return string
-	 */
-	protected function getValidateMessage($message)
-	{
-		return Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE." . strtoupper($message));
 	}
 }
