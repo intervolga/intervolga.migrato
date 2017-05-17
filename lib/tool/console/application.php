@@ -1,6 +1,7 @@
 <?namespace Intervolga\Migrato\Tool\Console;
 
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Tool\Console\Command\UnusedConfigCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -16,6 +17,10 @@ class Application extends \Symfony\Component\Console\Application
 		$arModuleVersion = array('VERSION' => '');
 		include $moduleDir . '/install/version.php';
 		parent::__construct($moduleName, $arModuleVersion['VERSION']);
+
+		$this->addCommands(array(
+			new UnusedConfigCommand(),
+		));
 	}
 
 	protected function configureIO(InputInterface $input, OutputInterface $output)
