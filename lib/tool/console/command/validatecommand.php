@@ -16,7 +16,8 @@ class ValidateCommand extends BaseCommand
 	{
 		parent::configure();
 		$this
-			->setName('validate')
+			->setHidden(true)
+			->setName('validatexmlid')
 			->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.VALIDATE_DESCRIPTION'));
 	}
 

@@ -3,6 +3,7 @@
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Console\Command\UnusedConfigCommand;
 use Intervolga\Migrato\Tool\Console\Command\ValidateCommand;
+use Intervolga\Migrato\Tool\Console\Command\ValidateComplexCommand;
 use Intervolga\Migrato\Tool\Console\Command\WarnDeleteCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -21,6 +22,7 @@ class Application extends \Symfony\Component\Console\Application
 		parent::__construct($moduleName, $arModuleVersion['VERSION']);
 
 		$this->addCommands(array(
+			new ValidateComplexCommand(),
 			new ValidateCommand(),
 			new UnusedConfigCommand(),
 			new WarnDeleteCommand(),

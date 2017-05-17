@@ -1,5 +1,6 @@
 <?
 $MESS['INTERVOLGA_MIGRATO.COMMAND_STARTED'] = 'Выполняется команда <info>#COMMAND#</info>';
+$MESS['INTERVOLGA_MIGRATO.SUBCOMMAND_STARTED'] = 'Выполняется подкоманда <info>#COMMAND#</info>';
 $MESS['INTERVOLGA_MIGRATO.LOGS_SUMMARY'] = 'Краткая сводка <info>#COMMAND#</info>:';
 $MESS['INTERVOLGA_MIGRATO.STATISTICS_RECORD'] = '#OPERATION# -- #MODULE#: #ENTITY# (всего записей: #COUNT# шт.)';
 $MESS['INTERVOLGA_MIGRATO.DETAIL_SUMMARY'] = 'Подробная сводка <info>#COMMAND#</info>:';

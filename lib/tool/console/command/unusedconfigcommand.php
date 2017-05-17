@@ -47,6 +47,7 @@ class UnusedConfigCommand extends BaseCommand
 	protected function configure()
 	{
 		$this->setName('unused');
+		$this->setHidden(true);
 		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.UNUSED_CONFIG_DESCRIPTION'));
 	}
 }

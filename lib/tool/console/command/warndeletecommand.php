@@ -5,7 +5,6 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
-use Intervolga\Migrato\Tool\Orm\LogTable;
 
 Loc::loadMessages(__FILE__);
 
@@ -20,6 +19,7 @@ class WarnDeleteCommand extends BaseCommand
 	{
 		parent::configure();
 		$this
+			->setHidden(true)
 			->setName('warndelete')
 			->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.WARN_DELETE_DESCRIPTION'));
 	}

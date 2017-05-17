@@ -7,6 +7,7 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -17,6 +18,8 @@ abstract class BaseCommand extends Command
 	const REPORT_TYPE_FAIL = 'fail';
 	const REPORT_TYPE_OK = 'ok';
 	const REPORT_TYPE_INFO = 'info';
+
+	protected static $mainCommand = '';
 
 	/**
 	 * @var \Symfony\Component\Console\Input\InputInterface $input
@@ -32,7 +35,6 @@ abstract class BaseCommand extends Command
 	 */
 	protected $step = '';
 
-	protected $isMainCommand = true;
 	protected $shownDetailSummary = false;
 	protected $shownShortSummary = false;
 
@@ -111,29 +113,54 @@ abstract class BaseCommand extends Command
 		return $result;
 	}
 
+	/**
+	 * @return bool
+	 */
+	protected function isMainCommand()
+	{
+		return static::$mainCommand == get_called_class();
+	}
+
 	public function execute(InputInterface $input, OutputInterface $output)
 	{
 		$this->input = $input;
 		$this->output = $output;
+		if (!static::$mainCommand)
+		{
+			static::$mainCommand = get_called_class();
+		}
 
-		if ($this->isMainCommand)
+		if ($this->isMainCommand())
 		{
 			$this->reportTypeCounter = array();
 			LogTable::deleteAll();
 			$this->checkFiles();
-		}
-		$this->separate();
-		$this->output->writeln(Loc::getMessage(
+			$this->output->writeln(Loc::getMessage(
 				'INTERVOLGA_MIGRATO.COMMAND_STARTED',
 				array(
 					'#COMMAND#' => $this->getDescription(),
 				)
-			)
-		);
-		$this->separate();
-		$this->executeInner();
-		if ($this->isMainCommand)
+			));
+			$this->separate();
+		}
+		else
 		{
+			$this->output->writeln(Loc::getMessage(
+				'INTERVOLGA_MIGRATO.SUBCOMMAND_STARTED',
+				array(
+					'#COMMAND#' => $this->getDescription(),
+				)
+			));
+		}
+
+		if ($this->isMainCommand())
+		{
+
+		}
+		$this->executeInner();
+		if ($this->isMainCommand())
+		{
+			$this->separate();
 			$this->finalReport();
 		}
 	}
@@ -348,5 +375,19 @@ abstract class BaseCommand extends Command
 	{
 		$langName = Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_' . strtoupper($entityName));
 		return $langName ? $langName : $entityName;
+	}
+
+	/**
+	 * @param string $name
+	 *
+	 * @throws \Symfony\Component\Console\Exception\ExceptionInterface
+	 */
+	protected function runSubcommand($name)
+	{
+		$command = $this->getApplication()->find($name);
+		if ($command)
+		{
+			$command->run(new ArrayInput(array()), $this->output);
+		}
 	}
 }
