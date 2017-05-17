@@ -75,7 +75,12 @@ abstract class BaseCommand extends Command
 			if (!$this->shownDetailSummary)
 			{
 				$this->output->writeln(
-					Loc::getMessage('INTERVOLGA_MIGRATO.DETAIL_SUMMARY'),
+					Loc::getMessage(
+						'INTERVOLGA_MIGRATO.DETAIL_SUMMARY',
+						array(
+							'#COMMAND#' => $this->getDescription(),
+						)
+					),
 					OutputInterface::VERBOSITY_VERY_VERBOSE
 				);
 				$this->shownDetailSummary = true;
@@ -97,7 +102,7 @@ abstract class BaseCommand extends Command
 		}
 		else
 		{
-			die(__FILE__ . ":" . __LINE__);
+			die(__FILE__ . ':' . __LINE__);
 		}
 		return $result;
 	}
@@ -141,11 +146,11 @@ abstract class BaseCommand extends Command
 		if (!Directory::isDirectoryExists(INTERVOLGA_MIGRATO_DIRECTORY))
 		{
 			Directory::createDirectory(INTERVOLGA_MIGRATO_DIRECTORY);
-			CopyDirFiles(dirname(dirname(dirname(__DIR__))) . "/install/public", INTERVOLGA_MIGRATO_DIRECTORY);
+			CopyDirFiles(dirname(dirname(dirname(__DIR__))) . '/install/public', INTERVOLGA_MIGRATO_DIRECTORY);
 		}
 		if (!Config::isExists())
 		{
-			throw new \Exception(Loc::getMessage("INTERVOLGA_MIGRATO.CONFIG_NOT_FOUND"));
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.CONFIG_NOT_FOUND'));
 		}
 	}
 
@@ -159,12 +164,12 @@ abstract class BaseCommand extends Command
 				)
 			)
 		);
-		if ($this->reportTypeCounter["fail"])
+		if ($this->reportTypeCounter[static::REPORT_TYPE_FAIL])
 		{
 			$this->output->writeln(Loc::getMessage(
 				'INTERVOLGA_MIGRATO.PROCESS_COMPLETED_ERRORS',
 				array(
-					'#CNT#' => $this->reportTypeCounter["fail"],
+					'#CNT#' => $this->reportTypeCounter[static::REPORT_TYPE_FAIL],
 				)
 			));
 		}
@@ -228,7 +233,7 @@ abstract class BaseCommand extends Command
 	 */
 	protected function getModuleOptionsDirectory($module)
 	{
-		return INTERVOLGA_MIGRATO_DIRECTORY . $module . "/";
+		return INTERVOLGA_MIGRATO_DIRECTORY . $module . '/';
 	}
 
 	/**
@@ -253,7 +258,7 @@ abstract class BaseCommand extends Command
 	 * @param int $count
 	 * @param int $option
 	 */
-	protected function report($message, $type = "", $count = 1, $option = 0)
+	protected function report($message, $type = '', $count = 1, $option = 0)
 	{
 		if ($type)
 		{
@@ -277,21 +282,21 @@ abstract class BaseCommand extends Command
 	protected function reportShortSummary()
 	{
 		$getList = LogTable::getList(array(
-			"filter" => array(
-				"=STEP" => $this->getDescription(),
+			'filter' => array(
+				'=STEP' => $this->getDescription(),
 			),
-			"select" => array(
-				"MODULE_NAME",
-				"ENTITY_NAME",
-				"OPERATION",
-				"RESULT",
+			'select' => array(
+				'MODULE_NAME',
+				'ENTITY_NAME',
+				'OPERATION',
+				'RESULT',
 				new ExpressionField('CNT', 'COUNT(*)')
 			),
-			"group" => array(
-				"MODULE_NAME",
-				"ENTITY_NAME",
-				"OPERATION",
-				"RESULT",
+			'group' => array(
+				'MODULE_NAME',
+				'ENTITY_NAME',
+				'OPERATION',
+				'RESULT',
 			),
 		));
 		while ($logs = $getList->fetch())
@@ -299,50 +304,60 @@ abstract class BaseCommand extends Command
 			if (!$this->shownShortSummary)
 			{
 				$this->output->writeln(
-					Loc::getMessage('INTERVOLGA_MIGRATO.LOGS_SUMMARY'),
+					Loc::getMessage(
+						'INTERVOLGA_MIGRATO.LOGS_SUMMARY',
+						array(
+							'#COMMAND#' => $this->getDescription(),
+						)
+					),
 					OutputInterface::VERBOSITY_VERBOSE
 				);
 				$this->shownShortSummary = true;
 			}
 			$this->report(
 				Loc::getMessage(
-					"INTERVOLGA_MIGRATO.STATISTICS_RECORD",
+					'INTERVOLGA_MIGRATO.STATISTICS_RECORD',
 					array(
-						"#MODULE#" => self::getModuleMessage($logs["MODULE_NAME"]),
-						"#ENTITY#" => self::getEntityMessage($logs["ENTITY_NAME"]),
-						"#OPERATION#" => $logs["OPERATION"],
-						"#COUNT#" => $logs["CNT"],
+						'#MODULE#' => self::getModuleMessage($logs['MODULE_NAME']),
+						'#ENTITY#' => self::getEntityMessage($logs['ENTITY_NAME']),
+						'#OPERATION#' => $logs['OPERATION'],
+						'#COUNT#' => $logs['CNT'],
 					)
 				),
-				$logs["RESULT"] ? "ok" : "fail",
+				$logs['RESULT'] ? static::REPORT_TYPE_OK : static::REPORT_TYPE_FAIL,
 				0,
 				OutputInterface::VERBOSITY_VERBOSE
 			);
 		}
 	}
 
+	/**
+	 * @param string $moduleName
+	 *
+	 * @return string
+	 */
 	protected function getModuleMessage($moduleName)
 	{
-		$name = Loc::getMessage("INTERVOLGA_MIGRATO.MODULE_" . strtoupper($moduleName));
-		if (!Loc::getMessage("INTERVOLGA_MIGRATO.MODULE_" . strtoupper($moduleName)))
+		$name = Loc::getMessage('INTERVOLGA_MIGRATO.MODULE_' . strtoupper($moduleName));
+		if (!Loc::getMessage('INTERVOLGA_MIGRATO.MODULE_' . strtoupper($moduleName)))
 		{
 			$name = Loc::getMessage(
-				"INTERVOLGA_MIGRATO.MODULE_UNKNOWN",
+				'INTERVOLGA_MIGRATO.MODULE_UNKNOWN',
 				array(
-					"#MODULE#" => $moduleName,
+					'#MODULE#' => $moduleName,
 				)
 			);
 		}
 		return $name;
 	}
 
+	/**
+	 * @param string $entityName
+	 *
+	 * @return string
+	 */
 	protected function getEntityMessage($entityName)
 	{
-		return Loc::getMessage("INTERVOLGA_MIGRATO.ENTITY_" . strtoupper($entityName));
-	}
-
-	protected function getStepMessage($stepName)
-	{
-		return Loc::getMessage("INTERVOLGA_MIGRATO.STEP_" . strtoupper(preg_replace("/\s\d+/", "", $stepName)));
+		return Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_' . strtoupper($entityName));
 	}
 }

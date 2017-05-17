@@ -1,8 +1,8 @@
 <?
 $MESS['INTERVOLGA_MIGRATO.COMMAND_STARTED'] = 'Выполняется команда <info>#COMMAND#</info>';
-$MESS['INTERVOLGA_MIGRATO.LOGS_SUMMARY'] = '<info>Краткая сводка:</info>';
+$MESS['INTERVOLGA_MIGRATO.LOGS_SUMMARY'] = 'Краткая сводка <info>#COMMAND#</info>:';
 $MESS['INTERVOLGA_MIGRATO.STATISTICS_RECORD'] = '#OPERATION# -- #MODULE#: #ENTITY# (всего записей: #COUNT# шт.)';
-$MESS['INTERVOLGA_MIGRATO.DETAIL_SUMMARY'] = '<info>Подробная сводка:</info>';
+$MESS['INTERVOLGA_MIGRATO.DETAIL_SUMMARY'] = 'Подробная сводка <info>#COMMAND#</info>:';
 $MESS['INTERVOLGA_MIGRATO.STATISTIC_ONE_RECORD'] = '#OPERATION# -- #MODULE#: #ENTITY# (XML ID=<info>#DATA_XML_ID#</info>)';
 $MESS['INTERVOLGA_MIGRATO.CONFIG_NOT_FOUND'] = 'Отсутствует файл конфигурации';
 $MESS['INTERVOLGA_MIGRATO.STEP'] = 'Команда: #STEP#';
