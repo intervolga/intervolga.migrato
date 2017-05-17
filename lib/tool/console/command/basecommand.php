@@ -51,6 +51,10 @@ abstract class BaseCommand extends Command
 	 */
 	protected function logRecord(array $log)
 	{
+		if (!array_key_exists('STEP', $log))
+		{
+			$log['STEP'] = $this->getDescription();
+		}
 		$result = LogTable::add($log);
 		if (!array_key_exists('RESULT', $log))
 		{
@@ -237,22 +241,6 @@ abstract class BaseCommand extends Command
 	}
 
 	/**
-	 * @param string $step
-	 */
-	protected function startStep($step)
-	{
-		$this->step = $step;
-		$this->output->writeln(Loc::getMessage(
-				'INTERVOLGA_MIGRATO.STEP',
-				array(
-					'#STEP#' => $this->step,
-				)
-			),
-			OutputInterface::VERBOSITY_VERBOSE
-		);
-	}
-
-	/**
 	 * @param string $message
 	 * @param string $type
 	 * @param int $count
@@ -358,6 +346,7 @@ abstract class BaseCommand extends Command
 	 */
 	protected function getEntityMessage($entityName)
 	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_' . strtoupper($entityName));
+		$langName = Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_' . strtoupper($entityName));
+		return $langName ? $langName : $entityName;
 	}
 }
