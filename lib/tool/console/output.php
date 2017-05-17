@@ -3,40 +3,22 @@
 use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\Console\Output\Output as SymfonyOutput;
 
 class Output extends ConsoleOutput
 {
-	protected $isWindowsCharset = false;
-
 	public function __construct($verbosity = self::VERBOSITY_NORMAL, $decorated = false, OutputFormatterInterface $formatter = null)
 	{
-		parent::__construct($verbosity, $decorated, $formatter);
+		parent::__construct($verbosity, $decorated, new Formatter());
 		$this->initStyles();
 	}
 
 	public function setWindowsCharset($isWindowsCharset = true)
 	{
-		$this->isWindowsCharset = $isWindowsCharset;
-	}
-
-	public function write($messages, $newline = false, $options = SymfonyOutput::OUTPUT_NORMAL)
-	{
-		if ($this->isWindowsCharset)
+		$formatter = $this->getFormatter();
+		if ($formatter instanceof Formatter)
 		{
-			if (is_array($messages))
-			{
-				foreach ($messages as $i => $message)
-				{
-					$messages[$i] = iconv('utf-8', 'cp1251', $message);
-				}
-			}
-			else
-			{
-				$messages = iconv('utf-8', 'cp1251', $messages);
-			}
+			$formatter->setWindowsCharset($isWindowsCharset);
 		}
-		parent::write($messages, $newline, $options);
 	}
 
 	protected function initStyles()
