@@ -185,6 +185,14 @@ abstract class BaseCommand extends Command
 		}
 	}
 
+	/**
+	 * @return int[]
+	 */
+	public function getReportTypesCounter()
+	{
+		return $this->reportTypeCounter;
+	}
+
 	public function finalReport()
 	{
 		$this->output->writeln(
@@ -198,7 +206,7 @@ abstract class BaseCommand extends Command
 		if ($this->reportTypeCounter[static::REPORT_TYPE_FAIL])
 		{
 			$this->output->writeln(Loc::getMessage(
-				'INTERVOLGA_MIGRATO.PROCESS_COMPLETED_ERRORS',
+				'INTERVOLGA_MIGRATO.COMPLETED_ERRORS',
 				array(
 					'#CNT#' => $this->reportTypeCounter[static::REPORT_TYPE_FAIL],
 				)
@@ -380,6 +388,7 @@ abstract class BaseCommand extends Command
 	/**
 	 * @param string $name
 	 *
+	 * @return \Symfony\Component\Console\Command\Command
 	 * @throws \Symfony\Component\Console\Exception\ExceptionInterface
 	 */
 	protected function runSubcommand($name)
@@ -388,6 +397,18 @@ abstract class BaseCommand extends Command
 		if ($command)
 		{
 			$command->run(new ArrayInput(array()), $this->output);
+			if ($command instanceof BaseCommand)
+			{
+				foreach ($command->getReportTypesCounter() as $type => $counter)
+				{
+					if ($counter)
+					{
+						$this->reportTypeCounter[$type] += $counter;
+					}
+				}
+			}
 		}
+
+		return $command;
 	}
 }
