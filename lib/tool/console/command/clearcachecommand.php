@@ -16,10 +16,9 @@ class ClearCacheCommand extends BaseCommand
 	public function executeInner()
 	{
 		$this->clear();
-		$this->shownShortSummary;
 	}
 
-	public function clear()
+	protected function clear()
 	{
 		BXClearCache(true);
 		$GLOBALS["CACHE_MANAGER"]->CleanAll();
