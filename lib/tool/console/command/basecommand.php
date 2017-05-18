@@ -378,19 +378,7 @@ abstract class BaseCommand extends Command
 		));
 		while ($logs = $getList->fetch())
 		{
-			if (!$this->shownShortSummary)
-			{
-				$this->output->writeln(
-					Loc::getMessage(
-						'INTERVOLGA_MIGRATO.LOGS_SUMMARY',
-						array(
-							'#COMMAND#' => $this->getDescription(),
-						)
-					),
-					OutputInterface::VERBOSITY_VERBOSE
-				);
-				$this->shownShortSummary = true;
-			}
+			$this->shortSummaryStart();
 			$this->report(
 				Loc::getMessage(
 					'INTERVOLGA_MIGRATO.STATISTICS_RECORD',
@@ -405,6 +393,23 @@ abstract class BaseCommand extends Command
 				0,
 				OutputInterface::VERBOSITY_VERBOSE
 			);
+		}
+	}
+
+	protected function shortSummaryStart()
+	{
+		if (!$this->shownShortSummary)
+		{
+			$this->output->writeln(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.LOGS_SUMMARY',
+					array(
+						'#COMMAND#' => $this->getDescription(),
+					)
+				),
+				OutputInterface::VERBOSITY_VERBOSE
+			);
+			$this->shownShortSummary = true;
 		}
 	}
 
