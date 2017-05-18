@@ -19,7 +19,7 @@ class Formatter extends OutputFormatter
 
 	protected function initStyles()
 	{
-		$style = new OutputFormatterStyle('blue', null, array('bold', 'blink'));
+		$style = new OutputFormatterStyle('blue', 'white');
 		$this->setStyle('info', $style);
 
 		$style = new OutputFormatterStyle('green');
