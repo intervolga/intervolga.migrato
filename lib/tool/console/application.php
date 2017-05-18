@@ -5,6 +5,7 @@ use Intervolga\Migrato\Tool\Console\Command\AutofixCommand;
 use Intervolga\Migrato\Tool\Console\Command\ClearCacheCommand;
 use Intervolga\Migrato\Tool\Console\Command\ExportOptionCommand;
 use Intervolga\Migrato\Tool\Console\Command\GenerateCommand;
+use Intervolga\Migrato\Tool\Console\Command\ImportOptionCommand;
 use Intervolga\Migrato\Tool\Console\Command\ReIndexCommand;
 use Intervolga\Migrato\Tool\Console\Command\UnusedConfigCommand;
 use Intervolga\Migrato\Tool\Console\Command\UrlRewriteCommand;
@@ -38,6 +39,7 @@ class Application extends \Symfony\Component\Console\Application
 			new UrlRewriteCommand(),
 			new GenerateCommand(),
 			new ExportOptionCommand(),
+			new ImportOptionCommand(),
 		));
 	}
 
