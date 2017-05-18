@@ -4,7 +4,9 @@ $MESS['INTERVOLGA_MIGRATO.SUBCOMMAND_STARTED'] = 'Выполняется под�
 $MESS['INTERVOLGA_MIGRATO.LOGS_SUMMARY'] = 'Краткая сводка <info>#COMMAND#</info>:';
 $MESS['INTERVOLGA_MIGRATO.STATISTICS_RECORD'] = '#OPERATION# -- #MODULE#: #ENTITY# (всего записей: #COUNT# шт.)';
 $MESS['INTERVOLGA_MIGRATO.DETAIL_SUMMARY'] = 'Подробная сводка <info>#COMMAND#</info>:';
-$MESS['INTERVOLGA_MIGRATO.STATISTIC_ONE_RECORD'] = '#OPERATION# -- #MODULE#: #ENTITY# (XML ID=<info>#DATA_XML_ID#</info>)';
+$MESS['INTERVOLGA_MIGRATO.STATISTIC_ONE_RECORD'] = '#OPERATION# -- #MODULE#: #ENTITY# (#IDS#)';
+$MESS['INTERVOLGA_MIGRATO.RECORD_ID'] = 'ID=<info>#ID#</info>';
+$MESS['INTERVOLGA_MIGRATO.RECORD_XML_ID'] = 'XML ID=<info>#XML_ID#</info>';
 $MESS['INTERVOLGA_MIGRATO.CONFIG_NOT_FOUND'] = 'Отсутствует файл конфигурации';
 $MESS['INTERVOLGA_MIGRATO.COMMAND_COMPLETED'] = 'Команда <info>#COMMAND#</info> выполнена';
 $MESS['INTERVOLGA_MIGRATO.COMPLETED_OK'] = '<ok>Ошибок нет</ok>';
@@ -37,3 +39,4 @@ $MESS['INTERVOLGA_MIGRATO.ENTITY_PRICETYPE'] = 'Типы цен';
 $MESS['INTERVOLGA_MIGRATO.ENTITY_PERSONTYPE'] = 'Типы плательщиков';
 $MESS['INTERVOLGA_MIGRATO.ENTITY_PROPERTYGROUP'] = 'Группы свойств заказов';
 $MESS['INTERVOLGA_MIGRATO.ENTITY_PROPERTYVARIANT'] = 'Варианты значений свойств заказов';
+$MESS['INTERVOLGA_MIGRATO.INVALID_LOG_FORMAT'] = 'Недопустимый формат лог-записи';

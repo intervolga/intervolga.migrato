@@ -4,6 +4,7 @@ use Bitrix\Main\Entity\ExpressionField;
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Symfony\Component\Console\Command\Command;
@@ -53,64 +54,130 @@ abstract class BaseCommand extends Command
 	 */
 	protected function logRecord(array $log)
 	{
-		if (!array_key_exists('STEP', $log))
-		{
-			$log['STEP'] = $this->getDescription();
-		}
+		$log['STEP'] = $log['STEP'] ? $log['STEP'] : $this->getDescription();
 		$result = LogTable::add($log);
+		$this->detailSummaryStart();
+		$this->report(
+			$this->getLogReportMessage($log),
+			$this->getLogReportType($log),
+			1,
+			OutputInterface::VERBOSITY_VERY_VERBOSE
+		);
+		return $result;
+	}
+
+	/**
+	 * @param array $log
+	 *
+	 * @return string
+	 * @throws \Exception
+	 */
+	protected function getLogReportMessage(array $log)
+	{
+		$replaces = $this->prepareLogReportMessageReplaces($log);
+		if ($replaces['#ENTITY#'])
+		{
+			return Loc::getMessage('INTERVOLGA_MIGRATO.STATISTIC_ONE_RECORD', $replaces);
+		}
+		else
+		{
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INVALID_LOG_FORMAT'));
+		}
+	}
+
+	/**
+	 * @param array $log
+	 *
+	 * @return string[]
+	 */
+	protected function prepareLogReportMessageReplaces(array $log)
+	{
+		$data = null;
+		$ids = '';
+		if ($log['RECORD'])
+		{
+			/**
+			 * @var Record $record
+			 */
+			$record = $log['RECORD'];
+			$data = $record->getData();
+			$ids = $this->getIdsString($record->getXmlId(), $record->getId());
+		}
+		elseif ($log['XML_ID_ERROR'])
+		{
+			/**
+			 * @var \Intervolga\Migrato\Tool\XmlIdValidateError $error
+			 */
+			$error = $log['XML_ID_ERROR'];
+			$data = $error->getDataClass();
+			$ids = $this->getIdsString($error->getXmlId(), $error->getId());
+		}
+		return array(
+			'#OPERATION#' => $log['OPERATION'],
+			'#MODULE#' => $data ? self::getModuleMessage($data->getModule()) : '',
+			'#ENTITY#' => $data ? self::getEntityMessage($data->getEntityName()) : '',
+			'#IDS#' => $ids,
+		);
+	}
+
+	/**
+	 * @param string $xmlId
+	 * @param \Intervolga\Migrato\Data\RecordId|null $id
+	 *
+	 * @return string
+	 * @throws \Exception
+	 */
+	protected function getIdsString($xmlId = '', RecordId $id = null)
+	{
+		$ids = array();
+		if ($xmlId)
+		{
+			$ids[] = Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_XML_ID', array(
+				'#XML_ID#' => $xmlId,
+			));
+		}
+		if ($id)
+		{
+			$ids[] = Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_ID', array(
+				'#ID#' => (string) $id->getValue(),
+			));
+		}
+		return implode(', ', $ids);
+	}
+
+	/**
+	 * @param array $log
+	 *
+	 * @return string
+	 */
+	protected function getLogReportType(array $log)
+	{
 		if (!array_key_exists('RESULT', $log))
 		{
 			$type = static::REPORT_TYPE_INFO;
 		}
 		else
 		{
-			if ($log['RESULT'])
-			{
-				$type = static::REPORT_TYPE_OK;
-			}
-			else
-			{
-				$type = static::REPORT_TYPE_FAIL;
-			}
+			$type = $log['RESULT'] ? static::REPORT_TYPE_OK : static::REPORT_TYPE_FAIL;
 		}
-		/**
-		 * @var Record $record
-		 */
-		if ($record = $log['RECORD'])
+		return $type;
+	}
+
+	protected function detailSummaryStart()
+	{
+		if (!$this->shownDetailSummary)
 		{
-			if (!$this->shownDetailSummary)
-			{
-				$this->output->writeln(
-					Loc::getMessage(
-						'INTERVOLGA_MIGRATO.DETAIL_SUMMARY',
-						array(
-							'#COMMAND#' => $this->getDescription(),
-						)
-					),
-					OutputInterface::VERBOSITY_VERY_VERBOSE
-				);
-				$this->shownDetailSummary = true;
-			}
-			$this->report(
+			$this->output->writeln(
 				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.STATISTIC_ONE_RECORD',
+					'INTERVOLGA_MIGRATO.DETAIL_SUMMARY',
 					array(
-						'#OPERATION#' => $log['OPERATION'],
-						'#MODULE#' => self::getModuleMessage($record->getData()->getModule()),
-						'#ENTITY#' => self::getEntityMessage($record->getData()->getEntityName()),
-						'#DATA_XML_ID#' => $record->getXmlId(),
+						'#COMMAND#' => $this->getDescription(),
 					)
 				),
-				$type,
-				1,
 				OutputInterface::VERBOSITY_VERY_VERBOSE
 			);
+			$this->shownDetailSummary = true;
 		}
-		else
-		{
-			die(__FILE__ . ':' . __LINE__);
-		}
-		return $result;
 	}
 
 	/**
@@ -151,11 +218,6 @@ abstract class BaseCommand extends Command
 					'#COMMAND#' => $this->getDescription(),
 				)
 			));
-		}
-
-		if ($this->isMainCommand())
-		{
-
 		}
 		$this->executeInner();
 		if ($this->isMainCommand())
