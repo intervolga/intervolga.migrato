@@ -781,7 +781,7 @@ class GenerateCommand extends BaseCommand
 					'TABLE_NAME' => strtolower($name),
 				));
 
-				$this->report('hlblock:hlblock №' . $i, $result->isSuccess() ? 'ok' : 'fail');
+				$this->reportCreated('hlblock:hlblock', $result->getId());
 			}
 			catch (\Exception $exp)
 			{
