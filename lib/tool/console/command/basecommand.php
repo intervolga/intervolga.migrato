@@ -38,6 +38,7 @@ abstract class BaseCommand extends Command
 
 	protected $shownDetailSummary = false;
 	protected $shownShortSummary = false;
+	protected $customFinalReport = '';
 
 	/**
 	 * @param int $options
@@ -268,18 +269,25 @@ abstract class BaseCommand extends Command
 				)
 			)
 		);
-		if ($this->reportTypeCounter[static::REPORT_TYPE_FAIL])
+		if ($this->customFinalReport)
 		{
-			$this->output->writeln(Loc::getMessage(
-				'INTERVOLGA_MIGRATO.COMPLETED_ERRORS',
-				array(
-					'#CNT#' => $this->reportTypeCounter[static::REPORT_TYPE_FAIL],
-				)
-			));
+			$this->output->writeln($this->customFinalReport);
 		}
 		else
 		{
-			$this->output->writeln(Loc::getMessage('INTERVOLGA_MIGRATO.COMPLETED_OK'));
+			if ($this->reportTypeCounter[static::REPORT_TYPE_FAIL])
+			{
+				$this->output->writeln(Loc::getMessage(
+					'INTERVOLGA_MIGRATO.COMPLETED_ERRORS',
+					array(
+						'#CNT#' => $this->reportTypeCounter[static::REPORT_TYPE_FAIL],
+					)
+				));
+			}
+			else
+			{
+				$this->output->writeln(Loc::getMessage('INTERVOLGA_MIGRATO.COMPLETED_OK'));
+			}
 		}
 	}
 
