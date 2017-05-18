@@ -92,16 +92,19 @@ abstract class BaseCommand extends Command
 	 */
 	protected function prepareLogReportMessageReplaces(array $log)
 	{
+		$replaces = array(
+			'#OPERATION#' => $log['OPERATION'],
+			'#IDS#' => '',
+		);
 		$data = null;
-		$ids = '';
 		if ($log['RECORD'])
 		{
 			/**
 			 * @var Record $record
 			 */
 			$record = $log['RECORD'];
+			$replaces['#IDS#'] = $this->getIdsString($record->getXmlId(), $record->getId());
 			$data = $record->getData();
-			$ids = $this->getIdsString($record->getXmlId(), $record->getId());
 		}
 		elseif ($log['XML_ID_ERROR'])
 		{
@@ -109,15 +112,15 @@ abstract class BaseCommand extends Command
 			 * @var \Intervolga\Migrato\Tool\XmlIdValidateError $error
 			 */
 			$error = $log['XML_ID_ERROR'];
+			$replaces['#IDS#'] = $this->getIdsString($error->getXmlId(), $error->getId());
 			$data = $error->getDataClass();
-			$ids = $this->getIdsString($error->getXmlId(), $error->getId());
 		}
-		return array(
-			'#OPERATION#' => $log['OPERATION'],
-			'#MODULE#' => $data ? self::getModuleMessage($data->getModule()) : '',
-			'#ENTITY#' => $data ? self::getEntityMessage($data->getEntityName()) : '',
-			'#IDS#' => $ids,
-		);
+		if ($data)
+		{
+			$replaces['#MODULE#'] = static::getModuleMessage($data->getModule());
+			$replaces['#ENTITY#'] = static::getEntityMessage($data->getEntityName());
+		}
+		return $replaces;
 	}
 
 	/**
