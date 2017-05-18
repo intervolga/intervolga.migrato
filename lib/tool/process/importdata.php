@@ -38,7 +38,7 @@ class ImportData extends BaseProcess
 			static::init();
 			static::importWithDependencies();
 			static::logNotResolved();
-			static::showNotImported();
+			static::deleteNotImported();
 			static::deleteMarked();
 			static::resolveReferences();
 		}
@@ -51,7 +51,7 @@ class ImportData extends BaseProcess
 		static::init();
 		static::importWithDependencies();
 		static::logNotResolved();
-		static::showNotImported();
+		static::deleteNotImported();
 		static::deleteMarked();
 		static::resolveReferences();
 	}
