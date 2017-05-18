@@ -14,6 +14,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 Loc::loadMessages(__FILE__);
 
+/**
+ * @field \Symfony\Component\Console\Input\InputInterface $input
+ */
 abstract class BaseCommand extends Command
 {
 	const REPORT_TYPE_FAIL = 'fail';
@@ -22,30 +25,124 @@ abstract class BaseCommand extends Command
 
 	protected static $mainCommand = '';
 
-	/**
-	 * @var \Symfony\Component\Console\Input\InputInterface $input
-	 */
-	protected $input = null;
+	protected $step = '';
+	protected $shownDetailSummary = false;
+	protected $shownShortSummary = false;
+	protected $customFinalReport = '';
+	protected $reportTypeCounter = array();
+
 	/**
 	 * @var \Symfony\Component\Console\Output\OutputInterface $output
 	 */
 	protected $output = null;
 
-	/**
-	 * @var string
-	 */
-	protected $step = '';
+	abstract public function executeInner();
 
-	protected $shownDetailSummary = false;
-	protected $shownShortSummary = false;
-	protected $customFinalReport = '';
+	/**
+	 * @return int[]
+	 */
+	public function getReportTypesCounter()
+	{
+		return $this->reportTypeCounter;
+	}
+
+	public function execute(InputInterface $input, OutputInterface $output)
+	{
+		$this->output = $output;
+		if ($this->isMainCommand())
+		{
+			LogTable::deleteAll();
+			$this->checkFiles();
+			$this->output->writeln(Loc::getMessage(
+				'INTERVOLGA_MIGRATO.COMMAND_STARTED',
+				array(
+					'#COMMAND#' => $this->getDescription(),
+				)
+			));
+			$this->separate();
+		}
+		else
+		{
+			$this->output->writeln(Loc::getMessage(
+				'INTERVOLGA_MIGRATO.SUBCOMMAND_STARTED',
+				array(
+					'#COMMAND#' => $this->getDescription(),
+				)
+			));
+		}
+		$this->executeInner();
+		if ($this->isMainCommand())
+		{
+			$this->separate();
+			$this->finalReport();
+		}
+	}
+
+	/**
+	 * @return bool
+	 */
+	protected function isMainCommand()
+	{
+		if (!static::$mainCommand)
+		{
+			static::$mainCommand = get_called_class();
+			return true;
+		}
+		return (static::$mainCommand == get_called_class());
+	}
+
+	/**
+	 * @throws \Exception
+	 */
+	protected function checkFiles()
+	{
+		if (!Directory::isDirectoryExists(INTERVOLGA_MIGRATO_DIRECTORY))
+		{
+			Directory::createDirectory(INTERVOLGA_MIGRATO_DIRECTORY);
+			CopyDirFiles(dirname(dirname(dirname(__DIR__))) . '/install/public', INTERVOLGA_MIGRATO_DIRECTORY);
+		}
+		if (!Config::isExists())
+		{
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.CONFIG_NOT_FOUND'));
+		}
+	}
 
 	/**
 	 * @param int $options
 	 */
-	public function separate($options = 0)
+	protected function separate($options = 0)
 	{
 		$this->output->writeln(str_repeat('-', 80), $options);
+	}
+
+	protected function finalReport()
+	{
+		$this->output->writeln(Loc::getMessage(
+			'INTERVOLGA_MIGRATO.COMMAND_COMPLETED',
+			array(
+				'#COMMAND#' => $this->getDescription(),
+			)
+		));
+		if ($this->customFinalReport)
+		{
+			$this->output->writeln($this->customFinalReport);
+		}
+		else
+		{
+			if ($this->reportTypeCounter[static::REPORT_TYPE_FAIL])
+			{
+				$this->output->writeln(Loc::getMessage(
+					'INTERVOLGA_MIGRATO.COMPLETED_ERRORS',
+					array(
+						'#CNT#' => $this->reportTypeCounter[static::REPORT_TYPE_FAIL],
+					)
+				));
+			}
+			else
+			{
+				$this->output->writeln(Loc::getMessage('INTERVOLGA_MIGRATO.COMPLETED_OK'));
+			}
+		}
 	}
 
 	/**
@@ -64,7 +161,25 @@ abstract class BaseCommand extends Command
 			1,
 			OutputInterface::VERBOSITY_VERY_VERBOSE
 		);
+
 		return $result;
+	}
+
+	protected function detailSummaryStart()
+	{
+		if (!$this->shownDetailSummary)
+		{
+			$this->output->writeln(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.DETAIL_SUMMARY',
+					array(
+						'#COMMAND#' => $this->getDescription(),
+					)
+				),
+				OutputInterface::VERBOSITY_VERY_VERBOSE
+			);
+			$this->shownDetailSummary = true;
+		}
 	}
 
 	/**
@@ -167,130 +282,6 @@ abstract class BaseCommand extends Command
 		return $type;
 	}
 
-	protected function detailSummaryStart()
-	{
-		if (!$this->shownDetailSummary)
-		{
-			$this->output->writeln(
-				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.DETAIL_SUMMARY',
-					array(
-						'#COMMAND#' => $this->getDescription(),
-					)
-				),
-				OutputInterface::VERBOSITY_VERY_VERBOSE
-			);
-			$this->shownDetailSummary = true;
-		}
-	}
-
-	/**
-	 * @return bool
-	 */
-	protected function isMainCommand()
-	{
-		return static::$mainCommand == get_called_class();
-	}
-
-	public function execute(InputInterface $input, OutputInterface $output)
-	{
-		$this->input = $input;
-		$this->output = $output;
-		if (!static::$mainCommand)
-		{
-			static::$mainCommand = get_called_class();
-		}
-
-		if ($this->isMainCommand())
-		{
-			$this->reportTypeCounter = array();
-			LogTable::deleteAll();
-			$this->checkFiles();
-			$this->output->writeln(Loc::getMessage(
-				'INTERVOLGA_MIGRATO.COMMAND_STARTED',
-				array(
-					'#COMMAND#' => $this->getDescription(),
-				)
-			));
-			$this->separate();
-		}
-		else
-		{
-			$this->output->writeln(Loc::getMessage(
-				'INTERVOLGA_MIGRATO.SUBCOMMAND_STARTED',
-				array(
-					'#COMMAND#' => $this->getDescription(),
-				)
-			));
-		}
-		$this->executeInner();
-		if ($this->isMainCommand())
-		{
-			$this->separate();
-			$this->finalReport();
-		}
-	}
-
-	abstract public function executeInner();
-
-	/**
-	 * @var int[]
-	 */
-	protected $reportTypeCounter = array();
-
-	protected function checkFiles()
-	{
-		if (!Directory::isDirectoryExists(INTERVOLGA_MIGRATO_DIRECTORY))
-		{
-			Directory::createDirectory(INTERVOLGA_MIGRATO_DIRECTORY);
-			CopyDirFiles(dirname(dirname(dirname(__DIR__))) . '/install/public', INTERVOLGA_MIGRATO_DIRECTORY);
-		}
-		if (!Config::isExists())
-		{
-			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.CONFIG_NOT_FOUND'));
-		}
-	}
-
-	/**
-	 * @return int[]
-	 */
-	public function getReportTypesCounter()
-	{
-		return $this->reportTypeCounter;
-	}
-
-	public function finalReport()
-	{
-		$this->output->writeln(
-			Loc::getMessage(
-				'INTERVOLGA_MIGRATO.COMMAND_COMPLETED',
-				array(
-					'#COMMAND#' => $this->getDescription(),
-				)
-			)
-		);
-		if ($this->customFinalReport)
-		{
-			$this->output->writeln($this->customFinalReport);
-		}
-		else
-		{
-			if ($this->reportTypeCounter[static::REPORT_TYPE_FAIL])
-			{
-				$this->output->writeln(Loc::getMessage(
-					'INTERVOLGA_MIGRATO.COMPLETED_ERRORS',
-					array(
-						'#CNT#' => $this->reportTypeCounter[static::REPORT_TYPE_FAIL],
-					)
-				));
-			}
-			else
-			{
-				$this->output->writeln(Loc::getMessage('INTERVOLGA_MIGRATO.COMPLETED_OK'));
-			}
-		}
-	}
-
 	/**
 	 * @param \Intervolga\Migrato\Data\BaseData[] $dataClasses
 	 *
@@ -336,16 +327,6 @@ abstract class BaseCommand extends Command
 		{
 			return $dataClasses;
 		}
-	}
-
-	/**
-	 * @param string $module
-	 *
-	 * @return string
-	 */
-	protected function getModuleOptionsDirectory($module)
-	{
-		return INTERVOLGA_MIGRATO_DIRECTORY . $module . '/';
 	}
 
 	/**

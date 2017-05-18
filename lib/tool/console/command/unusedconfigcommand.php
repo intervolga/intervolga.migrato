@@ -7,6 +7,13 @@ Loc::loadMessages(__FILE__);
 
 class UnusedConfigCommand extends BaseCommand
 {
+	protected function configure()
+	{
+		$this->setName('unused');
+		$this->setHidden(true);
+		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.UNUSED_CONFIG_DESCRIPTION'));
+	}
+
 	public function executeInner()
 	{
 		$configDataClassesString = $this->getConfigDataCodes();
@@ -42,12 +49,5 @@ class UnusedConfigCommand extends BaseCommand
 		}
 
 		return $configDataClassesString;
-	}
-
-	protected function configure()
-	{
-		$this->setName('unused');
-		$this->setHidden(true);
-		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.UNUSED_CONFIG_DESCRIPTION'));
 	}
 }

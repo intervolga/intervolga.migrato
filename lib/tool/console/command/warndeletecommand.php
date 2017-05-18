@@ -10,18 +10,14 @@ Loc::loadMessages(__FILE__);
 
 class WarnDeleteCommand extends BaseCommand
 {
-	/**
-	 * @var int
-	 */
-	protected $willDelete;
+	protected $willDelete = 0;
+	protected $totalRecords = 0;
 
 	protected function configure()
 	{
-		parent::configure();
-		$this
-			->setHidden(true)
-			->setName('warndelete')
-			->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.WARN_DELETE_DESCRIPTION'));
+		$this->setHidden(true);
+		$this->setName('warndelete');
+		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.WARN_DELETE_DESCRIPTION'));
 	}
 
 	public function executeInner()
@@ -32,28 +28,22 @@ class WarnDeleteCommand extends BaseCommand
 		{
 			$this->checkData($dataClass);
 		}
-		if ($this->willDelete)
-		{
-			$this->report(
-				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.SOME_WILL_BE_DELETED',
-					array(
-						'#COUNT#' => $this->willDelete,
-					)
-				),
-				static::REPORT_TYPE_INFO,
-				0
-			);
-		}
-		else
-		{
-			$this->report(
-				Loc::getMessage('INTERVOLGA_MIGRATO.NOTHING_WILL_BE_DELETED'),
-				static::REPORT_TYPE_INFO,
-				0
-			);
-		}
 		$this->reportShortSummary();
+		$this->makeCustomFinalReport();
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
+	 */
+	protected function checkData(BaseData $dataClass)
+	{
+		$fileRecordsXmlIds = $this->getFileRecordsXmlIds($dataClass);
+		$databaseRecords = $dataClass->getList();
+		foreach ($databaseRecords as $databaseRecord)
+		{
+			$this->totalRecords++;
+			$this->checkRecord($databaseRecord, $fileRecordsXmlIds);
+		}
 	}
 
 	/**
@@ -75,19 +65,6 @@ class WarnDeleteCommand extends BaseCommand
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
-	 */
-	protected function checkData(BaseData $dataClass)
-	{
-		$fileRecordsXmlIds = $this->getFileRecordsXmlIds($dataClass);
-		$databaseRecords = $dataClass->getList();
-		foreach ($databaseRecords as $databaseRecord)
-		{
-			$this->checkRecord($databaseRecord, $fileRecordsXmlIds);
-		}
-	}
-
-	/**
 	 * @param \Intervolga\Migrato\Data\Record $databaseRecord
 	 * @param array $fileRecordsXmlIds
 	 */
@@ -106,8 +83,31 @@ class WarnDeleteCommand extends BaseCommand
 			$this->logRecord(array(
 				'RECORD' => $databaseRecord,
 				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_SAVED'),
+				'RESULT' => true,
 			));
 		}
 	}
 
+	protected function makeCustomFinalReport()
+	{
+		if ($this->willDelete)
+		{
+			$this->customFinalReport = Loc::getMessage(
+				'INTERVOLGA_MIGRATO.SOME_WILL_BE_DELETED',
+				array(
+					'#COUNT#' => $this->willDelete,
+					'#TOTAL#' => $this->totalRecords,
+				)
+			);
+		}
+		else
+		{
+			$this->customFinalReport = Loc::getMessage(
+				'INTERVOLGA_MIGRATO.NOTHING_WILL_BE_DELETED',
+				array(
+					'#TOTAL#' => $this->totalRecords,
+				)
+			);
+		}
+	}
 }

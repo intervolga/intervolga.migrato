@@ -9,10 +9,8 @@ class AutofixCommand extends BaseCommand
 {
 	protected function configure()
 	{
-		parent::configure();
-		$this
-			->setName('autofix')
-			->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.AUTOFIX_DESCRIPTION'));
+		$this->setName('autofix');
+		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.AUTOFIX_DESCRIPTION'));
 	}
 
 	public function executeInner()

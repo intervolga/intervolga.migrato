@@ -14,58 +14,6 @@ class ValidateCommand extends BaseCommand
 {
 	protected $lastExecuteResult = array();
 	protected $allXmlIds = array();
-	protected function configure()
-	{
-		parent::configure();
-		$this
-			->setHidden(true)
-			->setName('validatexmlid')
-			->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.VALIDATE_DESCRIPTION'));
-	}
-
-	public function executeInner()
-	{
-		$result = array();
-		$configDataClasses = Config::getInstance()->getDataClasses();
-
-		$dataClasses = $this->recursiveGetDependentDataClasses($configDataClasses);
-		foreach ($dataClasses as $data)
-		{
-			if (Loader::includeModule($data->getModule()))
-			{
-				$filter = Config::getInstance()->getDataClassFilter($data);
-				if (!$data->isXmlIdFieldExists())
-				{
-					$data->createXmlIdField();
-				}
-				$result = array_merge($result, $this->validateData($data, $filter));
-			}
-			else
-			{
-				if (in_array($data, $configDataClasses))
-				{
-					$error = Loc::getMessage(
-						'INTERVOLGA_MIGRTO.CONFIG_MODULE_NOT_INSTALLED',
-						array(
-							'#MODULE#' => $data->getModule(),
-						)
-					);
-				}
-				else
-				{
-					$error = Loc::getMessage(
-						'INTERVOLGA_MIGRTO.DEPENDANT_MODULE_NOT_INSTALLED',
-						array(
-							'#MODULE#' => $data->getModule(),
-						)
-					);
-				}
-				throw new LoaderException($error);
-			}
-		}
-		$this->reportShortSummary();
-		$this->lastExecuteResult = $result;
-	}
 
 	/**
 	 * @return \Intervolga\Migrato\Tool\XmlIdValidateError[]
@@ -73,6 +21,51 @@ class ValidateCommand extends BaseCommand
 	public function getLastExecuteResult()
 	{
 		return $this->lastExecuteResult;
+	}
+
+	protected function configure()
+	{
+		$this->setHidden(true);
+		$this->setName('validatexmlid');
+		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.VALIDATE_DESCRIPTION'));
+	}
+
+	public function executeInner()
+	{
+		$result = array();
+		$configDataClasses = Config::getInstance()->getDataClasses();
+		$dataClasses = $this->recursiveGetDependentDataClasses($configDataClasses);
+		foreach ($dataClasses as $data)
+		{
+			$result = array_merge($result, $this->checkDataClass($data));
+		}
+		$this->reportShortSummary();
+		$this->lastExecuteResult = $result;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $data
+	 *
+	 * @return array|\Intervolga\Migrato\Tool\XmlIdValidateError[]
+	 * @throws \Bitrix\Main\LoaderException
+	 */
+	protected function checkDataClass(BaseData $data)
+	{
+		if (Loader::includeModule($data->getModule()))
+		{
+			$filter = Config::getInstance()->getDataClassFilter($data);
+			if (!$data->isXmlIdFieldExists())
+			{
+				$data->createXmlIdField();
+			}
+			$result = $this->validateData($data, $filter);
+		}
+		else
+		{
+			throw $this->dataModuleError($data);
+		}
+
+		return $result;
 	}
 
 	/**
@@ -102,6 +95,31 @@ class ValidateCommand extends BaseCommand
 	protected function getRecordXmlIdErrors(Record $record)
 	{
 		$errors = array();
+		if ($errorType = $this->getErrorType($record))
+		{
+			$errors[] = new XmlIdValidateError($record->getData(), $errorType, $record->getId(), $record->getXmlId());
+			$this->logRecord(array(
+				'RECORD' => $record,
+				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
+				'COMMENT' => XmlIdValidateError::typeToString($errorType),
+				'STEP' => $this->getDescription(),
+				'RESULT' => false,
+			));
+		}
+		else
+		{
+			$this->logRecord(array(
+				'RECORD' => $record,
+				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
+				'STEP' => $this->getDescription(),
+				'RESULT' => true,
+			));
+		}
+		return $errors;
+	}
+
+	protected function getErrorType(Record $record)
+	{
 		$errorType = 0;
 		if ($record->getXmlId())
 		{
@@ -129,27 +147,8 @@ class ValidateCommand extends BaseCommand
 		{
 			$errorType = XmlIdValidateError::TYPE_EMPTY;
 		}
-		if ($errorType)
-		{
-			$errors[] = new XmlIdValidateError($record->getData(), $errorType, $record->getId(), $record->getXmlId());
-			$this->logRecord(array(
-				'RECORD' => $record,
-				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
-				'COMMENT' => XmlIdValidateError::typeToString($errorType),
-				'STEP' => $this->getDescription(),
-				'RESULT' => false,
-			));
-		}
-		else
-		{
-			$this->logRecord(array(
-				'RECORD' => $record,
-				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
-				'STEP' => $this->getDescription(),
-				'RESULT' => true,
-			));
-		}
-		return $errors;
+
+		return $errorType;
 	}
 
 	/**
@@ -171,5 +170,29 @@ class ValidateCommand extends BaseCommand
 	protected function isSimpleXmlId($xmlId)
 	{
 		return is_numeric($xmlId);
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $data
+	 *
+	 * @return \Bitrix\Main\LoaderException
+	 */
+	protected function dataModuleError(BaseData $data)
+	{
+		$configDataClasses = Config::getInstance()->getDataClasses();
+		if (in_array($data, $configDataClasses))
+		{
+			$code = 'INTERVOLGA_MIGRTO.CONFIG_MODULE_NOT_INSTALLED';
+		}
+		else
+		{
+			$code = 'INTERVOLGA_MIGRTO.DEPENDANT_MODULE_NOT_INSTALLED';
+		}
+		return new LoaderException(Loc::getMessage(
+			$code,
+			array(
+				'#MODULE#' => $data->getModule(),
+			)
+		));
 	}
 }
