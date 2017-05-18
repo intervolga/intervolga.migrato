@@ -3,6 +3,7 @@
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Console\Command\AutofixCommand;
 use Intervolga\Migrato\Tool\Console\Command\ClearCacheCommand;
+use Intervolga\Migrato\Tool\Console\Command\ExportOptionCommand;
 use Intervolga\Migrato\Tool\Console\Command\GenerateCommand;
 use Intervolga\Migrato\Tool\Console\Command\ReIndexCommand;
 use Intervolga\Migrato\Tool\Console\Command\UnusedConfigCommand;
@@ -36,6 +37,7 @@ class Application extends \Symfony\Component\Console\Application
 			new ReIndexCommand(),
 			new UrlRewriteCommand(),
 			new GenerateCommand(),
+			new ExportOptionCommand(),
 		));
 	}
 
