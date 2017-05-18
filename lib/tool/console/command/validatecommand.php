@@ -12,6 +12,8 @@ Loc::loadMessages(__FILE__);
 
 class ValidateCommand extends BaseCommand
 {
+	protected $lastExecuteResult = array();
+	protected $allXmlIds = array();
 	protected function configure()
 	{
 		parent::configure();
@@ -62,11 +64,16 @@ class ValidateCommand extends BaseCommand
 			}
 		}
 		$this->reportShortSummary();
-
-		return $result;
+		$this->lastExecuteResult = $result;
 	}
 
-	protected $allXmlIds = array();
+	/**
+	 * @return \Intervolga\Migrato\Tool\XmlIdValidateError[]
+	 */
+	public function getLastExecuteResult()
+	{
+		return $this->lastExecuteResult;
+	}
 
 	/**
 	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
