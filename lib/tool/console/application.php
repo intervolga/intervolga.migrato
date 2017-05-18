@@ -3,6 +3,7 @@
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Console\Command\AutofixCommand;
 use Intervolga\Migrato\Tool\Console\Command\ClearCacheCommand;
+use Intervolga\Migrato\Tool\Console\Command\ReIndexCommand;
 use Intervolga\Migrato\Tool\Console\Command\UnusedConfigCommand;
 use Intervolga\Migrato\Tool\Console\Command\ValidateCommand;
 use Intervolga\Migrato\Tool\Console\Command\ValidateComplexCommand;
@@ -30,6 +31,7 @@ class Application extends \Symfony\Component\Console\Application
 			new WarnDeleteCommand(),
 			new AutofixCommand(),
 			new ClearCacheCommand(),
+			new ReIndexCommand(),
 		));
 	}
 
