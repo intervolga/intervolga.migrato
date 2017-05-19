@@ -26,6 +26,8 @@ class Logger
 
 	protected $command;
 	protected $output;
+	protected $stepNumber = 0;
+	protected $step = '';
 
 	public function __construct(BaseCommand $command, OutputInterface $output)
 	{
@@ -124,9 +126,17 @@ class Logger
 	public function addDb(array $dbLog, $type = '')
 	{
 		$this->detailSummaryStart();
+		if (!$dbLog['COMMAND'])
+		{
+			$dbLog['COMMAND'] = $this->command->getDescription();
+		}
 		if (!$dbLog['STEP'])
 		{
-			$dbLog['STEP'] = $this->command->getDescription();
+			$dbLog['STEP'] = $this->step;
+		}
+		if (!$dbLog['STEP_NUMBER'])
+		{
+			$dbLog['STEP_NUMBER'] = $this->stepNumber;
 		}
 		if (!$type)
 		{
@@ -383,13 +393,17 @@ class Logger
 	{
 		return LogTable::getList(array(
 			'filter' => array(
-				'=STEP' => $this->command->getDescription(),
+				'=COMMAND' => $this->command->getDescription(),
+			),
+			'order' => array(
+				'STEP_NUMBER' => 'ASC',
 			),
 			'select' => array(
 				'MODULE_NAME',
 				'ENTITY_NAME',
 				'OPERATION',
 				'RESULT',
+				'STEP',
 				new ExpressionField('CNT', 'COUNT(*)')
 			),
 			'group' => array(
@@ -397,6 +411,8 @@ class Logger
 				'ENTITY_NAME',
 				'OPERATION',
 				'RESULT',
+				'STEP',
+				'STEP_NUMBER',
 			),
 		));
 	}
@@ -416,5 +432,14 @@ class Logger
 			);
 			$this->shownShortSummary = true;
 		}
+	}
+
+	/**
+	 * @param string $step
+	 */
+	public function startStep($step)
+	{
+		$this->step = $step;
+		$this->stepNumber++;
 	}
 }

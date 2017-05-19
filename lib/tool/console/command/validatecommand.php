@@ -103,7 +103,6 @@ class ValidateCommand extends BaseCommand
 					'RECORD' => $record,
 					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
 					'COMMENT' => XmlIdValidateError::typeToString($errorType),
-					'STEP' => $this->getDescription(),
 				),
 				Logger::TYPE_FAIL
 			);
@@ -114,7 +113,6 @@ class ValidateCommand extends BaseCommand
 				array(
 					'RECORD' => $record,
 					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
-					'STEP' => $this->getDescription(),
 				),
 				Logger::TYPE_OK
 			);
