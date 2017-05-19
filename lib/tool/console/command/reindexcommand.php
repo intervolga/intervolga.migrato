@@ -2,6 +2,7 @@
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Tool\Console\Logger;
 
 Loc::loadMessages(__FILE__);
 
@@ -15,24 +16,25 @@ class ReIndexCommand extends BaseCommand
 
 	public function executeInner()
 	{
-		$this->reindex();
-	}
-
-	protected function reindex()
-	{
 		if (Loader::includeModule('search'))
 		{
 			$count = \CSearch::ReIndexAll(true);
-			$this->customFinalReport = Loc::getMessage(
-				'INTERVOLGA_MIGRATO.REINDEX_RESULT',
-				array(
-					'#COUNT#' => $count,
-				)
+			$this->logger->registerFinal(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.REINDEX_RESULT',
+					array(
+						'#COUNT#' => $count,
+					)
+				),
+				Logger::TYPE_OK
 			);
 		}
 		else
 		{
-			$this->customFinalReport = Loc::getMessage('INTERVOLGA_MIGRATO.NO_SEARCH_MODULE');
+			$this->logger->registerFinal(
+				Loc::getMessage('INTERVOLGA_MIGRATO.NO_SEARCH_MODULE'),
+				Logger::TYPE_INFO
+			);
 		}
 	}
 }
