@@ -4,9 +4,10 @@ use Bitrix\Main\Config\Option;
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\Config;
+use Intervolga\Migrato\Tool\Console\Logger;
 use Intervolga\Migrato\Tool\OptionFileViewXml;
-use Symfony\Component\Console\Output\OutputInterface;
 
 Loc::loadMessages(__FILE__);
 
@@ -20,70 +21,69 @@ class ImportOptionCommand extends BaseCommand
 
 	public function executeInner()
 	{
+		foreach ($this->getOptionFiles() as $file)
+		{
+			$module = str_replace(".xml", "", $file->getName());
+			$options = OptionFileViewXml::readFromFileSystem($file->getPath());
+			$this->import($module, $options);
+		}
+	}
+
+	/**
+	 * @return \Bitrix\Main\IO\File[]
+	 * @throws \Bitrix\Main\IO\FileNotFoundException
+	 */
+	protected function getOptionFiles()
+	{
+		$result = array();
 		$directory = new Directory(INTERVOLGA_MIGRATO_DIRECTORY . "options/");
 		if ($directory->isExists())
 		{
-			$total = array();
 			foreach ($directory->getChildren() as $dirOrFile)
 			{
 				if ($dirOrFile instanceof File)
 				{
-					$file = $dirOrFile;
-					$module = str_replace(".xml", "", $file->getName());
-					$total[$module] = 0;
-					$options = OptionFileViewXml::readFromFileSystem($file->getPath());
-					foreach ($options as $option)
-					{
-						if (Config::getInstance()->isOptionIncluded($option['NAME']))
-						{
-							Option::set($module, $option['NAME'], $option['VALUE'], $option['SITE_ID']);
-							$total[$module]++;
-							if ($option['SITE_ID'])
-							{
-								$id = $option['SITE_ID'] . ':' . $option['NAME'];
-							}
-							else
-							{
-								$id = $option['NAME'];
-							}
-							$this->detailSummaryStart();
-							$this->report(
-								Loc::getMessage(
-									'INTERVOLGA_MIGRATO.STATISTIC_ONE_RECORD',
-									array(
-										'#MODULE#' => $this->getModuleMessage($module),
-										'#ENTITY#' => Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_NAME_OPTIONS'),
-										'#OPERATION#' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_IMPORT_OPTIONS'),
-										'#IDS#' => $id,
-									)
-								),
-								static::REPORT_TYPE_OK,
-								$count,
-								OutputInterface::VERBOSITY_VERY_VERBOSE
-							);
-						}
-					}
+					$result[] = $dirOrFile;
 				}
 			}
+		}
 
-			$this->shortSummaryStart();
-			foreach ($total as $module => $count)
+		return $result;
+	}
+
+	/**
+	 * @param string $module
+	 * @param array $options
+	 */
+	protected function import($module, array $options)
+	{
+		foreach ($options as $option)
+		{
+			if (Config::getInstance()->isOptionIncluded($option['NAME']))
 			{
-				$this->report(
-					Loc::getMessage(
-						'INTERVOLGA_MIGRATO.STATISTICS_RECORD',
-						array(
-							'#MODULE#' => $this->getModuleMessage($module),
-							'#ENTITY#' => Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_NAME_OPTIONS'),
-							'#OPERATION#' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_IMPORT_OPTIONS'),
-							'#COUNT#' => $count,
-						)
-					),
-					static::REPORT_TYPE_OK,
-					$count,
-					OutputInterface::VERBOSITY_VERBOSE
-				);
+				$this->importOption($module, $option);
 			}
 		}
+	}
+
+	/**
+	 * @param string $module
+	 * @param array $option
+	 */
+	protected function importOption($module, array $option)
+	{
+		Option::set($module, $option['NAME'], $option['VALUE'], $option['SITE_ID']);
+		$this->logger->addDb(
+			array(
+				'MODULE_NAME' => $module,
+				'ENTITY_NAME' => 'option',
+				'ID' => RecordId::createComplexId(array(
+					'SITE_ID' => $option['SITE_ID'],
+					'NAME' => $option['NAME'],
+				)),
+				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.IMPORT_OPTION'),
+			),
+			Logger::TYPE_OK
+		);
 	}
 }
