@@ -2,6 +2,7 @@
 
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\UrlRewriter;
+use Intervolga\Migrato\Tool\Console\Logger;
 
 Loc::loadMessages(__FILE__);
 
@@ -21,11 +22,14 @@ class UrlRewriteCommand extends BaseCommand
 	protected function urlRewrite()
 	{
 		$res = UrlRewriter::reindexAll();
-		$this->customFinalReport = Loc::getMessage(
-			'INTERVOLGA_MIGRATO.URLREWRITE_UPDATED',
-			array(
-				'#COUNT#' => $res,
-			)
+		$this->logger->registerFinal(
+			Loc::getMessage(
+				'INTERVOLGA_MIGRATO.URLREWRITE_UPDATED',
+				array(
+					'#COUNT#' => $res,
+				)
+			),
+			Logger::TYPE_OK
 		);
 	}
 }
