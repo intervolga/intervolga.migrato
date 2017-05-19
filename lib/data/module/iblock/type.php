@@ -1,5 +1,6 @@
 <?namespace Intervolga\Migrato\Data\Module\Iblock;
 
+use Bitrix\Iblock\TypeTable;
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
@@ -228,5 +229,23 @@ class Type extends BaseData
 	public function getXmlId($id)
 	{
 		return $id->getValue();
+	}
+
+	public function findRecord($xmlId)
+	{
+		$parameters = array(
+			'filter' => array(
+				'=ID' => $xmlId,
+			),
+			'limit' => 1,
+		);
+		if (TypeTable::getList($parameters)->fetch())
+		{
+			return $this->createId($xmlId);
+		}
+		else
+		{
+			return null;
+		}
 	}
 }
