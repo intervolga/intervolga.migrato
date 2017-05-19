@@ -1,10 +1,11 @@
 <?namespace Intervolga\Migrato\Tool\Console\Command;
 
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\Config;
+use Intervolga\Migrato\Tool\Console\Logger;
 use Intervolga\Migrato\Tool\OptionFileViewXml;
 use Intervolga\Migrato\Tool\Orm\OptionTable;
-use Symfony\Component\Console\Output\OutputInterface;
 
 Loc::loadMessages(__FILE__);
 
@@ -24,20 +25,21 @@ class ExportOptionCommand extends BaseCommand
 		foreach ($this->getDbOptions() as $module => $moduleOptions)
 		{
 			OptionFileViewXml::write($moduleOptions, INTERVOLGA_MIGRATO_DIRECTORY . 'options/' , $module);
-			$this->report(
-				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.STATISTICS_RECORD',
+			foreach ($moduleOptions as $moduleOption)
+			{
+				$this->logger->addDb(
 					array(
-						'#MODULE#' => $this->getModuleMessage($module),
-						'#ENTITY#' => Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_NAME_OPTIONS'),
-						'#OPERATION#' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_EXPORT_OPTIONS'),
-						'#COUNT#' => count($moduleOptions),
-					)
-				),
-				static::REPORT_TYPE_OK,
-				count($moduleOptions),
-				OutputInterface::VERBOSITY_VERBOSE
-			);
+						'MODULE_NAME' => $module,
+						'ENTITY_NAME' => 'option',
+						'ID' => RecordId::createComplexId(array(
+							'SITE_ID' => $moduleOption['SITE_ID'],
+							'NAME' => $moduleOption['NAME'],
+						)),
+						'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.EXPORT_OPTION'),
+					),
+					Logger::TYPE_OK
+				);
+			}
 		}
 	}
 
