@@ -11,9 +11,9 @@ Loc::loadMessages(__FILE__);
 
 class Logger
 {
-	const TYPE_INFO = 'I';
-	const TYPE_OK = 'S';
-	const TYPE_FAIL = 'F';
+	const TYPE_INFO = 'info';
+	const TYPE_OK = 'ok';
+	const TYPE_FAIL = 'fail';
 
 	const LEVEL_NORMAL = 0;
 	const LEVEL_SHORT = 1;
@@ -117,21 +117,31 @@ class Logger
 
 	/**
 	 * @param array $dbLog
+	 * @param string $type
 	 *
 	 * @return \Bitrix\Main\Entity\AddResult
+	 * @throws \Exception
 	 */
-	public function addDb(array $dbLog)
+	public function addDb(array $dbLog, $type = '')
 	{
 		$this->detailSummaryStart();
 		if (!$dbLog['STEP'])
 		{
 			$dbLog['STEP'] = $this->command->getDescription();
 		}
+		if (!$type)
+		{
+			$type = static::TYPE_INFO;
+		}
+		if (!$dbLog['RESULT'])
+		{
+			$dbLog['RESULT'] = $type;
+		}
 		$result = LogTable::add($dbLog);
 		$this->add(
 			$this->getDbMessage($dbLog),
 			static::LEVEL_DETAIL,
-			$this->getDbType($dbLog)
+			$type
 		);
 		return $result;
 	}
@@ -244,28 +254,6 @@ class Logger
 	}
 
 	/**
-	 * @param array $dbLog
-	 *
-	 * @return string
-	 */
-	protected function getDbType(array $dbLog)
-	{
-		if (array_key_exists('EXCEPTION', $dbLog))
-		{
-			return static::TYPE_FAIL;
-		}
-		if (!array_key_exists('RESULT', $dbLog))
-		{
-			$type = static::TYPE_INFO;
-		}
-		else
-		{
-			$type = $dbLog['RESULT'] ? static::TYPE_OK : static::TYPE_FAIL;
-		}
-		return $type;
-	}
-
-	/**
 	 * @param string $message
 	 * @param string $type
 	 */
@@ -366,7 +354,6 @@ class Logger
 		while ($logs = $getList->fetch())
 		{
 			$this->shortSummaryStart();
-			$type = $logs['RESULT'] ? static::TYPE_OK : static::TYPE_FAIL;
 			$this->add(
 				Loc::getMessage(
 					'INTERVOLGA_MIGRATO.STATISTIC_SHORT',
@@ -378,9 +365,9 @@ class Logger
 					)
 				),
 				static::LEVEL_SHORT,
-				$type
+				$logs['RESULT']
 			);
-			$this->typesCounter[$type]--;
+			$this->typesCounter[$logs['RESULT']]--;
 		}
 	}
 
