@@ -302,7 +302,7 @@ class Logger
 	{
 		foreach ($this->finalMessages as $final)
 		{
-			$this->add($final['message'], $final['type']);
+			$this->add($final['message'], 0, $final['type']);
 		}
 	}
 
@@ -315,6 +315,11 @@ class Logger
 				$this->typesCounter[$type] += $counter;
 			}
 		}
+	}
+
+	public function resetTypesCounter()
+	{
+		$this->typesCounter = array();
 	}
 
 	/**
