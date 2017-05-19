@@ -6,6 +6,7 @@ use Intervolga\Migrato\Tool\Console\Command\ClearCacheCommand;
 use Intervolga\Migrato\Tool\Console\Command\ExportDataCommand;
 use Intervolga\Migrato\Tool\Console\Command\ExportOptionCommand;
 use Intervolga\Migrato\Tool\Console\Command\GenerateCommand;
+use Intervolga\Migrato\Tool\Console\Command\ImportDataCommand;
 use Intervolga\Migrato\Tool\Console\Command\ImportOptionCommand;
 use Intervolga\Migrato\Tool\Console\Command\ReIndexCommand;
 use Intervolga\Migrato\Tool\Console\Command\UnusedConfigCommand;
@@ -42,6 +43,7 @@ class Application extends \Symfony\Component\Console\Application
 			new ExportOptionCommand(),
 			new ImportOptionCommand(),
 			new ExportDataCommand(),
+			new ImportDataCommand(),
 		));
 	}
 
