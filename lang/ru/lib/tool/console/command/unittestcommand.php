@@ -5,4 +5,4 @@ $MESS['INTERVOLGA_MIGRATO.COPY_MIGRATION_DATA'] = 'Копирование пап
 $MESS['INTERVOLGA_MIGRATO.IMPORT_EXPORT'] = 'Последовательный импорт и экспорт данных';
 $MESS['INTERVOLGA_MIGRATO.COMPARE_DIRECTORIES'] = 'Сравнение полученных миграционных папок';
 $MESS['INTERVOLGA_MIGRATO.REPORT_FILE'] = 'Сгенерирован файл #FILE# с отчетом сравнения';
-$MESS['INTERVOLGA_MIGRATO.ERROR_WRITE_FILE'] = 'Директории не имеют отличий';
+$MESS['INTERVOLGA_MIGRATO.TEST_OK'] = 'Директории не имеют отличий';
