@@ -16,10 +16,6 @@ Loc::loadMessages(__FILE__);
  */
 abstract class BaseCommand extends Command
 {
-	const REPORT_TYPE_FAIL = 'fail';
-	const REPORT_TYPE_OK = 'ok';
-	const REPORT_TYPE_INFO = 'info';
-
 	protected static $mainCommand = '';
 
 	protected $output = null;
@@ -46,6 +42,7 @@ abstract class BaseCommand extends Command
 		$this->executeInner();
 		if ($this->isMainCommand())
 		{
+			$this->logger->addShortSummary();
 			$this->logger->endCommand();
 		}
 	}
