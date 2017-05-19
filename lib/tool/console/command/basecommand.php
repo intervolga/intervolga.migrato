@@ -40,9 +40,9 @@ abstract class BaseCommand extends Command
 			$this->logger->startSubcommand();
 		}
 		$this->executeInner();
+		$this->logger->addShortSummary();
 		if ($this->isMainCommand())
 		{
-			$this->logger->addShortSummary();
 			$this->logger->endCommand();
 		}
 	}

@@ -2,6 +2,7 @@
 
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Config;
+use Intervolga\Migrato\Tool\Console\Logger;
 
 Loc::loadMessages(__FILE__);
 
@@ -22,15 +23,16 @@ class UnusedConfigCommand extends BaseCommand
 		{
 			if (!in_array($conf->getEntityName(), $configDataClassesString[$conf->getModule()]))
 			{
-				$this->report(
+				$this->logger->add(
 					Loc::getMessage(
 						'INTERVOLGA_MIGRATO.DATA_NOT_USED',
 						array(
-							'#MODULE#' => $this->getModuleMessage($conf->getModule()),
-							'#ENTITY#' => $this->getEntityMessage($conf->getEntityName()),
+							'#MODULE#' => $this->logger->getModuleMessage($conf->getModule()),
+							'#ENTITY#' => $this->logger->getEntityMessage($conf->getEntityName()),
 						)
 					),
-					static::REPORT_TYPE_INFO
+					0,
+					Logger::TYPE_INFO
 				);
 			}
 		}

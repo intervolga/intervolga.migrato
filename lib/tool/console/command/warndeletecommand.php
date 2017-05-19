@@ -4,6 +4,7 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\Config;
+use Intervolga\Migrato\Tool\Console\Logger;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 
 Loc::loadMessages(__FILE__);
@@ -28,8 +29,7 @@ class WarnDeleteCommand extends BaseCommand
 		{
 			$this->checkData($dataClass);
 		}
-		$this->reportShortSummary();
-		$this->makeCustomFinalReport();
+		$this->addResult();
 	}
 
 	/**
@@ -73,40 +73,50 @@ class WarnDeleteCommand extends BaseCommand
 		if (!in_array($databaseRecord->getXmlId(), $fileRecordsXmlIds))
 		{
 			$this->willDelete++;
-			$this->logRecord(array(
+			$this->logger->addDb(array(
 				'RECORD' => $databaseRecord,
 				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_REMOVED'),
 			));
 		}
 		else
 		{
-			$this->logRecord(array(
-				'RECORD' => $databaseRecord,
-				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_SAVED'),
-				'RESULT' => true,
-			));
+			$this->logger->addDb(
+				array(
+					'RECORD' => $databaseRecord,
+					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_SAVED'),
+				),
+				Logger::TYPE_OK
+			);
 		}
 	}
 
-	protected function makeCustomFinalReport()
+	protected function addResult()
 	{
 		if ($this->willDelete)
 		{
-			$this->customFinalReport = Loc::getMessage(
-				'INTERVOLGA_MIGRATO.SOME_WILL_BE_DELETED',
-				array(
-					'#COUNT#' => $this->willDelete,
-					'#TOTAL#' => $this->totalRecords,
-				)
+			$this->logger->add(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.SOME_WILL_BE_DELETED',
+					array(
+						'#COUNT#' => $this->willDelete,
+						'#TOTAL#' => $this->totalRecords,
+					)
+				),
+				0,
+				Logger::TYPE_INFO
 			);
 		}
 		else
 		{
-			$this->customFinalReport = Loc::getMessage(
-				'INTERVOLGA_MIGRATO.NOTHING_WILL_BE_DELETED',
-				array(
-					'#TOTAL#' => $this->totalRecords,
-				)
+			$this->logger->add(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.NOTHING_WILL_BE_DELETED',
+					array(
+						'#TOTAL#' => $this->totalRecords,
+					)
+				),
+				0,
+				Logger::TYPE_OK
 			);
 		}
 	}

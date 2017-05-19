@@ -6,6 +6,7 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\Config;
+use Intervolga\Migrato\Tool\Console\Logger;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 Loc::loadMessages(__FILE__);
@@ -39,7 +40,6 @@ class ValidateCommand extends BaseCommand
 		{
 			$result = array_merge($result, $this->checkDataClass($data));
 		}
-		$this->reportShortSummary();
 		$this->lastExecuteResult = $result;
 	}
 
@@ -98,22 +98,26 @@ class ValidateCommand extends BaseCommand
 		if ($errorType = $this->getErrorType($record))
 		{
 			$errors[] = new XmlIdValidateError($record->getData(), $errorType, $record->getId(), $record->getXmlId());
-			$this->logRecord(array(
-				'RECORD' => $record,
-				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
-				'COMMENT' => XmlIdValidateError::typeToString($errorType),
-				'STEP' => $this->getDescription(),
-				'RESULT' => false,
-			));
+			$this->logger->addDb(
+				array(
+					'RECORD' => $record,
+					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
+					'COMMENT' => XmlIdValidateError::typeToString($errorType),
+					'STEP' => $this->getDescription(),
+				),
+				Logger::TYPE_FAIL
+			);
 		}
 		else
 		{
-			$this->logRecord(array(
-				'RECORD' => $record,
-				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
-				'STEP' => $this->getDescription(),
-				'RESULT' => true,
-			));
+			$this->logger->addDb(
+				array(
+					'RECORD' => $record,
+					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
+					'STEP' => $this->getDescription(),
+				),
+				Logger::TYPE_OK
+			);
 		}
 		return $errors;
 	}
