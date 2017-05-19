@@ -9,6 +9,7 @@ use Intervolga\Migrato\Tool\Console\Command\GenerateCommand;
 use Intervolga\Migrato\Tool\Console\Command\ImportDataCommand;
 use Intervolga\Migrato\Tool\Console\Command\ImportOptionCommand;
 use Intervolga\Migrato\Tool\Console\Command\ReIndexCommand;
+use Intervolga\Migrato\Tool\Console\Command\UnitTestCommand;
 use Intervolga\Migrato\Tool\Console\Command\UnusedConfigCommand;
 use Intervolga\Migrato\Tool\Console\Command\UrlRewriteCommand;
 use Intervolga\Migrato\Tool\Console\Command\ValidateCommand;
@@ -44,6 +45,7 @@ class Application extends \Symfony\Component\Console\Application
 			new ImportOptionCommand(),
 			new ExportDataCommand(),
 			new ImportDataCommand(),
+			new UnitTestCommand(),
 		));
 	}
 
