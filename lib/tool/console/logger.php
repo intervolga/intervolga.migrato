@@ -120,7 +120,6 @@ class Logger
 	 * @param string $type
 	 *
 	 * @return \Bitrix\Main\Entity\AddResult
-	 * @throws \Exception
 	 */
 	public function addDb(array $dbLog, $type = '')
 	{
@@ -167,19 +166,11 @@ class Logger
 	 * @param array $dbLog
 	 *
 	 * @return string
-	 * @throws \Exception
 	 */
 	protected function getDbMessage(array $dbLog)
 	{
 		$replaces = $this->prepareDbMessageReplaces($dbLog);
-		if ($replaces['#ENTITY#'])
-		{
-			return Loc::getMessage('INTERVOLGA_MIGRATO.STATISTIC_DETAIL', $replaces);
-		}
-		else
-		{
-			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INVALID_LOG_FORMAT'));
-		}
+		return Loc::getMessage('INTERVOLGA_MIGRATO.STATISTIC_DETAIL', $replaces);
 	}
 
 	/**
@@ -192,6 +183,8 @@ class Logger
 		$replaces = array(
 			'#OPERATION#' => $dbLog['OPERATION'],
 			'#IDS#' => '',
+			'#MODULE#' => $this->getModuleMessage($dbLog['MODULE_NAME']),
+			'#ENTITY#' => $this->getEntityMessage($dbLog['ENTITY_NAME']),
 		);
 		$data = null;
 		if ($dbLog['RECORD'])
@@ -211,6 +204,10 @@ class Logger
 			$error = $dbLog['XML_ID_ERROR'];
 			$replaces['#IDS#'] = $this->getIdsString($error->getXmlId(), $error->getId());
 			$data = $error->getDataClass();
+		}
+		elseif ($dbLog['ID'])
+		{
+			$replaces['#IDS#'] = $this->getIdsString('', $dbLog['ID']);
 		}
 		if ($data)
 		{

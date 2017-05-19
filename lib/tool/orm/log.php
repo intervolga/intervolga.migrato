@@ -95,6 +95,11 @@ class LogTable extends DataManager
 			$data = array_merge($data, static::exceptionToLog($data["EXCEPTION"]));
 			unset($data["EXCEPTION"]);
 		}
+		if ($data["ID"])
+		{
+			$data = array_merge($data, static::idToLog($data["ID"]));
+			unset($data["ID"]);
+		}
 		parent::add($data);
 	}
 
