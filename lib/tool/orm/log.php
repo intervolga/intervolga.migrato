@@ -36,7 +36,9 @@ class LogTable extends DataManager
 			new StringField("DATA_ID_COMPLEX", array(
 				"serialized" => true,
 			)),
+			new StringField("COMMAND"),
 			new StringField("STEP"),
+			new IntegerField("STEP_NUMBER"),
 			new StringField("OPERATION"),
 			new StringField("RESULT"),
 			new StringField("COMMENT"),
