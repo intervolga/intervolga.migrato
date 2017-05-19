@@ -1,6 +1,7 @@
 <?namespace Intervolga\Migrato\Tool\Console\Command;
 
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Tool\Console\Logger;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 Loc::loadMessages(__FILE__);
@@ -19,33 +20,41 @@ class AutofixCommand extends BaseCommand
 		 * @var ValidateCommand $validateCommand
 		 */
 		$validateCommand = $this->runSubcommand('validatexmlid');
-		$this->reportTypeCounter = array();
+		$this->logger->separate();
+		$this->logger->resetTypesCounter();
 		$errors = $validateCommand->getLastExecuteResult();
 		$fixed = $this->fixErrors($errors);
-		$this->reportShortSummary();
 		if (!$errors)
 		{
-			$this->customFinalReport = Loc::getMessage('INTERVOLGA_MIGRATO.AUTOFIX_NO_NEED');
+			$this->logger->registerFinal(
+				Loc::getMessage('INTERVOLGA_MIGRATO.AUTOFIX_NO_NEED'),
+				Logger::TYPE_OK
+			);
 		}
 		else
 		{
 			if ($fixed == count($errors))
 			{
-				$this->customFinalReport = Loc::getMessage(
-					'INTERVOLGA_MIGRATO.AUTOFIX_X_ALL',
-					array(
-						'#X#' => $fixed,
-					)
+				$this->logger->registerFinal(
+					Loc::getMessage(
+						'INTERVOLGA_MIGRATO.AUTOFIX_X_ALL',
+						array(
+							'#X#' => $fixed,
+						)
+					),
+					Logger::TYPE_OK
 				);
 			}
 			else
 			{
-				$this->customFinalReport = Loc::getMessage(
-					'INTERVOLGA_MIGRATO.AUTOFIX_X_OF_Y',
-					array(
-						'#X#' => $fixed,
-						'#Y#' => count($errors),
-					)
+				$this->logger->registerFinal(Loc::getMessage(
+						'INTERVOLGA_MIGRATO.AUTOFIX_X_OF_Y',
+						array(
+							'#X#' => $fixed,
+							'#Y#' => count($errors),
+						)
+					),
+					Logger::TYPE_FAIL
 				);
 			}
 		}
@@ -79,20 +88,25 @@ class AutofixCommand extends BaseCommand
 		{
 			$xmlId = $error->getDataClass()->generateXmlId($error->getId());
 			$error->setXmlId($xmlId);
-			$this->logRecord(array(
-				'XML_ID_ERROR' => $error,
-				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.AUTOFIX'),
-			));
+			$this->logger->addDb(
+				array(
+					'XML_ID_ERROR' => $error,
+					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.AUTOFIX'),
+				),
+				Logger::TYPE_OK
+			);
 			$result = 1;
 		}
 		catch (\Exception $exception)
 		{
-			$this->logRecord(array(
-				'XML_ID_ERROR' => $error,
-				'EXCEPTION' => $exception,
-				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.AUTOFIX'),
-				'RESULT' => false,
-			));
+			$this->logger->addDb(
+				array(
+					'XML_ID_ERROR' => $error,
+					'EXCEPTION' => $exception,
+					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.AUTOFIX'),
+				),
+				Logger::TYPE_FAIL
+			);
 		}
 		return $result;
 	}
