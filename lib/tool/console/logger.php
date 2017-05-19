@@ -237,7 +237,10 @@ class Logger
 		{
 			if (is_array($id->getValue()))
 			{
-				$stringId = implode(';', $id->getValue());
+				$begin = Loc::getMessage('INTERVOLGA_MIGRATO.COMPLEX_ID_BEGIN');
+				$end = Loc::getMessage('INTERVOLGA_MIGRATO.COMPLEX_ID_END');
+				$separator = Loc::getMessage('INTERVOLGA_MIGRATO.COMPLEX_ID_SEPARATOR');
+				$stringId = $begin . implode($separator, $id->getValue()) . $end;
 			}
 			else
 			{
