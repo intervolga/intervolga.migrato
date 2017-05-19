@@ -1,8 +1,11 @@
 <? namespace Intervolga\Migrato\Data\Module\Main;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
+
+Loc::loadMessages(__FILE__);
 
 class EventType extends BaseData
 {
@@ -71,7 +74,14 @@ class EventType extends BaseData
 		else
 		{
 			global $APPLICATION;
-			throw new \Exception(trim(strip_tags($APPLICATION->getException()->getString())));
+			if ($APPLICATION->getException())
+			{
+				throw new \Exception(trim(strip_tags($APPLICATION->getException()->getString())));
+			}
+			else
+			{
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.EVENTTYPE_CREATE_ERROR'));
+			}
 		}
 	}
 

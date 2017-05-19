@@ -541,12 +541,20 @@ abstract class BaseUserField extends BaseData
 
 	public function delete($xmlId)
 	{
-		if($id = $this->findRecord($xmlId))
+		if ($id = $this->findRecord($xmlId))
 		{
 			$fieldObject = new \CUserTypeEntity();
 			if (!$fieldObject->delete($id->getValue()))
 			{
-				throw new \Exception("Unknown error");
+				global $APPLICATION;
+				if ($APPLICATION->GetException())
+				{
+					throw new \Exception($APPLICATION->getException()->getString());
+				}
+				else
+				{
+					throw new \Exception("Unknown error");
+				}
 			}
 		}
 	}
