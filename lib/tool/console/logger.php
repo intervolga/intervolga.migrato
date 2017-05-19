@@ -228,8 +228,16 @@ class Logger
 		}
 		if ($id)
 		{
+			if (is_array($id->getValue()))
+			{
+				$stringId = implode(';', $id->getValue());
+			}
+			else
+			{
+				$stringId = $id->getValue();
+			}
 			$ids[] = Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_ID', array(
-				'#ID#' => (string) $id->getValue(),
+				'#ID#' => $stringId,
 			));
 		}
 		return implode(', ', $ids);
