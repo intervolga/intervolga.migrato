@@ -47,11 +47,11 @@ class Logger
 				'#COMMAND#' => $this->command->getDescription(),
 			)
 		));
-		$this->separate();
 	}
 
 	public function startSubcommand()
 	{
+		$this->separate();
 		$this->add(Loc::getMessage(
 			'INTERVOLGA_MIGRATO.SUBCOMMAND_STARTED',
 			array(
@@ -103,7 +103,7 @@ class Logger
 			}
 			if ($type == static::TYPE_OK)
 			{
-				$message = '<ok>[ok]</ok> ' . $message;
+				$message = '<ok>[ ok ]</ok> ' . $message;
 			}
 			if ($type == static::TYPE_INFO)
 			{
@@ -134,6 +134,23 @@ class Logger
 			$this->getDbType($dbLog)
 		);
 		return $result;
+	}
+
+	protected function detailSummaryStart()
+	{
+		if (!$this->shownDetailSummary)
+		{
+			$this->add(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.DETAIL_SUMMARY',
+					array(
+						'#COMMAND#' => $this->command->getDescription(),
+					)
+				),
+				static::LEVEL_DETAIL
+			);
+			$this->shownDetailSummary = true;
+		}
 	}
 
 	/**
@@ -252,40 +269,6 @@ class Logger
 		);
 	}
 
-	public function detailSummaryStart()
-	{
-		if (!$this->shownDetailSummary)
-		{
-			$this->add(
-				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.DETAIL_SUMMARY',
-					array(
-						'#COMMAND#' => $this->command->getDescription(),
-					)
-				),
-				static::LEVEL_DETAIL
-			);
-			$this->shownDetailSummary = true;
-		}
-	}
-
-	public function shortSummaryStart()
-	{
-		if (!$this->shownShortSummary)
-		{
-			$this->add(
-				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.SHORT_SUMMARY',
-					array(
-						'#COMMAND#' => $this->command->getDescription(),
-					)
-				),
-				static::LEVEL_SHORT
-			);
-			$this->shownShortSummary = true;
-		}
-	}
-
 	public function addErrorsCount()
 	{
 		if ($errors = $this->typesCounter[static::TYPE_FAIL])
@@ -375,6 +358,7 @@ class Logger
 		while ($logs = $getList->fetch())
 		{
 			$this->shortSummaryStart();
+			$type = $logs['RESULT'] ? static::TYPE_OK : static::TYPE_FAIL;
 			$this->add(
 				Loc::getMessage(
 					'INTERVOLGA_MIGRATO.STATISTIC_SHORT',
@@ -386,8 +370,9 @@ class Logger
 					)
 				),
 				static::LEVEL_SHORT,
-				$logs['RESULT'] ? static::TYPE_OK : static::TYPE_FAIL
+				$type
 			);
+			$this->typesCounter[$type]--;
 		}
 	}
 
@@ -414,5 +399,22 @@ class Logger
 				'RESULT',
 			),
 		));
+	}
+
+	protected function shortSummaryStart()
+	{
+		if (!$this->shownShortSummary)
+		{
+			$this->add(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.SHORT_SUMMARY',
+					array(
+						'#COMMAND#' => $this->command->getDescription(),
+					)
+				),
+				static::LEVEL_SHORT
+			);
+			$this->shownShortSummary = true;
+		}
 	}
 }
