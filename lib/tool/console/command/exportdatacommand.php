@@ -5,6 +5,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\Config;
+use Intervolga\Migrato\Tool\Console\Logger;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 
 Loc::loadMessages(__FILE__);
@@ -32,7 +33,6 @@ class ExportDataCommand extends BaseCommand
 			{
 				$this->exportData($data);
 			}
-			$this->reportShortSummary();
 		}
 	}
 
@@ -77,18 +77,24 @@ class ExportDataCommand extends BaseCommand
 			$this->checkRuntimesDependencies($record->getRuntimes());
 			$this->checkDependencies($record->getDependencies());
 			DataFileViewXml::write($record, $path);
-			$this->logRecord(array(
-				"RECORD" => $record,
-				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_EXPORT'),
-			));
+			$this->logger->addDb(
+				array(
+					"RECORD" => $record,
+					"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_EXPORT'),
+				),
+				Logger::TYPE_OK
+			);
 		}
 		catch (\Exception $exception)
 		{
-			$this->logRecord(array(
-				"RECORD" => $record,
-				"EXCEPTION" => $exception,
-				"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_EXPORT'),
-			));
+			$this->logger->addDb(
+				array(
+					"RECORD" => $record,
+					"EXCEPTION" => $exception,
+					"OPERATION" => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_EXPORT'),
+				),
+				Logger::TYPE_FAIL
+			);
 		}
 	}
 
