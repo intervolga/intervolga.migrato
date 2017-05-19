@@ -517,7 +517,7 @@ abstract class BaseUserField extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
 		$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
@@ -539,7 +539,7 @@ abstract class BaseUserField extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		if ($id = $this->findRecord($xmlId))
 		{

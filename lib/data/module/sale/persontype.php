@@ -120,7 +120,7 @@ class PersonType extends BaseData
 		return $array;
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$add = $this->recordToArray($record);
 		$object = new \CSalePersonType();
@@ -136,7 +136,7 @@ class PersonType extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		if ($id)

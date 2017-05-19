@@ -70,14 +70,14 @@ class Field extends BaseUserField
 		return "HLBLOCK_" . $id;
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$hlblockLink = $record->getDependency($this->getDependencyString());
 		if ($hlblockLink && ($hlblockId = $hlblockLink->getId()))
 		{
 			$record->setFieldRaw("ENTITY_ID", $this->getDependencyNameKey($hlblockId->getValue()));
 
-			return parent::create($record);
+			return parent::createInner($record);
 		}
 		else
 		{

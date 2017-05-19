@@ -106,7 +106,7 @@ class Language extends BaseData
 		return $array;
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$data = $this->recordToArray($record);
 		$result = LanguageTable::add($data);
@@ -120,7 +120,7 @@ class Language extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		if ($id)

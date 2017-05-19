@@ -64,7 +64,7 @@ class EventType extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$eventTypeId = \CEventType::add($record->getFieldsRaw());
 		if ($eventTypeId)
@@ -85,7 +85,7 @@ class EventType extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		if ($id && !\CEventType::delete(array("ID" => $id->getValue())))

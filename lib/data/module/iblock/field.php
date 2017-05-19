@@ -70,7 +70,7 @@ class Field extends BaseUserField
 		return "IBLOCK_" . $id . "_SECTION";
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		if ($iblockId = $record->getDependency($this->getDependencyString())->getId())
 		{
@@ -78,7 +78,7 @@ class Field extends BaseUserField
 			$userTypeEntity->CreatePropertyTables("iblock_" . $iblockId->getValue() . "_section");
 			$record->setFieldRaw("ENTITY_ID", $this->getDependencyNameKey($iblockId->getValue()));
 
-			return parent::create($record);
+			return parent::createInner($record);
 		}
 		else
 		{

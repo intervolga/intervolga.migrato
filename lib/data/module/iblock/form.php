@@ -293,7 +293,7 @@ class Form extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$array = $this->recordToArray($record);
 		if ($array['CATEGORY'] && $array['NAME'])
@@ -341,7 +341,7 @@ class Form extends BaseData
 	 *
 	 * @throws \Exception
 	 */
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$fields = $this->parseXmlId($xmlId);
 		if ($fields)

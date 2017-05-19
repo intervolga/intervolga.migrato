@@ -141,7 +141,7 @@ class PriceType extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$add = $this->recordToArray($record);
 
@@ -158,7 +158,7 @@ class PriceType extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		if ($id)
