@@ -248,4 +248,9 @@ class Type extends BaseData
 			return null;
 		}
 	}
+
+	public function createId($id)
+	{
+		return RecordId::createStringId($id);
+	}
 }
