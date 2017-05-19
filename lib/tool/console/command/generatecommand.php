@@ -13,7 +13,8 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\UserFieldTable;
 use Bitrix\Sale\Internals\OrderPropsTable;
 use Bitrix\Sale\Internals\PersonTypeTable;
-use Symfony\Component\Console\Output\OutputInterface;
+use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\Console\Logger;
 
 Loc::loadMessages(__FILE__);
 
@@ -42,14 +43,14 @@ class GenerateCommand extends BaseCommand
 			$this->createIBlockType();
 			$this->createIBlockIBlock();
 			$this->createUserField('IBLOCK_#ENTITY#_SECTION');
-			$this->createUserFieldEnum('iblock', $this->iblockFieldEnumFilter);
+			$this->createUserFieldEnum('iblock', 'iblockFieldEnumFilter');
 			$this->createIBlockProperty();
 		}
 		if (Loader::IncludeModule('highloadblock'))
 		{
 			//TODO $this->createHighLoadBlock();
 			$this->createUserField('HLBLOCK_#ENTITY#');
-			$this->createUserFieldEnum('highloadblock', $this->hlblockFieldEnumFilter);
+			$this->createUserFieldEnum('highloadblock', 'hlblockFieldEnumFilter');
 		}
 
 		if (Loader::IncludeModule('sale'))
@@ -83,11 +84,18 @@ class GenerateCommand extends BaseCommand
 					'DESCRIPTION' => $this->generateRandom('TEXT0-100'),
 					'STRING_ID' => $name,
 				));
-				$this->reportCreated('main:group', $id);
+				if ($id)
+				{
+					$this->reportCreated('main', 'group', $id);
+				}
+				else
+				{
+					$this->reportErrors('main', 'group', array($group->LAST_ERROR));
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('main', 'group', $exp);
 			}
 		}
 	}
@@ -132,38 +140,58 @@ class GenerateCommand extends BaseCommand
 	}
 
 	/**
+	 * @param string $module
 	 * @param string $entity
-	 * @param string $id
+	 * @param $id
 	 */
-	protected function reportCreated($entity, $id)
+	protected function reportCreated($module, $entity, $id)
 	{
-		if ($id)
-		{
-			$this->report(
-				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.RECORD_CREATED_ID', array(
-						'#ENTITY#' => $entity,
-						'#ID#' => $id,
-					)
-				),
-				static::REPORT_TYPE_OK,
-				1,
-				OutputInterface::VERBOSITY_VERBOSE
-			);
-		}
-		else
-		{
-			$this->report(
-				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.RECORD_CREATE_FAIL', array(
-						'#ENTITY#' => $entity,
-					)
-				),
-				static::REPORT_TYPE_FAIL,
-				1,
-				OutputInterface::VERBOSITY_VERBOSE
-			);
-		}
+		$this->logger->addDb(
+			array(
+				'MODULE_NAME' => $module,
+				'ENTITY_NAME' => $entity,
+				'ID' => RecordId::createStringId($id),
+				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_CREATE'),
+			),
+			Logger::TYPE_OK
+		);
+	}
+
+	/**
+	 * @param string $module
+	 * @param string $entity
+	 * @param array $errors
+	 */
+	protected function reportErrors($module, $entity, array $errors = array())
+	{
+		$this->logger->addDb(
+			array(
+				'MODULE_NAME' => $module,
+				'ENTITY_NAME' => $entity,
+				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_CREATE'),
+				'RESULT' => Logger::TYPE_FAIL,
+				'COMMENT' => implode(', ', $errors),
+			),
+			Logger::TYPE_FAIL
+		);
+	}
+
+	/**
+	 * @param string $module
+	 * @param string $entity
+	 * @param \Exception $exception
+	 */
+	protected function reportException($module, $entity, \Exception $exception = null)
+	{
+		$this->logger->addDb(
+			array(
+				'MODULE_NAME' => $module,
+				'ENTITY_NAME' => $entity,
+				'EXCEPTION' => $exception,
+				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_CREATE'),
+			),
+			Logger::TYPE_FAIL
+		);
 	}
 
 	/**
@@ -186,11 +214,18 @@ class GenerateCommand extends BaseCommand
 					'CHARSET' => 'UTF-8',
 					'DIRECTION' => $this->generateRandom('STRING_BOOL'),
 				));
-				$this->reportCreated('main:culture', $id->getId());
+				if ($id->isSuccess())
+				{
+					$this->reportCreated('main', 'culture', $id->getId());
+				}
+				else
+				{
+					$this->reportErrors('main', 'culture', $id->getErrorMessages());
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('main', 'culture', $exp);
 			}
 		}
 	}
@@ -207,7 +242,6 @@ class GenerateCommand extends BaseCommand
 		{
 			try
 			{
-				$name = $this->generateRandom('STRING0-10');
 				$id = LanguageTable::add(array(
 					'LID' => $this->generateRandom('STRING0-2'),
 					'SORT' => $this->generateRandom('NUMBER0-100'),
@@ -216,17 +250,24 @@ class GenerateCommand extends BaseCommand
 					'NAME' => $this->generateRandom('STRING0-10'),
 					'CULTURE_ID' => $this->generateRandom('FROM_LIST', $cultures),
 				));
-				$this->reportCreated('main:language', $id->isSuccess() ? $name : '');
+				if ($id->isSuccess())
+				{
+					$this->reportCreated('main', 'language', $id->getId());
+				}
+				else
+				{
+					$this->reportErrors('main', 'language', $id->getErrorMessages());
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('main', 'language', $exp);
 			}
 		}
 	}
 
 	/**
-	 * @param \Bitrix\Main\DB\Result $rsCollection
+	 * @param \Bitrix\Main\DB\Result|\CDBResult $rsCollection
 	 * @param string $field
 	 *
 	 * @return array
@@ -256,18 +297,32 @@ class GenerateCommand extends BaseCommand
 			{
 				$et = new \CEventType();
 				$name = $this->generateRandom('STRING0-10');
-				$id = $et->Add(array(
+				$id = $et->add(array(
 					'LID' => $this->generateRandom('FROM_LIST', $languages),
 					'EVENT_NAME' => $name,
 					'NAME' => $name,
 					'SORT' => $this->generateRandom('NUMBER0-100'),
 					'DESCRIPTION' => $this->generateRandom('TEXT0-50'),
 				));
-				$this->reportCreated('main:eventtype', $id);
+				if ($id)
+				{
+					$this->reportCreated('main', 'eventtype', $id);
+				}
+				else
+				{
+					global $APPLICATION;
+					$this->reportErrors(
+						'main',
+						'eventtype',
+						array(
+							$APPLICATION->GetException()->GetString(),
+						)
+					);
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('main', 'eventtype', $exp);
 			}
 		}
 	}
@@ -296,12 +351,26 @@ class GenerateCommand extends BaseCommand
 					'SUBJECT' => $this->generateRandom('TEXT0-20'),
 					'MESSAGE' => $this->generateRandom('TEXT0-200'),
 				);
-				$id = $et->Add($fields);
-				$this->reportCreated('main:event', $id);
+				$id = $et->add($fields);
+				if ($id)
+				{
+					$this->reportCreated('main', 'event', $id);
+				}
+				else
+				{
+					global $APPLICATION;
+					$this->reportErrors(
+						'main',
+						'event',
+						array(
+							$APPLICATION->GetException()->GetString(),
+						)
+					);
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('main', 'event', $exp);
 			}
 		}
 	}
@@ -317,7 +386,7 @@ class GenerateCommand extends BaseCommand
 			{
 				$obBlocktype = new \CIBlockType();
 				$id = $this->generateRandom('STRING0-10');
-				$id = $obBlocktype->Add(array(
+				$id = $obBlocktype->add(array(
 					'ID' => $this->generateRandom('STRING0-10'),
 					'SECTIONS' => $this->generateRandom('STRING_BOOL'),
 					'IN_RSS' => $this->generateRandom('STRING_BOOL'),
@@ -330,11 +399,18 @@ class GenerateCommand extends BaseCommand
 						),
 					),
 				));
-				$this->reportCreated('iblock:type', $id);
+				if ($id)
+				{
+					$this->reportCreated('iblock', 'type', $id);
+				}
+				else
+				{
+					$this->reportErrors('iblock', 'type', array($obBlocktype->LAST_ERROR));
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('iblock', 'type', $exp);
 			}
 		}
 	}
@@ -367,12 +443,19 @@ class GenerateCommand extends BaseCommand
 					'INDEX_ELEMENT' => $this->generateRandom('STRING_BOOL'),
 					'INDEX_SECTION' => $this->generateRandom('STRING_BOOL'),
 				);
-				$id = $obBlock->Add($arField);
-				$this->reportCreated('iblock:iblock', $id);
+				$id = $obBlock->add($arField);
+				if ($id)
+				{
+					$this->reportCreated('iblock', 'iblock', $id);
+				}
+				else
+				{
+					$this->reportErrors('iblock', 'iblock', array($obBlock->LAST_ERROR));
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('iblock', 'iblock', $exp);
 			}
 		}
 	}
@@ -392,7 +475,7 @@ class GenerateCommand extends BaseCommand
 			{
 				$obIBlockField = new \CUserTypeEntity();
 				$name = strtoupper($this->generateRandom('STRING0-10'));
-				$id = $obIBlockField->Add(array(
+				$id = $obIBlockField->add(array(
 					'FIELD_NAME' => 'UF_' . $name,
 					'XML_ID' => $name,
 					'ENTITY_ID' => str_replace('#ENTITY#', $this->generateRandom('FROM_LIST', $iblocks), $entity),
@@ -422,11 +505,25 @@ class GenerateCommand extends BaseCommand
 						'en' => $this->generateRandom('TEXT0-10'),
 					),
 				));
-				$this->reportCreated('iblock:field', $id);
+				if ($id)
+				{
+					$this->reportCreated('iblock', 'field', $id);
+				}
+				else
+				{
+					global $APPLICATION;
+					$this->reportErrors(
+						'iblock',
+						'field',
+						array(
+							$APPLICATION->GetException()->GetString(),
+						)
+					);
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('iblock', 'field', $exp);
 			}
 		}
 	}
@@ -434,9 +531,8 @@ class GenerateCommand extends BaseCommand
 	/**
 	 * @param string $module
 	 * @param array $filter
-	 * @param int $count
 	 */
-	protected function createUserFieldEnum($module, $filter, $count = 1)
+	protected function createUserFieldEnum($module, $filter)
 	{
 		try
 		{
@@ -469,24 +565,27 @@ class GenerateCommand extends BaseCommand
 					);
 				}
 				$ufFieldId = $this->generateRandom('FROM_LIST', $userFields);
-				$obEnum->SetEnumValues($ufFieldId, $arAddEnum);
-				$this->report(
-					Loc::getMessage(
-						'INTERVOLGA_MIGRATO.ENUM_CREATED',
+				$result = $obEnum->SetEnumValues($ufFieldId, $arAddEnum);
+				if ($result)
+				{
+					$this->reportCreated($module, 'fieldenum', '?');
+				}
+				else
+				{
+					global $APPLICATION;
+					$this->reportErrors(
+						$module,
+						'fieldenum',
 						array(
-							'#FIELD#' => $ufFieldId['FIELD_NAME'],
-							'#ENTITY#' => $module . ':fieldenum',
+							$APPLICATION->GetException()->GetString(),
 						)
-					),
-					static::REPORT_TYPE_OK,
-					1,
-					OutputInterface::VERBOSITY_VERBOSE
-				);
+					);
+				}
 			}
 		}
 		catch (\Exception $exp)
 		{
-			$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+			$this->reportException($module, 'fieldenum', $exp);
 		}
 	}
 
@@ -529,12 +628,19 @@ class GenerateCommand extends BaseCommand
 						);
 					}
 				}
-				$id = $obIBlockProperty->Add($arField);
-				$this->reportCreated('iblock:property', $id);
+				$id = $obIBlockProperty->add($arField);
+				if ($id)
+				{
+					$this->reportCreated('iblock', 'property', $id);
+				}
+				else
+				{
+					$this->reportErrors('iblock', 'property', array($obIBlockProperty->LAST_ERROR));
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('iblock', 'property', $exp);
 			}
 		}
 	}
@@ -559,11 +665,25 @@ class GenerateCommand extends BaseCommand
 					'ACTIVE' => $this->generateRandom('STRING_BOOL'),
 					'LID' => $this->generateRandom('FROM_LIST', $sites),
 				));
-				$this->reportCreated('sale:personType', $id);
+				if ($id)
+				{
+					$this->reportCreated('sale', 'personType', $id);
+				}
+				else
+				{
+					global $APPLICATION;
+					$this->reportErrors(
+						'sale',
+						'personType',
+						array(
+							$APPLICATION->GetException()->GetString(),
+						)
+					);
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('sale', 'personType', $exp);
 			}
 		}
 	}
@@ -586,11 +706,25 @@ class GenerateCommand extends BaseCommand
 					'NAME' => ucfirst(strtolower($this->generateRandom('STRING0-10'))),
 					'SORT' => $this->generateRandom('NUMBER0-100'),
 				));
-				$this->reportCreated('sale:propertyGroup', $id);
+				if ($id)
+				{
+					$this->reportCreated('sale', 'propertyGroup', $id);
+				}
+				else
+				{
+					global $APPLICATION;
+					$this->reportErrors(
+						'sale',
+						'propertyGroup',
+						array(
+							$APPLICATION->GetException()->GetString(),
+						)
+					);
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('sale', 'propertyGroup', $exp);
 			}
 		}
 	}
@@ -634,11 +768,18 @@ class GenerateCommand extends BaseCommand
 					'UTIL' => $this->generateRandom('STRING_BOOL'),
 					'MULTIPLE' => 'N',
 				));
-				$this->reportCreated('sale:property', $result->getId());
+				if ($result->isSuccess())
+				{
+					$this->reportCreated('sale', 'property', $result->getId());
+				}
+				else
+				{
+					$this->reportErrors('sale', 'property', $result->getErrorMessages());
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('sale', 'property', $exp);
 			}
 		}
 
@@ -667,11 +808,25 @@ class GenerateCommand extends BaseCommand
 						'ru' => $this->generateRandom('STRING0-5'),
 					),
 				));
-				$this->reportCreated('catalog:pricetype', $id);
+				if ($id)
+				{
+					$this->reportCreated('catalog', 'pricetype', $id);
+				}
+				else
+				{
+					global $APPLICATION;
+					$this->reportErrors(
+						'catalog',
+						'pricetype',
+						array(
+							$APPLICATION->GetException()->GetString(),
+						)
+					);
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('catalog', 'pricetype', $exp);
 			}
 		}
 	}
@@ -730,11 +885,18 @@ class GenerateCommand extends BaseCommand
 					'DOMAIN_LIMITED' => 'N',
 					'SITE_NAME' => $this->generateRandom('TEXT0-20'),
 				));
-				$this->reportCreated('main:site', $result->getId());
+				if ($result->isSuccess())
+				{
+					$this->reportCreated('main', 'site', $result->getId());
+				}
+				else
+				{
+					$this->reportErrors('main', 'site', $result->getErrorMessages());
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('main', 'site', $exp);
 			}
 		}
 	}
@@ -757,11 +919,18 @@ class GenerateCommand extends BaseCommand
 					'SORT' => $this->generateRandom('NUMBER0-100'),
 					'TEMPLATE' => $this->generateRandom('STRING0-15'),
 				));
-				$this->reportCreated('main:siteTemplate', $result->getId());
+				if ($result->isSuccess())
+				{
+					$this->reportCreated('main', 'siteTemplate', $result->getId());
+				}
+				else
+				{
+					$this->reportErrors('main', 'siteTemplate', $result->getErrorMessages());
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('main', 'siteTemplate', $exp);
 			}
 		}
 	}
@@ -781,13 +950,19 @@ class GenerateCommand extends BaseCommand
 					'TABLE_NAME' => strtolower($name),
 				));
 
-				$this->reportCreated('hlblock:hlblock', $result->getId());
+				if ($result->isSuccess())
+				{
+					$this->reportCreated('hlblock', 'hlblock', $result->getId());
+				}
+				else
+				{
+					$this->reportErrors('hlblock', 'hlblock', $result->getErrorMessages());
+				}
 			}
 			catch (\Exception $exp)
 			{
-				$this->report('Exception: ' . $exp->getMessage(), static::REPORT_TYPE_FAIL);
+				$this->reportException('hlblock', 'hlblock', $exp);
 			}
 		}
-
 	}
 }
