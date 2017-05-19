@@ -40,6 +40,7 @@ class Logger
 
 	public function startCommand()
 	{
+		LogTable::deleteAll();
 		$this->add(Loc::getMessage(
 			'INTERVOLGA_MIGRATO.COMMAND_STARTED',
 			array(
