@@ -22,8 +22,8 @@ class GenerationData extends BaseProcess
 		static::createMainGroup();
 		static::createMainCulture();
 		static::createMainLanguage();
-		//static::createMainSite();
-		//static::createMainSiteTemplate();
+		static::createMainSite();
+		static::createMainSiteTemplate();
 		static::createMainEventType();
 		static::createMainEvent();
 
@@ -37,8 +37,11 @@ class GenerationData extends BaseProcess
 		}
 		if(Loader::IncludeModule("highloadblock"))
 		{
-			//static::createHighLoadBlock();
-			static::createUserField("HLBLOCK_#ENTITY#");
+			static::createHighLoadBlock();
+			if(Loader::IncludeModule("iblock"))
+			{
+				static::createUserField("HLBLOCK_#ENTITY#");
+			}
 			static::createUserFieldEnum("highloadblock", "static::hlblockFieldEnumFilter");
 		}
 
@@ -101,7 +104,7 @@ class GenerationData extends BaseProcess
 					"CHARSET"           => "UTF-8",
 					"DIRECTION"         => static::generateRandom("BOOL"),
 				));
-				static::report("main:culture №" . $i, $id ? "ok" : "fail");
+				static::report("main:culture №" . $i, $id->isSuccess() ? "ok" : "fail");
 			} catch(\Exception $exp)
 			{
 				static::report("Exception: " . $exp->getMessage(),"warning");
@@ -136,6 +139,8 @@ class GenerationData extends BaseProcess
 	public static function createMainSite($count = 1)
 	{
 		static::startStep(__FUNCTION__);
+		$cultures = static::collectIds(CultureTable::getList(array("select" => array("ID"))));
+		$languages = static::collectIds(LanguageTable::getList(array("select" => array("ID"))));
 		for($i = 0; $i < $count; $i++)
 		{
 			try
@@ -149,7 +154,10 @@ class GenerationData extends BaseProcess
 					'NAME' => static::generateRandom("TEXT0-20"),
 					'DIR' => "/" . static::generateRandom("STRING0-6"),
 					'DOMAIN_LIMITED' => "N",
+					'SERVER_NAME' => "khodnenko1.ivserv1.tmweb.ru",
 					'SITE_NAME' => static::generateRandom("TEXT0-20"),
+					'CULTURE_ID' => static::generateRandom("FROM_LIST", $cultures),
+					'LANGUAGE_ID' => static::generateRandom("FROM_LIST", $languages),
 				));
 				static::report("main:site №" . $i, $result->isSuccess() ? "ok" : "fail");
 			} catch(\Exception $exp)
@@ -374,24 +382,16 @@ class GenerationData extends BaseProcess
 				));
 
 				static::report("hlblock:hlblock №" . $i, $result->isSuccess() ? "ok" : "fail");
+				if(!$result->isSuccess())
+				{
+					static::report(implode(", ", $result->getErrorMessages()), "fail");
+				}
 			}
 			catch(\Exception $exp)
 			{
 				static::report("Exception: " . $exp->getMessage(), "warning");
 			}
 		}
-
-	}
-
-	public static function createHighLoadField($count = 10)
-	{
-		static::startStep(__FUNCTION__);
-
-	}
-
-	public static function createHighLoadFieldEnum($count = 10)
-	{
-		static::startStep(__FUNCTION__);
 
 	}
 
@@ -461,7 +461,7 @@ class GenerationData extends BaseProcess
 			try
 			{
 				$name = ucfirst(strtolower(static::generateRandom("STRING0-10")));
-				$type = static::generateRandom("FROM_LIST", array("CHECKBOX", "TEXT", "TEXTAREA", "RADIO"));
+				$type = static::generateRandom("FROM_LIST", array("CHECKBOX", "TEXT", "TEXTAREA", "RADIO", "ENUM"));
 				$result = OrderPropsTable::add(array(
 					"PERSON_TYPE_ID" => static::generateRandom("FROM_LIST", $types),
 					"PROPS_GROUP_ID" => static::generateRandom("FROM_LIST", $propsGroup),
@@ -498,21 +498,28 @@ class GenerationData extends BaseProcess
 	public static function createSalePropertyVariant($count = 1)
 	{
 		static::startStep(__FUNCTION__);
-		/*for($i = 0; $i < $count; $i++)
+		$types = static::collectIds(OrderPropsTable::getList(array("select" => array("ID"), "filter" => array("TYPE" => "ENUM"))));
+		if(count($types) > 0)
 		{
-			$result = OrderPropsVariantTable::add(array(
-				"ORDER_PROPS_ID" => $variant["SORT"],
-				"NAME" => $variant["NAME"],
-				"VALUE" => $variant["VALUE"],
-				"SORT" => $variant["SORT"],
-				"DESCRIPTION" => $variant["DESCRIPTION"],
-			));
-			static::report("sale:propertyVariant №" . $i, $result->isSuccess() ? "ok" : "fail");
-			if (!$result->isSuccess())
+			for($i = 0; $i < $count; $i++)
 			{
-				throw new \Exception(implode("<br>", $addResult->getErrorMessages()));
+				$propId = static::generateRandom("FROM_LIST", $types);
+				$result = OrderPropsVariantTable::add(array(
+					"ORDER_PROPS_ID" => $propId,
+					"NAME" => static::generateRandom("STRING0-10"),
+					"VALUE" => static::generateRandom("STRING0-10"),
+					"SORT" => static::generateRandom("NUMBER0-100"),
+					"DESCRIPTION" => static::generateRandom("TEXT0-100"),
+				));
+				static::report("sale:propertyVariant set prop with id=" . $propId, $result->isSuccess() ? "ok" : "fail");
+				if (!$result->isSuccess())
+				{
+					throw new \Exception(implode("\r\n", $result->getErrorMessages()));
+				}
 			}
-		}*/
+		}
+		else
+			static::report("sale:propertyVariant no property of ENUM", "warning");
 	}
 
 	/***************************************************** Catalog *****************************************************/
@@ -559,10 +566,11 @@ class GenerationData extends BaseProcess
 			{
 				$obIBlockField = new \CUserTypeEntity();
 				$name = strtoupper(static::generateRandom("STRING0-10"));
+				$entityId = str_replace("#ENTITY#", static::generateRandom("FROM_LIST", $iblocks), $entity);
 				$id = $obIBlockField->Add(array(
 					"FIELD_NAME" => "UF_" . $name,
 					"XML_ID" => $name,
-					"ENTITY_ID" => str_replace("#ENTITY#", static::generateRandom("FROM_LIST", $iblocks), $entity),
+					"ENTITY_ID" => $entityId,
 					"MANDATORY" => static::generateRandom("STRING_BOOL"),
 					"ACTIVE" => static::generateRandom("STRING_BOOL"),
 					"MULTIPLE" => "N",
@@ -589,7 +597,7 @@ class GenerationData extends BaseProcess
 						'en' => static::generateRandom("TEXT0-10"),
 					),
 				));
-				static::report($entity . ":field №" . $i, $id ? "ok" : "fail");
+				static::report($entityId . ":field №" . $i, $id ? "ok" : "fail");
 			}
 			catch(\Exception $exp)
 			{
@@ -622,7 +630,6 @@ class GenerationData extends BaseProcess
 			{
 				$obEnum = new \CUserFieldEnum();
 				$arAddEnum = array();
-				$count = rand(1, 3);
 				for($i = 0; $i < $count; $i++)
 				{
 					$value = static::generateRandom("STRING0-10");
@@ -637,6 +644,9 @@ class GenerationData extends BaseProcess
 				$obEnum->SetEnumValues($ufFieldId, $arAddEnum);
 				static::report($module . ":fieldenum added for userfield " . $ufFieldId, "ok");
 			}
+			else
+				static::report("Not exist uf fields with type of list", "warning");
+
 		}
 		catch(\Exception $exp)
 		{
