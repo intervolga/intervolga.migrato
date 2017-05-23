@@ -12,6 +12,7 @@ use Bitrix\Main\SiteTemplateTable;
 use Bitrix\Main\Loader;
 use Bitrix\Main\UserFieldTable;
 use Bitrix\Sale\Internals\OrderPropsTable;
+use Bitrix\Sale\Internals\OrderPropsVariantTable;
 use Bitrix\Sale\Internals\PersonTypeTable;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\Console\Logger;
@@ -33,8 +34,8 @@ class GenerateCommand extends BaseCommand
 		$this->createMainGroup();
 		$this->createMainCulture();
 		$this->createMainLanguage();
-		//TODO $this->createMainSite();
-		//TODO $this->createMainSiteTemplate();
+		$this->createMainSite();
+		$this->createMainSiteTemplate();
 		$this->createMainEventType();
 		$this->createMainEvent();
 
@@ -48,8 +49,11 @@ class GenerateCommand extends BaseCommand
 		}
 		if (Loader::IncludeModule('highloadblock'))
 		{
-			//TODO $this->createHighLoadBlock();
-			$this->createUserField('HLBLOCK_#ENTITY#');
+			$this->createHighLoadBlock();
+			if (Loader::IncludeModule('iblock'))
+			{
+				$this->createUserField('HLBLOCK_#ENTITY#');
+			}
 			$this->createUserFieldEnum('highloadblock', 'hlblockFieldEnumFilter');
 		}
 
@@ -58,12 +62,15 @@ class GenerateCommand extends BaseCommand
 			$this->createSalePersonType();
 			$this->createSalePropertyGroup();
 			$this->createSaleProperty();
+			$this->createSalePropertyVariant();
 		}
 
 		if (Loader::IncludeModule('catalog'))
 		{
 			$this->createCatalogPriceType();
 		}
+
+		$this->runSubcommand('clearcache');
 	}
 
 	/**
@@ -532,7 +539,7 @@ class GenerateCommand extends BaseCommand
 	 * @param string $module
 	 * @param array $filter
 	 */
-	protected function createUserFieldEnum($module, $filter)
+	protected function createUserFieldEnum($module, $filter, $count = 1)
 	{
 		try
 		{
@@ -553,7 +560,6 @@ class GenerateCommand extends BaseCommand
 			{
 				$obEnum = new \CUserFieldEnum();
 				$arAddEnum = array();
-				$count = rand(1, 3);
 				for ($i = 0; $i < $count; $i++)
 				{
 					$value = $this->generateRandom('STRING0-10');
@@ -744,7 +750,7 @@ class GenerateCommand extends BaseCommand
 			try
 			{
 				$name = ucfirst(strtolower($this->generateRandom('STRING0-10')));
-				$type = $this->generateRandom('FROM_LIST', array('CHECKBOX', 'TEXT', 'TEXTAREA', 'RADIO'));
+				$type = $this->generateRandom('FROM_LIST', array('CHECKBOX', 'TEXT', 'TEXTAREA', 'RADIO', 'ENUM'));
 				$result = OrderPropsTable::add(array(
 					'PERSON_TYPE_ID' => $this->generateRandom('FROM_LIST', $types),
 					'PROPS_GROUP_ID' => $this->generateRandom('FROM_LIST', $propsGroup),
@@ -782,7 +788,36 @@ class GenerateCommand extends BaseCommand
 				$this->reportException('sale', 'property', $exp);
 			}
 		}
+	}
 
+	protected function createSalePropertyVariant($count = 1)
+	{
+		$types = $this->collectIds(OrderPropsTable::getList(array(
+			'select' => array('ID'),
+			'filter' => array('TYPE' => 'ENUM')
+		)));
+		if (count($types) > 0)
+		{
+			for ($i = 0; $i < $count; $i++)
+			{
+				$propId = static::generateRandom('FROM_LIST', $types);
+				$result = OrderPropsVariantTable::add(array(
+					'ORDER_PROPS_ID' => $propId,
+					'NAME' => static::generateRandom('STRING0-10'),
+					'VALUE' => static::generateRandom('STRING0-10'),
+					'SORT' => static::generateRandom('NUMBER0-100'),
+					'DESCRIPTION' => static::generateRandom('TEXT0-100'),
+				));
+				if ($result->isSuccess())
+				{
+					$this->reportCreated('sale', 'propertyvariant', $result->getId());
+				}
+				else
+				{
+					$this->reportErrors('sale', 'propertyvariant', $result->getErrorMessages());
+				}
+			}
+		}
 	}
 
 	/**
@@ -870,6 +905,8 @@ class GenerateCommand extends BaseCommand
 	 */
 	protected function createMainSite($count = 1)
 	{
+		$cultures = static::collectIds(CultureTable::getList(array("select" => array("ID"))));
+		$languages = static::collectIds(LanguageTable::getList(array("select" => array("ID"))));
 		for ($i = 0; $i < $count; $i++)
 		{
 			try
@@ -884,6 +921,8 @@ class GenerateCommand extends BaseCommand
 					'DIR' => '/' . $this->generateRandom('STRING0-6'),
 					'DOMAIN_LIMITED' => 'N',
 					'SITE_NAME' => $this->generateRandom('TEXT0-20'),
+					'CULTURE_ID' => static::generateRandom("FROM_LIST", $cultures),
+					'LANGUAGE_ID' => static::generateRandom("FROM_LIST", $languages),
 				));
 				if ($result->isSuccess())
 				{
