@@ -11,6 +11,7 @@ class ReIndexCommand extends BaseCommand
 	protected function configure()
 	{
 		$this->setName('reindex');
+		$this->setHidden(true);
 		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.REINDEX_DESCRIPTION'));
 	}
 

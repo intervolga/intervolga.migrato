@@ -15,6 +15,7 @@ class ExportDataCommand extends BaseCommand
 	protected function configure()
 	{
 		$this->setName('exportdata');
+		$this->setHidden(true);
 		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.EXPORT_DATA_DESCRIPTION'));
 	}
 

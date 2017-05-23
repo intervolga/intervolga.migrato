@@ -10,6 +10,7 @@ class ClearCacheCommand extends BaseCommand
 	protected function configure()
 	{
 		$this->setName('clearcache');
+		$this->setHidden(true);
 		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.CLEARCACHE_DESCRIPTION'));
 	}
 

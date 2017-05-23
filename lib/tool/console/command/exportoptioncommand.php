@@ -17,6 +17,7 @@ class ExportOptionCommand extends BaseCommand
 	protected function configure()
 	{
 		$this->setName('exportoptions');
+		$this->setHidden(true);
 		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.EXPORT_OPTIONS_DESCRIPTION'));
 	}
 

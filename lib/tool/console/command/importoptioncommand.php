@@ -16,6 +16,7 @@ class ImportOptionCommand extends BaseCommand
 	protected function configure()
 	{
 		$this->setName('importoptions');
+		$this->setHidden(true);
 		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.IMPORT_OPTIONS_DESCRIPTION'));
 	}
 

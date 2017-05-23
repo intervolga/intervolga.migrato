@@ -30,6 +30,7 @@ class ImportDataCommand extends BaseCommand
 	protected function configure()
 	{
 		$this->setName('importdata');
+		$this->setHidden(true);
 		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.IMPORT_DATA_DESCRIPTION'));
 	}
 

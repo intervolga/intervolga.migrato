@@ -11,6 +11,7 @@ class UrlRewriteCommand extends BaseCommand
 	protected function configure()
 	{
 		$this->setName('urlrewrite');
+		$this->setHidden(true);
 		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.URLREWRITE_DESCRIPTION'));
 	}
 
