@@ -79,7 +79,7 @@ class Culture extends BaseData
 		return $array;
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$data = $this->recordToArray($record);
 		$result = CultureTable::add($data);
@@ -93,7 +93,7 @@ class Culture extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		if ($id)

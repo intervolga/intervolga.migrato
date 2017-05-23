@@ -183,7 +183,7 @@ class Event extends BaseData
 		return $array;
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$fields = $this->recordToArray($record);
 
@@ -206,7 +206,7 @@ class Event extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		if ($id)

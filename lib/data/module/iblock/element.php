@@ -293,7 +293,7 @@ class Element extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
 
@@ -318,7 +318,7 @@ class Element extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		if ($id)

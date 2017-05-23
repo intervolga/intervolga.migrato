@@ -234,7 +234,7 @@ class Iblock extends BaseData
 		return $fields;
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw(array("SEO", "FIELDS", "MESSAGES"));
 		$seo = $fields["SEO"];
@@ -298,7 +298,7 @@ class Iblock extends BaseData
 		$seoProps->set($seo);
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		if ($id)

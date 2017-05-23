@@ -1,6 +1,5 @@
 <?namespace Intervolga\Migrato\Tool\Orm;
 
-use Bitrix\Main\Entity\BooleanField;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\Entity\DatetimeField;
 use Bitrix\Main\Entity\IntegerField;
@@ -13,6 +12,8 @@ use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 class LogTable extends DataManager
 {
+	const RESULT_FAIL = 'fail';
+
 	protected static $migrationTime = 0;
 	public static function getTableName()
 	{
@@ -35,9 +36,11 @@ class LogTable extends DataManager
 			new StringField("DATA_ID_COMPLEX", array(
 				"serialized" => true,
 			)),
+			new StringField("COMMAND"),
 			new StringField("STEP"),
+			new IntegerField("STEP_NUMBER"),
 			new StringField("OPERATION"),
-			new BooleanField("RESULT"),
+			new StringField("RESULT"),
 			new StringField("COMMENT"),
 		);
 	}
@@ -75,10 +78,6 @@ class LogTable extends DataManager
 			static::$migrationTime = time();
 		}
 		$data["MIGRATION_DATETIME"] = DateTime::createFromTimestamp(static::$migrationTime);
-		if (!array_key_exists("RESULT", $data))
-		{
-			$data["RESULT"] = true;
-		}
 		if (!array_key_exists("MIGRATION_DATETIME", $data))
 		{
 			$data["MIGRATION_DATETIME"] = static::getMigrationDateTime();
@@ -97,6 +96,11 @@ class LogTable extends DataManager
 		{
 			$data = array_merge($data, static::exceptionToLog($data["EXCEPTION"]));
 			unset($data["EXCEPTION"]);
+		}
+		if ($data["ID"])
+		{
+			$data = array_merge($data, static::idToLog($data["ID"]));
+			unset($data["ID"]);
 		}
 		parent::add($data);
 	}
@@ -121,7 +125,7 @@ class LogTable extends DataManager
 	protected static function exceptionToLog(\Exception $exception)
 	{
 		$log = array(
-			"RESULT" => false,
+			"RESULT" => static::RESULT_FAIL,
 			"COMMENT" => get_class($exception) . ": " . $exception->getMessage(),
 		);
 		if ($exception->getCode())

@@ -241,7 +241,7 @@ class Property extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$fields = $this->recordToArray($record);
 		$propertyObject = new \CIBlockProperty();
@@ -258,7 +258,7 @@ class Property extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		$propertyObject = new \CIBlockProperty();

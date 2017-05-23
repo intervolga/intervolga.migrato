@@ -50,7 +50,7 @@ class HighloadBlock extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$result = HighloadBlockTable::add($record->getFieldsRaw());
 		if ($result->isSuccess())
@@ -65,7 +65,7 @@ class HighloadBlock extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		if ($id = $this->findRecord($xmlId))
 		{

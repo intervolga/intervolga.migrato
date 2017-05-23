@@ -517,7 +517,7 @@ abstract class BaseUserField extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
 		$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
@@ -539,14 +539,22 @@ abstract class BaseUserField extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
-		if($id = $this->findRecord($xmlId))
+		if ($id = $this->findRecord($xmlId))
 		{
 			$fieldObject = new \CUserTypeEntity();
 			if (!$fieldObject->delete($id->getValue()))
 			{
-				throw new \Exception("Unknown error");
+				global $APPLICATION;
+				if ($APPLICATION->GetException())
+				{
+					throw new \Exception($APPLICATION->getException()->getString());
+				}
+				else
+				{
+					throw new \Exception("Unknown error");
+				}
 			}
 		}
 	}

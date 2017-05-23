@@ -273,15 +273,19 @@ class Form extends BaseData
 	public function update(Record $record)
 	{
 		$array = $this->recordToArray($record);
-
 		$options = new \CUserOptions();
-		$isUpdated = $options->setOption(
-			$array['CATEGORY'],
-			$array['NAME'],
-			unserialize($array['VALUE']),
-			$array['COMMON'] == 'Y',
-			$array['USER_ID']
-		);
+		$isUpdated = false;
+
+		if ($array['CATEGORY'] && $array['NAME'])
+		{
+			$isUpdated = $options->setOption(
+				$array['CATEGORY'],
+				$array['NAME'],
+				unserialize($array['VALUE']),
+				$array['COMMON'] == 'Y',
+				$array['USER_ID']
+			);
+		}
 
 		if (!$isUpdated)
 		{
@@ -289,31 +293,37 @@ class Form extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$array = $this->recordToArray($record);
-
-		$options = new \CUserOptions();
-		$isAdded = $options->setOption(
-			$array['CATEGORY'],
-			$array['NAME'],
-			unserialize($array['VALUE']),
-			$array['COMMON'] == 'Y',
-			$array['USER_ID']
-		);
-
-		if ($isAdded)
+		if ($array['CATEGORY'] && $array['NAME'])
 		{
-			$filter = array(
-				'CATEGORY' => $array['CATEGORY'],
-				'NAME' => $array['NAME'],
-				'COMMON' => $array['COMMON'],
-				'USER_ID' => $array['USER_ID'],
+			$options = new \CUserOptions();
+			$isAdded = $options->setOption(
+				$array['CATEGORY'],
+				$array['NAME'],
+				unserialize($array['VALUE']),
+				$array['COMMON'] == 'Y',
+				$array['USER_ID']
 			);
-			$userOption = \CUserOptions::getList(array(), $filter)->fetch();
-			if ($userOption)
+
+			if ($isAdded)
 			{
-				return $this->createId($userOption['ID']);
+				$filter = array(
+					'CATEGORY' => $array['CATEGORY'],
+					'NAME' => $array['NAME'],
+					'COMMON' => $array['COMMON'],
+					'USER_ID' => $array['USER_ID'],
+				);
+				$userOption = \CUserOptions::getList(array(), $filter)->fetch();
+				if ($userOption)
+				{
+					return $this->createId($userOption['ID']);
+				}
+				else
+				{
+					throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_NOT_CREATED');
+				}
 			}
 			else
 			{
@@ -331,7 +341,7 @@ class Form extends BaseData
 	 *
 	 * @throws \Exception
 	 */
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$fields = $this->parseXmlId($xmlId);
 		if ($fields)

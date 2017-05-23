@@ -1,5 +1,6 @@
 <?namespace Intervolga\Migrato\Data\Module\Iblock;
 
+use Bitrix\Iblock\TypeTable;
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
@@ -150,7 +151,7 @@ class Type extends BaseData
 		return $fields;
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw($this->getLanguageFields());
 		$fields = $this->extractLanguageFields($fields);
@@ -166,7 +167,7 @@ class Type extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		$typeObject = new \CIBlockType();
@@ -228,5 +229,28 @@ class Type extends BaseData
 	public function getXmlId($id)
 	{
 		return $id->getValue();
+	}
+
+	public function findRecord($xmlId)
+	{
+		$parameters = array(
+			'filter' => array(
+				'=ID' => $xmlId,
+			),
+			'limit' => 1,
+		);
+		if (TypeTable::getList($parameters)->fetch())
+		{
+			return $this->createId($xmlId);
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	public function createId($id)
+	{
+		return RecordId::createStringId($id);
 	}
 }

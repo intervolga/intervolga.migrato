@@ -143,7 +143,7 @@ class Property extends BaseData
 		return $array;
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$array = $this->recordToArray($record);
 		$addResult = OrderPropsTable::add($array);
@@ -157,7 +157,7 @@ class Property extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		if ($id)

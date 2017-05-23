@@ -41,8 +41,8 @@ class Page
 			)
 		);
 		$report = array(
-			ColorLog::getColoredString($formattedName, 'fail'),
-			ColorLog::getColoredString($formattedMessage, 'fail'),
+			$formattedName,
+			$formattedMessage,
 			'',
 			Loc::getMessage('INTERVOLGA_MIGRATO.BACKTRACE'),
 			'## ' . $exception->getFile() . '(' . $exception->getLine() . ')',
@@ -70,8 +70,8 @@ class Page
 			)
 		);
 		$report = array(
-			ColorLog::getColoredString($formattedName, 'fail'),
-			ColorLog::getColoredString($formattedMessage, 'fail'),
+			$formattedName,
+			$formattedMessage,
 			'',
 			Loc::getMessage('INTERVOLGA_MIGRATO.BACKTRACE'),
 			'## ' . $error->getFile() . '(' . $error->getLine() . ')',

@@ -102,7 +102,7 @@ class PropertyGroup extends BaseData
 		return $array;
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$add = $this->recordToArray($record);
 		$object = new \CSaleOrderPropsGroup();
@@ -118,7 +118,7 @@ class PropertyGroup extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		if ($id)

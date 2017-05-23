@@ -92,7 +92,7 @@ class Permission extends BaseData
 			throw new \Exception("Not exist the permission for IBlock: " . $curValue["IBLOCK_ID"] . " and Group: " . $curValue["GROUP_ID"]);
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		if($record->getDependency("IBLOCK_ID") &&
 			$iblockId = Iblock::getInstance()->findRecord($record->getDependency("IBLOCK_ID")->getValue()))
@@ -122,7 +122,7 @@ class Permission extends BaseData
 		));
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		if($id)

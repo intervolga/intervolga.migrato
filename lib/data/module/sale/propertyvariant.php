@@ -69,7 +69,7 @@ class PropertyVariant extends BaseData
 		return BaseXmlIdProvider::formatXmlId($md5);
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$create = $this->recordToArray($record);
 		$addResult = OrderPropsVariantTable::add($create);
@@ -110,7 +110,7 @@ class PropertyVariant extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		if ($id)
