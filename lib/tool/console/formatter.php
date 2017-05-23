@@ -78,7 +78,24 @@ class Formatter extends OutputFormatter
 			}
 		}
 
-		return $result;
+		return $this->sortByLength($result);
+	}
+
+	/**
+	 * @param array $array
+	 *
+	 * @return array
+	 */
+	protected function sortByLength(array $array)
+	{
+		uasort(
+			$array,
+			function($a, $b)
+			{
+				return strlen($b) - strlen($a);
+			}
+		);
+		return $array;
 	}
 
 	/**
