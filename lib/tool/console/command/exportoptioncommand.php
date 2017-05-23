@@ -24,21 +24,24 @@ class ExportOptionCommand extends BaseCommand
 	{
 		foreach ($this->getDbOptions() as $module => $moduleOptions)
 		{
-			OptionFileViewXml::write($moduleOptions, INTERVOLGA_MIGRATO_DIRECTORY . 'options/' , $module);
-			foreach ($moduleOptions as $moduleOption)
+			if ($moduleOptions)
 			{
-				$this->logger->addDb(
-					array(
-						'MODULE_NAME' => $module,
-						'ENTITY_NAME' => 'option',
-						'ID' => RecordId::createComplexId(array(
-							'SITE_ID' => $moduleOption['SITE_ID'],
-							'NAME' => $moduleOption['NAME'],
-						)),
-						'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.EXPORT_OPTION'),
-					),
-					Logger::TYPE_OK
-				);
+				OptionFileViewXml::write($moduleOptions, INTERVOLGA_MIGRATO_DIRECTORY . 'options/' , $module);
+				foreach ($moduleOptions as $moduleOption)
+				{
+					$this->logger->addDb(
+						array(
+							'MODULE_NAME' => $module,
+							'ENTITY_NAME' => 'option',
+							'ID' => RecordId::createComplexId(array(
+								'SITE_ID' => $moduleOption['SITE_ID'],
+								'NAME' => $moduleOption['NAME'],
+							)),
+							'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.EXPORT_OPTION'),
+						),
+						Logger::TYPE_OK
+					);
+				}
 			}
 		}
 	}
