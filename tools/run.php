@@ -18,7 +18,7 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.ph
 @set_time_limit(0);
 if (!Loader::includeModule("intervolga.migrato"))
 {
-	echo "Module intervolga.migrato not installed";
+	echo "Module intervolga.migrato not installed\n";
 }
 else
 {
