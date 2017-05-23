@@ -49,7 +49,7 @@ class UnitTestCommand extends BaseCommand
 			File::putFileContents($reportFileName, implode("\n", $output));
 			$this->logger->registerFinal(
 				Loc::getMessage('INTERVOLGA_MIGRATO.REPORT_FILE', array('#FILE#' => $reportFileName)),
-				Logger::TYPE_OK
+				Logger::TYPE_FAIL
 			);
 		}
 		else
