@@ -3,6 +3,7 @@
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Console\Command\AutofixCommand;
 use Intervolga\Migrato\Tool\Console\Command\ClearCacheCommand;
+use Intervolga\Migrato\Tool\Console\Command\ExportCommand;
 use Intervolga\Migrato\Tool\Console\Command\ExportDataCommand;
 use Intervolga\Migrato\Tool\Console\Command\ExportOptionCommand;
 use Intervolga\Migrato\Tool\Console\Command\GenerateCommand;
@@ -46,6 +47,7 @@ class Application extends \Symfony\Component\Console\Application
 			new ExportDataCommand(),
 			new ImportDataCommand(),
 			new UnitTestCommand(),
+			new ExportCommand(),
 		));
 	}
 
