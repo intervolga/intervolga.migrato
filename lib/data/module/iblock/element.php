@@ -86,7 +86,6 @@ class Element extends BaseData
 		{
 			$link = new Link($instance, $valueElementXmlId);
 		}
-		// TODO сделать для множественного поля
 		if($property["DESCRIPTION"])
 		{
 			$link->setDescription($property["DESCRIPTION"]);
@@ -294,7 +293,7 @@ class Element extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
 
@@ -319,7 +318,7 @@ class Element extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		if ($id)

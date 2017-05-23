@@ -1,4 +1,10 @@
 <?php
+use Bitrix\Main\Loader;
+use Intervolga\Migrato\Tool\Console\Application;
+use Intervolga\Migrato\Tool\Console\Formatter;
+use Intervolga\Migrato\Tool\Page;
+use Symfony\Component\Console\Output\ConsoleOutput;
+
 $_SERVER["DOCUMENT_ROOT"] = realpath(dirname(__FILE__)."/../../../..");
 $DOCUMENT_ROOT = $_SERVER["DOCUMENT_ROOT"];
 
@@ -10,82 +16,26 @@ define("STATISTIC_SKIP_ACTIVITY_CHECK", true);
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 
 @set_time_limit(0);
-if (!\Bitrix\Main\Loader::includeModule("intervolga.migrato"))
+if (!Loader::includeModule("intervolga.migrato"))
 {
-	echo "Module intervolga.migrato not installed";
-}
-
-try
-{
-	\Intervolga\Migrato\Tool\Page::checkRights();
-}
-catch (\Exception $exception)
-{
-	\Intervolga\Migrato\Tool\Page::handleException($exception);
-	require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");
-	die;
-}
-
-/**
- * @see \Intervolga\Migrato\Tool\Process\AutoFix
- * @see \Intervolga\Migrato\Tool\Process\ClearData
- * @see \Intervolga\Migrato\Tool\Process\ExportData
- * @see \Intervolga\Migrato\Tool\Process\ExportOption
- * @see \Intervolga\Migrato\Tool\Process\ImportData
- * @see \Intervolga\Migrato\Tool\Process\ImportOption
- * @see \Intervolga\Migrato\Tool\Process\Validate
- */
-$processes = array(
-	"autofix" => "\\Intervolga\\Migrato\\Tool\\Process\\AutoFix",
-	"cleardata" => "\\Intervolga\\Migrato\\Tool\\Process\\ClearData",
-	"exportdata" => "\\Intervolga\\Migrato\\Tool\\Process\\ExportData",
-	"exportoption" => "\\Intervolga\\Migrato\\Tool\\Process\\ExportOption",
-	"importdata" => "\\Intervolga\\Migrato\\Tool\\Process\\ImportData",
-	"importoption" => "\\Intervolga\\Migrato\\Tool\\Process\\ImportOption",
-	"validate" => "\\Intervolga\\Migrato\\Tool\\Process\\Validate",
-);
-if (\Intervolga\Migrato\Tool\Page::isCli())
-{
-	$cmdProcess = $argv[1];
+	echo "Module intervolga.migrato not installed\n";
 }
 else
 {
-	$cmdProcess = $_GET["process"];
-}
-$found = false;
-foreach ($processes as $process => $processClass)
-{
-	/**
-	 * @var \Intervolga\Migrato\Tool\Process\BaseProcess $processClass
-	 */
-	if ($cmdProcess == $process)
+	try
 	{
-		$found = true;
-		try
-		{
-			$processClass::run();
-			$report = $processClass::getReports();
-			\Intervolga\Migrato\Tool\Page::showReport($report);
-		}
-		catch (\Exception $exception)
-		{
-			\Intervolga\Migrato\Tool\Page::handleException($exception);
-		}
+		Page::checkRights();
+		$application = new Application();
+		$application->run(null, new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, null, new Formatter()));
 	}
-}
-
-if (!$found)
-{
-	if (\Intervolga\Migrato\Tool\Page::isCli())
+	catch (\Error $error)
 	{
-		$message = "Use first argv";
+		Page::handleError($error);
 	}
-	else
+	catch (\Exception $exception)
 	{
-		$message = "Use Get variable 'process'";
+		Page::handleException($exception);
 	}
-	$message .= " to run process (" . implode(", ", array_keys($processes)) . ")";
-	\Intervolga\Migrato\Tool\Page::showReport(array($message));
 }
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");

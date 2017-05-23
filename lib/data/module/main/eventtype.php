@@ -1,7 +1,11 @@
 <? namespace Intervolga\Migrato\Data\Module\Main;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
+
+Loc::loadMessages(__FILE__);
 
 class EventType extends BaseData
 {
@@ -23,15 +27,28 @@ class EventType extends BaseData
 			$record->setXmlId($this->getXmlId($id));
 			$record->setId($id);
 			$record->addFieldsRaw(array(
-				"LID" => $type["LID"],
 				"EVENT_NAME" => $type["EVENT_NAME"],
 				"NAME" => $type["NAME"],
 				"DESCRIPTION" => $type["DESCRIPTION"],
 				"SORT" => $type["SORT"],
 			));
+
+			$dependency = clone $this->getDependency('LANGUAGE');
+			$dependency->setValue(Language::getInstance()->getXmlId(
+				Language::getInstance()->createId($type['LID'])
+			));
+			$record->setDependency('LANGUAGE', $dependency);
+
 			$result[] = $record;
 		}
 		return $result;
+	}
+
+	public function getDependencies()
+	{
+		return array(
+			'LANGUAGE' => new Link(Language::getInstance()),
+		);
 	}
 
 	public function update(Record $record)
@@ -47,7 +64,7 @@ class EventType extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$eventTypeId = \CEventType::add($record->getFieldsRaw());
 		if ($eventTypeId)
@@ -57,14 +74,21 @@ class EventType extends BaseData
 		else
 		{
 			global $APPLICATION;
-			throw new \Exception(trim(strip_tags($APPLICATION->getException()->getString())));
+			if ($APPLICATION->getException())
+			{
+				throw new \Exception(trim(strip_tags($APPLICATION->getException()->getString())));
+			}
+			else
+			{
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.EVENTTYPE_CREATE_ERROR'));
+			}
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		if (!\CEventType::delete(array("ID" => $id->getValue())))
+		if ($id && !\CEventType::delete(array("ID" => $id->getValue())))
 		{
 			throw new \Exception("Unknown error");
 		}

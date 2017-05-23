@@ -6,10 +6,9 @@ use Intervolga\Migrato\Data\Record;
 
 class FieldEnum extends BaseUserFieldEnum
 {
-
 	public function getFilesSubdir()
 	{
-		return "/highloadblock/";
+		return "/highloadblock/field/";
 	}
 
 	/**

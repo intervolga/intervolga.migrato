@@ -202,7 +202,7 @@ class Section extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
 		$fields["IBLOCK_ID"] = $this->getIBlock($record);
@@ -222,10 +222,10 @@ class Section extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		if(!\CIBlockSection::Delete($id))
+		if($id && !\CIBlockSection::Delete($id->getValue()))
 		{
 			throw new \Exception("Unknown error");
 		}

@@ -83,9 +83,21 @@ abstract class BaseXmlIdProvider
 			$prefix
 		);
 		$xmlid = strrev(uniqid("", true));
+		return static::formatXmlId($xmlid, $prefix);
+	}
+
+	/**
+	 * @param string $xmlid
+	 * @param string $prefix
+	 *
+	 * @return string
+	 */
+	public static function formatXmlId($xmlid, $prefix = "")
+	{
 		$xmlid = str_replace(".", "", $xmlid);
 		$xmlid = implode("-", str_split($xmlid, 6));
-		return $prefix.$xmlid;
+
+		return strtolower($prefix.$xmlid);
 	}
 
 	/**

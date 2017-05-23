@@ -1,7 +1,10 @@
 <?namespace Intervolga\Migrato\Data\Module\Iblock;
 
+use Bitrix\Iblock\TypeTable;
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\Link;
+use Intervolga\Migrato\Data\Module\Main\Language;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Bitrix\Main\Localization\LanguageTable;
@@ -39,6 +42,13 @@ class Type extends BaseData
 		return $result;
 	}
 
+	public function getDependencies()
+	{
+		return array(
+			'LANGUAGE' => new Link(Language::getInstance()),
+		);
+	}
+
 	/**
 	 * @return array|string[]
 	 * @throws \Bitrix\Main\ArgumentException
@@ -64,6 +74,7 @@ class Type extends BaseData
 	 */
 	protected function addLanguageStrings(Record $record)
 	{
+		$langXmlIds = array();
 		$strings = array();
 		foreach ($this->getLanguages() as $language)
 		{
@@ -71,6 +82,10 @@ class Type extends BaseData
 			{
 				foreach ($this->getLanguageFields() as $languageField)
 				{
+					if ($languageField)
+					{
+						$langXmlIds[$language] = Language::getInstance()->getXmlId(Language::getInstance()->createId($language));
+					}
 					$strings[$languageField][$language] = $typeLang[$languageField];
 				}
 			}
@@ -79,6 +94,12 @@ class Type extends BaseData
 		{
 			$typeLangs = Value::treeToList($langFields, $field);
 			$record->addFieldsRaw($typeLangs);
+		}
+		if ($langXmlIds)
+		{
+			$dependency = clone $this->getDependency('LANGUAGE');
+			$dependency->setValues($langXmlIds);
+			$record->setDependency('LANGUAGE', $dependency);
 		}
 	}
 
@@ -130,7 +151,7 @@ class Type extends BaseData
 		return $fields;
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw($this->getLanguageFields());
 		$fields = $this->extractLanguageFields($fields);
@@ -146,7 +167,7 @@ class Type extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		$typeObject = new \CIBlockType();
@@ -208,5 +229,28 @@ class Type extends BaseData
 	public function getXmlId($id)
 	{
 		return $id->getValue();
+	}
+
+	public function findRecord($xmlId)
+	{
+		$parameters = array(
+			'filter' => array(
+				'=ID' => $xmlId,
+			),
+			'limit' => 1,
+		);
+		if (TypeTable::getList($parameters)->fetch())
+		{
+			return $this->createId($xmlId);
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	public function createId($id)
+	{
+		return RecordId::createStringId($id);
 	}
 }

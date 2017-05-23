@@ -11,6 +11,8 @@ abstract class BaseData
 	 */
 	protected $xmlIdProvider = null;
 
+	protected $cache = array();
+
 	/**
 	 * @return static
 	 */
@@ -44,11 +46,27 @@ abstract class BaseData
 	/**
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 *
+	 * @return \Intervolga\Migrato\Data\RecordId
+	 * @throws \Exception
+	 */
+	public function create(Record $record)
+	{
+		$recordId = $this->createInner($record);
+		if ($record->getXmlId())
+		{
+			$this->cache[$record->getXmlId()] = $recordId;
+		}
+		return $recordId;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
 	 * @throws \Bitrix\Main\NotImplementedException
 	 *
 	 * @return \Intervolga\Migrato\Data\RecordId
 	 */
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		throw new NotImplementedException("Create for " . $record->getData()->getModule() . "/" . $record->getData()->getEntityName() . " is not yet implemented");
 	}
@@ -56,9 +74,20 @@ abstract class BaseData
 	/**
 	 * @param string $xmlId
 	 *
-	 * @throws \Bitrix\Main\NotImplementedException
+	 * @throws \Exception
 	 */
 	public function delete($xmlId)
+	{
+		$this->deleteInner($xmlId);
+		unset($this->cache[$xmlId]);
+	}
+
+	/**
+	 * @param string $xmlId
+	 *
+	 * @throws \Bitrix\Main\NotImplementedException
+	 */
+	protected function deleteInner($xmlId)
 	{
 		throw new NotImplementedException("Delete for " . $this->getModule() . "/" . $this->getEntityName() . " ($xmlId) is not yet implemented");
 	}
@@ -71,6 +100,10 @@ abstract class BaseData
 	public function findRecord($xmlId)
 	{
 		$findRecords = static::findRecords(array($xmlId));
+		if ($this->cache[$xmlId])
+		{
+			return $this->cache[$xmlId];
+		}
 		return $findRecords[$xmlId];
 	}
 
@@ -83,7 +116,7 @@ abstract class BaseData
 	{
 		if ($this->xmlIdProvider)
 		{
-			return $this->xmlIdProvider->findRecords($xmlIds);
+			$result = $this->xmlIdProvider->findRecords($xmlIds);
 		}
 		else
 		{
@@ -91,14 +124,18 @@ abstract class BaseData
 			$allRecords = static::getList();
 			foreach ($allRecords as $dbRecord)
 			{
+				if ($dbRecord->getXmlId())
+				{
+					$this->cache[$dbRecord->getXmlId()] = $dbRecord->getId();
+				}
 				if (in_array($dbRecord->getXmlId(), $xmlIds))
 				{
 					$result[$dbRecord->getXmlId()] = $dbRecord->getId();
 				}
 			}
-
-			return $result;
 		}
+
+		return $result;
 	}
 
 	/**
@@ -226,7 +263,7 @@ abstract class BaseData
 		}
 		else
 		{
-			throw new NotImplementedException("Not implemented yet");
+			throw new NotImplementedException("setXmlId for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
 		}
 	}
 
@@ -244,7 +281,7 @@ abstract class BaseData
 		}
 		else
 		{
-			throw new NotImplementedException("Not implemented yet");
+			throw new NotImplementedException("getXmlId for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
 		}
 	}
 

@@ -4,6 +4,7 @@ use Intervolga\Migrato\Data\BaseUserField;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 class Field extends BaseUserField
 {
@@ -36,10 +37,6 @@ class Field extends BaseUserField
 	 */
 	protected function userFieldToRecord(array $userField)
 	{
-		if ($userField["FIELD_NAME"] == "UF_XML_ID")
-		{
-			return null;
-		}
 		$record = parent::userFieldToRecord($userField);
 		$hlBlockId = str_replace("HLBLOCK_", "", $userField["ENTITY_ID"]);
 		$hlBlockRecordId = RecordId::createNumericId($hlBlockId);
@@ -73,13 +70,14 @@ class Field extends BaseUserField
 		return "HLBLOCK_" . $id;
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
-		if ($hlblockId = $record->getDependency($this->getDependencyString())->getId())
+		$hlblockLink = $record->getDependency($this->getDependencyString());
+		if ($hlblockLink && ($hlblockId = $hlblockLink->getId()))
 		{
 			$record->setFieldRaw("ENTITY_ID", $this->getDependencyNameKey($hlblockId->getValue()));
 
-			return parent::create($record);
+			return parent::createInner($record);
 		}
 		else
 		{
@@ -87,5 +85,19 @@ class Field extends BaseUserField
 			$entity = static::getEntityName();
 			throw new \Exception("Create $module/$entity: record haven`t the dependence for element " . $record->getXmlId());
 		}
+	}
+
+	public function getXmlId($id)
+	{
+		$userField = \CUserTypeEntity::getById($id->getValue());
+		$hlBlockId = str_replace("HLBLOCK_", "", $userField["ENTITY_ID"]);
+		$hlBlockRecordId = RecordId::createNumericId($hlBlockId);
+		$hlBlockXmlId = HighloadBlock::getInstance()->getXmlId($hlBlockRecordId);
+		$md5 = md5(serialize(array(
+			$hlBlockXmlId,
+			$userField['FIELD_NAME'],
+		)));
+
+		return BaseXmlIdProvider::formatXmlId($md5);
 	}
 }

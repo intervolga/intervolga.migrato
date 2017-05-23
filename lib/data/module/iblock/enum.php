@@ -69,7 +69,7 @@ class Enum extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
 		if($propertyId = $record->getDependency("PROPERTY_ID")->getId())
@@ -79,7 +79,6 @@ class Enum extends BaseData
 
 			$enumObject = new \CIBlockPropertyEnum();
 			$enumId = $enumObject->add($fields);
-			// TODO Ошибка с добавлением
 			if ($enumId)
 			{
 				return $this->createId($enumId);
@@ -93,10 +92,10 @@ class Enum extends BaseData
 			throw new \Exception("Creating enum: not found property for record " . $record->getXmlId());
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
-		if (!\CIBlockPropertyEnum::Delete($id))
+		if ($id && !\CIBlockPropertyEnum::Delete($id->getValue()))
 		{
 			throw new \Exception("Unknown error");
 		}

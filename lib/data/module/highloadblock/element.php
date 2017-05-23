@@ -178,7 +178,7 @@ class Element extends BaseData
 
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		if($hlIblockId = $record->getDependency("HLBLOCK_ID")->getId())
 		{
@@ -201,7 +201,7 @@ class Element extends BaseData
 			throw new \Exception("Creating highloadblock/element: record " . $record->getXmlId() .  "haven`t HLBLOCK_ID");
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId)->getValue();
 		$strEntityDataClass = $this->getDataClass($id["HLBLOCK_ID"]);

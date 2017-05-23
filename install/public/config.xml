@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
+    <options>
+        <exclude>admin_passwordh</exclude>
+        <exclude>signer_default_key</exclude>
+        <exclude>server_uniq_id</exclude>
+        <exclude>^~</exclude>
+        <exclude>^wizard_</exclude>
+    </options>
     <module>
         <name>main</name>
         <entity>
@@ -10,6 +17,24 @@
         </entity>
         <entity>
             <name>eventtype</name>
+        </entity>
+        <entity>
+            <name>field</name>
+        </entity>
+        <entity>
+            <name>fieldenum</name>
+        </entity>
+        <entity>
+            <name>site</name>
+        </entity>
+        <entity>
+            <name>culture</name>
+        </entity>
+        <entity>
+            <name>language</name>
+        </entity>
+        <entity>
+            <name>sitetemplate</name>
         </entity>
     </module>
     <module>
@@ -49,6 +74,15 @@
         </entity>
         <entity>
             <name>permission</name>
+        </entity>
+        <entity>
+            <name>field</name>
+        </entity>
+        <entity>
+            <name>fieldenum</name>
+        </entity>
+        <entity>
+            <name>form</name>
         </entity>
     </module>
     <module>

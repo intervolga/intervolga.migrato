@@ -48,7 +48,7 @@ class Group extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$groupObject = new \CGroup();
 		$groupId = $groupObject->add($record->getFieldsRaw());
@@ -62,7 +62,7 @@ class Group extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		$groupObject = new \CGroup();

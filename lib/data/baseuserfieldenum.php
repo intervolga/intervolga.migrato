@@ -51,7 +51,7 @@ abstract class BaseUserFieldEnum extends BaseData
 		}
 	}
 
-	public function create(Record $record)
+	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
 		if($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
@@ -76,7 +76,7 @@ abstract class BaseUserFieldEnum extends BaseData
 		}
 	}
 
-	public function delete($xmlId)
+	protected function deleteInner($xmlId)
 	{
 		$id = $this->findRecord($xmlId);
 		$fieldenumObject = new \CUserFieldEnum();

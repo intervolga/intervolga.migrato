@@ -1,0 +1,3 @@
+<?
+$MESS['INTERVOLGA_MIGRATO.EXPORT_DATA_DESCRIPTION'] = 'Экспорт записей из БД в XML';
+$MESS['INTERVOLGA_MIGRATO.OPERATION_EXPORT'] = 'экспорт данных';
