@@ -94,17 +94,33 @@ class WarnDeleteCommand extends BaseCommand
 	{
 		if ($this->willDelete)
 		{
-			$this->logger->add(
-				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.SOME_WILL_BE_DELETED',
-					array(
-						'#COUNT#' => $this->willDelete,
-						'#TOTAL#' => $this->totalRecords,
-					)
-				),
-				0,
-				Logger::TYPE_INFO
-			);
+			if ($this->willDelete == $this->totalRecords)
+			{
+				$this->logger->add(
+					Loc::getMessage(
+						'INTERVOLGA_MIGRATO.ALL_WILL_BE_DELETED',
+						array(
+							'#TOTAL#' => $this->totalRecords,
+						)
+					),
+					0,
+					Logger::TYPE_INFO
+				);
+			}
+			else
+			{
+				$this->logger->add(
+					Loc::getMessage(
+						'INTERVOLGA_MIGRATO.SOME_WILL_BE_DELETED',
+						array(
+							'#COUNT#' => $this->willDelete,
+							'#TOTAL#' => $this->totalRecords,
+						)
+					),
+					0,
+					Logger::TYPE_INFO
+				);
+			}
 		}
 		else
 		{
