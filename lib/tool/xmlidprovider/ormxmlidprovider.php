@@ -52,24 +52,23 @@ class OrmXmlIdProvider extends BaseXmlIdProvider
 		}
 	}
 
-	public function findRecords(array $xmlIds)
+	public function findRecord($xmlId)
 	{
-		$result = array();
 		$parameters = array(
 			"select" => array(
 				"ID",
 				"XML_ID",
 			),
 			"filter" => array(
-				"=XML_ID" => $xmlIds,
+				"=XML_ID" => $xmlId,
 			),
 		);
 		$dataManager = $this->dataManager;
 		$getList = $dataManager::getList($parameters);
 		while ($record = $getList->fetch())
 		{
-			$result[$record["XML_ID"]] = RecordId::createNumericId($record["ID"]);
+			return RecordId::createNumericId($record["ID"]);
 		}
-		return $result;
+		return null;
 	}
 }

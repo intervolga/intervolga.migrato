@@ -2,6 +2,7 @@
 
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Console\Logger;
+use Intervolga\Migrato\Tool\PublicCache;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 Loc::loadMessages(__FILE__);
@@ -58,6 +59,7 @@ class AutofixCommand extends BaseCommand
 				);
 			}
 		}
+		PublicCache::getInstance()->clearTagCache();
 	}
 
 	/**

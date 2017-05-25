@@ -1,6 +1,7 @@
 <? namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\NotImplementedException;
+use Intervolga\Migrato\Tool\PublicCache;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 abstract class BaseData
@@ -12,6 +13,7 @@ abstract class BaseData
 	protected $xmlIdProvider = null;
 
 	protected $cache = array();
+	protected $isAllCached = false;
 
 	/**
 	 * @return static
@@ -79,7 +81,7 @@ abstract class BaseData
 	public function delete($xmlId)
 	{
 		$this->deleteInner($xmlId);
-		unset($this->cache[$xmlId]);
+		$this->cache[$xmlId] = null;
 	}
 
 	/**
@@ -99,43 +101,53 @@ abstract class BaseData
 	 */
 	public function findRecord($xmlId)
 	{
-		$findRecords = static::findRecords(array($xmlId));
-		if ($this->cache[$xmlId])
-		{
-			return $this->cache[$xmlId];
-		}
-		return $findRecords[$xmlId];
-	}
-
-	/**
-	 * @param string[] $xmlIds
-	 *
-	 * @return \Intervolga\Migrato\Data\RecordId[]
-	 */
-	public function findRecords(array $xmlIds)
-	{
+		$id = null;
 		if ($this->xmlIdProvider)
 		{
-			$result = $this->xmlIdProvider->findRecords($xmlIds);
+			$id = $this->xmlIdProvider->findRecord($xmlId);
 		}
 		else
 		{
-			$result = array();
-			$allRecords = static::getList();
-			foreach ($allRecords as $dbRecord)
-			{
-				if ($dbRecord->getXmlId())
-				{
-					$this->cache[$dbRecord->getXmlId()] = $dbRecord->getId();
-				}
-				if (in_array($dbRecord->getXmlId(), $xmlIds))
-				{
-					$result[$dbRecord->getXmlId()] = $dbRecord->getId();
-				}
-			}
+			$id = $this->findRecordExhaustive($xmlId);
 		}
 
-		return $result;
+		return $id;
+	}
+
+	protected function findRecordExhaustive($xmlId)
+	{
+		if (array_key_exists($xmlId, $this->cache))
+		{
+			return $this->cache[$xmlId];
+		}
+		else
+		{
+			if ($this->isAllCached)
+			{
+				$this->cache[$xmlId] = null;
+			}
+			else
+			{
+				$this->cache[$xmlId] = null;
+				$this->cacheIds();
+				$this->isAllCached = true;
+			}
+
+			return $this->cache[$xmlId];
+		}
+	}
+
+	protected function cacheIds()
+	{
+		$allRecords = static::getList();
+		foreach ($allRecords as $dbRecord)
+		{
+			if ($dbRecord->getXmlId())
+			{
+				$this->cache[$dbRecord->getXmlId()] = $dbRecord->getId();
+			}
+		}
+		$this->isAllCached = true;
 	}
 
 	/**
@@ -340,5 +352,16 @@ abstract class BaseData
 		{
 			return BaseXmlIdProvider::makeDefaultXmlId($this);
 		}
+	}
+
+	/**
+	 * @param string $xmlId
+	 * @param string $code
+	 *
+	 * @return string
+	 */
+	public static function getPublicId($xmlId = '', $code = '')
+	{
+		return PublicCache::getInstance()->getId(static::getInstance(), $xmlId, $code);
 	}
 }
