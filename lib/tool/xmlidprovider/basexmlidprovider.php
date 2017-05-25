@@ -101,12 +101,12 @@ abstract class BaseXmlIdProvider
 	}
 
 	/**
-	 * @param string[] $xmlIds
+	 * @param string $xmlId
 	 *
-	 * @return \Intervolga\Migrato\Data\RecordId[]
+	 * @return \Intervolga\Migrato\Data\RecordId|null
 	 * @throws \Bitrix\Main\NotImplementedException
 	 */
-	public function findRecords(array $xmlIds)
+	public function findRecord($xmlId)
 	{
 		throw new NotImplementedException("Not implemented yet");
 	}

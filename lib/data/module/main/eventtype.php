@@ -121,19 +121,15 @@ class EventType extends BaseData
 		}
 	}
 
-	public function findRecords(array $xmlIds)
+	public function findRecord($xmlId)
 	{
-		$result = array();
-		foreach ($xmlIds as $xmlId)
+		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		$filter = array("LID" => $fields[0], "EVENT_NAME" => $fields[1]);
+		$record = \CEventType::getList($filter)->fetch();
+		if ($record["ID"])
 		{
-			$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
-			$filter = array("LID" => $fields[0], "EVENT_NAME" => $fields[1]);
-			$record = \CEventType::getList($filter)->fetch();
-			if ($record["ID"])
-			{
-				$result[$xmlId] = $this->createId($record["ID"]);
-			}
+			return $this->createId($record["ID"]);
 		}
-		return $result;
+		return null;
 	}
 }
