@@ -95,7 +95,6 @@ class Event extends BaseData
 		}
 		$md5 = md5(serialize(array(
 			$message["EMAIL_FROM"],
-			$message["EMAIL_FROM"],
 			$message["EMAIL_TO"],
 			$message["EVENT_NAME"],
 			$sites
