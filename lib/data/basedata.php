@@ -360,8 +360,8 @@ abstract class BaseData
 	 *
 	 * @return string
 	 */
-	public function getPublicId($xmlId = '', $code = '')
+	public static function getPublicId($xmlId = '', $code = '')
 	{
-		return PublicCache::getInstance()->getId($this, $xmlId, $code);
+		return PublicCache::getInstance()->getId(static::getInstance(), $xmlId, $code);
 	}
 }
