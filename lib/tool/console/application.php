@@ -55,6 +55,7 @@ class Application extends \Symfony\Component\Console\Application
 
 	protected function configureIO(InputInterface $input, OutputInterface $output)
 	{
+		$output->setDecorated(true);
 		parent::configureIO($input, $output);
 		if (true === $input->hasParameterOption(array('--win', '-W'), true))
 		{
