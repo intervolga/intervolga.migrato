@@ -1,6 +1,7 @@
 <? namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\NotImplementedException;
+use Intervolga\Migrato\Tool\PublicCache;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 abstract class BaseData
@@ -351,5 +352,16 @@ abstract class BaseData
 		{
 			return BaseXmlIdProvider::makeDefaultXmlId($this);
 		}
+	}
+
+	/**
+	 * @param string $xmlId
+	 * @param string $code
+	 *
+	 * @return string
+	 */
+	public function getPublicId($xmlId = '', $code = '')
+	{
+		return PublicCache::getInstance()->getId($this, $xmlId, $code);
 	}
 }
