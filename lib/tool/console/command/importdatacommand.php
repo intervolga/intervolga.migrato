@@ -9,6 +9,7 @@ use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Console\Logger;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Tool\ImportList;
+use Intervolga\Migrato\Tool\PublicCache;
 
 Loc::loadMessages(__FILE__);
 
@@ -52,6 +53,7 @@ class ImportDataCommand extends BaseCommand
 			$this->deleteNotImported();
 			$this->resolveReferences();
 		}
+		PublicCache::getInstance()->clearTagCache();
 	}
 
 	protected function init()

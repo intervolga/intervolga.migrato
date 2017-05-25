@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
     <options>
-        <exclude>admin_passwordh</exclude>
         <exclude>signer_default_key</exclude>
         <exclude>server_uniq_id</exclude>
         <exclude>^~</exclude>
