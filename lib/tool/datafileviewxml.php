@@ -33,7 +33,7 @@ class DataFileViewXml
 	protected static function markDataFileDeleted(File $file)
 	{
 		$content = $file->getContents();
-		XmlHelper::addAttrToTags('data', array('deleted', 'true'), $content);
+		$content = XmlHelper::addAttrToTags('data', array('deleted' => 'true'), $content);
 		$file->putContents($content);
 	}
 
