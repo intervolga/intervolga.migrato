@@ -40,9 +40,13 @@ class Logger
 		$this->add(str_repeat('-', 80));
 	}
 
-	public function startCommand()
+	public function clearLogs()
 	{
 		LogTable::deleteAll();
+	}
+
+	public function startCommand()
+	{
 		$this->add(Loc::getMessage(
 			'INTERVOLGA_MIGRATO.COMMAND_STARTED',
 			array(

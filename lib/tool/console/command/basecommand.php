@@ -18,7 +18,12 @@ abstract class BaseCommand extends Command
 {
 	protected static $mainCommand = '';
 
+	/**
+	 * @var InputInterface $input
+	 */
+	protected $input = null;
 	protected $output = null;
+	protected $clearLogs = true;
 	/**
 	 * @var \Intervolga\Migrato\Tool\Console\Logger $logger
 	 */
@@ -28,11 +33,16 @@ abstract class BaseCommand extends Command
 
 	public function execute(InputInterface $input, OutputInterface $output)
 	{
+		$this->input = $input;
 		$this->output = $output;
 		$this->logger = new Logger($this, $output);
 		if ($this->isMainCommand())
 		{
 			$this->checkFiles();
+			if ($this->clearLogs)
+			{
+				$this->logger->clearLogs();
+			}
 			$this->logger->startCommand();
 		}
 		else
