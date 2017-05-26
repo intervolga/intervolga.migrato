@@ -58,7 +58,10 @@ class WarnDeleteCommand extends BaseCommand
 		$fileRecordsXmlIds = array();
 		foreach ($fileRecords as $record)
 		{
-			$fileRecordsXmlIds[] = $record->getXmlId();
+			if (!$record->getDeleteMark())
+			{
+				$fileRecordsXmlIds[] = $record->getXmlId();
+			}
 		}
 
 		return $fileRecordsXmlIds;
