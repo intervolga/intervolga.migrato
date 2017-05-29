@@ -7,6 +7,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Console\Logger;
+use Intervolga\Migrato\Tool\DataTree\Builder;
 use Intervolga\Migrato\Tool\XmlIdValidateError;
 
 Loc::loadMessages(__FILE__);
@@ -15,6 +16,10 @@ class ValidateCommand extends BaseCommand
 {
 	protected $lastExecuteResult = array();
 	protected $allXmlIds = array();
+	/**
+	 * @var \Intervolga\Migrato\Tool\DataTree\Tree
+	 */
+	protected $tree;
 
 	/**
 	 * @return \Intervolga\Migrato\Tool\XmlIdValidateError[]
@@ -34,9 +39,8 @@ class ValidateCommand extends BaseCommand
 	public function executeInner()
 	{
 		$result = array();
-		$configDataClasses = Config::getInstance()->getDataClasses();
-		$dataClasses = $this->recursiveGetDependentDataClasses($configDataClasses);
-		foreach ($dataClasses as $data)
+		$this->tree = Builder::build();
+		foreach ($this->tree->getDataClasses() as $data)
 		{
 			$result = array_merge($result, $this->checkDataClass($data));
 		}
@@ -51,6 +55,7 @@ class ValidateCommand extends BaseCommand
 	 */
 	protected function checkDataClass(BaseData $data)
 	{
+		$result = array();
 		if (Loader::includeModule($data->getModule()))
 		{
 			$filter = Config::getInstance()->getDataClassFilter($data);
@@ -62,7 +67,7 @@ class ValidateCommand extends BaseCommand
 		}
 		else
 		{
-			throw $this->dataModuleError($data);
+			$this->dataModuleError($data);
 		}
 
 		return $result;
@@ -177,24 +182,40 @@ class ValidateCommand extends BaseCommand
 	/**
 	 * @param \Intervolga\Migrato\Data\BaseData $data
 	 *
-	 * @return \Bitrix\Main\LoaderException
+	 * @throws \Bitrix\Main\LoaderException
 	 */
 	protected function dataModuleError(BaseData $data)
 	{
-		$configDataClasses = Config::getInstance()->getDataClasses();
-		if (in_array($data, $configDataClasses))
+		if ($this->tree->findNode($data)->isStrongNeed())
 		{
-			$code = 'INTERVOLGA_MIGRTO.CONFIG_MODULE_NOT_INSTALLED';
+			if ($this->tree->findNode($data)->isRoot())
+			{
+				$code = 'INTERVOLGA_MIGRTO.CONFIG_MODULE_NOT_INSTALLED';
+			}
+			else
+			{
+				$code = 'INTERVOLGA_MIGRTO.DEPENDANT_MODULE_NOT_INSTALLED';
+			}
+			throw new LoaderException(Loc::getMessage(
+				$code,
+				array(
+					'#MODULE#' => $this->logger->getModuleMessage($data->getModule()),
+				)
+			));
 		}
 		else
 		{
-			$code = 'INTERVOLGA_MIGRTO.DEPENDANT_MODULE_NOT_INSTALLED';
+			$this->logger->add(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRTO.REFERENCED_MODULE_NOT_INSTALLED',
+					array(
+						'#MODULE#' => $this->logger->getModuleMessage($data->getModule()),
+						'#ENTITY#' => $this->logger->getEntityMessage($data->getEntityName()),
+					)
+				),
+				Logger::LEVEL_NORMAL,
+				Logger::TYPE_INFO
+			);
 		}
-		return new LoaderException(Loc::getMessage(
-			$code,
-			array(
-				'#MODULE#' => $data->getModule(),
-			)
-		));
 	}
 }
