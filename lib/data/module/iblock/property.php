@@ -34,6 +34,7 @@ class Property extends BaseData
 			$record->setId(RecordId::createNumericId($property["ID"]));
 
 			$smartFilterOptions = $this->getSmartFilterOptions($property["ID"]);
+			$property = $this->exportDefaultValue($property);
 
 			$record->addFieldsRaw(array_merge(
 				$smartFilterOptions,
@@ -85,6 +86,28 @@ class Property extends BaseData
 		}
 
 		return $result;
+	}
+
+	/**
+	 * @param array $property
+	 *
+	 * @return array
+	 */
+	protected function exportDefaultValue(array $property)
+	{
+		if ($property['USER_TYPE'] == 'HTML' && $property['DEFAULT_VALUE'])
+		{
+			$defaultValue = unserialize($property['DEFAULT_VALUE']);
+			if (is_array($defaultValue))
+			{
+				if (!strlen($defaultValue['TEXT']))
+				{
+					$property['DEFAULT_VALUE'] = false;
+				}
+			}
+		}
+
+		return $property;
 	}
 
 	/**
@@ -184,6 +207,18 @@ class Property extends BaseData
 		{
 			$fields["MULTIPLE_CNT"] = false;
 		}
+		$fields = $this->importDefaultValue($fields);
+
+		return $fields;
+	}
+
+	/**
+	 * @param array $fields
+	 *
+	 * @return array
+	 */
+	protected function importDefaultValue(array $fields)
+	{
 		if ($fields['USER_TYPE'] == 'HTML' && $fields['DEFAULT_VALUE'])
 		{
 			$fields['DEFAULT_VALUE'] = unserialize($fields['DEFAULT_VALUE']);
