@@ -134,7 +134,7 @@ class Config
 	/**
 	 * @return BaseData[]
 	 */
-	public function getAllDateClasses()
+	public function getAllDataClasses()
 	{
 		$entities = array();
 		$dir = new Directory(\Bitrix\Main\Application::getDocumentRoot() . "/local/modules/intervolga.migrato/lib/data/module/");
