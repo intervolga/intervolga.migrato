@@ -178,20 +178,21 @@ class Form extends BaseData
 				}
 				if ($type)
 				{
-					$xmlIdParts[] = $type;
-
-					if ($form['COMMON'] == 'Y')
-					{
-						$xmlIdParts[] = static::XML_ALL;
-					}
-					else
-					{
-						$xmlIdParts[] = static::XML_ADMIN;
-					}
-
 					$iblockId = substr($form['NAME'], strripos($form['NAME'], '_') + 1);
 					$iblockXmlId = \CIBlock::getByID($iblockId)->fetch();
-					$xmlIdParts[] = $iblockXmlId['XML_ID'];
+					if ($iblockXmlId['XML_ID'])
+					{
+						$xmlIdParts[] = $type;
+						if ($form['COMMON'] == 'Y')
+						{
+							$xmlIdParts[] = static::XML_ALL;
+						}
+						else
+						{
+							$xmlIdParts[] = static::XML_ADMIN;
+						}
+						$xmlIdParts[] = $iblockXmlId['XML_ID'];
+					}
 				}
 			}
 		}
