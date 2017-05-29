@@ -184,6 +184,10 @@ class Property extends BaseData
 		{
 			$fields["MULTIPLE_CNT"] = false;
 		}
+		if ($fields['USER_TYPE'] == 'HTML' && $fields['DEFAULT_VALUE'])
+		{
+			$fields['DEFAULT_VALUE'] = unserialize($fields['DEFAULT_VALUE']);
+		}
 
 		return $fields;
 	}
