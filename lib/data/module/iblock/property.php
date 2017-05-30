@@ -154,31 +154,15 @@ class Property extends BaseData
 	public function update(Record $record)
 	{
 		$fields = $this->recordToArray($record);
-		$isUpdateReference = !$fields["IBLOCK_ID"];
+		$smartFilterSettingsBeforeUpdate = $this->getDbRootSmartFilter($record->getId()->getValue());
 		$propertyObject = new \CIBlockProperty();
-		$smartFilterSettings = array();
-		if ($isUpdateReference)
-		{
-			$smartFilterSettings = SectionPropertyTable::getList(array(
-				"filter" => array(
-					"PROPERTY_ID" => $record->getId()->getValue(),
-					"SECTION_ID" => 0,
-				),
-			))->fetch();
-		}
-		$isUpdated = $propertyObject->update($record->getId()->getValue(), $fields);
-		if (!$isUpdated)
+		if (!$propertyObject->update($record->getId()->getValue(), $fields))
 		{
 			throw new \Exception(trim(strip_tags($propertyObject->LAST_ERROR)));
 		}
-
-		if ($isUpdateReference)
+		if ($record->isReferenceUpdate())
 		{
-			$this->deleteRootSmartFilter($record->getId()->getValue());
-			if ($smartFilterSettings)
-			{
-				SectionPropertyTable::add($smartFilterSettings);
-			}
+			$this->restoreDbRootSmartFilter($record->getId()->getValue(), $smartFilterSettingsBeforeUpdate);
 		}
 		else
 		{
@@ -235,6 +219,45 @@ class Property extends BaseData
 		}
 
 		return $fields;
+	}
+
+	/**
+	 * @param int $propertyId
+	 *
+	 * @return array
+	 * @throws \Bitrix\Main\ArgumentException
+	 */
+	protected function getDbRootSmartFilter($propertyId)
+	{
+		$smartFilterSettings = SectionPropertyTable::getList(array(
+			"filter" => array(
+				"PROPERTY_ID" => $propertyId,
+				"SECTION_ID" => 0,
+			),
+		))->fetch();
+		if ($smartFilterSettings)
+		{
+			return $smartFilterSettings;
+		}
+		else
+		{
+			return array();
+		}
+	}
+
+	/**
+	 * @param int $propertyId
+	 * @param array $smartFilterSettings
+	 *
+	 * @throws \Exception
+	 */
+	protected function restoreDbRootSmartFilter($propertyId, array $smartFilterSettings)
+	{
+		$this->deleteRootSmartFilter($propertyId);
+		if ($smartFilterSettings)
+		{
+			SectionPropertyTable::add($smartFilterSettings);
+		}
 	}
 
 	/**
