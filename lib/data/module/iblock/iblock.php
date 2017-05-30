@@ -96,11 +96,60 @@ class Iblock extends BaseData
 		{
 			foreach ($fields as $k => $field)
 			{
-				unset($fields[$k]["NAME"]);
+				unset($field['NAME']);
+				$field = $this->exportWatermarkSettings($k, $field);
+				$fields[$k] = $field;
 			}
 			$fieldsValues = Value::treeToList($fields, "FIELDS");
 			$record->addFieldsRaw($fieldsValues);
 		}
+	}
+
+	/**
+	 * @param string $name
+	 * @param array $field
+	 *
+	 * @return array
+	 */
+	protected function exportWatermarkSettings($name, array $field)
+	{
+		$pictures = array(
+			'PREVIEW_PICTURE',
+			'DETAIL_PICTURE',
+			'SECTION_PICTURE',
+			'SECTION_DETAIL_PICTURE',
+		);
+		if (in_array($name, $pictures))
+		{
+			if (!array_key_exists('USE_WATERMARK_TEXT', $field['DEFAULT_VALUE']))
+			{
+				$field['DEFAULT_VALUE']['USE_WATERMARK_TEXT'] = 'N';
+			}
+			if (!array_key_exists('USE_WATERMARK_FILE', $field['DEFAULT_VALUE']))
+			{
+				$field['DEFAULT_VALUE']['USE_WATERMARK_FILE'] = 'N';
+			}
+		}
+		$dv = $field['DEFAULT_VALUE'];
+		if (is_array($dv) && $dv)
+		{
+			if ($dv['USE_WATERMARK_TEXT'] == 'N')
+			{
+				unset($field['DEFAULT_VALUE']['WATERMARK_TEXT']);
+				unset($field['DEFAULT_VALUE']['WATERMARK_TEXT_FONT']);
+				unset($field['DEFAULT_VALUE']['WATERMARK_TEXT_COLOR']);
+				unset($field['DEFAULT_VALUE']['WATERMARK_TEXT_SIZE']);
+				unset($field['DEFAULT_VALUE']['WATERMARK_TEXT_POSITION']);
+			}
+			if ($dv['USE_WATERMARK_FILE'] == 'N')
+			{
+				unset($field['DEFAULT_VALUE']['WATERMARK_FILE']);
+				unset($field['DEFAULT_VALUE']['WATERMARK_FILE_ALPHA']);
+				unset($field['DEFAULT_VALUE']['WATERMARK_FILE_POSITION']);
+				unset($field['DEFAULT_VALUE']['WATERMARK_FILE_ORDER']);
+			}
+		}
+		return $field;
 	}
 
 	/**

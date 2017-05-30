@@ -60,14 +60,16 @@ class Form extends BaseData
 	{
 		if ($formXmlId = $this->fieldsToXmlId($form))
 		{
-			$record = new Record($this);
-			$record->setXmlId($formXmlId);
-			$record->setId($this->createId($form['ID']));
-			$record->setFieldRaw('VALUE', $form['VALUE']);
-			$this->addIblockDependency($record, $form['NAME']);
-			$this->addPropsDependencies($record, $form['VALUE']);
-
-			return $record;
+			if ($value = unserialize($form['VALUE']))
+			{
+				$record = new Record($this);
+				$record->setXmlId($formXmlId);
+				$record->setId($this->createId($form['ID']));
+				$record->setFieldRaw('VALUE', $form['VALUE']);
+				$this->addIblockDependency($record, $form['NAME']);
+				$this->addPropsDependencies($record, $value);
+				return $record;
+			}
 		}
 
 		return null;
@@ -99,20 +101,22 @@ class Form extends BaseData
 	protected function addPropsDependencies(Record $record, $value)
 	{
 		$propertyXmlIds = array();
-		foreach ($this->getIblockProperties() as $id => $xmlId)
+		if ($value['tabs'])
 		{
-			$find = '--PROPERTY_' . $id . '--';
-			$replace = '--PROPERTY_' . $xmlId . '--';
-			if (is_int(strpos($value, $find)))
+			foreach ($this->getIblockProperties() as $id => $xmlId)
 			{
-				$value = str_replace($find, $replace, $value);
-				$propertyXmlIds[] = $xmlId;
+				$find = '--PROPERTY_' . $id . '--';
+				$replace = '--PROPERTY_' . $xmlId . '--';
+				if (is_int(strpos($value['tabs'], $find)))
+				{
+					$value['tabs'] = str_replace($find, $replace, $value['tabs']);
+					$propertyXmlIds[] = $xmlId;
+				}
 			}
 		}
+		$record->setFieldRaw('VALUE', serialize($value));
 		if ($propertyXmlIds)
 		{
-			$record->setFieldRaw('VALUE', $value);
-
 			$dependency = clone $this->getDependency('PROPERTY_ID');
 			$dependency->setValues($propertyXmlIds);
 			$record->setDependency('PROPERTY_ID', $dependency);
@@ -178,20 +182,21 @@ class Form extends BaseData
 				}
 				if ($type)
 				{
-					$xmlIdParts[] = $type;
-
-					if ($form['COMMON'] == 'Y')
-					{
-						$xmlIdParts[] = static::XML_ALL;
-					}
-					else
-					{
-						$xmlIdParts[] = static::XML_ADMIN;
-					}
-
 					$iblockId = substr($form['NAME'], strripos($form['NAME'], '_') + 1);
 					$iblockXmlId = \CIBlock::getByID($iblockId)->fetch();
-					$xmlIdParts[] = $iblockXmlId['XML_ID'];
+					if ($iblockXmlId['XML_ID'])
+					{
+						$xmlIdParts[] = $type;
+						if ($form['COMMON'] == 'Y')
+						{
+							$xmlIdParts[] = static::XML_ALL;
+						}
+						else
+						{
+							$xmlIdParts[] = static::XML_ADMIN;
+						}
+						$xmlIdParts[] = $iblockXmlId['XML_ID'];
+					}
 				}
 			}
 		}
@@ -246,13 +251,16 @@ class Form extends BaseData
 		$result = $this->parseXmlId($record->getXmlId());
 		if ($value = $record->getFieldRaw('VALUE'))
 		{
-			foreach ($this->getIblockProperties(false) as $xmlId => $id)
+			if ($value = unserialize($value))
 			{
-				$find = '--PROPERTY_' . $xmlId . '--';
-				$replace = '--PROPERTY_' . $id . '--';
-				$value = str_replace($find, $replace, $value);
+				foreach ($this->getIblockProperties(false) as $xmlId => $id)
+				{
+					$find = '--PROPERTY_' . $xmlId . '--';
+					$replace = '--PROPERTY_' . $id . '--';
+					$value['tabs'] = str_replace($find, $replace, $value['tabs']);
+				}
+				$result['VALUE'] = $value;
 			}
-			$result['VALUE'] = $value;
 		}
 
 		return $result;
@@ -281,7 +289,7 @@ class Form extends BaseData
 			$isUpdated = $options->setOption(
 				$array['CATEGORY'],
 				$array['NAME'],
-				unserialize($array['VALUE']),
+				$array['VALUE'],
 				$array['COMMON'] == 'Y',
 				$array['USER_ID']
 			);
@@ -302,7 +310,7 @@ class Form extends BaseData
 			$isAdded = $options->setOption(
 				$array['CATEGORY'],
 				$array['NAME'],
-				unserialize($array['VALUE']),
+				$array['VALUE'],
 				$array['COMMON'] == 'Y',
 				$array['USER_ID']
 			);

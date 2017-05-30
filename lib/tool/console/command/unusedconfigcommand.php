@@ -18,7 +18,7 @@ class UnusedConfigCommand extends BaseCommand
 	public function executeInner()
 	{
 		$configDataClassesString = $this->getConfigDataCodes();
-		$allConfigDataClasses = Config::getInstance()->getAllDateClasses();
+		$allConfigDataClasses = Config::getInstance()->getAllDataClasses();
 		foreach ($allConfigDataClasses as $conf)
 		{
 			if (!in_array($conf->getEntityName(), $configDataClassesString[$conf->getModule()]))

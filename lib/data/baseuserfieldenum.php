@@ -85,12 +85,18 @@ abstract class BaseUserFieldEnum extends BaseData
 
 	public function setXmlId($id, $xmlId)
 	{
-		$enumGetList = \CUserFieldEnum::getList(array(), array("ID" => $id));
-		if($enum = $enumGetList->fetch())
+		$enumGetList = \CUserFieldEnum::getList(array(), array("ID" => $id->getValue()));
+		if ($enum = $enumGetList->fetch())
 		{
-			$enum["XML_ID"] = $xmlId;
 			$userFieldObject = new \CUserFieldEnum();
-			$userFieldObject->setEnumValues($enum["USER_FIELD_ID"], $enum);
+			$userFieldObject->setEnumValues(
+				$enum["USER_FIELD_ID"],
+				array(
+					$enum['ID'] => array(
+						'XML_ID' => $xmlId,
+					),
+				)
+			);
 		}
 	}
 
