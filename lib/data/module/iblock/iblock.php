@@ -130,7 +130,8 @@ class Iblock extends BaseData
 				$field['DEFAULT_VALUE']['USE_WATERMARK_FILE'] = 'N';
 			}
 		}
-		if ($dv = $field['DEFAULT_VALUE'])
+		$dv = $field['DEFAULT_VALUE'];
+		if (is_array($dv) && $dv)
 		{
 			if ($dv['USE_WATERMARK_TEXT'] == 'N')
 			{
