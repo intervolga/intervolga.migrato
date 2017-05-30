@@ -477,7 +477,7 @@ class ImportDataCommand extends BaseCommand
 					throw new \Exception('Record not found');
 				}
 				$clone->setId($id);
-				$clone->update();
+				$clone->updateReferences();
 				$this->logger->addDb(
 					array(
 						'RECORD' => $dataRecord,

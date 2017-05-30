@@ -15,6 +15,10 @@ class Record extends BaseDataObject
 	 * @var bool
 	 */
 	protected $deleteMark = false;
+	/**
+	 * @var bool
+	 */
+	protected $isReferenceUpdate = false;
 
 	/**
 	 * @param string $xmlId
@@ -168,6 +172,13 @@ class Record extends BaseDataObject
 		$this->getData()->update($this);
 	}
 
+	public function updateReferences()
+	{
+		$this->isReferenceUpdate = true;
+		$this->getData()->update($this);
+		$this->isReferenceUpdate = false;
+	}
+
 	/**
 	 * @return \Intervolga\Migrato\Data\RecordId
 	 */
@@ -288,5 +299,13 @@ class Record extends BaseDataObject
 		}
 
 		return $info;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isReferenceUpdate()
+	{
+		return $this->isReferenceUpdate;
 	}
 }
