@@ -1,5 +1,6 @@
 <?namespace Intervolga\Migrato\Tool\Console\Command;
 
+use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
@@ -8,6 +9,7 @@ use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Console\Logger;
 use Intervolga\Migrato\Tool\DataFileViewXml;
+use Intervolga\Migrato\Tool\DataTree\Builder;
 use Intervolga\Migrato\Tool\ImportList;
 use Intervolga\Migrato\Tool\PublicCache;
 
@@ -59,11 +61,10 @@ class ImportDataCommand extends BaseCommand
 	protected function init()
 	{
 		$this->list = new ImportList();
-		$configDataClasses = Config::getInstance()->getDataClasses();
-		$dataClasses = $this->recursiveGetDependentDataClasses($configDataClasses);
-		foreach ($dataClasses as $data)
+		$tree = Builder::build();
+		foreach ($tree->getDataClasses() as $data)
 		{
-			if (!in_array($data, $configDataClasses))
+			if (!$tree->findNode($data)->isRoot())
 			{
 				$this->prepareNonConfigData($data);
 			}
@@ -82,10 +83,13 @@ class ImportDataCommand extends BaseCommand
 	 */
 	protected function prepareNonConfigData(BaseData $data)
 	{
-		$dataGetList = $data->getList();
-		foreach ($dataGetList as $localDataRecord)
+		if (Loader::includeModule($data->getModule()))
 		{
-			$this->list->addCreatedRecord($localDataRecord);
+			$dataGetList = $data->getList();
+			foreach ($dataGetList as $localDataRecord)
+			{
+				$this->list->addCreatedRecord($localDataRecord);
+			}
 		}
 	}
 
@@ -473,7 +477,7 @@ class ImportDataCommand extends BaseCommand
 					throw new \Exception('Record not found');
 				}
 				$clone->setId($id);
-				$clone->update();
+				$clone->updateReferences();
 				$this->logger->addDb(
 					array(
 						'RECORD' => $dataRecord,

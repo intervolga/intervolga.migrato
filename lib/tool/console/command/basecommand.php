@@ -49,7 +49,18 @@ abstract class BaseCommand extends Command
 		{
 			$this->logger->startSubcommand();
 		}
-		$this->executeInner();
+		try
+		{
+			$this->executeInner();
+		}
+		catch (\Throwable $throwable)
+		{
+			$this->logger->handle($throwable);
+		}
+		catch (\Exception $exception)
+		{
+			$this->logger->handle($exception);
+		}
 		$this->logger->addShortSummary();
 		if ($this->isMainCommand())
 		{
@@ -83,53 +94,6 @@ abstract class BaseCommand extends Command
 		if (!Config::isExists())
 		{
 			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.CONFIG_NOT_FOUND'));
-		}
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\BaseData[] $dataClasses
-	 *
-	 * @return \Intervolga\Migrato\Data\BaseData[]
-	 */
-	protected function recursiveGetDependentDataClasses(array $dataClasses)
-	{
-		$newClassesAdded = false;
-		foreach ($dataClasses as $dataClass)
-		{
-			$dependencies = $dataClass->getDependencies();
-			if ($dependencies)
-			{
-				foreach ($dependencies as $dependency)
-				{
-					$dependentDataClass = $dependency->getTargetData();
-					if (!in_array($dependentDataClass, $dataClasses))
-					{
-						$dataClasses[] = $dependentDataClass;
-						$newClassesAdded = true;
-					}
-				}
-			}
-			$references = $dataClass->getReferences();
-			if ($references)
-			{
-				foreach ($references as $reference)
-				{
-					$dependentDataClass = $reference->getTargetData();
-					if (!in_array($dependentDataClass, $dataClasses))
-					{
-						$dataClasses[] = $dependentDataClass;
-						$newClassesAdded = true;
-					}
-				}
-			}
-		}
-		if ($newClassesAdded)
-		{
-			return $this->recursiveGetDependentDataClasses($dataClasses);
-		}
-		else
-		{
-			return $dataClasses;
 		}
 	}
 

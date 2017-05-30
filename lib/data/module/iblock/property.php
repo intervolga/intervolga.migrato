@@ -34,6 +34,7 @@ class Property extends BaseData
 			$record->setId(RecordId::createNumericId($property["ID"]));
 
 			$smartFilterOptions = $this->getSmartFilterOptions($property["ID"]);
+			$property = $this->exportDefaultValue($property);
 
 			$record->addFieldsRaw(array_merge(
 				$smartFilterOptions,
@@ -88,6 +89,28 @@ class Property extends BaseData
 	}
 
 	/**
+	 * @param array $property
+	 *
+	 * @return array
+	 */
+	protected function exportDefaultValue(array $property)
+	{
+		if ($property['USER_TYPE'] == 'HTML' && $property['DEFAULT_VALUE'])
+		{
+			$defaultValue = unserialize($property['DEFAULT_VALUE']);
+			if (is_array($defaultValue))
+			{
+				if (!strlen($defaultValue['TEXT']))
+				{
+					$property['DEFAULT_VALUE'] = false;
+				}
+			}
+		}
+
+		return $property;
+	}
+
+	/**
 	 * @param int $propertyId
 	 *
 	 * @return array
@@ -104,21 +127,11 @@ class Property extends BaseData
 		$result = array();
 		if ($property = $sectionPropertyGetList->fetch())
 		{
-			$result["HAS_SMART_FILTER_SETTINGS"] = "Y";
+			$result["IS_ROOT_SMART_FILTER"] = "Y";
 			$result["SMART_FILTER"] = $property["SMART_FILTER"];
 			$result["DISPLAY_TYPE"] = $property["DISPLAY_TYPE"];
 			$result["DISPLAY_EXPANDED"] = $property["DISPLAY_EXPANDED"];
 			$result["FILTER_HINT"] = $property["FILTER_HINT"];
-		}
-		else
-		{
-			$result = array(
-				"HAS_SMART_FILTER_SETTINGS" => "N",
-				"SMART_FILTER" => "",
-				"DISPLAY_TYPE" => "",
-				"DISPLAY_EXPANDED" => "",
-				"FILTER_HINT" => "",
-			);
 		}
 
 		return $result;
@@ -141,13 +154,17 @@ class Property extends BaseData
 	public function update(Record $record)
 	{
 		$fields = $this->recordToArray($record);
+		$smartFilterSettingsBeforeUpdate = $this->getDbRootSmartFilter($record->getId()->getValue());
 		$propertyObject = new \CIBlockProperty();
-		$isUpdated = $propertyObject->update($record->getId()->getValue(), $fields);
-		if (!$isUpdated)
+		if (!$propertyObject->update($record->getId()->getValue(), $fields))
 		{
 			throw new \Exception(trim(strip_tags($propertyObject->LAST_ERROR)));
 		}
-		if ($fields["IBLOCK_ID"])
+		if ($record->isReferenceUpdate())
+		{
+			$this->restoreDbRootSmartFilter($record->getId()->getValue(), $smartFilterSettingsBeforeUpdate);
+		}
+		else
 		{
 			$this->updateSmartFilter($fields["IBLOCK_ID"], $record->getId()->getValue(), $fields);
 		}
@@ -184,8 +201,63 @@ class Property extends BaseData
 		{
 			$fields["MULTIPLE_CNT"] = false;
 		}
+		$fields = $this->importDefaultValue($fields);
 
 		return $fields;
+	}
+
+	/**
+	 * @param array $fields
+	 *
+	 * @return array
+	 */
+	protected function importDefaultValue(array $fields)
+	{
+		if ($fields['USER_TYPE'] == 'HTML' && $fields['DEFAULT_VALUE'])
+		{
+			$fields['DEFAULT_VALUE'] = unserialize($fields['DEFAULT_VALUE']);
+		}
+
+		return $fields;
+	}
+
+	/**
+	 * @param int $propertyId
+	 *
+	 * @return array
+	 * @throws \Bitrix\Main\ArgumentException
+	 */
+	protected function getDbRootSmartFilter($propertyId)
+	{
+		$smartFilterSettings = SectionPropertyTable::getList(array(
+			"filter" => array(
+				"PROPERTY_ID" => $propertyId,
+				"SECTION_ID" => 0,
+			),
+		))->fetch();
+		if ($smartFilterSettings)
+		{
+			return $smartFilterSettings;
+		}
+		else
+		{
+			return array();
+		}
+	}
+
+	/**
+	 * @param int $propertyId
+	 * @param array $smartFilterSettings
+	 *
+	 * @throws \Exception
+	 */
+	protected function restoreDbRootSmartFilter($propertyId, array $smartFilterSettings)
+	{
+		$this->deleteRootSmartFilter($propertyId);
+		if ($smartFilterSettings)
+		{
+			SectionPropertyTable::add($smartFilterSettings);
+		}
 	}
 
 	/**
@@ -197,10 +269,10 @@ class Property extends BaseData
 	 */
 	protected function updateSmartFilter($iblockId, $propertyId, $property)
 	{
-		if ($property['HAS_SMART_FILTER_SETTINGS'])
+		$this->deleteRootSmartFilter($propertyId);
+		if ($property['IS_ROOT_SMART_FILTER'])
 		{
-			$this->deleteSmartFilterSettings($propertyId);
-			if ($property['HAS_SMART_FILTER_SETTINGS'] == 'Y')
+			if ($property['IS_ROOT_SMART_FILTER'] == 'Y')
 			{
 				$fields = array(
 					'IBLOCK_ID' => $iblockId,
@@ -222,7 +294,7 @@ class Property extends BaseData
 	 * @throws \Bitrix\Main\ArgumentException
 	 * @throws \Exception
 	 */
-	protected function deleteSmartFilterSettings($propertyId)
+	protected function deleteRootSmartFilter($propertyId)
 	{
 		$getList = SectionPropertyTable::getList(array(
 			'filter' => array(

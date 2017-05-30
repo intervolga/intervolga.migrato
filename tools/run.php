@@ -1,9 +1,7 @@
 <?php
 use Bitrix\Main\Loader;
-use Intervolga\Migrato\Tool\Console\Application;
-use Intervolga\Migrato\Tool\Console\Formatter;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Page;
-use Symfony\Component\Console\Output\ConsoleOutput;
 
 $_SERVER["DOCUMENT_ROOT"] = realpath(dirname(__FILE__)."/../../../..");
 $DOCUMENT_ROOT = $_SERVER["DOCUMENT_ROOT"];
@@ -16,26 +14,15 @@ define("STATISTIC_SKIP_ACTIVITY_CHECK", true);
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 
 @set_time_limit(0);
+
+Loc::loadMessages(__FILE__);
 if (!Loader::includeModule("intervolga.migrato"))
 {
-	echo "Module intervolga.migrato not installed\n";
+	die(Loc::getMessage('INTERVOLGA_MIGRATO.MODULE_NOT_INSTALLED'));
 }
 else
 {
-	try
-	{
-		Page::checkRights();
-		$application = new Application();
-		$application->run(null, new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, null, new Formatter()));
-	}
-	catch (\Error $error)
-	{
-		Page::handleError($error);
-	}
-	catch (\Exception $exception)
-	{
-		Page::handleException($exception);
-	}
+	Page::run();
 }
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");

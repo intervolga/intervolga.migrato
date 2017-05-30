@@ -13,6 +13,9 @@ $MESS['INTERVOLGA_MIGRATO.RECORD_XML_ID'] = 'XML ID=<info>#XML_ID#</info>';
 $MESS['INTERVOLGA_MIGRATO.COMPLEX_ID_BEGIN'] = '"';
 $MESS['INTERVOLGA_MIGRATO.COMPLEX_ID_END'] = '"';
 $MESS['INTERVOLGA_MIGRATO.COMPLEX_ID_SEPARATOR'] = '";"';
+$MESS['INTERVOLGA_MIGRATO.ERROR'] = '<fail>При выполнении команды произошла ошибка (Класс: #CLASS#)</fail>';
+$MESS['INTERVOLGA_MIGRATO.ERROR_MESSAGE_CODE'] = '<fail>#MESSAGE# (Код ошибки: #CODE#)</fail>';
+$MESS['INTERVOLGA_MIGRATO.BACKTRACE'] = '<info>Стек вызова:</info>';
 
 $MESS['INTERVOLGA_MIGRATO.MODULE_MAIN'] = 'Главный модуль';
 $MESS['INTERVOLGA_MIGRATO.MODULE_IBLOCK'] = 'Информационные блоки';
