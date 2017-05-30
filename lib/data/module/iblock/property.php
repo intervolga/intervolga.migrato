@@ -154,13 +154,33 @@ class Property extends BaseData
 	public function update(Record $record)
 	{
 		$fields = $this->recordToArray($record);
+		$isUpdateReference = !$fields["IBLOCK_ID"];
 		$propertyObject = new \CIBlockProperty();
+		$smartFilterSettings = array();
+		if ($isUpdateReference)
+		{
+			$smartFilterSettings = SectionPropertyTable::getList(array(
+				"filter" => array(
+					"PROPERTY_ID" => $record->getId()->getValue(),
+					"SECTION_ID" => 0,
+				),
+			))->fetch();
+		}
 		$isUpdated = $propertyObject->update($record->getId()->getValue(), $fields);
 		if (!$isUpdated)
 		{
 			throw new \Exception(trim(strip_tags($propertyObject->LAST_ERROR)));
 		}
-		if ($fields["IBLOCK_ID"])
+
+		if ($isUpdateReference)
+		{
+			$this->deleteRootSmartFilter($record->getId()->getValue());
+			if ($smartFilterSettings)
+			{
+				SectionPropertyTable::add($smartFilterSettings);
+			}
+		}
+		else
 		{
 			$this->updateSmartFilter($fields["IBLOCK_ID"], $record->getId()->getValue(), $fields);
 		}
@@ -226,9 +246,9 @@ class Property extends BaseData
 	 */
 	protected function updateSmartFilter($iblockId, $propertyId, $property)
 	{
+		$this->deleteRootSmartFilter($propertyId);
 		if ($property['IS_ROOT_SMART_FILTER'])
 		{
-			$this->deleteSmartFilterSettings($propertyId);
 			if ($property['IS_ROOT_SMART_FILTER'] == 'Y')
 			{
 				$fields = array(
@@ -251,7 +271,7 @@ class Property extends BaseData
 	 * @throws \Bitrix\Main\ArgumentException
 	 * @throws \Exception
 	 */
-	protected function deleteSmartFilterSettings($propertyId)
+	protected function deleteRootSmartFilter($propertyId)
 	{
 		$getList = SectionPropertyTable::getList(array(
 			'filter' => array(
