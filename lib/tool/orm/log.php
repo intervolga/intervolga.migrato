@@ -102,7 +102,7 @@ class LogTable extends DataManager
 			$data = array_merge($data, static::idToLog($data["ID"]));
 			unset($data["ID"]);
 		}
-		parent::add($data);
+		return parent::add($data);
 	}
 
 	/**

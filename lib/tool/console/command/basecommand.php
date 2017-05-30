@@ -49,7 +49,18 @@ abstract class BaseCommand extends Command
 		{
 			$this->logger->startSubcommand();
 		}
-		$this->executeInner();
+		try
+		{
+			$this->executeInner();
+		}
+		catch (\Throwable $throwable)
+		{
+			$this->logger->handle($throwable);
+		}
+		catch (\Exception $exception)
+		{
+			$this->logger->handle($exception);
+		}
 		$this->logger->addShortSummary();
 		if ($this->isMainCommand())
 		{

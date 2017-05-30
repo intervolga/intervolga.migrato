@@ -446,4 +446,29 @@ class Logger
 		$this->step = $step;
 		$this->stepNumber++;
 	}
+
+	/**
+	 * @param \Exception|\Throwable $error
+	 */
+	public function handle($error)
+	{
+		$formattedName = Loc::getMessage(
+			'INTERVOLGA_MIGRATO.ERROR',
+			array(
+				'#CLASS#' => get_class($error)
+			)
+		);
+		$formattedMessage = Loc::getMessage(
+			'INTERVOLGA_MIGRATO.ERROR_MESSAGE_CODE',
+			array(
+				'#MESSAGE#' => $error->getMessage(),
+				'#CODE#' => $error->getCode(),
+			)
+		);
+		$this->add($formattedName, static::LEVEL_NORMAL);
+		$this->add($formattedMessage, static::LEVEL_SHORT);
+		$this->add(Loc::getMessage('INTERVOLGA_MIGRATO.BACKTRACE'), static::LEVEL_DETAIL);
+		$this->add('## ' . $error->getFile() . '(' . $error->getLine() . ')', static::LEVEL_SHORT);
+		$this->add($error->getTraceAsString(), static::LEVEL_DETAIL);
+	}
 }
