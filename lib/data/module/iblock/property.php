@@ -127,21 +127,11 @@ class Property extends BaseData
 		$result = array();
 		if ($property = $sectionPropertyGetList->fetch())
 		{
-			$result["HAS_SMART_FILTER_SETTINGS"] = "Y";
+			$result["IS_ROOT_SMART_FILTER"] = "Y";
 			$result["SMART_FILTER"] = $property["SMART_FILTER"];
 			$result["DISPLAY_TYPE"] = $property["DISPLAY_TYPE"];
 			$result["DISPLAY_EXPANDED"] = $property["DISPLAY_EXPANDED"];
 			$result["FILTER_HINT"] = $property["FILTER_HINT"];
-		}
-		else
-		{
-			$result = array(
-				"HAS_SMART_FILTER_SETTINGS" => "N",
-				"SMART_FILTER" => "",
-				"DISPLAY_TYPE" => "",
-				"DISPLAY_EXPANDED" => "",
-				"FILTER_HINT" => "",
-			);
 		}
 
 		return $result;
@@ -236,10 +226,10 @@ class Property extends BaseData
 	 */
 	protected function updateSmartFilter($iblockId, $propertyId, $property)
 	{
-		if ($property['HAS_SMART_FILTER_SETTINGS'])
+		if ($property['IS_ROOT_SMART_FILTER'])
 		{
 			$this->deleteSmartFilterSettings($propertyId);
-			if ($property['HAS_SMART_FILTER_SETTINGS'] == 'Y')
+			if ($property['IS_ROOT_SMART_FILTER'] == 'Y')
 			{
 				$fields = array(
 					'IBLOCK_ID' => $iblockId,
