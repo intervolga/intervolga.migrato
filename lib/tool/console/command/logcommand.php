@@ -1,10 +1,8 @@
 <?namespace Intervolga\Migrato\Tool\Console\Command;
 
 use Bitrix\Main\Localization\Loc;
-use Bitrix\Main\Web\Json;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\Console\Input\InputOption;
 
 Loc::loadMessages(__FILE__);
 
@@ -16,12 +14,6 @@ class LogCommand extends BaseCommand
 	{
 		$this->setName('log');
 		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.LOG_DESCRIPTION'));
-		$this->addOption(
-			'fails',
-			null,
-			InputOption::VALUE_NONE,
-			Loc::getMessage('INTERVOLGA_MIGRATO.LOG_FAILS_DESCRIPTION')
-		);
 	}
 
 	public function executeInner()

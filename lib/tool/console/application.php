@@ -79,6 +79,14 @@ class Application extends \Symfony\Component\Console\Application
 			Loc::getMessage('INTERVOLGA_MIGRATO.CONVERT_TO_WIN_1251')
 		);
 		$inputDefinition->addOption($option);
+
+		$option = new InputOption(
+			'--fails',
+			'-F',
+			InputOption::VALUE_NONE,
+			Loc::getMessage('INTERVOLGA_MIGRATO.SHOW_LOGS')
+		);
+		$inputDefinition->addOption($option);
 		return $inputDefinition;
 	}
 }
