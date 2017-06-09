@@ -67,6 +67,14 @@ class Application extends \Symfony\Component\Console\Application
 				$formatter->setWindowsCharset(true);
 			}
 		}
+		if (true === $input->hasParameterOption(array('--utf', '-U'), true))
+		{
+			$formatter = $output->getFormatter();
+			if ($formatter instanceof Formatter)
+			{
+				$formatter->setUnicodeCharset(true);
+			}
+		}
 	}
 
 	protected function getDefaultInputDefinition()
@@ -77,6 +85,14 @@ class Application extends \Symfony\Component\Console\Application
 			'-W',
 			InputOption::VALUE_NONE,
 			Loc::getMessage('INTERVOLGA_MIGRATO.CONVERT_TO_WIN_1251')
+		);
+		$inputDefinition->addOption($option);
+
+		$option = new InputOption(
+			'--utf',
+			'-U',
+			InputOption::VALUE_NONE,
+			Loc::getMessage('INTERVOLGA_MIGRATO.CONVERT_TO_UTF_8')
 		);
 		$inputDefinition->addOption($option);
 
