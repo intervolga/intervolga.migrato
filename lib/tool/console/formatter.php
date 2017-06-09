@@ -70,7 +70,7 @@ class Formatter extends OutputFormatter
 		$result = array();
 		$matches = array();
 		$regex = Loc::getMessage('INTERVOLGA_MIGRATO.RUSSIAN_REGEX');
-		if (preg_match_all('/[' . $regex . ']+/iu', $message, $matches))
+		if (preg_match_all('/[' . $regex . ']+/' . BX_UTF_PCRE_MODIFIER, $message, $matches))
 		{
 			foreach ($matches[0] as $i => $string)
 			{

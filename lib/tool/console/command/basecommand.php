@@ -64,6 +64,13 @@ abstract class BaseCommand extends Command
 		$this->logger->addShortSummary();
 		if ($this->isMainCommand())
 		{
+			if (true === $input->hasParameterOption(array('--fails', '-F'), true))
+			{
+				if (!$this instanceof LogCommand)
+				{
+					$this->runSubcommand('log', array('--fails' => true));
+				}
+			}
 			$this->logger->endCommand();
 		}
 	}
@@ -99,16 +106,17 @@ abstract class BaseCommand extends Command
 
 	/**
 	 * @param string $name
+	 * @param array $arguments
 	 *
 	 * @return \Symfony\Component\Console\Command\Command
 	 * @throws \Symfony\Component\Console\Exception\ExceptionInterface
 	 */
-	protected function runSubcommand($name)
+	protected function runSubcommand($name, array $arguments = array())
 	{
 		$command = $this->getApplication()->find($name);
 		if ($command)
 		{
-			$command->run(new ArrayInput(array()), $this->output);
+			$command->run(new ArrayInput($arguments), $this->output);
 			if ($command instanceof BaseCommand)
 			{
 				$this->logger->mergeTypesCounter($command->logger);
