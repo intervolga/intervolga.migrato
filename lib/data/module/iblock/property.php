@@ -366,7 +366,7 @@ class Property extends BaseData
 		{
 			if ($property['ID'] && $property['XML_ID'])
 			{
-				$iblockXmlId = Iblock::getInstance()->getXmlId(Iblock::getInstance()->createId($property['ID']));
+				$iblockXmlId = Iblock::getInstance()->getXmlId(Iblock::getInstance()->createId($property['IBLOCK_ID']));
 				$xmlId = $iblockXmlId . static::XML_ID_SEPARATOR . $property['XML_ID'];
 			}
 		}
