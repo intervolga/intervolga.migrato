@@ -364,4 +364,11 @@ abstract class BaseData
 	{
 		return PublicCache::getInstance()->getId(static::getInstance(), $xmlId, $code);
 	}
+
+	/**
+	 * @param string $xmlId
+	 */
+	public function validateXmlIdCustom($xmlId)
+	{
+	}
 }

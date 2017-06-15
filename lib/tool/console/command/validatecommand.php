@@ -100,28 +100,50 @@ class ValidateCommand extends BaseCommand
 	protected function getRecordXmlIdErrors(Record $record)
 	{
 		$errors = array();
-		if ($errorType = $this->getErrorType($record))
+		try
 		{
-			$errors[] = new XmlIdValidateError($record->getData(), $errorType, $record->getId(), $record->getXmlId());
+			if ($errorType = $this->getErrorType($record))
+			{
+				$errors[] = new XmlIdValidateError($record->getData(), $errorType, $record->getId(), $record->getXmlId());
+				$this->logger->addDb(
+					array(
+						'RECORD' => $record,
+						'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
+						'COMMENT' => XmlIdValidateError::typeToString($errorType),
+					),
+					Logger::TYPE_FAIL
+				);
+			}
+			else
+			{
+				$this->logger->addDb(
+					array(
+						'RECORD' => $record,
+						'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
+					),
+					Logger::TYPE_OK
+				);
+			}
+		}
+		catch (\Exception $exception)
+		{
+			$errors[] = new XmlIdValidateError(
+				$record->getData(),
+				XmlIdValidateError::TYPE_INVALID_EXT,
+				$record->getId(),
+				$record->getXmlId(),
+				$exception->getMessage()
+			);
 			$this->logger->addDb(
 				array(
 					'RECORD' => $record,
 					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
-					'COMMENT' => XmlIdValidateError::typeToString($errorType),
+					'COMMENT' => $exception->getMessage(),
 				),
 				Logger::TYPE_FAIL
 			);
 		}
-		else
-		{
-			$this->logger->addDb(
-				array(
-					'RECORD' => $record,
-					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
-				),
-				Logger::TYPE_OK
-			);
-		}
+
 		return $errors;
 	}
 
@@ -132,6 +154,7 @@ class ValidateCommand extends BaseCommand
 		{
 			if ($this->isValidXmlId($record->getXmlId()))
 			{
+				$record->getData()->validateXmlIdCustom($record->getXmlId());
 				if (!in_array($record->getXmlId(), $this->allXmlIds))
 				{
 					$this->allXmlIds[] = $record->getXmlId();

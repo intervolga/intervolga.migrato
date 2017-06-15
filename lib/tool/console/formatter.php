@@ -9,6 +9,7 @@ Loc::loadMessages(__FILE__);
 class Formatter extends OutputFormatter
 {
 	protected $isWindowsCharset = false;
+	protected $isUnicodeCharset = false;
 	protected $replaces = array();
 
 	public function __construct($decorated = false, array $styles = array())
@@ -32,6 +33,11 @@ class Formatter extends OutputFormatter
 	public function setWindowsCharset($isWindowsCharset = true)
 	{
 		$this->isWindowsCharset = $isWindowsCharset;
+	}
+
+	public function setUnicodeCharset($isUnicodeCharset = true)
+	{
+		$this->isUnicodeCharset = $isUnicodeCharset;
 	}
 
 	public function format($message)
@@ -123,6 +129,10 @@ class Formatter extends OutputFormatter
 		if ($this->isWindowsCharset)
 		{
 			$message = iconv('utf-8', 'cp1251', $message);
+		}
+		if ($this->isUnicodeCharset)
+		{
+			$message = iconv('cp1251', 'utf-8', $message);
 		}
 
 		return $message;

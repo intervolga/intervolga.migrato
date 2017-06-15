@@ -3,6 +3,7 @@
 use Bitrix\Iblock\PropertyTable;
 use Bitrix\Iblock\SectionPropertyTable;
 use Bitrix\Main\Loader;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
@@ -10,8 +11,12 @@ use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Value;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
+Loc::loadMessages(__FILE__);
+
 class Property extends BaseData
 {
+	const XML_ID_SEPARATOR = '.';
+
 	public function __construct()
 	{
 		Loader::includeModule("iblock");
@@ -30,8 +35,9 @@ class Property extends BaseData
 		while ($property = $getList->fetch())
 		{
 			$record = new Record($this);
-			$record->setXmlId($property["XML_ID"]);
-			$record->setId(RecordId::createNumericId($property["ID"]));
+			$id = $this->createId($property['ID']);
+			$record->setXmlId($this->getXmlId($id));
+			$record->setId($id);
 
 			$smartFilterOptions = $this->getSmartFilterOptions($property["ID"]);
 			$property = $this->exportDefaultValue($property);
@@ -337,6 +343,64 @@ class Property extends BaseData
 		if ($id && !$propertyObject->delete($id->getValue()))
 		{
 			throw new \Exception("Unknown error");
+		}
+	}
+
+	public function setXmlId($id, $xmlId)
+	{
+		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		$propertyObject = new \CIBlockProperty();
+		$isUpdated = $propertyObject->update($id->getValue(), array('XML_ID' => $fields[1]));
+		if (!$isUpdated)
+		{
+			global $APPLICATION;
+			throw new \Exception(trim(strip_tags($APPLICATION->getException()->getString())));
+		}
+	}
+
+	public function getXmlId($id)
+	{
+		$xmlId = '';
+		$property = PropertyTable::getList(array('filter' => array('=ID' => $id->getValue())))->fetch();
+		if ($property)
+		{
+			if ($property['ID'] && $property['XML_ID'])
+			{
+				$iblockXmlId = Iblock::getInstance()->getXmlId(Iblock::getInstance()->createId($property['ID']));
+				$xmlId = $iblockXmlId . static::XML_ID_SEPARATOR . $property['XML_ID'];
+			}
+		}
+
+		return $xmlId;
+	}
+
+	public function findRecord($xmlId)
+	{
+		$id = null;
+		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		if ($fields[0] && $fields[1])
+		{
+			$filter = array(
+				'=IBLOCK.XML_ID' => $fields[0],
+				'=XML_ID' => $fields[1],
+			);
+			$property = PropertyTable::getList(array('filter' => $filter))->fetch();
+			if ($property)
+			{
+				$id = $this->createId($property['ID']);
+			}
+		}
+
+		return $id;
+	}
+
+	public function validateXmlIdCustom($xmlId)
+	{
+		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		$isValid = (count($fields) == 2 && $fields[0] && $fields[1]);
+		if (!$isValid)
+		{
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INVALID_XML_ID'));
 		}
 	}
 }
