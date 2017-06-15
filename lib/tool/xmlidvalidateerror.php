@@ -12,11 +12,13 @@ class XmlIdValidateError
 	const TYPE_EMPTY = 2;
 	const TYPE_INVALID = 3;
 	const TYPE_SIMPLE = 4;
+	const TYPE_INVALID_EXT = 5;
 
 	protected $dataClass;
 	protected $type;
 	protected $id;
 	protected $xmlId;
+	protected $comment;
 
 	/**
 	 * @param string $type
@@ -37,6 +39,10 @@ class XmlIdValidateError
 		{
 			return Loc::getMessage("INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_INVALID");
 		}
+		if ($type == static::TYPE_INVALID_EXT)
+		{
+			return Loc::getMessage("INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_INVALID_EXT");
+		}
 		if ($type == static::TYPE_SIMPLE)
 		{
 			return Loc::getMessage("INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_SIMPLE");
@@ -49,13 +55,15 @@ class XmlIdValidateError
 	 * @param int $type
 	 * @param RecordId $id
 	 * @param string $xmlId
+	 * @param string $comment
 	 */
-	public function __construct(BaseData $dataClass, $type, $id, $xmlId)
+	public function __construct(BaseData $dataClass, $type, $id, $xmlId, $comment = '')
 	{
 		$this->dataClass = $dataClass;
 		$this->type = $type;
 		$this->id = $id;
 		$this->xmlId = $xmlId;
+		$this->comment = $comment;
 	}
 
 	/**
@@ -117,6 +125,17 @@ class XmlIdValidateError
 		if ($this->getType() == static::TYPE_INVALID)
 		{
 			$string = $name . " " . $xmlId . " " . static::typeToString($this->getType());
+		}
+		if ($this->getType() == static::TYPE_INVALID_EXT)
+		{
+			if ($this->comment)
+			{
+				$string = $this->comment;
+			}
+			else
+			{
+				$string = $name . " " . $xmlId . " " . static::typeToString($this->getType());
+			}
 		}
 		if ($this->getType() == static::TYPE_SIMPLE)
 		{
