@@ -3,12 +3,15 @@
 use Bitrix\Iblock\PropertyTable;
 use Bitrix\Iblock\SectionPropertyTable;
 use Bitrix\Main\Loader;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Value;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
+
+Loc::loadMessages(__FILE__);
 
 class Property extends BaseData
 {
@@ -389,5 +392,15 @@ class Property extends BaseData
 		}
 
 		return $id;
+	}
+
+	public function validateXmlIdCustom($xmlId)
+	{
+		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		$isValid = (count($fields) == 2 && $fields[0] && $fields[1]);
+		if (!$isValid)
+		{
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INVALID_XML_ID'));
+		}
 	}
 }
