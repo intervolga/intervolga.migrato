@@ -361,13 +361,19 @@ class Property extends BaseData
 	public function getXmlId($id)
 	{
 		$xmlId = '';
-		$property = PropertyTable::getList(array('filter' => array('=ID' => $id->getValue())))->fetch();
+		$property = PropertyTable::getList(array(
+			'filter' => array('=ID' => $id->getValue()),
+			'select' => array(
+				'ID',
+				'XML_ID',
+				'IBLOCK_XML_ID' => 'IBLOCK.XML_ID',
+			),
+		))->fetch();
 		if ($property)
 		{
-			if ($property['ID'] && $property['XML_ID'])
+			if ($property['XML_ID'] && $property['IBLOCK_XML_ID'])
 			{
-				$iblockXmlId = Iblock::getInstance()->getXmlId(Iblock::getInstance()->createId($property['IBLOCK_ID']));
-				$xmlId = $iblockXmlId . static::XML_ID_SEPARATOR . $property['XML_ID'];
+				$xmlId = $property['IBLOCK_XML_ID'] . static::XML_ID_SEPARATOR . $property['XML_ID'];
 			}
 		}
 

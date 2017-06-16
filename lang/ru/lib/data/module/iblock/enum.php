@@ -1,0 +1,2 @@
+<?
+$MESS['INTERVOLGA_MIGRATO.INVALID_IBLOCK_PROPERTY_ENUM_XML_ID'] = 'XML ID в БД не должен содержать точек';

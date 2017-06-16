@@ -96,7 +96,7 @@ class Form extends BaseData
 
 	/**
 	 * @param \Intervolga\Migrato\Data\Record $record
-	 * @param string $value
+	 * @param array $value
 	 */
 	protected function addPropsDependencies(Record $record, $value)
 	{
@@ -139,19 +139,20 @@ class Form extends BaseData
 				array(
 					'select' => array(
 						'ID',
-						'XML_ID',
 					)
 				)
 			);
 			while ($property = $propertiesGetList->fetch())
 			{
+				$idObject = Property::getInstance()->createId($property['ID']);
+				$xmlId = Property::getInstance()->getXmlId($idObject);
 				if ($idToXmlId)
 				{
-					$properties[$idToXmlId][$property['ID']] = $property['XML_ID'];
+					$properties[$idToXmlId][$property['ID']] = $xmlId;
 				}
 				else
 				{
-					$properties[$idToXmlId][$property['XML_ID']] = $property['ID'];
+					$properties[$idToXmlId][$xmlId] = $property['ID'];
 				}
 			}
 		}
