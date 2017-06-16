@@ -28,7 +28,15 @@ class XmlHelper
 	 */
 	public static function xmlHeader()
 	{
-		return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+		if (defined('BX_UTF'))
+		{
+			$encoding = 'utf-8';
+		}
+		else
+		{
+			$encoding = 'windows-1251';
+		}
+		return "<?xml version=\"1.0\" encoding=\"$encoding\"?>\n";
 	}
 	/**
 	 * @param string $tag
@@ -78,7 +86,7 @@ class XmlHelper
 		}
 		else
 		{
-			return str_repeat("\t", $level) . "<$tag>" . htmlspecialchars($value) . "</$tag>\n";
+			return str_repeat("\t", $level) . "<$tag>" . htmlspecialcharsbx($value) . "</$tag>\n";
 		}
 	}
 }
