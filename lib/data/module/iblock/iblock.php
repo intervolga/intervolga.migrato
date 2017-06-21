@@ -43,6 +43,7 @@ class Iblock extends BaseData
 				"NAME" => $iblock["NAME"],
 				"ACTIVE" => $iblock["ACTIVE"],
 				"SORT" => $iblock["SORT"],
+				"VERSION" => $iblock["VERSION"],
 				"LIST_PAGE_URL" => $iblock["LIST_PAGE_URL"],
 				"DETAIL_PAGE_URL" => $iblock["DETAIL_PAGE_URL"],
 				"SECTION_PAGE_URL" => $iblock["SECTION_PAGE_URL"],
