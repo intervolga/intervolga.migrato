@@ -9,6 +9,7 @@ Loc::loadMessages(__FILE__);
 
 class intervolga_migrato extends CModule
 {
+	const MINIMAL_VERSION_PHP = '5.5.9';
 	/**
 	 * @return string
 	 */
@@ -34,22 +35,33 @@ class intervolga_migrato extends CModule
 
 	public function doInstall()
 	{
-		try
+		global $APPLICATION;
+		if(version_compare(phpversion(), self::MINIMAL_VERSION_PHP) >= 0)
 		{
-			$this->installDb();
-			$this->copyPublicFiles();
-			Main\ModuleManager::registerModule($this->MODULE_ID);
-			$this->installEvents();
-		}
-		catch (\Exception $e)
-		{
-			global $APPLICATION;
-			$APPLICATION->ThrowException($e->getMessage());
+			try
+			{
+				$this->installDb();
+				$this->copyPublicFiles();
+				Main\ModuleManager::registerModule($this->MODULE_ID);
+				$this->installEvents();
+			}
+			catch (\Exception $e)
+			{
+				$APPLICATION->ThrowException($e->getMessage());
 
+				return false;
+			}
+
+			return true;
+		}
+		else
+		{
+			$APPLICATION->ThrowException(Loc::getMessage("INTERVOLGA_MIGRATO_SMALL_VERSION", array(
+				"#CURRENT_VERSION#" => phpversion(),
+				"#MINIMAL_VERSION#" => self::MINIMAL_VERSION_PHP,
+			)));
 			return false;
 		}
-
-		return true;
 	}
 
 	public function installDb()
