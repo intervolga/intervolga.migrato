@@ -137,7 +137,8 @@ class Config
 	public function getAllDataClasses()
 	{
 		$entities = array();
-		$dir = new Directory(\Bitrix\Main\Application::getDocumentRoot() . "/local/modules/intervolga.migrato/lib/data/module/");
+		$moduleDirPath = Loader::getLocal('modules/intervolga.migrato/lib/data/module/');
+		$dir = new Directory($moduleDirPath);
 		foreach ($dir->getChildren() as $module)
 		{
 			/**
