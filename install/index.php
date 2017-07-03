@@ -171,7 +171,7 @@ class intervolga_migrato extends CModule
 	private function checkMinRequirements()
 	{
 		global $APPLICATION;
-		if(version_compare(phpversion(), self::MINIMAL_VERSION_PHP) >= 0)
+		if(version_compare(phpversion(), self::MINIMAL_VERSION_PHP) < 0)
 		{
 			$APPLICATION->ThrowException(Loc::getMessage("INTERVOLGA_MIGRATO_SMALL_VERSION", array(
 				"#OBJECT#" => "PHP",
@@ -180,7 +180,7 @@ class intervolga_migrato extends CModule
 			)));
 			return false;
 		}
-		if(version_compare(SM_VERSION, self::MINIMAL_VERSION_BITRIX) >= 0)
+		if(version_compare(SM_VERSION, self::MINIMAL_VERSION_BITRIX) < 0)
 		{
 			$APPLICATION->ThrowException(Loc::getMessage("INTERVOLGA_MIGRATO_SMALL_VERSION", array(
 				"#OBJECT#" => "Bitrix",
