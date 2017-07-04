@@ -1,6 +1,7 @@
 <? namespace Intervolga\Migrato\Tool;
 
 use Bitrix\Main\Application;
+use Bitrix\Main\Event;
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
 use Bitrix\Main\Loader;
@@ -157,6 +158,25 @@ class Config
 					if (Loader::includeModule($dataObject->getModule()))
 					{
 						$entities[] = $dataObject;
+					}
+				}
+			}
+		}
+
+		$event = new Event('intervolga.migrato', 'OnMigratoDataBuildList');
+		$event->send();
+		if ($event->getResults())
+		{
+			foreach($event->getResults() as $evenResult)
+			{
+				if (is_array($evenResult->getParameters()))
+				{
+					foreach($evenResult->getParameters() as $parameter)
+					{
+						if ($parameter instanceof BaseData)
+						{
+							$entities[] = $parameter;
+						}
 					}
 				}
 			}
