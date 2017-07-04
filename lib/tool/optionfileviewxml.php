@@ -11,9 +11,11 @@ class OptionFileViewXml
 	 */
 	public static function write(array $options, $directory, $module)
 	{
-		$content = '';
+		$arModuleVersion = array('VERSION' => '');
+		include dirname(dirname(__DIR__)) . '/install/version.php';
+		$content = "";
 		$content .= XmlHelper::xmlHeader();
-		$content .= "<options>\n";
+		$content .= "<options migrato=\"" . $arModuleVersion["VERSION"] . "\">\n";
 		foreach ($options as $option)
 		{
 			$map = array(
