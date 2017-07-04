@@ -1,5 +1,6 @@
 <? namespace Intervolga\Migrato\Tool;
 
+use Bitrix\Main\Application;
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
 use Bitrix\Main\Loader;
@@ -137,7 +138,7 @@ class Config
 	public function getAllDataClasses()
 	{
 		$entities = array();
-		$dir = new Directory(\Bitrix\Main\Application::getDocumentRoot() . "/local/modules/intervolga.migrato/lib/data/module/");
+		$dir = new Directory(Application::getDocumentRoot() . "/local/modules/intervolga.migrato/lib/data/module/");
 		foreach ($dir->getChildren() as $module)
 		{
 			/**
