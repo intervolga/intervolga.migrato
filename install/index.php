@@ -9,6 +9,8 @@ Loc::loadMessages(__FILE__);
 
 class intervolga_migrato extends CModule
 {
+	const MINIMAL_VERSION_PHP = '5.5.9';
+	const MINIMAL_VERSION_BITRIX = '15.0.15';
 	/**
 	 * @return string
 	 */
@@ -34,22 +36,29 @@ class intervolga_migrato extends CModule
 
 	public function doInstall()
 	{
-		try
+		global $APPLICATION;
+		if($this->checkMinRequirements())
 		{
-			$this->installDb();
-			$this->copyPublicFiles();
-			Main\ModuleManager::registerModule($this->MODULE_ID);
-			$this->installEvents();
-		}
-		catch (\Exception $e)
-		{
-			global $APPLICATION;
-			$APPLICATION->ThrowException($e->getMessage());
+			try
+			{
+				$this->installDb();
+				$this->copyPublicFiles();
+				Main\ModuleManager::registerModule($this->MODULE_ID);
+				$this->installEvents();
+			}
+			catch (\Exception $e)
+			{
+				$APPLICATION->ThrowException($e->getMessage());
 
+				return false;
+			}
+
+			return true;
+		}
+		else
+		{
 			return false;
 		}
-
-		return true;
 	}
 
 	public function installDb()
@@ -156,6 +165,30 @@ class intervolga_migrato extends CModule
 			'onBeforeUpdateOrderPropsTable'
 		);
 
+		return true;
+	}
+
+	private function checkMinRequirements()
+	{
+		global $APPLICATION;
+		if(version_compare(phpversion(), self::MINIMAL_VERSION_PHP) < 0)
+		{
+			$APPLICATION->ThrowException(Loc::getMessage("INTERVOLGA_MIGRATO_SMALL_VERSION", array(
+				"#OBJECT#" => "PHP",
+				"#CURRENT_VERSION#" => phpversion(),
+				"#MINIMAL_VERSION#" => self::MINIMAL_VERSION_PHP,
+			)));
+			return false;
+		}
+		if(version_compare(SM_VERSION, self::MINIMAL_VERSION_BITRIX) < 0)
+		{
+			$APPLICATION->ThrowException(Loc::getMessage("INTERVOLGA_MIGRATO_SMALL_VERSION", array(
+				"#OBJECT#" => "Bitrix",
+				"#CURRENT_VERSION#" => SM_VERSION,
+				"#MINIMAL_VERSION#" => self::MINIMAL_VERSION_BITRIX,
+			)));
+			return false;
+		}
 		return true;
 	}
 }

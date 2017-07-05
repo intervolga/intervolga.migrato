@@ -1,5 +1,6 @@
 <? namespace Intervolga\Migrato\Tool;
 
+use Bitrix\Main\Event;
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
 use Bitrix\Main\Loader;
@@ -137,7 +138,8 @@ class Config
 	public function getAllDataClasses()
 	{
 		$entities = array();
-		$dir = new Directory(\Bitrix\Main\Application::getDocumentRoot() . "/local/modules/intervolga.migrato/lib/data/module/");
+		$moduleDirPath = Loader::getLocal('modules/intervolga.migrato/lib/data/module/');
+		$dir = new Directory($moduleDirPath);
 		foreach ($dir->getChildren() as $module)
 		{
 			/**
@@ -160,6 +162,35 @@ class Config
 				}
 			}
 		}
+		$entities = array_merge($entities, static::getExtEntities());
+
+		return $entities;
+	}
+
+	/**
+	 * @return \Intervolga\Migrato\Data\BaseData[]
+	 */
+	protected static function getExtEntities()
+	{
+		$entities = array();
+		$event = new Event('intervolga.migrato', 'OnMigratoDataBuildList');
+		$event->send();
+		if ($eventResults = $event->getResults())
+		{
+			foreach ($eventResults as $eventResult)
+			{
+				if (is_array($eventResult->getParameters()))
+				{
+					foreach ($eventResult->getParameters() as $parameter)
+					{
+						if ($parameter instanceof BaseData)
+						{
+							$entities[] = $parameter;
+						}
+					}
+				}
+			}
+		}
 
 		return $entities;
 	}
@@ -177,20 +208,15 @@ class Config
 				$moduleName = $moduleArray["#"]["name"][0]["#"];
 				foreach ($moduleArray["#"]["entity"] as $entityArray)
 				{
-					$className = $entityArray["#"]["name"][0]["#"];
-					$name = "\\Intervolga\\Migrato\\Data\\Module\\" . $moduleName . "\\" . $className;
-					if (class_exists($name))
+					$entityName = $entityArray["#"]["name"][0]["#"];
+					if ($entity = static::getData($moduleName, $entityName))
 					{
-						/**
-						 * @var BaseData $name
-						 */
-						$dataObject = $name::getInstance();
-						if (Loader::includeModule($dataObject->getModule()))
+						if (Loader::includeModule($entity->getModule()))
 						{
-							$entities[] = $dataObject;
+							$entities[] = $entity;
 							if ($entityArray["#"]["filter"])
 							{
-								$this->registerDataFilter($dataObject, $entityArray["#"]["filter"]);
+								$this->registerDataFilter($entity, $entityArray["#"]["filter"]);
 							}
 						}
 					}
@@ -199,6 +225,41 @@ class Config
 		}
 
 		return $entities;
+	}
+
+	/**
+	 * @param string $module
+	 * @param string $entity
+	 *
+	 * @return \Intervolga\Migrato\Data\BaseData|null|static
+	 */
+	protected static function getData($module, $entity)
+	{
+		$extEntities = static::getExtEntities();
+		$name = "\\Intervolga\\Migrato\\Data\\Module\\" . $module . "\\" . $entity;
+		if (class_exists($name))
+		{
+			/**
+			 * @var BaseData $name
+			 */
+			$dataObject = $name::getInstance();
+
+			return $dataObject;
+		}
+		elseif ($extEntities)
+		{
+			foreach ($extEntities as $extEntity)
+			{
+				$isSameModule = $extEntity->getModule() == $module;
+				$isSameEntity = $extEntity->getEntityName() == $entity;
+				if ($isSameModule && $isSameEntity)
+				{
+					return $extEntity;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	/**

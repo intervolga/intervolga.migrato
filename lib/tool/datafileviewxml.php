@@ -43,9 +43,11 @@ class DataFileViewXml
 	 */
 	public static function write(Record $record, $path)
 	{
+		$arModuleVersion = array('VERSION' => '');
+		include dirname(dirname(__DIR__)) . '/install/version.php';
 		$content = "";
 		$content .= XmlHelper::xmlHeader();
-		$content .= "<data>\n";
+		$content .= "<data migrato=\"" . $arModuleVersion["VERSION"] . "\">\n";
 		$content .= XmlHelper::tagValue("xml_id", $record->getXmlId(), 1);
 		$content .= static::valuesToXml($record->getDependencies(), "dependency", 1, true);
 		$content .= static::valuesToXml($record->getReferences(), "reference", 1, true);
