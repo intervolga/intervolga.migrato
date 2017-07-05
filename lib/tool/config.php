@@ -1,6 +1,5 @@
 <? namespace Intervolga\Migrato\Tool;
 
-use Bitrix\Main\Application;
 use Bitrix\Main\Event;
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
