@@ -5,6 +5,103 @@
         <exclude>server_uniq_id</exclude>
         <exclude>^~</exclude>
         <exclude>^wizard_</exclude>
+
+        <!-- main -->
+        <exclude>^update_.*</exclude>
+        <exclude>strong_update_check</exclude>
+        <exclude>stable_versions_only</exclude>
+        <exclude>translate_key_yandex</exclude>
+        <exclude>site_name</exclude>
+        <exclude>server_name</exclude>
+        <exclude>error_reporting</exclude>
+        <exclude>all_bcc</exclude>
+        <exclude>email_from</exclude>
+        <exclude>crc_code</exclude>
+        <exclude>distributive6</exclude>
+        <exclude>^dump_.*</exclude>
+        <exclude>INSTALL_STATISTIC_TABLES</exclude>
+        <exclude>last_files_count</exclude>
+        <exclude>mp_modules_date</exclude>
+
+        <!-- intervolga.recaptcha -->
+        <exclude>recaptchaPublicKey</exclude>
+        <exclude>recaptchaSecretKey</exclude>
+
+        <!-- sender -->
+        <exclude>address_from</exclude>
+        <exclude>address_send_to_me</exclude>
+
+        <!-- sale -->
+        <exclude>order_email</exclude>
+        <exclude>location</exclude>
+        <exclude>location_zip</exclude>
+        <exclude>export_session_name_\/bitrix\/admin\/1c_excha</exclude>
+        <exclude>export_session_id_\/bitrix\/admin\/1c_excha</exclude>
+        <exclude>secure_1c_exchange</exclude>
+        <exclude>last_export_time_\/bitrix\/admin\/1c_excha</exclude>
+        <exclude>last_export_time_committed_\/bitrix\/admin\/1c_excha</exclude>
+        <exclude>onec_exchange_last_time</exclude>
+
+        <!-- conversion -->
+        <exclude>START_DATE_TIME</exclude>
+
+        <!-- perfmon -->
+        <exclude>GROUP_DEFAULT_RIGHT</exclude>
+        <exclude>bitrix_optimal</exclude>
+        <exclude>cache_log</exclude>
+        <exclude>end_time</exclude>
+        <exclude>GROUP_DEFAULT_RIGHT</exclude>
+        <exclude>^large_cache_.*</exclude>
+        <exclude>^mark_db.*</exclude>
+        <exclude>^mark_php.*</exclude>
+        <exclude>max_display_url</exclude>
+        <exclude>^slow_sql_.*</exclude>
+        <exclude>^test_.*</exclude>
+        <exclude>^sql_.*</exclude>
+        <exclude>tables_show_time</exclude>
+        <exclude>^test_.*</exclude>
+        <exclude>^total_.*</exclude>
+        <exclude>warning_log</exclude>
+
+        <!-- im.payment -->
+        <exclude>eshop_id</exclude>
+        <exclude>expire</exclude>
+        <exclude>hold_mode</exclude>
+        <exclude>secret_key</exclude>
+
+        <!-- eshop -->
+        <exclude>shopEmail</exclude>
+
+        <!-- security -->
+        <exclude>ipcheck_disable_file</exclude>
+        <exclude>redirect_sid</exclude>
+
+        <!-- socialservices -->
+        <exclude>^bitrix24net_.*</exclude>
+
+        <!-- statistic -->
+        <exclude>^dbnode_.*</exclude>
+
+        <!-- intervolga.common -->
+        <exclude>debug_1c</exclude>
+        <exclude>max_size_folder_1c_exchange</exclude>
+        <exclude>log_1c_period</exclude>
+        <exclude>redirect_emails</exclude>
+        <exclude>catch_all_emails</exclude>
+
+        <!-- intervolga.common -->
+        <exclude>dadata_tocken</exclude>
+        <exclude>is_prodaction</exclude>
+
+        <!-- intervolga.smo -->
+        <exclude>^og_.*</exclude>
+
+        <!-- subscribe -->
+        <exclude>default_from</exclude>
+        <exclude>default_to</exclude>
+
+        <!-- forum -->
+        <exclude>FORUM_FROM_EMAIL</exclude>
     </options>
     <module>
         <name>main</name>
