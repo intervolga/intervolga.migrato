@@ -1,6 +1,7 @@
 <?namespace Intervolga\Migrato\Tool\Console\Command;
 
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\IO\Directory;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Console\Logger;
@@ -23,6 +24,7 @@ class ExportOptionCommand extends BaseCommand
 
 	public function executeInner()
 	{
+		$this->clearDirOptions();
 		foreach ($this->getDbOptions() as $module => $moduleOptions)
 		{
 			if ($moduleOptions)
@@ -44,6 +46,15 @@ class ExportOptionCommand extends BaseCommand
 					);
 				}
 			}
+		}
+	}
+
+	protected function clearDirOptions()
+	{
+		$path = INTERVOLGA_MIGRATO_DIRECTORY . 'options';
+		if (Directory::isDirectoryExists($path))
+		{
+			Directory::deleteDirectory($path);
 		}
 	}
 
