@@ -52,7 +52,7 @@ class ExportOptionCommand extends BaseCommand
 	protected function clearDirOptions()
 	{
 		$path = INTERVOLGA_MIGRATO_DIRECTORY . 'options';
-		if(Directory::isDirectoryExists($path))
+		if (Directory::isDirectoryExists($path))
 		{
 			Directory::deleteDirectory($path);
 		}
