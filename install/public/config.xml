@@ -61,12 +61,6 @@
         <exclude>^total_.*</exclude>
         <exclude>warning_log</exclude>
 
-        <!-- im.payment -->
-        <exclude>eshop_id</exclude>
-        <exclude>expire</exclude>
-        <exclude>hold_mode</exclude>
-        <exclude>secret_key</exclude>
-
         <!-- eshop -->
         <exclude>shopEmail</exclude>
 
