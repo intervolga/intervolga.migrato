@@ -22,10 +22,8 @@
         <exclude>INSTALL_STATISTIC_TABLES</exclude>
         <exclude>last_files_count</exclude>
         <exclude>mp_modules_date</exclude>
-
-        <!-- intervolga.recaptcha -->
-        <exclude>recaptchaPublicKey</exclude>
-        <exclude>recaptchaSecretKey</exclude>
+        <exclude>admin_passwordh</exclude>
+        <exclude>captcha_password</exclude>
 
         <!-- sender -->
         <exclude>address_from</exclude>
@@ -88,13 +86,6 @@
         <exclude>log_1c_period</exclude>
         <exclude>redirect_emails</exclude>
         <exclude>catch_all_emails</exclude>
-
-        <!-- intervolga.common -->
-        <exclude>dadata_tocken</exclude>
-        <exclude>is_prodaction</exclude>
-
-        <!-- intervolga.smo -->
-        <exclude>^og_.*</exclude>
 
         <!-- subscribe -->
         <exclude>default_from</exclude>
