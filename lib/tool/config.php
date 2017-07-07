@@ -98,6 +98,33 @@ class Config
 	}
 
 	/**
+	 * @param string $module
+	 * @param string $name
+	 * @param string[] $rule
+	 *
+	 * @return bool
+	 */
+	protected function isOptionMatchesRule($module, $name, $rule)
+	{
+		$result = false;
+		$ruleModule = $rule['module'] ? $rule['module'] : '.*';
+		$ruleModulePattern = static::ruleToPattern($ruleModule);
+
+		$matches = array();
+		if (preg_match_all($ruleModulePattern, $module, $matches))
+		{
+			$ruleName = $rule['name'];
+			$ruleNamePattern = static::ruleToPattern($ruleName);
+			if (preg_match_all($ruleNamePattern, $name, $matches))
+			{
+				$result = true;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
 	 * @param string $rule
 	 *
 	 * @return string
