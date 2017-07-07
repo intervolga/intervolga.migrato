@@ -129,8 +129,6 @@ class Permission extends BaseData
 		{
 
 		}
-		else
-			throw new \Exception("Delete permission: not found element for xml id = " . $xmlId);
 	}
 
 	public function createId($id)
