@@ -1,92 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
     <options>
-        <exclude>signer_default_key</exclude>
-        <exclude>server_uniq_id</exclude>
         <exclude>^~</exclude>
         <exclude>^wizard_</exclude>
-
-        <!-- main -->
-        <exclude>^update_.*</exclude>
-        <exclude>strong_update_check</exclude>
-        <exclude>stable_versions_only</exclude>
-        <exclude>translate_key_yandex</exclude>
-        <exclude>site_name</exclude>
-        <exclude>server_name</exclude>
-        <exclude>error_reporting</exclude>
-        <exclude>all_bcc</exclude>
-        <exclude>email_from</exclude>
-        <exclude>crc_code</exclude>
-        <exclude>distributive6</exclude>
-        <exclude>^dump_.*</exclude>
-        <exclude>INSTALL_STATISTIC_TABLES</exclude>
-        <exclude>last_files_count</exclude>
-        <exclude>mp_modules_date</exclude>
-        <exclude>admin_passwordh</exclude>
-        <exclude>captcha_password</exclude>
-
-        <!-- sender -->
-        <exclude>address_from</exclude>
-        <exclude>address_send_to_me</exclude>
-
-        <!-- sale -->
-        <exclude>order_email</exclude>
-        <exclude>location</exclude>
-        <exclude>location_zip</exclude>
-        <exclude>export_session_name_\/bitrix\/admin\/1c_excha</exclude>
-        <exclude>export_session_id_\/bitrix\/admin\/1c_excha</exclude>
-        <exclude>secure_1c_exchange</exclude>
-        <exclude>last_export_time_\/bitrix\/admin\/1c_excha</exclude>
-        <exclude>last_export_time_committed_\/bitrix\/admin\/1c_excha</exclude>
-        <exclude>onec_exchange_last_time</exclude>
-
-        <!-- conversion -->
-        <exclude>START_DATE_TIME</exclude>
-
-        <!-- perfmon -->
-        <exclude>GROUP_DEFAULT_RIGHT</exclude>
-        <exclude>bitrix_optimal</exclude>
-        <exclude>cache_log</exclude>
-        <exclude>end_time</exclude>
-        <exclude>GROUP_DEFAULT_RIGHT</exclude>
-        <exclude>^large_cache_.*</exclude>
-        <exclude>^mark_db.*</exclude>
-        <exclude>^mark_php.*</exclude>
-        <exclude>max_display_url</exclude>
-        <exclude>^slow_sql_.*</exclude>
-        <exclude>^test_.*</exclude>
-        <exclude>^sql_.*</exclude>
-        <exclude>tables_show_time</exclude>
-        <exclude>^test_.*</exclude>
-        <exclude>^total_.*</exclude>
-        <exclude>warning_log</exclude>
-
-        <!-- eshop -->
-        <exclude>shopEmail</exclude>
-
-        <!-- security -->
-        <exclude>ipcheck_disable_file</exclude>
-        <exclude>redirect_sid</exclude>
-
-        <!-- socialservices -->
-        <exclude>^bitrix24net_.*</exclude>
-
-        <!-- statistic -->
-        <exclude>^dbnode_.*</exclude>
-
-        <!-- intervolga.common -->
-        <exclude>debug_1c</exclude>
-        <exclude>max_size_folder_1c_exchange</exclude>
-        <exclude>log_1c_period</exclude>
-        <exclude>redirect_emails</exclude>
-        <exclude>catch_all_emails</exclude>
-
-        <!-- subscribe -->
-        <exclude>default_from</exclude>
-        <exclude>default_to</exclude>
-
-        <!-- forum -->
-        <exclude>FORUM_FROM_EMAIL</exclude>
+        <exclude module="conversion">START_DATE_TIME</exclude>
+        <exclude module="currency">installed_currencies</exclude>
+        <exclude module="eshop">.*</exclude>
+        <exclude module="forum">FORUM_FROM_EMAIL</exclude>
+        <exclude module="intervolga\.common">debug_1c</exclude>
+        <exclude module="intervolga\.common">max_size_folder_1c_exchange</exclude>
+        <exclude module="intervolga\.common">log_1c_period</exclude>
+        <exclude module="intervolga\.common">redirect_emails</exclude>
+        <exclude module="intervolga\.common">catch_all_emails</exclude>
+        <exclude module="mail">.*</exclude>
+        <exclude module="main">signer_default_key</exclude>
+        <exclude module="main">server_uniq_id</exclude>
+        <exclude module="main">^update_.*</exclude>
+        <exclude module="main">strong_update_check</exclude>
+        <exclude module="main">stable_versions_only</exclude>
+        <exclude module="main">translate_key_yandex</exclude>
+        <exclude module="main">site_name</exclude>
+        <exclude module="main">server_name</exclude>
+        <exclude module="main">error_reporting</exclude>
+        <exclude module="main">all_bcc</exclude>
+        <exclude module="main">email_from</exclude>
+        <exclude module="main">crc_code</exclude>
+        <exclude module="main">distributive6</exclude>
+        <exclude module="main">^dump_.*</exclude>
+        <exclude module="main">INSTALL_STATISTIC_TABLES</exclude>
+        <exclude module="main">last_files_count</exclude>
+        <exclude module="main">mp_modules_date</exclude>
+        <exclude module="main">admin_passwordh</exclude>
+        <exclude module="main">captcha_password</exclude>
+        <exclude module="main">new_user_registration_def_group</exclude>
+        <exclude module="main">optimize_css_files</exclude>
+        <exclude module="main">optimize_js_files</exclude>
+        <exclude module="main">site_checker_success</exclude>
+        <exclude module="main">site_stopped</exclude>
+        <exclude module="perfmon">.*</exclude>
+        <exclude module="sale">order_email</exclude>
+        <exclude module="sale">location</exclude>
+        <exclude module="sale">location_zip</exclude>
+        <exclude module="sale">export_session_name_\/bitrix\/admin\/1c_excha</exclude>
+        <exclude module="sale">export_session_id_\/bitrix\/admin\/1c_excha</exclude>
+        <exclude module="sale">secure_1c_exchange</exclude>
+        <exclude module="sale">last_export_time_\/bitrix\/admin\/1c_excha</exclude>
+        <exclude module="sale">last_export_time_committed_\/bitrix\/admin\/1c_excha</exclude>
+        <exclude module="sale">onec_exchange_last_time</exclude>
+        <exclude module="sale">basket_discount_converted</exclude>
+        <exclude module="search">^bitrix24net_.*</exclude>
+        <exclude module="security">ipcheck_disable_file</exclude>
+        <exclude module="security">redirect_sid</exclude>
+        <exclude module="sender">address_from</exclude>
+        <exclude module="sender">address_send_to_me</exclude>
+        <exclude module="socialservices">^bitrix24net_.*</exclude>
+        <exclude module="statistic">^dbnode_.*</exclude>
+        <exclude module="storeassist">num_orders</exclude>
+        <exclude module="subscribe">default_from</exclude>
+        <exclude module="subscribe">default_to</exclude>
     </options>
     <module>
         <name>main</name>
