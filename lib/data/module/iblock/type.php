@@ -179,8 +179,6 @@ class Type extends BaseData
 				throw new \Exception("Unknown error");
 			}
 		}
-		else
-			throw new \Exception("Элемент с id " . $xmlId . " не существует");
 	}
 
 	private function deleteContentIBlockType($id)
