@@ -6,6 +6,9 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
 
 class Permission extends BaseData
 {
@@ -81,34 +84,19 @@ class Permission extends BaseData
 		$curValue = $record->getId()->getValue();
 		$arGroups = \CIBlock::GetGroupPermissions($curValue["IBLOCK_ID"]);
 
-		if(key_exists($curValue["GROUP_ID"], $arGroups))
-		{
-			$curFields = $record->getFieldsRaw();
-			$arGroups[$curValue["GROUP_ID"]] = $curFields["PERMISSION"];
-			$iblock = new \CIBlock();
-			$iblock->SetPermission($curValue["IBLOCK_ID"], $arGroups);
-		}
-		else
-			throw new \Exception("Not exist the permission for IBlock: " . $curValue["IBLOCK_ID"] . " and Group: " . $curValue["GROUP_ID"]);
+		$curFields = $record->getFieldsRaw();
+		$arGroups[$curValue["GROUP_ID"]] = $curFields["PERMISSION"];
+		$iblock = new \CIBlock();
+		$iblock->SetPermission($curValue["IBLOCK_ID"], $arGroups);
 	}
 
 	protected function createInner(Record $record)
 	{
-		if($record->getDependency("IBLOCK_ID") &&
-			$iblockId = Iblock::getInstance()->findRecord($record->getDependency("IBLOCK_ID")->getValue()))
-		{
-			$iblockId = $iblockId->getValue();
-		}
-		else
-			throw new \Exception("Create permission: Broken external link on IBlock");
+		$iblockLinkId = Iblock::getInstance()->findRecord($record->getDependency("IBLOCK_ID")->getValue());
+		$iblockId = $iblockLinkId->getValue();
 
-		if($record->getDependency("GROUP_ID") &&
-			$groupId = Group::getInstance()->findRecord($record->getDependency("GROUP_ID")->getValue()))
-		{
-			$groupId = $groupId->getValue();
-		}
-		else
-			throw new \Exception("Create permission: Broken external link on Group");
+		$groupLinkId = Group::getInstance()->findRecord($record->getDependency("GROUP_ID")->getValue());
+		$groupId = $groupLinkId->getValue();
 
 		$arGroups = \CIBlock::GetGroupPermissions($iblockId);
 
@@ -124,13 +112,19 @@ class Permission extends BaseData
 
 	protected function deleteInner($xmlId)
 	{
-		$id = $this->findRecord($xmlId);
-		if($id)
+		if($linkId = $this->findRecord($xmlId))
 		{
-
+			$complexId = $linkId->getValue();
+			$arGroups = \CIBlock::GetGroupPermissions($complexId["IBLOCK_ID"]);
+			if(in_array($complexId['GROUP_ID'], array_keys($arGroups)))
+			{
+				unset($arGroups[$complexId['GROUP_ID']]);
+				$iblock = new \CIBlock();
+				$iblock->SetPermission($complexId["IBLOCK_ID"], $arGroups);
+			}
 		}
 		else
-			throw new \Exception("Delete permission: not found element for xml id = " . $xmlId);
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.NOT_ELEMENT_FOR_XMLID', array('#XML_ID#' => $xmlId)));
 	}
 
 	public function createId($id)
