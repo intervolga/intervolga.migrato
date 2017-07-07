@@ -60,24 +60,6 @@ class Config
 	}
 
 	/**
-	 * @return array
-	 */
-	public function getModulesOptions()
-	{
-		$options = array();
-		foreach ($this->configArray["config"]["#"]["module"] as $moduleArray)
-		{
-			$moduleName = $moduleArray["#"]["name"][0]["#"];
-			foreach ($moduleArray["#"]["options"][0]["#"]["name"] as $optionArray)
-			{
-				$options[$moduleName][] = $optionArray["#"];
-			}
-		}
-
-		return $options;
-	}
-
-	/**
 	 * @return string[]
 	 */
 	public function getOptionsRules()
