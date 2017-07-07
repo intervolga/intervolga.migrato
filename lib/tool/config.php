@@ -69,7 +69,15 @@ class Config
 		{
 			foreach ($optionsArray[0]["#"]["exclude"] as $excludeItem)
 			{
-				$options[] = $excludeItem["#"];
+				$option = array(
+					'name' => $excludeItem["#"],
+					'module' => '',
+				);
+				if ($excludeItem['@'] && $excludeItem['@']['module'])
+				{
+					$option['module'] = $excludeItem['@']['module'];
+				}
+				$options[] = $option;
 			}
 		}
 
@@ -77,19 +85,18 @@ class Config
 	}
 
 	/**
+	 * @param string $module
 	 * @param string $name
 	 *
 	 * @return bool
 	 */
-	public static function isOptionIncluded($name)
+	public static function isOptionIncluded($module, $name)
 	{
 		$isIncluded = true;
 		$rules = static::getInstance()->getOptionsRules();
 		foreach ($rules as $rule)
 		{
-			$pattern = static::ruleToPattern($rule);
-			$matches = array();
-			if (preg_match_all($pattern, $name, $matches))
+			if (static::isOptionMatchesRule($module, $name, $rule))
 			{
 				$isIncluded = false;
 			}
