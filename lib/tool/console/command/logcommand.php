@@ -3,6 +3,7 @@
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Output\OutputInterface;
 
 Loc::loadMessages(__FILE__);
 
@@ -61,6 +62,12 @@ class LogCommand extends BaseCommand
 
 	protected function addLogToTable(array $log, Table $table)
 	{
+		if($this->output->getVerbosity() < OutputInterface::VERBOSITY_VERBOSE && $log['COMMENT'])
+		{
+			$comment = explode(PHP_EOL . PHP_EOL, $log['COMMENT']);
+			$log['COMMENT'] = $comment[0];
+		}
+
 		$row = array(
 			'TIME' => $log['TIMESTAMP_X'],
 			'DATA' => $log['MODULE_NAME'] . ':' . $log['ENTITY_NAME'],
