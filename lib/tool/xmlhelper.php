@@ -11,13 +11,12 @@ class XmlHelper
 	 */
 	public static function addAttrToTags($tagName, $attributes, $xml)
 	{
-		$search = '/<' . $tagName . '[^>]*/';
+		$search = '/<' . $tagName . '[^>]*>/';
 		preg_match($search, $xml, $matches);
 		$tagLine = $matches[0];
 		foreach ($attributes as $name => $value)
 		{
-			// Если аттрибута нет в теге
-			if(preg_match('/\s' . $name . '\b/', $tagLine) === false)
+			if (!preg_match('/\s' . $name . '\b/', $tagLine))
 			{
 				$tagLine = str_replace(">", " $name=\"$value\">", $tagLine);
 			}

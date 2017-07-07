@@ -82,10 +82,6 @@ class Group extends BaseData
 				throw new \Exception("Unknown error");
 			}
 		}
-		else
-		{
-			throw new \Exception("Not found record with xml id " . $xmlId);
-		}
 	}
 
 	public function setXmlId($id, $xmlId)

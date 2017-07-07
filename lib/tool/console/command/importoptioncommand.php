@@ -60,7 +60,7 @@ class ImportOptionCommand extends BaseCommand
 	{
 		foreach ($options as $option)
 		{
-			if (Config::getInstance()->isOptionIncluded($option['NAME']))
+			if (Config::getInstance()->isOptionIncluded($module, $option['NAME']))
 			{
 				$this->importOption($module, $option);
 			}
