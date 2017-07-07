@@ -61,24 +61,6 @@ class Config
 	}
 
 	/**
-	 * @return array
-	 */
-	public function getModulesOptions()
-	{
-		$options = array();
-		foreach ($this->configArray["config"]["#"]["module"] as $moduleArray)
-		{
-			$moduleName = $moduleArray["#"]["name"][0]["#"];
-			foreach ($moduleArray["#"]["options"][0]["#"]["name"] as $optionArray)
-			{
-				$options[$moduleName][] = $optionArray["#"];
-			}
-		}
-
-		return $options;
-	}
-
-	/**
 	 * @return string[]
 	 */
 	public function getOptionsRules()
@@ -88,7 +70,15 @@ class Config
 		{
 			foreach ($optionsArray[0]["#"]["exclude"] as $excludeItem)
 			{
-				$options[] = $excludeItem["#"];
+				$option = array(
+					'name' => $excludeItem["#"],
+					'module' => '',
+				);
+				if ($excludeItem['@'] && $excludeItem['@']['module'])
+				{
+					$option['module'] = $excludeItem['@']['module'];
+				}
+				$options[] = $option;
 			}
 		}
 
@@ -96,24 +86,50 @@ class Config
 	}
 
 	/**
+	 * @param string $module
 	 * @param string $name
 	 *
 	 * @return bool
 	 */
-	public static function isOptionIncluded($name)
+	public static function isOptionIncluded($module, $name)
 	{
 		$isIncluded = true;
 		$rules = static::getInstance()->getOptionsRules();
 		foreach ($rules as $rule)
 		{
-			$pattern = static::ruleToPattern($rule);
-			$matches = array();
-			if (preg_match_all($pattern, $name, $matches))
+			if (static::isOptionMatchesRule($module, $name, $rule))
 			{
 				$isIncluded = false;
 			}
 		}
 		return $isIncluded;
+	}
+
+	/**
+	 * @param string $module
+	 * @param string $name
+	 * @param string[] $rule
+	 *
+	 * @return bool
+	 */
+	protected function isOptionMatchesRule($module, $name, $rule)
+	{
+		$result = false;
+		$ruleModule = $rule['module'] ? $rule['module'] : '.*';
+		$ruleModulePattern = static::ruleToPattern($ruleModule);
+
+		$matches = array();
+		if (preg_match_all($ruleModulePattern, $module, $matches))
+		{
+			$ruleName = $rule['name'];
+			$ruleNamePattern = static::ruleToPattern($ruleName);
+			if (preg_match_all($ruleNamePattern, $name, $matches))
+			{
+				$result = true;
+			}
+		}
+
+		return $result;
 	}
 
 	/**

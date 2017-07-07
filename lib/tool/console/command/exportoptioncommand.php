@@ -98,7 +98,7 @@ class ExportOptionCommand extends BaseCommand
 		{
 			foreach ($moduleOptions as $name => $sameOptions)
 			{
-				if (Config::getInstance()->isOptionIncluded($name))
+				if (Config::getInstance()->isOptionIncluded($moduleId, $name))
 				{
 					foreach ($sameOptions as $siteId => $option)
 					{
