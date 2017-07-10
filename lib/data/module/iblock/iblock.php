@@ -263,18 +263,18 @@ class Iblock extends BaseData
 		}
 	}
 
-	private function checkEqualVersion($xmlid, &$fields)
+	protected function checkEqualVersion($xmlid, &$fields)
 	{
-		if($fields["VERSION"])
+		if ($fields["VERSION"])
 		{
 			$id = $this->findRecord($xmlid);
 			$rsElem = IblockTable::getList(array(
 				"filter" => array("ID" => $id->getValue()),
 				"select" => array("ID", "VERSION"),
 			));
-			if($arElem = $rsElem->fetch())
+			if ($arElem = $rsElem->fetch())
 			{
-				if($arElem["VERSION"] != $fields["VERSION"])
+				if ($arElem["VERSION"] != $fields["VERSION"])
 				{
 					throw new \Exception(Loc::GetMessage("INTERVOLGA_MIGRATO.IBLOCK_VERSION_NOT_EQUAL", array(
 						"#ID#" => $id->getValue(),
