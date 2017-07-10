@@ -123,8 +123,6 @@ class Permission extends BaseData
 				$iblock->SetPermission($complexId["IBLOCK_ID"], $arGroups);
 			}
 		}
-		else
-			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.NOT_ELEMENT_FOR_XMLID', array('#XML_ID#' => $xmlId)));
 	}
 
 	public function createId($id)
