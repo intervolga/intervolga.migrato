@@ -342,7 +342,7 @@ class Property extends BaseData
 		$propertyObject = new \CIBlockProperty();
 		if ($id && !$propertyObject->delete($id->getValue()))
 		{
-			throw new \Exception("Unknown error");
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY_UNKNOWN_ERROR'));
 		}
 	}
 
