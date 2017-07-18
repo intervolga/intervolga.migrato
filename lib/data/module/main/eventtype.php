@@ -66,7 +66,12 @@ class EventType extends BaseData
 
 	protected function createInner(Record $record)
 	{
-		$eventTypeId = \CEventType::add($record->getFieldsRaw());
+		$arFields = $record->getFieldsRaw();
+		if($lang = $record->getDependency('LANGUAGE')->getId())
+		{
+			$arFields['LID'] = $lang->getValue();
+		}
+		$eventTypeId = \CEventType::add($arFields);
 		if ($eventTypeId)
 		{
 			return $this->createId($eventTypeId);
@@ -74,14 +79,9 @@ class EventType extends BaseData
 		else
 		{
 			global $APPLICATION;
-			if ($APPLICATION->getException())
-			{
-				throw new \Exception(trim(strip_tags($APPLICATION->getException()->getString())));
-			}
-			else
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.EVENTTYPE_CREATE_ERROR'));
-			}
+			$errorMsg = $APPLICATION->getException()->getString() ? $APPLICATION->getException()->getString()
+				: Loc::getMessage('INTERVOLGA_MIGRATO.EVENTTYPE_CREATE_ERROR');
+			throw new \Exception(trim(strip_tags($errorMsg)));
 		}
 	}
 
@@ -90,7 +90,7 @@ class EventType extends BaseData
 		$id = $this->findRecord($xmlId);
 		if ($id && !\CEventType::delete(array("ID" => $id->getValue())))
 		{
-			throw new \Exception("Unknown error");
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.EVENTTYPE_UNKNOWN_ERROR'));
 		}
 	}
 
