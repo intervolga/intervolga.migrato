@@ -10,6 +10,7 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Bitrix\Main\Localization\LanguageTable;
 use Intervolga\Migrato\Data\Value;
+use \Bitrix\Iblock\TypeLanguageTable;
 
 class Type extends BaseData
 {
@@ -211,8 +212,16 @@ class Type extends BaseData
 		if($arType = $rsType->fetch())
 		{
 			$arFields = array("ID" => $xmlId);
-			$result = TypeTable::update($id, $arFields);
-			if(!$result->isSuccess())
+			$result = TypeTable::update($id->getValue(), $arFields);
+			if($result->isSuccess())
+			{
+				foreach($this->getLanguages() as $language)
+				{
+					$langId = array('IBLOCK_TYPE_ID' => $id->getValue(), 'LANGUAGE_ID' => $language);
+					TypeLanguageTable::update($langId, array('IBLOCK_TYPE_ID' => $xmlId));
+				}
+			}
+			else
 			{
 				throw new \Exception(implode(', ', $result->getErrorMessages()));
 			}
