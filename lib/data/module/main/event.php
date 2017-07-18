@@ -1,5 +1,6 @@
 <? namespace Intervolga\Migrato\Data\Module\Main;
 
+use Bitrix\Main\Mail\Internal\EventTypeTable;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
@@ -164,8 +165,11 @@ class Event extends BaseData
 		$array['ADDITIONAL_FIELD'] = unserialize($array['ADDITIONAL_FIELD']);
 		if ($eventType = $record->getDependency('EVENT_NAME')->getId())
 		{
-			$getList = \CEventType::GetList(array('ID' => $eventType->getValue()));
-			if ($eventType = $getList->Fetch())
+			$rsEventType = EventTypeTable::getList(array(
+				'filter' => array('ID' => $eventType->getValue()),
+				'select' => array('ID', 'EVENT_NAME')
+			));
+			if ($eventType = $rsEventType->fetch())
 			{
 				$array['EVENT_NAME'] = $eventType['EVENT_NAME'];
 			}
@@ -186,22 +190,15 @@ class Event extends BaseData
 	{
 		$fields = $this->recordToArray($record);
 
-		if ($fields['EVENT_NAME'])
+		$eventMessageObject = new \CEventMessage();
+		$eventMessageId = $eventMessageObject->add($fields);
+		if ($eventMessageId)
 		{
-			$eventMessageObject = new \CEventMessage();
-			$eventMessageId = $eventMessageObject->add($fields);
-			if ($eventMessageId)
-			{
-				return $this->createId($eventMessageId);
-			}
-			else
-			{
-				throw new \Exception(trim(strip_tags($eventMessageObject->LAST_ERROR)));
-			}
+			return $this->createId($eventMessageId);
 		}
 		else
 		{
-			throw new \Exception("Не задано поле EVENT_TYPE для почтового шаблона с xmlId " . $record->getXmlId());
+			throw new \Exception(trim(strip_tags($eventMessageObject->LAST_ERROR)));
 		}
 	}
 
