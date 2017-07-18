@@ -70,7 +70,7 @@ class Enum extends BaseData
 			$isUpdated = $enumObject->Update($record->getId()->getValue(), $fields);
 			if (!$isUpdated)
 			{
-				throw new \Exception("Unknown error");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INVALID_IBLOCK_PROPERTY_ENUM_UNKNOWN_ERROR'));
 			}
 		}
 	}
@@ -91,19 +91,25 @@ class Enum extends BaseData
 			}
 			else
 			{
-				throw new \Exception("Unknown error");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INVALID_IBLOCK_PROPERTY_ENUM_UNKNOWN_ERROR'));
 			}
 		}
 		else
-			throw new \Exception("Creating enum: not found property for record " . $record->getXmlId());
+		{
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INVALID_IBLOCK_PROPERTY_ENUM_NOT_PROPERTY', array(
+				'#XML_ID#' => $record->getXmlId()
+			)));
+		}
 	}
 
 	protected function deleteInner($xmlId)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id && !\CIBlockPropertyEnum::Delete($id->getValue()))
+		if($id = $this->findRecord($xmlId))
 		{
-			throw new \Exception("Unknown error");
+			if(!\CIBlockPropertyEnum::Delete($id->getValue()))
+			{
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INVALID_IBLOCK_PROPERTY_ENUM_UNKNOWN_ERROR'));
+			}
 		}
 	}
 
@@ -116,7 +122,7 @@ class Enum extends BaseData
 		$isUpdated = \CIBlockPropertyEnum::update($id->getValue(), $arFields);
 		if (!$isUpdated)
 		{
-			throw new \Exception('Unknown exception');
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INVALID_IBLOCK_PROPERTY_ENUM_UNKNOWN_ERROR'));
 		}
 	}
 
