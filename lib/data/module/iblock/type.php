@@ -10,7 +10,10 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Bitrix\Main\Localization\LanguageTable;
 use Intervolga\Migrato\Data\Value;
-use \Bitrix\Iblock\TypeLanguageTable;
+use Bitrix\Iblock\TypeLanguageTable;
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
 
 class Type extends BaseData
 {
@@ -121,10 +124,12 @@ class Type extends BaseData
 	{
 		$fields = $record->getFieldsRaw($this->getLanguageFields());
 		$fields = $this->extractLanguageFields($fields);
-		$result = TypeTable::update($record->getId()->getValue(), $fields);
-		if (!$result->isSuccess())
+
+		$typeObject = new \CIBlockType();
+		$isUpdated = $typeObject->update($record->getId()->getValue(), $fields);
+		if (!$isUpdated)
 		{
-			throw new \Exception(trim(strip_tags(implode(', ', $result->getErrorMessages()))));
+			throw new \Exception(trim(strip_tags($typeObject->LAST_ERROR)));
 		}
 	}
 
@@ -156,14 +161,15 @@ class Type extends BaseData
 	{
 		$fields = $record->getFieldsRaw($this->getLanguageFields());
 		$fields = $this->extractLanguageFields($fields);
-		$result = TypeTable::add($fields);
-		if ($result->isSuccess())
+		$typeObject = new \CIBlockType();
+		$typeId = $typeObject->add($fields);
+		if ($typeId)
 		{
-			return $this->createId($result->getId());
+			return $this->createId($typeId);
 		}
 		else
 		{
-			throw new \Exception(trim(strip_tags(implode(', ', $result->getErrorMessages()))));
+			throw new \Exception(trim(strip_tags($typeObject->LAST_ERROR)));
 		}
 	}
 
@@ -172,10 +178,9 @@ class Type extends BaseData
 		if($id = $this->findRecord($xmlId))
 		{
 			$this->deleteContentIBlockType($id->getValue());
-			$result = TypeTable::delete($id->getValue());
-			if (!$result->isSuccess())
+			if (!($isDeleted = \CIBlockType::Delete($id->getValue())))
 			{
-				throw new \Exception(implode(', ', $result->getErrorMessages()));
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_TYPE_DELETE_ERROR'), array('#ID#' => $xmlId));
 			}
 		}
 	}
@@ -183,7 +188,7 @@ class Type extends BaseData
 	private function deleteContentIBlockType($id)
 	{
 		$rsIblock = IblockTable::getList(array(
-			'filter' => array("TYPE" => $id)
+			'filter' => array("IBLOCK_TYPE_ID" => $id)
 		));
 		while($arIblock = $rsIblock->fetch())
 		{
