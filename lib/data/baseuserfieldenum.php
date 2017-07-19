@@ -1,5 +1,9 @@
 <? namespace Intervolga\Migrato\Data;
 
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
+
 abstract class BaseUserFieldEnum extends BaseData
 {
 	/**
@@ -46,7 +50,7 @@ abstract class BaseUserFieldEnum extends BaseData
 			$isUpdated = $enumObject->SetEnumValues($fieldId->getValue(), array($record->getId()->getValue() => $fields));
 			if (!$isUpdated)
 			{
-				throw new \Exception("Unknown error");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
 			}
 		}
 	}
@@ -67,12 +71,12 @@ abstract class BaseUserFieldEnum extends BaseData
 			}
 			else
 			{
-				throw new \Exception("Unknown error");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
 			}
 		}
 		else
 		{
-			throw new \Exception("iblock/fieldenum не указана зависимость uf поля");
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.CREATE_NOT_USER_FIELD', array('#XML_ID#' => $record->getXmlId())));
 		}
 	}
 
@@ -85,14 +89,15 @@ abstract class BaseUserFieldEnum extends BaseData
 
 	public function setXmlId($id, $xmlId)
 	{
-		$enumGetList = \CUserFieldEnum::getList(array(), array("ID" => $id->getValue()));
-		if ($enum = $enumGetList->fetch())
+		$obEnum = new \CUserFieldEnum();
+		$rsEnum = $obEnum->getList(array(), array("ID" => $id));
+		if ($arEnum = $rsEnum->fetch())
 		{
 			$userFieldObject = new \CUserFieldEnum();
 			$userFieldObject->setEnumValues(
-				$enum["USER_FIELD_ID"],
+				$arEnum["USER_FIELD_ID"],
 				array(
-					$enum['ID'] => array(
+					$arEnum['ID'] => array(
 						'XML_ID' => $xmlId,
 					),
 				)
@@ -105,10 +110,11 @@ abstract class BaseUserFieldEnum extends BaseData
 		$xmlId = "";
 		if($id = $id->getValue())
 		{
-			$enumGetList = \CUserFieldEnum::getList(array(), array("ID" => $id));
-			if($enum = $enumGetList->fetch())
+			$obEnum = new \CUserFieldEnum();
+			$rsEnum = $obEnum->getList(array(), array("ID" => $id));
+			if($arEnum = $rsEnum->fetch())
 			{
-				$xmlId = $enum["XML_ID"];
+				$xmlId = $arEnum["XML_ID"];
 			}
 		}
 		return $xmlId;

@@ -1,10 +1,13 @@
 <? namespace Intervolga\Migrato\Data\Module\Sale;
 
 use Bitrix\Sale\Internals\OrderPropsVariantTable;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
+
+Loc::loadMessages(__FILE__);
 
 class PropertyVariant extends BaseData
 {
@@ -79,7 +82,7 @@ class PropertyVariant extends BaseData
 		}
 		else
 		{
-			throw new \Exception(implode("<br>", $addResult->getErrorMessages()));
+			throw new \Exception(implode(", ", $addResult->getErrorMessages()));
 		}
 	}
 
@@ -117,7 +120,7 @@ class PropertyVariant extends BaseData
 		{
 			if (!OrderPropsVariantTable::delete($id->getValue()))
 			{
-				throw new \Exception("Unknown error");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
 			}
 		}
 	}

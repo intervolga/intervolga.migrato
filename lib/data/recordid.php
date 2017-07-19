@@ -1,5 +1,9 @@
 <? namespace Intervolga\Migrato\Data;
 
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
+
 class RecordId
 {
 	const TYPE_NUMERIC = 1;
@@ -75,7 +79,7 @@ class RecordId
 		{
 			return $this->complexId;
 		}
-		throw new \Exception("Unknown RecordId type");
+		throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_RECORD_ID_TYPE'));
 	}
 
 	/**
