@@ -210,7 +210,7 @@ class Event extends BaseData
 			$eventMessageObject = new \CEventMessage();
 			if (!$eventMessageObject->delete($id->getValue()))
 			{
-				throw new \Exception("Unknown error");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.EVENT_UNKNOWN_ERROR'));
 			}
 		}
 	}
