@@ -336,23 +336,12 @@ abstract class BaseUserField extends BaseData
 	{
 		$runtimeValue = null;
 		$runtimeLink = null;
-		if ($field->getFieldRaw("USER_TYPE_ID") == "iblock_element")
-		{
-			$runtimeLink = $this->getIblockElementLink($value);
-		}
-		elseif ($field->getFieldRaw("USER_TYPE_ID") == "hlblock")
-		{
-			$runtimeLink = $this->getHlblockElementLink($field, $value);
-		}
-		elseif ($field->getFieldRaw("USER_TYPE_ID") == "iblock_section")
-		{
-			$runtimeLink = $this->getIblockSectionLink($value);
-		}
-		elseif ($field->getFieldRaw("USER_TYPE_ID") == "enumeration")
+		$simpleTypes = array("string", "double", "boolean", "integer", "datetime", "date", "string_formatted", "iblock_element", "hlblock", "iblock_section");
+		if ($field->getFieldRaw("USER_TYPE_ID") == "enumeration")
 		{
 			$runtimeLink = $this->getEnumerationLink($value);
 		}
-		elseif (in_array($field->getFieldRaw("USER_TYPE_ID"), array("string", "double", "boolean", "integer", "datetime", "date", "string_formatted")))
+		elseif (in_array($field->getFieldRaw("USER_TYPE_ID"), $simpleTypes))
 		{
 			$runtimeValue = new Value($value);
 		}
@@ -394,55 +383,6 @@ abstract class BaseUserField extends BaseData
 			return $link;
 		}
 
-	}
-
-	/**
-	 * @param int $value
-	 *
-	 * @return \Intervolga\Migrato\Data\Link
-	 */
-	protected function getIblockElementLink($value)
-	{
-		return $this->getXmlIds(Element::getInstance(), $value);
-	}
-
-	/**
-	 * @param int $value
-	 *
-	 * @return \Intervolga\Migrato\Data\Link
-	 */
-	protected function getIblockSectionLink($value)
-	{
-		return $this->getXmlIds(Section::getInstance(), $value);
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Record $field
-	 * @param int $value
-	 *
-	 * @return \Intervolga\Migrato\Data\Link
-	 * @throws \Exception
-	 */
-	protected function getHlblockElementLink(Record $field, $value)
-	{
-		$references = $field->getReferences();
-		$hlbElementXmlId = "";
-		if ($references["SETTINGS.HLBLOCK_ID"])
-		{
-			$hlblockXmlId = $references["SETTINGS.HLBLOCK_ID"]->getValue();
-			$hlblockIdObject = HighloadBlock::getInstance()->findRecord($hlblockXmlId);
-			if ($hlblockIdObject)
-			{
-				$hlblockId = $hlblockIdObject->getValue();
-				$elementIdObject = RecordId::createComplexId(array(
-					"ID" => intval($value),
-					"HLBLOCK_ID" => intval($hlblockId),
-				));
-				$hlbElementXmlId = Module\Highloadblock\Element::getInstance()->getXmlId($elementIdObject);
-			}
-		}
-
-		return new Link(Module\Highloadblock\Element::getInstance(), $hlbElementXmlId);
 	}
 
 	/**
