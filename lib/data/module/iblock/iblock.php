@@ -2,6 +2,7 @@
 
 use Bitrix\Iblock\InheritedProperty\IblockTemplates;
 use Bitrix\Main\Loader;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Module\Main\Site;
 use Intervolga\Migrato\Data\Record;
@@ -9,6 +10,8 @@ use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Value;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
+
+Loc::loadMessages(__FILE__);
 
 class Iblock extends BaseData
 {
@@ -355,7 +358,7 @@ class Iblock extends BaseData
 			$iblockObject = new \CIBlock();
 			if (!$iblockObject->delete($id->getValue()))
 			{
-				throw new \Exception("Unknown error");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
 			}
 		}
 	}

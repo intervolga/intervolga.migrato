@@ -1,5 +1,6 @@
 <? namespace Intervolga\Migrato\Data;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\Module\Highloadblock\Field;
 use Intervolga\Migrato\Data\Module\Highloadblock\HighloadBlock;
 use Intervolga\Migrato\Data\Module\Iblock\Element;
@@ -7,6 +8,8 @@ use Intervolga\Migrato\Data\Module\Iblock\Iblock;
 use Intervolga\Migrato\Data\Module\Iblock\Section;
 use Intervolga\Migrato\Data\Module\Iblock\FieldEnum;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
+
+Loc::loadMessages(__FILE__);
 
 abstract class BaseUserField extends BaseData
 {
@@ -553,7 +556,7 @@ abstract class BaseUserField extends BaseData
 				}
 				else
 				{
-					throw new \Exception("Unknown error");
+					throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
 				}
 			}
 		}
