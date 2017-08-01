@@ -90,7 +90,7 @@ abstract class BaseUserFieldEnum extends BaseData
 	public function setXmlId($id, $xmlId)
 	{
 		$obEnum = new \CUserFieldEnum();
-		$rsEnum = $obEnum->getList(array(), array("ID" => $id));
+		$rsEnum = $obEnum->getList(array(), array("ID" => $id->getValue()));
 		if ($arEnum = $rsEnum->fetch())
 		{
 			$userFieldObject = new \CUserFieldEnum();
