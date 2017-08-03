@@ -37,6 +37,8 @@
         <exclude module="main">optimize_js_files</exclude>
         <exclude module="main">site_checker_success</exclude>
         <exclude module="main">site_stopped</exclude>
+        <exclude module="main">last_backup_end_time</exclude>
+        <exclude module="main">last_backup_start_time</exclude>
         <exclude module="perfmon">.*</exclude>
         <exclude module="sale">order_email</exclude>
         <exclude module="sale">location</exclude>
