@@ -12,6 +12,8 @@ use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Value;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
+Loc::loadMessages(__FILE__);
+
 class Iblock extends BaseData
 {
 	protected function __construct()
@@ -383,7 +385,7 @@ class Iblock extends BaseData
 			$iblockObject = new \CIBlock();
 			if (!$iblockObject->delete($id->getValue()))
 			{
-				throw new \Exception("Unknown error");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
 			}
 		}
 	}

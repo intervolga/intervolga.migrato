@@ -79,7 +79,7 @@ class Group extends BaseData
 			}
 			if (!$groupObject->delete($id->getValue()))
 			{
-				throw new \Exception("Unknown error");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
 			}
 		}
 	}

@@ -4,12 +4,15 @@ use Bitrix\Catalog\GroupAccessTable;
 use Bitrix\Catalog\GroupLangTable;
 use Bitrix\Catalog\GroupTable;
 use Bitrix\Main\Loader;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Module\Main\Group;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\Value;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
+
+Loc::loadMessages(__FILE__);
 
 class PriceType extends BaseData
 {
@@ -166,7 +169,7 @@ class PriceType extends BaseData
 			$object = new \CCatalogGroup();
 			if (!$object->delete($id->getValue()))
 			{
-				throw new \Exception("Unknown error");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
 			}
 		}
 	}
