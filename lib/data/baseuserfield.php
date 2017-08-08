@@ -3,10 +3,7 @@
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\Module\Highloadblock\Field;
 use Intervolga\Migrato\Data\Module\Highloadblock\HighloadBlock;
-use Intervolga\Migrato\Data\Module\Iblock\Element;
 use Intervolga\Migrato\Data\Module\Iblock\Iblock;
-use Intervolga\Migrato\Data\Module\Iblock\Section;
-use Intervolga\Migrato\Data\Module\Iblock\FieldEnum;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
@@ -325,74 +322,6 @@ abstract class BaseUserField extends BaseData
 	{
 		$references = $this->getSettingsReferences();
 		return $references[$key];
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Runtime $runtime
-	 * @param \Intervolga\Migrato\Data\Record $field
-	 * @param mixed $value
-	 */
-	public function fillRuntime(Runtime $runtime, Record $field, $value)
-	{
-		$runtimeValue = null;
-		$runtimeLink = null;
-		$simpleTypes = array("string", "double", "boolean", "integer", "datetime", "date", "string_formatted", "iblock_element", "hlblock", "iblock_section");
-		if ($field->getFieldRaw("USER_TYPE_ID") == "enumeration")
-		{
-			$runtimeLink = $this->getEnumerationLink($value);
-		}
-		elseif (in_array($field->getFieldRaw("USER_TYPE_ID"), $simpleTypes))
-		{
-			$runtimeValue = new Value($value);
-		}
-
-		if ($runtimeValue)
-		{
-			$runtime->setField($field->getXmlId(), $runtimeValue);
-		}
-		if ($runtimeLink)
-		{
-			if ($field->getFieldRaw("MANDATORY") == "Y")
-			{
-				$runtime->setDependency($field->getXmlId(), $runtimeLink);
-			}
-			else
-			{
-				$runtime->setReference($field->getXmlId(), $runtimeLink);
-			}
-		}
-	}
-
-	public function getXmlIds(Basedata $instance, $value)
-	{
-		$values = is_array($value) ? $value : array($value);
-		$xmlIds = array();
-		foreach($values as $value)
-		{
-			$inObject = RecordId::createNumericId($value);
-			$xmlIds[] = $instance->getXmlId($inObject);
-		}
-		if(count($xmlIds) == 1)
-		{
-			return new Link($instance, $xmlIds[0]);
-		}
-		else
-		{
-			$link = new Link($instance);
-			$link->setValues($xmlIds);
-			return $link;
-		}
-
-	}
-
-	/**
-	 * @param int $value
-	 *
-	 * @return \Intervolga\Migrato\Data\Link
-	 */
-	protected function getEnumerationLink($value)
-	{
-		return $this->getXmlIds(FieldEnum::getInstance(), $value);
 	}
 
 	/**
