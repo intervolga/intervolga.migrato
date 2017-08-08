@@ -89,15 +89,22 @@ class AutofixCommand extends BaseCommand
 		try
 		{
 			$xmlId = $error->getDataClass()->generateXmlId($error->getId());
-			$error->setXmlId($xmlId);
-			$this->logger->addDb(
-				array(
-					'XML_ID_ERROR' => $error,
-					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.AUTOFIX'),
-				),
-				Logger::TYPE_OK
-			);
-			$result = 1;
+			if ($xmlId)
+			{
+				$error->setXmlId($xmlId);
+				$this->logger->addDb(
+					array(
+						'XML_ID_ERROR' => $error,
+						'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.AUTOFIX'),
+					),
+					Logger::TYPE_OK
+				);
+				$result = 1;
+			}
+			else
+			{
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.AUTOFIX_ERROR_NOT_SET'));
+			}
 		}
 		catch (\Exception $exception)
 		{
