@@ -117,7 +117,7 @@ class Enum extends BaseData
 	{
 		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
 		$arFields = array(
-			"XML_ID" => $fields[1],
+			"XML_ID" => $fields[2],
 		);
 		$isUpdated = \CIBlockPropertyEnum::update($id->getValue(), $arFields);
 		if (!$isUpdated)
@@ -136,6 +136,7 @@ class Enum extends BaseData
 			'select' => array(
 				'ID',
 				'XML_ID',
+				'PROPERTY_XML_ID' => 'PROPERTY.XML_ID',
 				'IBLOCK_XML_ID' => 'PROPERTY.IBLOCK.XML_ID',
 			),
 		))->fetch();
@@ -143,7 +144,7 @@ class Enum extends BaseData
 		{
 			if ($enum['XML_ID'] && $enum['IBLOCK_XML_ID'])
 			{
-				$xmlId = $enum['IBLOCK_XML_ID'] . static::XML_ID_SEPARATOR . $enum['XML_ID'];
+				$xmlId = $enum['IBLOCK_XML_ID'] . static::XML_ID_SEPARATOR  . $enum['PROPERTY_XML_ID']  . static::XML_ID_SEPARATOR . $enum['XML_ID'];
 			}
 		}
 		return $xmlId;
@@ -153,11 +154,12 @@ class Enum extends BaseData
 	{
 		$id = null;
 		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
-		if ($fields[0] && $fields[1])
+		if ($fields[0] && $fields[1] && $fields[2])
 		{
 			$filter = array(
 				'=PROPERTY.IBLOCK.XML_ID' => $fields[0],
-				'=XML_ID' => $fields[1],
+				'=PROPERTY.XML_ID' => $fields[1],
+				'=XML_ID' => $fields[2],
 			);
 			$enum = PropertyEnumerationTable::getList(array('filter' => $filter))->fetch();
 			if ($enum)
@@ -172,7 +174,7 @@ class Enum extends BaseData
 	public function validateXmlIdCustom($xmlId)
 	{
 		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
-		$isValid = (count($fields) == 2 && $fields[0] && $fields[1]);
+		$isValid = (count($fields) == 3 && $fields[0] && $fields[1] && $fields[2]);
 		if (!$isValid)
 		{
 			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INVALID_IBLOCK_PROPERTY_ENUM_XML_ID'));
