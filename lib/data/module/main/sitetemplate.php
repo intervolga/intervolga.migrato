@@ -75,9 +75,9 @@ class SiteTemplate extends BaseData
 		return BaseXmlIdProvider::formatXmlId($md5, $tpl['SITE_ID'] . '-' . $tpl['TEMPLATE'] . '-');
 	}
 
-	public function isGenerateXmlId()
+	public function generateXmlId()
 	{
-		return false;
+		return '';
 	}
 
 	public function setXmlId($id, $xmlId)

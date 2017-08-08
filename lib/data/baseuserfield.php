@@ -562,9 +562,9 @@ abstract class BaseUserField extends BaseData
 		}
 	}
 
-	public function isGenerateXmlId()
+	public function generateXmlId()
 	{
-		return false;
+		return '';
 	}
 
 	public function setXmlId($id, $xmlId)

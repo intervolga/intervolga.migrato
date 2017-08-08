@@ -29,9 +29,9 @@ class HighloadBlock extends BaseData
 		return $result;
 	}
 
-	public function isGenerateXmlId()
+	public function generateXmlId()
 	{
-		return false;
+		return '';
 	}
 
 	public function setXmlId($id, $xmlId)

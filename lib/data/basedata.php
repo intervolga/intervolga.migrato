@@ -262,14 +262,6 @@ abstract class BaseData
 	}
 
 	/**
-	 * @return bool
-	 */
-	public function isGenerateXmlId()
-	{
-		return true;
-	}
-
-	/**
 	 * @param \Intervolga\Migrato\Data\RecordId $id
 	 * @param string $xmlId
 	 *

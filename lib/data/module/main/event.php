@@ -80,9 +80,9 @@ class Event extends BaseData
 		return array_values($result);
 	}
 
-	public function isGenerateXmlId()
+	public function generateXmlId()
 	{
-		return false;
+		return '';
 	}
 
 	public function setXmlId($id, $xmlId)
