@@ -158,7 +158,7 @@ class ValidateCommand extends BaseCommand
 				if (!in_array(strtolower($record->getXmlId()), $this->allXmlIds))
 				{
 					$this->allXmlIds[] = strtolower($record->getXmlId());
-					if ($this->isSimpleXmlId($record->getXmlId()))
+					if ($this->isSimpleXmlId($record->getValidationXmlId()))
 					{
 						$errorType = XmlIdValidateError::TYPE_SIMPLE;
 					}

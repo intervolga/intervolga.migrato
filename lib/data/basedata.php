@@ -371,4 +371,14 @@ abstract class BaseData
 	public function validateXmlIdCustom($xmlId)
 	{
 	}
+
+	/**
+	 * @param string $xmlId
+	 *
+	 * @return string
+	 */
+	public function getValidationXmlId($xmlId)
+	{
+		return $xmlId;
+	}
 }

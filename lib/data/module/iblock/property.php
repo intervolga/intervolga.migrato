@@ -409,4 +409,10 @@ class Property extends BaseData
 			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INVALID_XML_ID'));
 		}
 	}
+
+	public function getValidationXmlId($xmlId)
+	{
+		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		return $fields[1];
+	}
 }
