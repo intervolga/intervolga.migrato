@@ -5,6 +5,9 @@ class TableHelper
 	protected $table = array();
 	const PAD_BEFORE = ' ';
 	const PAD_AFTER = ' ';
+	const CROSSING = '+';
+	const HORIZONTAL_LINE = '-';
+	const VERTICAL_LINE = '|';
 	const MIN_LINES_SHOW_HEADER = 10;
 
 	/**
@@ -12,11 +15,11 @@ class TableHelper
 	 */
 	protected function getSeparator()
 	{
-		$result = '+';
+		$result = static::CROSSING;
 		foreach ($this->getTableColumnWidths() as $width)
 		{
-			$result .= str_repeat('-', strlen(static::PAD_BEFORE) + $width + strlen(static::PAD_AFTER));
-			$result .= '+';
+			$result .= str_repeat(static::HORIZONTAL_LINE, strlen(static::PAD_BEFORE) + $width + strlen(static::PAD_AFTER));
+			$result .= static::CROSSING;
 		}
 		$result .= "\n";
 
@@ -57,14 +60,14 @@ class TableHelper
 	 */
 	protected function getRow(array $row)
 	{
-		$result = '|';
+		$result = static::VERTICAL_LINE;
 
 		foreach ($this->getTableColumnWidths() as $column => $width)
 		{
 			$content = $row[$column];
 			$pad = str_repeat(' ', $width - strlen($content));
 			$result .= static::PAD_BEFORE . $content . $pad . static::PAD_AFTER;
-			$result .= '|';
+			$result .= static::VERTICAL_LINE;
 		}
 		$result .= "\n";
 
@@ -78,14 +81,14 @@ class TableHelper
 	 */
 	protected function getHeader(array $header)
 	{
-		$result = '|';
+		$result = static::VERTICAL_LINE;
 
 		foreach ($this->getTableColumnWidths() as $column => $width)
 		{
 			$content = $header[$column];
 			$pad = str_repeat(' ', $width - strlen($content));
 			$result .= '<info>' . static::PAD_BEFORE . $content . $pad . static::PAD_AFTER . '</info>';
-			$result .= '|';
+			$result .= static::VERTICAL_LINE;
 		}
 		$result .= "\n";
 
