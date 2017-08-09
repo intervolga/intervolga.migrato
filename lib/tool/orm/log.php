@@ -1,5 +1,6 @@
 <?namespace Intervolga\Migrato\Tool\Orm;
 
+use Bitrix\Main\Application;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\Entity\DatetimeField;
 use Bitrix\Main\Entity\IntegerField;
@@ -132,7 +133,10 @@ class LogTable extends DataManager
 		{
 			$log["COMMENT"] .= " (" . $exception->getCode() . ")";
 		}
-		$log["COMMENT"] .= "\n\n" . $exception->getTraceAsString();
+		$trace = $exception->getTraceAsString();
+		$root = Application::getDocumentRoot();
+		$trace = str_replace($root, '', $trace);
+		$log["COMMENT"] .= "\n\n" . $trace;
 		return $log;
 	}
 
