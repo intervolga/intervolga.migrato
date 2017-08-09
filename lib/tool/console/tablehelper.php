@@ -13,10 +13,10 @@ class TableHelper
 	/**
 	 * @return string
 	 */
-	protected function getSeparator()
+	protected function getSeparatorOutput()
 	{
 		$result = static::CROSSING;
-		foreach ($this->getTableColumnWidths() as $width)
+		foreach ($this->getColumnWidths() as $width)
 		{
 			$result .= str_repeat(static::HORIZONTAL_LINE, strlen(static::PAD_BEFORE) + $width + strlen(static::PAD_AFTER));
 			$result .= static::CROSSING;
@@ -29,24 +29,28 @@ class TableHelper
 	/**
 	 * @return int[]
 	 */
-	protected function getTableColumnWidths()
+	protected function getColumnWidths()
 	{
 		static $widths = array();
 		if (!$widths)
 		{
-			foreach ($this->table as $row)
+			$widths = static::calculateColumnWidths();
+		}
+
+		return $widths;
+	}
+
+	/**
+	 * @return int[]
+	 */
+	protected function calculateColumnWidths()
+	{
+		$widths = array();
+		foreach ($this->table as $row)
+		{
+			foreach ($row as $column => $content)
 			{
-				foreach ($row as $column => $content)
-				{
-					if (!array_key_exists($column, $widths))
-					{
-						$widths[$column] = strlen($content);
-					}
-					else
-					{
-						$widths[$column] = max(strlen($content), $widths[$column]);
-					}
-				}
+				$widths[$column] = max(strlen($content), $widths[$column]);
 			}
 		}
 
@@ -54,19 +58,39 @@ class TableHelper
 	}
 
 	/**
+	 * @return string
+	 */
+	protected function getRowsOutput()
+	{
+		$output = '';
+		foreach ($this->table as $index => $row)
+		{
+			if ($index == 0)
+			{
+				continue;
+			}
+			$output .= $this->getRowOutput($row);
+		}
+
+		return $output;
+	}
+
+	/**
 	 * @param string[] $row
+	 * @param string $prefix
+	 * @param string $postfix
 	 *
 	 * @return string
 	 */
-	protected function getRow(array $row)
+	protected function getRowOutput(array $row, $prefix = '', $postfix = '')
 	{
 		$result = static::VERTICAL_LINE;
 
-		foreach ($this->getTableColumnWidths() as $column => $width)
+		foreach ($this->getColumnWidths() as $column => $width)
 		{
 			$content = $row[$column];
 			$pad = str_repeat(' ', $width - strlen($content));
-			$result .= static::PAD_BEFORE . $content . $pad . static::PAD_AFTER;
+			$result .= $prefix . static::PAD_BEFORE . $content . $pad . static::PAD_AFTER . $postfix;
 			$result .= static::VERTICAL_LINE;
 		}
 		$result .= "\n";
@@ -75,24 +99,13 @@ class TableHelper
 	}
 
 	/**
-	 * @param string[] $header
+	 * @param string[] $row
 	 *
 	 * @return string
 	 */
-	protected function getHeader(array $header)
+	protected function getHeaderOutput(array $row)
 	{
-		$result = static::VERTICAL_LINE;
-
-		foreach ($this->getTableColumnWidths() as $column => $width)
-		{
-			$content = $header[$column];
-			$pad = str_repeat(' ', $width - strlen($content));
-			$result .= '<info>' . static::PAD_BEFORE . $content . $pad . static::PAD_AFTER . '</info>';
-			$result .= static::VERTICAL_LINE;
-		}
-		$result .= "\n";
-
-		return $result;
+		return static::getRowOutput($row, '<info>', '</info>');
 	}
 
 	/**
@@ -117,25 +130,16 @@ class TableHelper
 	public function getOutput()
 	{
 		$output = '';
-		$output .= $this->getSeparator();
-		foreach ($this->table as $index => $row)
-		{
-			if ($index == 0)
-			{
-				$output .= $this->getHeader($row);
-				$output .= $this->getSeparator();
-			}
-			else
-			{
-				$output .= $this->getRow($row);
-			}
-		}
+		$output .= $this->getSeparatorOutput();
+		$output .= $this->getHeaderOutput($this->table[0]);
+		$output .= $this->getSeparatorOutput();
+		$output .= $this->getRowsOutput();
 		if (count($this->table) > static::MIN_LINES_SHOW_HEADER)
 		{
-			$output .= $this->getSeparator();
-			$output .= $this->getHeader($this->table[0]);
+			$output .= $this->getSeparatorOutput();
+			$output .= $this->getHeaderOutput($this->table[0]);
 		}
-		$output .= $this->getSeparator();
+		$output .= $this->getSeparatorOutput();
 		return $output;
 	}
 }
