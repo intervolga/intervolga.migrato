@@ -50,7 +50,11 @@ class TableHelper
 		{
 			foreach ($row as $column => $content)
 			{
-				$widths[$column] = max(strlen($content), $widths[$column]);
+				$contentLines = explode(PHP_EOL, $content);
+				foreach ($contentLines as $contentLine)
+				{
+					$widths[$column] = max(strlen($contentLine), $widths[$column]);
+				}
 			}
 		}
 
@@ -84,16 +88,39 @@ class TableHelper
 	 */
 	protected function getRowOutput(array $row, $prefix = '', $postfix = '')
 	{
-		$result = static::VERTICAL_LINE;
+		$result = '';
+		$maxContentLines = $this->getMaxContentLines($row);
 
+		for ($contentLine = 0; $contentLine < $maxContentLines; $contentLine++)
+		{
+			$result .= static::VERTICAL_LINE;
+			foreach ($this->getColumnWidths() as $column => $width)
+			{
+				$content = $row[$column];
+				$contentLines = explode(PHP_EOL, $content);
+				$pad = str_repeat(' ', $width - strlen($contentLines[$contentLine]));
+				$result .= $prefix . static::PAD_BEFORE . $contentLines[$contentLine] . $pad . static::PAD_AFTER . $postfix;
+				$result .= static::VERTICAL_LINE;
+			}
+			$result .= PHP_EOL;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * @param array $row
+	 *
+	 * @return int
+	 */
+	protected function getMaxContentLines(array $row)
+	{
+		$result = 0;
 		foreach ($this->getColumnWidths() as $column => $width)
 		{
 			$content = $row[$column];
-			$pad = str_repeat(' ', $width - strlen($content));
-			$result .= $prefix . static::PAD_BEFORE . $content . $pad . static::PAD_AFTER . $postfix;
-			$result .= static::VERTICAL_LINE;
+			$result = max($result, count(explode(PHP_EOL, $content)));
 		}
-		$result .= "\n";
 
 		return $result;
 	}
