@@ -98,7 +98,7 @@ class ImportXmlIdCommand extends ImportDataCommand
 		if ($file->isExists())
 		{
 			$record = DataFileViewXml::parseFile($file);
-			$record->setData($dataClass);
+			$this->afterRead($record, $dataClass);
 
 			return $record;
 		}
