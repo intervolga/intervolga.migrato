@@ -53,6 +53,13 @@ class ImportXmlIdCommand extends ImportDataCommand
 		{
 			$this->createWithLog($record);
 		}
+
+		if (!$this->input->getOption('quick'))
+		{
+			$this->runSubcommand('clearcache');
+			$this->runSubcommand('urlrewrite');
+			$this->runSubcommand('reindex');
+		}
 	}
 
 	/**
