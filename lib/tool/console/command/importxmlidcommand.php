@@ -10,7 +10,7 @@ use Symfony\Component\Console\Input\InputOption;
 
 Loc::loadMessages(__FILE__);
 
-class ImportXmlIdCommand extends BaseCommand
+class ImportXmlIdCommand extends ImportDataCommand
 {
 	protected function configure()
 	{
@@ -44,6 +44,15 @@ class ImportXmlIdCommand extends BaseCommand
 	{
 		$dataClass = $this->findDataClass();
 		$record = $this->readRecordFile($dataClass);
+
+		if ($recordId = $record->getData()->findRecord($record->getXmlId()))
+		{
+			$this->updateWithLog($recordId, $record);
+		}
+		else
+		{
+			$this->createWithLog($record);
+		}
 	}
 
 	/**
