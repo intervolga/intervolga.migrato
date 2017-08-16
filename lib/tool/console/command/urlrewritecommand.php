@@ -22,7 +22,14 @@ class UrlRewriteCommand extends BaseCommand
 
 	protected function urlRewrite()
 	{
-		$res = UrlRewriter::reindexAll();
+		if(method_exists('\\CUrlRewriter', 'ReIndexAll'))
+		{
+			$res = \CUrlRewriter::ReIndexAll();
+		}
+		else
+		{
+			$res = UrlRewriter::reindexAll();
+		}
 		$this->logger->registerFinal(
 			Loc::getMessage(
 				'INTERVOLGA_MIGRATO.URLREWRITE_UPDATED',

@@ -1,12 +1,12 @@
 <? namespace Intervolga\Migrato\Data;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\Module\Highloadblock\Field;
 use Intervolga\Migrato\Data\Module\Highloadblock\HighloadBlock;
-use Intervolga\Migrato\Data\Module\Iblock\Element;
 use Intervolga\Migrato\Data\Module\Iblock\Iblock;
-use Intervolga\Migrato\Data\Module\Iblock\Section;
-use Intervolga\Migrato\Data\Module\Iblock\FieldEnum;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
+
+Loc::loadMessages(__FILE__);
 
 abstract class BaseUserField extends BaseData
 {
@@ -325,134 +325,6 @@ abstract class BaseUserField extends BaseData
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\Runtime $runtime
-	 * @param \Intervolga\Migrato\Data\Record $field
-	 * @param mixed $value
-	 */
-	public function fillRuntime(Runtime $runtime, Record $field, $value)
-	{
-		$runtimeValue = null;
-		$runtimeLink = null;
-		if ($field->getFieldRaw("USER_TYPE_ID") == "iblock_element")
-		{
-			$runtimeLink = $this->getIblockElementLink($value);
-		}
-		elseif ($field->getFieldRaw("USER_TYPE_ID") == "hlblock")
-		{
-			$runtimeLink = $this->getHlblockElementLink($field, $value);
-		}
-		elseif ($field->getFieldRaw("USER_TYPE_ID") == "iblock_section")
-		{
-			$runtimeLink = $this->getIblockSectionLink($value);
-		}
-		elseif ($field->getFieldRaw("USER_TYPE_ID") == "enumeration")
-		{
-			$runtimeLink = $this->getEnumerationLink($value);
-		}
-		elseif (in_array($field->getFieldRaw("USER_TYPE_ID"), array("string", "double", "boolean", "integer", "datetime", "date", "string_formatted")))
-		{
-			$runtimeValue = new Value($value);
-		}
-
-		if ($runtimeValue)
-		{
-			$runtime->setField($field->getXmlId(), $runtimeValue);
-		}
-		if ($runtimeLink)
-		{
-			if ($field->getFieldRaw("MANDATORY") == "Y")
-			{
-				$runtime->setDependency($field->getXmlId(), $runtimeLink);
-			}
-			else
-			{
-				$runtime->setReference($field->getXmlId(), $runtimeLink);
-			}
-		}
-	}
-
-	public function getXmlIds(Basedata $instance, $value)
-	{
-		$values = is_array($value) ? $value : array($value);
-		$xmlIds = array();
-		foreach($values as $value)
-		{
-			$inObject = RecordId::createNumericId($value);
-			$xmlIds[] = $instance->getXmlId($inObject);
-		}
-		if(count($xmlIds) == 1)
-		{
-			return new Link($instance, $xmlIds[0]);
-		}
-		else
-		{
-			$link = new Link($instance);
-			$link->setValues($xmlIds);
-			return $link;
-		}
-
-	}
-
-	/**
-	 * @param int $value
-	 *
-	 * @return \Intervolga\Migrato\Data\Link
-	 */
-	protected function getIblockElementLink($value)
-	{
-		return $this->getXmlIds(Element::getInstance(), $value);
-	}
-
-	/**
-	 * @param int $value
-	 *
-	 * @return \Intervolga\Migrato\Data\Link
-	 */
-	protected function getIblockSectionLink($value)
-	{
-		return $this->getXmlIds(Section::getInstance(), $value);
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Record $field
-	 * @param int $value
-	 *
-	 * @return \Intervolga\Migrato\Data\Link
-	 * @throws \Exception
-	 */
-	protected function getHlblockElementLink(Record $field, $value)
-	{
-		$references = $field->getReferences();
-		$hlbElementXmlId = "";
-		if ($references["SETTINGS.HLBLOCK_ID"])
-		{
-			$hlblockXmlId = $references["SETTINGS.HLBLOCK_ID"]->getValue();
-			$hlblockIdObject = HighloadBlock::getInstance()->findRecord($hlblockXmlId);
-			if ($hlblockIdObject)
-			{
-				$hlblockId = $hlblockIdObject->getValue();
-				$elementIdObject = RecordId::createComplexId(array(
-					"ID" => intval($value),
-					"HLBLOCK_ID" => intval($hlblockId),
-				));
-				$hlbElementXmlId = Module\Highloadblock\Element::getInstance()->getXmlId($elementIdObject);
-			}
-		}
-
-		return new Link(Module\Highloadblock\Element::getInstance(), $hlbElementXmlId);
-	}
-
-	/**
-	 * @param int $value
-	 *
-	 * @return \Intervolga\Migrato\Data\Link
-	 */
-	protected function getEnumerationLink($value)
-	{
-		return $this->getXmlIds(FieldEnum::getInstance(), $value);
-	}
-
-	/**
 	 * @return string
 	 */
 	abstract public function getDependencyString();
@@ -553,10 +425,15 @@ abstract class BaseUserField extends BaseData
 				}
 				else
 				{
-					throw new \Exception("Unknown error");
+					throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
 				}
 			}
 		}
+	}
+
+	public function generateXmlId()
+	{
+		return '';
 	}
 
 	public function setXmlId($id, $xmlId)

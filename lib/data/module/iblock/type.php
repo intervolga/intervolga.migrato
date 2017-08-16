@@ -1,5 +1,6 @@
 <?namespace Intervolga\Migrato\Data\Module\Iblock;
 
+use Bitrix\Iblock\IblockTable;
 use Bitrix\Iblock\TypeTable;
 use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
@@ -9,6 +10,10 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Bitrix\Main\Localization\LanguageTable;
 use Intervolga\Migrato\Data\Value;
+use Bitrix\Iblock\TypeLanguageTable;
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
 
 class Type extends BaseData
 {
@@ -20,7 +25,7 @@ class Type extends BaseData
 	public function getList(array $filter = array())
 	{
 		$result = array();
-		$getList = \CIBlockType::GetList();
+		$getList = TypeTable::getList();
 		while ($type = $getList->fetch())
 		{
 			$record = new Record($this);
@@ -117,9 +122,10 @@ class Type extends BaseData
 
 	public function update(Record $record)
 	{
-		$typeObject = new \CIBlockType();
 		$fields = $record->getFieldsRaw($this->getLanguageFields());
 		$fields = $this->extractLanguageFields($fields);
+
+		$typeObject = new \CIBlockType();
 		$isUpdated = $typeObject->update($record->getId()->getValue(), $fields);
 		if (!$isUpdated)
 		{
@@ -169,22 +175,22 @@ class Type extends BaseData
 
 	protected function deleteInner($xmlId)
 	{
-		$id = $this->findRecord($xmlId);
-		$typeObject = new \CIBlockType();
-		if($id)
+		if($id = $this->findRecord($xmlId))
 		{
 			$this->deleteContentIBlockType($id->getValue());
-			if (!$typeObject->delete($id->getValue()))
+			if (!($isDeleted = \CIBlockType::Delete($id->getValue())))
 			{
-				throw new \Exception("Unknown error");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_TYPE_DELETE_ERROR'), array('#ID#' => $xmlId));
 			}
 		}
 	}
 
 	private function deleteContentIBlockType($id)
 	{
-		$rsIblock = \CIBlock::GetList(array(), array("TYPE" => $id));
-		while($arIblock = $rsIblock->Fetch())
+		$rsIblock = IblockTable::getList(array(
+			'filter' => array("IBLOCK_TYPE_ID" => $id)
+		));
+		while($arIblock = $rsIblock->fetch())
 		{
 			if(\CModule::IncludeModule("catalog"))
 			{
@@ -207,19 +213,22 @@ class Type extends BaseData
 
 	public function setXmlId($id, $xmlId)
 	{
-		$rsType = \CIBlockType::GetByID($id->getValue());
-		if($arType = $rsType->Fetch())
+		$rsType = TypeTable::getById($id->getValue());
+		if($arType = $rsType->fetch())
 		{
-			$arFields = array(
-				"ID" => $xmlId,
-				"SECTIONS" => $arType["SECTIONS"],
-				"IN_RSS" => $arType["IN_RSS"]
-			);
-			$type = new \CIBlockType();
-			$isUpdated = $type->Update($id, $arFields);
-			if(!$isUpdated)
+			$arFields = array("ID" => $xmlId);
+			$result = TypeTable::update($id->getValue(), $arFields);
+			if($result->isSuccess())
 			{
-				throw new \Exception("Ошибка обновления xmlId элемента iblocktype " . $id->getValue());
+				foreach($this->getLanguages() as $language)
+				{
+					$langId = array('IBLOCK_TYPE_ID' => $id->getValue(), 'LANGUAGE_ID' => $language);
+					TypeLanguageTable::update($langId, array('IBLOCK_TYPE_ID' => $xmlId));
+				}
+			}
+			else
+			{
+				throw new \Exception(implode(', ', $result->getErrorMessages()));
 			}
 		}
 	}

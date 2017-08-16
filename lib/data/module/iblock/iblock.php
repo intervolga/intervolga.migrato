@@ -1,7 +1,9 @@
 <?namespace Intervolga\Migrato\Data\Module\Iblock;
 
+use Bitrix\Iblock\IblockTable;
 use Bitrix\Iblock\InheritedProperty\IblockTemplates;
 use Bitrix\Main\Loader;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Module\Main\Site;
 use Intervolga\Migrato\Data\Record;
@@ -9,6 +11,8 @@ use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Value;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
+
+Loc::loadMessages(__FILE__);
 
 class Iblock extends BaseData
 {
@@ -43,6 +47,7 @@ class Iblock extends BaseData
 				"NAME" => $iblock["NAME"],
 				"ACTIVE" => $iblock["ACTIVE"],
 				"SORT" => $iblock["SORT"],
+				"VERSION" => $iblock["VERSION"],
 				"LIST_PAGE_URL" => $iblock["LIST_PAGE_URL"],
 				"DETAIL_PAGE_URL" => $iblock["DETAIL_PAGE_URL"],
 				"SECTION_PAGE_URL" => $iblock["SECTION_PAGE_URL"],
@@ -252,10 +257,35 @@ class Iblock extends BaseData
 			$this->importMessages($record->getId()->getValue(), $messages);
 			$this->importFields($record->getId()->getValue(), $fieldsSettings);
 			$this->importSeo($record->getId()->getValue(), $seo);
+			$this->checkEqualVersion($record->getXmlId(), $fields);
 		}
 		else
 		{
 			throw new \Exception(trim(strip_tags($iblockObject->LAST_ERROR)));
+		}
+	}
+
+	protected function checkEqualVersion($xmlid, &$fields)
+	{
+		if ($fields["VERSION"])
+		{
+			$id = $this->findRecord($xmlid);
+			$rsElem = IblockTable::getList(array(
+				"filter" => array("ID" => $id->getValue()),
+				"select" => array("ID", "VERSION"),
+			));
+			if ($arElem = $rsElem->fetch())
+			{
+				if ($arElem["VERSION"] != $fields["VERSION"])
+				{
+					throw new \Exception(Loc::GetMessage("INTERVOLGA_MIGRATO.IBLOCK_VERSION_NOT_EQUAL", array(
+						"#ID#" => $id->getValue(),
+						"#NAME#" => $fields["NAME"],
+						"#VERSION_SITE#" => $arElem["VERSION"],
+						"#VERSION_IMPORT#" => $fields["VERSION"],
+					)));
+				}
+			}
 		}
 	}
 
@@ -355,7 +385,7 @@ class Iblock extends BaseData
 			$iblockObject = new \CIBlock();
 			if (!$iblockObject->delete($id->getValue()))
 			{
-				throw new \Exception("Unknown error");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
 			}
 		}
 	}

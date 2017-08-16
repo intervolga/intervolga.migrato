@@ -342,7 +342,7 @@ class Property extends BaseData
 		$propertyObject = new \CIBlockProperty();
 		if ($id && !$propertyObject->delete($id->getValue()))
 		{
-			throw new \Exception("Unknown error");
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY_UNKNOWN_ERROR'));
 		}
 	}
 
@@ -408,5 +408,11 @@ class Property extends BaseData
 		{
 			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INVALID_XML_ID'));
 		}
+	}
+
+	public function getValidationXmlId($xmlId)
+	{
+		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		return $fields[1];
 	}
 }

@@ -37,6 +37,14 @@ class Record extends BaseDataObject
 	}
 
 	/**
+	 * @return string
+	 */
+	public function getValidationXmlId()
+	{
+		return $this->getData()->getValidationXmlId($this->xmlId);
+	}
+
+	/**
 	 * @param array $fields string[] or string[][]
 	 */
 	public function addFieldsRaw(array $fields)

@@ -1,14 +1,19 @@
 <?namespace Intervolga\Migrato\Tool\Console\Command;
 
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Tool\Console\TableHelper;
 use Intervolga\Migrato\Tool\Orm\LogTable;
-use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Output\OutputInterface;
 
 Loc::loadMessages(__FILE__);
 
 class LogCommand extends BaseCommand
 {
 	protected $clearLogs = false;
+	/**
+	 * @var \Intervolga\Migrato\Tool\Console\TableHelper table
+	 */
+	protected $table = null;
 
 	public function configure()
 	{
@@ -18,35 +23,32 @@ class LogCommand extends BaseCommand
 
 	public function executeInner()
 	{
-		$table = $this->getTable();
+		$this->table = new TableHelper();
+		$this->initTable();
 		$getList = $this->getList();
 		while ($log = $getList->fetch())
 		{
-			$this->addLogToTable($log, $table);
+			$this->addLogToTable($log);
 		}
-
-		$table->render();
+		$this->logger->add($this->table->getOutput());
 	}
 
-	protected function getTable()
+	protected function initTable()
 	{
-		$table = new Table($this->output);
 		$headers = array(
-			'TIME',
-			'DATA',
-			'XML_ID',
-			'ID',
-			'OPERATION',
-			'RESULT',
-			'COMMENT'
+			'TIME' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_TIME'),
+			'DATA' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_DATA'),
+			'XML_ID' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_XML_ID'),
+			'ID' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_ID'),
+			'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_OPERATION'),
+			'RESULT' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_RESULT'),
+			'COMMENT' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_COMMENT'),
 		);
 		if ($this->input->getOption('fails'))
 		{
-			$headers = array_diff($headers, array('RESULT'));
+			unset($headers['RESULT']);
 		}
-		$table->setHeaders($headers);
-
-		return $table;
+		$this->table->addHeader($headers);
 	}
 
 	protected function getList()
@@ -59,8 +61,14 @@ class LogCommand extends BaseCommand
 		return LogTable::getList(array('filter' => $filter));
 	}
 
-	protected function addLogToTable(array $log, Table $table)
+	protected function addLogToTable(array $log)
 	{
+		if($this->output->getVerbosity() < OutputInterface::VERBOSITY_VERBOSE && $log['COMMENT'])
+		{
+			$comment = explode(PHP_EOL . PHP_EOL, $log['COMMENT']);
+			$log['COMMENT'] = $comment[0];
+		}
+
 		$row = array(
 			'TIME' => $log['TIMESTAMP_X'],
 			'DATA' => $log['MODULE_NAME'] . ':' . $log['ENTITY_NAME'],
@@ -74,7 +82,7 @@ class LogCommand extends BaseCommand
 		{
 			unset($row['RESULT']);
 		}
-		$table->addRow($row);
+		$this->table->addRow($row);
 	}
 
 	/**

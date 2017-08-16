@@ -1,11 +1,14 @@
 <? namespace Intervolga\Migrato\Data\Module\Sale;
 
 use Bitrix\Sale\Internals\OrderPropsTable;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\Value;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
+
+Loc::loadMessages(__FILE__);
 
 class Property extends BaseData
 {
@@ -69,6 +72,11 @@ class Property extends BaseData
 		}
 
 		return $result;
+	}
+
+	public function generateXmlId()
+	{
+		return '';
 	}
 
 	public function setXmlId($id, $xmlId)
@@ -164,7 +172,7 @@ class Property extends BaseData
 		{
 			if (!OrderPropsTable::delete($id->getValue()))
 			{
-				throw new \Exception("Unknown error");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
 			}
 		}
 	}

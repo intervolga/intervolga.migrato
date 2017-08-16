@@ -1,5 +1,6 @@
 <?namespace Intervolga\Migrato\Tool\Orm;
 
+use Bitrix\Main\Application;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\Entity\DatetimeField;
 use Bitrix\Main\Entity\IntegerField;
@@ -132,8 +133,62 @@ class LogTable extends DataManager
 		{
 			$log["COMMENT"] .= " (" . $exception->getCode() . ")";
 		}
-		$log["COMMENT"] .= "\n\n" . $exception->getTraceAsString();
+		$trace = static::getTrace($exception);
+		$log["COMMENT"] .= "\n\n" . $trace;
 		return $log;
+	}
+
+	/**
+	 * @param \Exception $exception
+	 *
+	 * @return string
+	 */
+	protected static function getTrace(\Exception $exception)
+	{
+		$result = array();
+
+		$result[] = static::getTraceLine(
+			array(
+				'file' => $exception->getFile(),
+				'line' => $exception->getLine(),
+			),
+			0
+		);
+		foreach ($exception->getTrace() as $i => $trace)
+		{
+			$result[] = static::getTraceLine($trace, $i + 1);
+		}
+		$result[] = static::getTraceLine(
+			array(
+				'custom' => '{main}',
+			),
+			count($result)
+		);
+
+		return implode(PHP_EOL, $result);
+	}
+
+	/**
+	 * @param array $trace
+	 * @param int $number
+	 *
+	 * @return string
+	 */
+	protected static function getTraceLine(array $trace, $number)
+	{
+		$root = Application::getDocumentRoot();
+		$migratoRoot = getLocalPath('modules/intervolga.migrato');
+		$trace['file'] = str_replace($root, '', $trace['file']);
+		$trace['file'] = str_replace($migratoRoot, 'MIGRATO_MODULE', $trace['file']);
+		$number = str_pad($number, 2, ' ', STR_PAD_RIGHT);
+		if ($trace['custom'])
+		{
+			return '#' . $number .' '. $trace['custom'];
+		}
+		else
+		{
+			return '#' . $number .' '. $trace['file'] . ':' . $trace['line'];
+		}
 	}
 
 	/**

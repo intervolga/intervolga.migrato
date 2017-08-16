@@ -362,6 +362,13 @@ class Form extends BaseData
 		}
 	}
 
+	public function generateXmlId()
+	{
+		return '';
+	}
+
 	public function setXmlId($id, $xmlId)
-	{}
+	{
+
+	}
 }
