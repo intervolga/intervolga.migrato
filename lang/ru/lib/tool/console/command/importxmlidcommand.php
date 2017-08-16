@@ -4,3 +4,4 @@ $MESS['INTERVOLGA_MIGRATO.NO_AFTER_CLEAR_DESCRIPTION'] = 'Пропустить �
 $MESS['INTERVOLGA_MIGRATO.IMPORT_XMLID_MODULE'] = 'Модуль';
 $MESS['INTERVOLGA_MIGRATO.IMPORT_XMLID_DATA'] = 'Сущность';
 $MESS['INTERVOLGA_MIGRATO.IMPORT_XMLID_XMLID'] = 'XML ID миграции';
+$MESS['INTERVOLGA_MIGRATO.DATA_CLASS_NOT_FOUND'] = 'Не найден класс для работы с сущностью';

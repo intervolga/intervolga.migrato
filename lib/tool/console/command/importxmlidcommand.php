@@ -1,6 +1,8 @@
 <?namespace Intervolga\Migrato\Tool\Console\Command;
 
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\SystemException;
+use Intervolga\Migrato\Tool\Config;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
@@ -38,5 +40,28 @@ class ImportXmlIdCommand extends BaseCommand
 
 	public function executeInner()
 	{
+		$dataClass = $this->findDataClass();
+	}
+
+	/**
+	 * @return \Intervolga\Migrato\Data\BaseData
+	 * @throws SystemException
+	 */
+	protected function findDataClass()
+	{
+		$module = $this->input->getArgument('module');
+		$data = $this->input->getArgument('data');
+
+		$dataClasses = Config::getInstance()->getAllDataClasses();
+		foreach ($dataClasses as $dataClass)
+		{
+			if ($dataClass->getModule() == $module
+				&& $dataClass->getEntityName() == $data)
+			{
+				return $dataClass;
+			}
+		}
+
+		throw new SystemException(Loc::getMessage('INTERVOLGA_MIGRATO.DATA_CLASS_NOT_FOUND'));
 	}
 }
