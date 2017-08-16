@@ -81,7 +81,10 @@ class ImportXmlIdCommand extends BaseCommand
 		$file = new File($filePath);
 		if ($file->isExists())
 		{
-			return DataFileViewXml::parseFile($file);
+			$record = DataFileViewXml::parseFile($file);
+			$record->setData($dataClass);
+
+			return $record;
 		}
 		throw new SystemException(Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_FILE_NOT_FOUND', array('#XML_ID#' => $xmlId)));
 	}
