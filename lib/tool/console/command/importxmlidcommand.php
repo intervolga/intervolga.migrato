@@ -1,8 +1,10 @@
 <?namespace Intervolga\Migrato\Tool\Console\Command;
 
+use Bitrix\Main\IO\File;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\SystemException;
 use Intervolga\Migrato\Tool\Config;
+use Intervolga\Migrato\Tool\DataFileViewXml;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
@@ -41,6 +43,7 @@ class ImportXmlIdCommand extends BaseCommand
 	public function executeInner()
 	{
 		$dataClass = $this->findDataClass();
+		$record = $this->readRecordFile($dataClass);
 	}
 
 	/**
@@ -63,5 +66,23 @@ class ImportXmlIdCommand extends BaseCommand
 		}
 
 		throw new SystemException(Loc::getMessage('INTERVOLGA_MIGRATO.DATA_CLASS_NOT_FOUND'));
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
+	 * @return \Intervolga\Migrato\Data\Record
+	 * @throws SystemException
+	 */
+	protected function readRecordFile(\Intervolga\Migrato\Data\BaseData $dataClass)
+	{
+		$xmlId = $this->input->getArgument('xmlid');
+		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . '/';
+		$filePath = $path . DataFileViewXml::FILE_PREFIX . $xmlId . "." . DataFileViewXml::FILE_EXT;
+		$file = new File($filePath);
+		if ($file->isExists())
+		{
+			return DataFileViewXml::parseFile($file);
+		}
+		throw new SystemException(Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_FILE_NOT_FOUND', array('#XML_ID#' => $xmlId)));
 	}
 }
