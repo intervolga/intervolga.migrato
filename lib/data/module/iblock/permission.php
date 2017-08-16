@@ -93,21 +93,32 @@ class Permission extends BaseData
 	protected function createInner(Record $record)
 	{
 		$iblockLinkId = Iblock::getInstance()->findRecord($record->getDependency("IBLOCK_ID")->getValue());
-		$iblockId = $iblockLinkId->getValue();
-
 		$groupLinkId = Group::getInstance()->findRecord($record->getDependency("GROUP_ID")->getValue());
-		$groupId = $groupLinkId->getValue();
+		if ($iblockLinkId)
+		{
+			$iblockId = $iblockLinkId->getValue();
+			$arGroups = \CIBlock::GetGroupPermissions($iblockId);
+			if ($groupLinkId)
+			{
+				$groupId = $groupLinkId->getValue();
+				$arGroups[$groupId] = $record->getField("PERMISSION")->getValue();
+				$iblock = new \CIBlock();
+				$iblock->SetPermission($iblockId, $arGroups);
 
-		$arGroups = \CIBlock::GetGroupPermissions($iblockId);
-
-		$arGroups[$groupId] = $record->getField("PERMISSION")->getValue();
-		$iblock = new \CIBlock();
-		$iblock->SetPermission($iblockId, $arGroups);
-
-		return $this->createId(array(
-			"IBLOCK_ID" => $iblockId,
-			"GROUP_ID" => $groupId,
-		));
+				return $this->createId(array(
+					"IBLOCK_ID" => $iblockId,
+					"GROUP_ID" => $groupId,
+				));
+			}
+			else
+			{
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.GROUP_NOT_FOUND'));
+			}
+		}
+		else
+		{
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_NOT_FOUND'));
+		}
 	}
 
 	protected function deleteInner($xmlId)
