@@ -34,6 +34,10 @@ class PublicCache
 	{
 		$module = $dataClass->getModule();
 		$entity = $dataClass->getEntityName();
+		if (!$this->cache[$module])
+		{
+			$this->cache[$module] = array();
+		}
 		if (!array_key_exists($entity, $this->cache[$module]))
 		{
 			$this->cacheData($dataClass);
