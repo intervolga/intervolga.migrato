@@ -300,7 +300,11 @@ class Iblock extends BaseData
 	{
 		if ($typeXmlId = $record->getDependency('IBLOCK_TYPE_ID')->getValue())
 		{
-			$fields['IBLOCK_TYPE_ID'] = $record->getDependency('IBLOCK_TYPE_ID')->findId()->getValue();
+			$typeId = $record->getDependency('IBLOCK_TYPE_ID')->findId();
+			if ($typeId)
+			{
+				$fields['IBLOCK_TYPE_ID'] = $typeId->getValue();
+			}
 		}
 		if ($typeXmlId = $record->getDependency('SITE')->getValues())
 		{
@@ -343,7 +347,7 @@ class Iblock extends BaseData
 		}
 		else
 		{
-			throw new \Exception("IBlock " . $record->getXmlId() . " haven`t dependency");
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_TYPE_NOT_SET'));
 		}
 	}
 
