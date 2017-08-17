@@ -188,7 +188,7 @@ class DataFileViewXml
 	 *
 	 * @return \Intervolga\Migrato\Data\Record
 	 */
-	protected static function parseFile(File $file)
+	public static function parseFile(File $file)
 	{
 		$xmlParser = new \CDataXML();
 		$xmlParser->Load($file->getPath());

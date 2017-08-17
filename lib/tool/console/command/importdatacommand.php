@@ -157,45 +157,57 @@ class ImportDataCommand extends BaseCommand
 		$data = DataFileViewXml::readFromFileSystem($path);
 		foreach ($data as $i => $dataItem)
 		{
-			$data[$i]->setData($dataClass);
-			if ($dependencies = $data[$i]->getDependencies())
+			$data[$i] = $this->afterRead($dataItem, $dataClass);
+		}
+
+		return $data;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
+	 * @return \Intervolga\Migrato\Data\Record
+	 */
+	protected function afterRead(Record $record, BaseData $dataClass)
+	{
+		$record->setData($dataClass);
+		if ($dependencies = $record->getDependencies())
+		{
+			$dependencies = $this->restoreDependenciesFromFile($dataClass, $dependencies);
+			$record->setDependencies($dependencies);
+		}
+		if ($references = $record->getReferences())
+		{
+			$references = $this->restoreReferencesFromFile($dataClass, $references);
+			$record->setReferences($references);
+		}
+		if ($runtimes = $record->getRuntimes())
+		{
+			$runtimes = $this->restoreRuntimesFromFile($dataClass, $runtimes);
+			$record->setRuntimes($runtimes);
+			foreach ($runtimes as $name => $runtime)
 			{
-				$dependencies = $this->restoreDependenciesFromFile($dataClass, $dependencies);
-				$data[$i]->setDependencies($dependencies);
-			}
-			if ($references = $data[$i]->getReferences())
-			{
-				$references = $this->restoreReferencesFromFile($dataClass, $references);
-				$data[$i]->setReferences($references);
-			}
-			if ($runtimes = $data[$i]->getRuntimes())
-			{
-				$runtimes = $this->restoreRuntimesFromFile($dataClass, $runtimes);
-				$data[$i]->setRuntimes($runtimes);
-				foreach ($runtimes as $name => $runtime)
+				if ($runtime->getData())
 				{
-					if ($runtime->getData())
+					foreach ($runtime->getFields() as $runtimeFieldName => $runtimeFieldValue)
 					{
-						foreach ($runtime->getFields() as $runtimeFieldName => $runtimeFieldValue)
-						{
-							$data[$i]->setReference('RUNTIME.' . $name, new Link($runtime->getData(), $runtimeFieldName));
-						}
-						foreach ($runtime->getReferences() as $runtimeFieldName => $runtimeFieldValue)
-						{
-							$data[$i]->setReference('RUNTIME.' . $name, new Link($runtime->getData(), $runtimeFieldName));
-							$data[$i]->setReference('RUNTIME.' . $name . $runtimeFieldName, $runtimeFieldValue);
-						}
-						foreach ($runtime->getDependencies() as $runtimeFieldName => $runtimeFieldValue)
-						{
-							$data[$i]->setReference('RUNTIME.' . $name, new Link($runtime->getData(), $runtimeFieldName));
-							$data[$i]->setDependency('RUNTIME.' . $name . $runtimeFieldName, $runtimeFieldValue);
-						}
+						$record->setReference('RUNTIME.' . $name, new Link($runtime->getData(), $runtimeFieldName));
+					}
+					foreach ($runtime->getReferences() as $runtimeFieldName => $runtimeFieldValue)
+					{
+						$record->setReference('RUNTIME.' . $name, new Link($runtime->getData(), $runtimeFieldName));
+						$record->setReference('RUNTIME.' . $name . $runtimeFieldName, $runtimeFieldValue);
+					}
+					foreach ($runtime->getDependencies() as $runtimeFieldName => $runtimeFieldValue)
+					{
+						$record->setReference('RUNTIME.' . $name, new Link($runtime->getData(), $runtimeFieldName));
+						$record->setDependency('RUNTIME.' . $name . $runtimeFieldName, $runtimeFieldValue);
 					}
 				}
 			}
 		}
 
-		return $data;
+		return $record;
 	}
 
 	/**
