@@ -1,4 +1,4 @@
-<? namespace Intervolga\Migrato\Data\Module\Store;
+<? namespace Intervolga\Migrato\Data\Module\Catalog;
 
 use Bitrix\Catalog\StoreTable;
 use Bitrix\Main\Loader;

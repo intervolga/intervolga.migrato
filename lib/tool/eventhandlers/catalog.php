@@ -5,11 +5,11 @@ use Bitrix\Main\Localization\Loc;
 
 Loc::loadMessages(__FILE__);
 
-class Store
+class Catalog
 {
     public static function OnBeforeCatalogStoreAdd(&$arFields)
     {
-        $storesXMLIDs= getStoresPropertyValue("XML_ID");
+        $storesXMLIDs= static::getStoresPropertyValue("XML_ID");
 
         if (in_array($arFields['XML_ID'], $storesXMLIDs)){
             global $APPLICATION;
@@ -30,7 +30,7 @@ class Store
         if (Loader::includeModule('catalog'))
         {
             $arSelectFields = array($property);
-            $store = CCatalogStore::GetList(
+            $store = \CCatalogStore::GetList(
                 array(),
                 array(),
                 false,
