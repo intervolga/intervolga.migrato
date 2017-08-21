@@ -9,6 +9,8 @@ Loc::loadMessages(__FILE__);
 
 class ImportCommand extends BaseCommand
 {
+	protected $wasClosedAtStart = false;
+
 	protected function configure()
 	{
 		$this->setName('import');
@@ -23,6 +25,7 @@ class ImportCommand extends BaseCommand
 
 	public function executeInner()
 	{
+		$this->wasClosedAtStart = $this->isSiteClosed();
 		$this->closeSite();
 		try
 		{
@@ -50,23 +53,38 @@ class ImportCommand extends BaseCommand
 
 	protected function closeSite()
 	{
-		$this->logger->separate();
-		$this->logger->add(
-			Loc::getMessage('INTERVOLGA_MIGRATO.SITE_CLOSED'),
-			0,
-			Logger::TYPE_INFO
-		);
-		Option::set("main", "site_stopped", "Y");
+		if (!$this->wasClosedAtStart)
+		{
+			$this->logger->separate();
+			$this->logger->add(
+				Loc::getMessage('INTERVOLGA_MIGRATO.SITE_CLOSED'),
+				0,
+				Logger::TYPE_INFO
+			);
+			Option::set("main", "site_stopped", "Y");
+		}
 	}
 
 	protected function openSite()
 	{
-		Option::set("main", "site_stopped", "N");
-		$this->logger->separate();
-		$this->logger->add(
-			Loc::getMessage('INTERVOLGA_MIGRATO.SITE_OPENED'),
-			0,
-			Logger::TYPE_INFO
-		);
+		if (!$this->wasClosedAtStart)
+		{
+			Option::set("main", "site_stopped", "N");
+			$this->logger->separate();
+			$this->logger->add(
+				Loc::getMessage('INTERVOLGA_MIGRATO.SITE_OPENED'),
+				0,
+				Logger::TYPE_INFO
+			);
+		}
+	}
+
+	/**
+	 * @return bool
+	 * @throws \Bitrix\Main\ArgumentNullException
+	 */
+	protected function isSiteClosed()
+	{
+		return (Option::get("main", "site_stopped") == 'Y');
 	}
 }
