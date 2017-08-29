@@ -118,10 +118,11 @@ class Code
 
 	/**
 	 * @param Directory $dir
+	 * @param bool $accessFilter
 	 * @return array
 	 * @throws \Bitrix\Main\IO\FileNotFoundException
 	 */
-	protected static function getFilesRecursive(Directory $dir)
+	protected static function getFilesRecursive(Directory $dir, $accessFilter = false)
 	{
 		$result = array();
 		if ($dir->isExists())
@@ -132,16 +133,67 @@ class Code
 				{
 					if (static::isCodeFile($fileSystemEntry))
 					{
-						$result[] = $fileSystemEntry;
+						if (!$accessFilter || static::isAccessFile($fileSystemEntry))
+						{
+							$result[] = $fileSystemEntry;
+						}
 					}
 				}
 				if ($fileSystemEntry instanceof Directory)
 				{
-					$result = array_merge($result, static::getFilesRecursive($fileSystemEntry));
+					$result = array_merge($result, static::getFilesRecursive($fileSystemEntry, $accessFilter));
 				}
 			}
 		}
 
 		return $result;
+	}
+
+	/**
+	 * @return \Bitrix\Main\IO\File[]
+	 * @throws \Bitrix\Main\IO\FileNotFoundException
+	 */
+	public static function getAccessFiles()
+	{
+		$root = Application::getDocumentRoot();
+		$dir = new Directory($root);
+		/**
+		 * @var \Bitrix\Main\IO\File[] $check
+		 */
+		$check = array();
+		foreach ($dir->getChildren() as $fileSystemEntry)
+		{
+			if (!static::isServiceEntry($fileSystemEntry))
+			{
+				if ($fileSystemEntry instanceof File)
+				{
+					if (static::isAccessFile($fileSystemEntry))
+					{
+						$check[] = $fileSystemEntry;
+					}
+				}
+				if ($fileSystemEntry instanceof Directory)
+				{
+					$check = array_merge($check, static::getFilesRecursive($fileSystemEntry, true));
+				}
+			}
+		}
+
+		$bitrixAccess = new File($root . '/bitrix/.access.php');
+		if ($bitrixAccess->isExists())
+		{
+			$check[] = $bitrixAccess;
+		}
+
+		return $check;
+	}
+
+	/**
+	 * @param \Bitrix\Main\IO\File $file
+	 * @return bool
+	 */
+	protected static function isAccessFile(File $file)
+	{
+		return ($file->getName() == '.access.php');
 	}
 }
