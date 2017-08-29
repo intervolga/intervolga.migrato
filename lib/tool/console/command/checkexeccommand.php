@@ -1,6 +1,7 @@
 <?php
 namespace Intervolga\Migrato\Tool\Console\Command;
 
+use Bitrix\Main\Application;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Code;
 use Intervolga\Migrato\Tool\Console\TableHelper;
@@ -13,6 +14,7 @@ class CheckExecCommand extends BaseCommand
 	 * @var \Intervolga\Migrato\Tool\Console\TableHelper table
 	 */
 	protected $table = null;
+
 	protected function configure()
 	{
 		$this->setName('checkexec');
@@ -51,8 +53,9 @@ class CheckExecCommand extends BaseCommand
 	{
 		foreach ($error['PARAMS_VALUES'] as $param => $value)
 		{
+			$root = Application::getDocumentRoot();
 			$row = array(
-				'FILE' => $error['FILE'],
+				'FILE' => str_replace($root, '', $error['FILE']),
 				'LINE' => $error['LINE'],
 				'COMPONENT' => $error['COMPONENT'],
 				'PARAM' => $param,
@@ -80,7 +83,6 @@ class CheckExecCommand extends BaseCommand
 			{
 				foreach ($data as $component)
 				{
-					\Bitrix\Main\Diag\Debug::writeToFile(__FILE__ . ':' . __LINE__ . "\n(" . date('Y-m-d H:i:s').")\n" . print_r($component, TRUE) . "\n\n", '', 'log/__debug.log');
 					if ($errors = static::getComponentProbablyNumericIds($component['DATA']))
 					{
 						$result[] = array(
@@ -103,44 +105,44 @@ class CheckExecCommand extends BaseCommand
 	 */
 	protected function getComponentProbablyNumericIds(array $component)
 	{
-		$foo = array();
+		$result = array();
 		foreach ($component['PARAMS'] as $param => $value)
 		{
-			if (static::isProbablyIdNumeric($param, $value))
+			if ($values = static::getProbablyIdNumeric($param, $value))
 			{
-				$foo[$param] = $value;
+				$result[$param] = $values;
 			}
 		}
 
-		return $foo;
+		return $result;
 	}
 
 	/**
 	 * @param string $param
 	 * @param mixed $value
-	 * @return bool
+	 * @return int[]
 	 */
-	protected function isProbablyIdNumeric($param, $value)
+	protected function getProbablyIdNumeric($param, $value)
 	{
 		if (static::isProbablyIdParam($param))
 		{
 			if (is_array($value))
 			{
-				if (static::containsNumericValue($value))
+				if ($numericValues = static::getNumericValues($value))
 				{
-					return true;
+					return $numericValues;
 				}
 			}
 			else
 			{
 				if (static::isNumericValue($value))
 				{
-					return true;
+					return array($value);
 				}
 			}
 		}
 
-		return false;
+		return array();
 	}
 
 	/**
@@ -166,19 +168,20 @@ class CheckExecCommand extends BaseCommand
 
 	/**
 	 * @param array $values
-	 * @return bool
+	 * @return array
 	 */
-	protected function containsNumericValue(array $values)
+	protected function getNumericValues(array $values)
 	{
+		$result = array();
 		foreach ($values as $value)
 		{
 			if (static::isNumericValue($value))
 			{
-				return true;
+				$result[] = $value;
 			}
 		}
 
-		return false;
+		return $result;
 	}
 
 	/**
