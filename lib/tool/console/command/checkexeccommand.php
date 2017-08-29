@@ -83,7 +83,6 @@ class CheckExecCommand extends BaseCommand
 			{
 				foreach ($data as $component)
 				{
-					\Bitrix\Main\Diag\Debug::writeToFile(__FILE__ . ':' . __LINE__ . "\n(" . date('Y-m-d H:i:s').")\n" . print_r($component['DATA'], TRUE) . "\n\n", '', 'log/__debug.log');
 					if ($errors = static::getComponentProbablyNumericIds($component['DATA']))
 					{
 						$result[] = array(
