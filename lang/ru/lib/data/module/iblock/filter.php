@@ -1,0 +1,3 @@
+<?
+$MESS['INTERVOLGA_MIGRATO.IBLOCK_PROPERTY_FILTER_ADD_ERROR'] = 'Ошибка при создании фильтра';
+$MESS['INTERVOLGA_MIGRATO.IBLOCK_PROPERTY_FILTER_DELETE_ERROR'] = 'Ошибка при удалении фильтра';
