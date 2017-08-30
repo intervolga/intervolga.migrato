@@ -10,6 +10,8 @@ Loc::loadMessages(__FILE__);
 
 class Filter extends BaseData
 {
+	const XML_ID_SEPARATOR = '.';
+
 	public function __construct()
 	{
 		Loader::includeModule("iblock");
@@ -38,7 +40,7 @@ class Filter extends BaseData
 		while($arFilter = $dbRes->Fetch())
 		{
 			$record = new Record($this);
-			$record->setId(\Intervolga\Migrato\Data\RecordId::createNumericId($arFilter['ID']));
+			$record->setId($this->createId( $arFilter['ID'] ));
 			$record->setXmlId($this->getXmlIdByObject($arFilter));
 			$record->setFieldRaw('NAME', $arFilter['NAME']);
 			$record->setFieldRaw('FILTER_ID', $arFilter['FILTER_ID']);
@@ -64,13 +66,14 @@ class Filter extends BaseData
 		$fields['FIELDS'] = unserialize($fields['FIELDS']);
 		$id = \CAdminFilter::Add($fields);
 		if($id)
-			return $id;
+			return $this->createId($id);
 		return new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY_FILTER_ADD_ERROR'));
 	}
 
 	protected function deleteInner($xmlId)
 	{
-		$id = $this->findRecord($xmlId);
+		$RecordId = $this->findRecord($xmlId);
+		$id = $RecordId->getValue();
 		$res = \CAdminFilter::Delete($id);
 		if(!$res)
 			return new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY_FILTER_DELETE_ERROR'));
@@ -86,14 +89,44 @@ class Filter extends BaseData
 		);
 		if ($filter = $dbRes->Fetch())
 		{
-			return md5( $filter["USER_ID"] . $filter["NAME"] . $filter["COMMON"]. $filter['fields'] );
+			$this->getXmlIdByObject($filter);
 		}
 		return "";
 	}
 
-	protected function getXmlIdByObject(array $fields)
+	protected function getXmlIdByObject(array $filter)
 	{
-		$res = md5($fields["USER_ID"] . $fields["NAME"] . $fields["COMMON"] . $fields['fields']);
-		return $res;
+		if($filter['FIELDS'])
+		{
+			$fields = md5($filter['FIELDS']);
+			return ($filter["USER_ID"] . static::XML_ID_SEPARATOR .
+					$filter["FILTER_ID"] . static::XML_ID_SEPARATOR .
+					$filter["COMMON"] . static::XML_ID_SEPARATOR.
+					$fields);
+		}
+		return '';
+	}
+
+	public function findRecord($xmlId)
+	{
+		$id = null;
+		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		$filter = [
+			'USER_ID' => $fields[0],
+			'FILTER_ID' => $fields[1],
+			'COMMON' => $fields[2]
+		];
+		$dbres = \CAdminFilter::getList([],$filter);
+		while ($filterRes = $dbres->Fetch())
+		{
+			if(md5($filterRes['FIELDS']) == $fields[3])
+				return $this->createId($filterRes['ID']);
+		}
+		return null;
+	}
+
+	public function createId($id)
+	{
+		return \Intervolga\Migrato\Data\RecordId::createNumericId($id);
 	}
 }
