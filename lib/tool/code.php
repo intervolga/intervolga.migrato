@@ -4,6 +4,7 @@ namespace Intervolga\Migrato\Tool;
 use Bitrix\Main\Application;
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
+use Bitrix\Main\IO\FileSystemEntry;
 
 class Code
 {
@@ -80,7 +81,7 @@ class Code
 	 * @param \Bitrix\Main\IO\FileSystemEntry $fileSystemEntry
 	 * @return bool
 	 */
-	protected static function isServiceEntry(\Bitrix\Main\IO\FileSystemEntry $fileSystemEntry)
+	protected static function isServiceEntry(FileSystemEntry $fileSystemEntry)
 	{
 		if ($fileSystemEntry->isFile())
 		{

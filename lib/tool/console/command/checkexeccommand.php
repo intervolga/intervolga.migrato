@@ -2,8 +2,11 @@
 namespace Intervolga\Migrato\Tool\Console\Command;
 
 use Bitrix\Main\Application;
+use Bitrix\Main\IO\File;
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\Code;
+use Intervolga\Migrato\Tool\Console\Logger;
 use Intervolga\Migrato\Tool\Console\TableHelper;
 
 Loc::loadMessages(__FILE__);
@@ -23,92 +26,99 @@ class CheckExecCommand extends BaseCommand
 
 	public function executeInner()
 	{
-		$this->table = new TableHelper();
 		$this->initTable();
-		$errors = static::getComponentErrors();
-		foreach ($errors as $error)
-		{
-			$this->addErrorToTable($error);
-		}
-
+		$this->checkComponents();
+		$this->checkAccessFiles();
 		$this->logger->add($this->table->getOutput());
 	}
 
 	protected function initTable()
 	{
+		$this->table = new TableHelper();
 		$headers = array(
 			'FILE' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_FILE'),
 			'LINE' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_LINE'),
-			'COMPONENT' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_COMPONENT'),
-			'PARAM' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_PARAM'),
+			'OBJECT' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_OBJECT'),
+			'FIELD' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_FIELD'),
 			'VALUE' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_VALUE'),
 		);
 		$this->table->addHeader($headers);
 	}
 
-	/**
-	 * @param array $error
-	 */
-	protected function addErrorToTable(array $error)
+	protected function checkComponents()
 	{
-		foreach ($error['PARAMS_VALUES'] as $param => $value)
+		$check = array_merge(
+			Code::getPublicFiles(),
+			Code::getTemplateFiles()
+		);
+		foreach ($check as $file)
 		{
-			$root = Application::getDocumentRoot();
-			$row = array(
-				'FILE' => str_replace($root, '', $error['FILE']),
-				'LINE' => $error['LINE'],
-				'COMPONENT' => $error['COMPONENT'],
-				'PARAM' => $param,
-				'VALUE' => is_array($value) ? implode(PHP_EOL, $value) : $value,
-			);
-			$this->table->addRow($row);
+			$this->checkFileForComponentsErrors($file);
 		}
 	}
 
 	/**
-	 * @return array
+	 * @param File $file
 	 * @throws \Bitrix\Main\IO\FileNotFoundException
 	 */
-	public function getComponentErrors()
+	protected function checkFileForComponentsErrors(File $file)
 	{
-		$result = array();
-		/**
-		 * @var \Bitrix\Main\IO\File[] $check
-		 */
-		$check = array_merge(Code::getPublicFiles(), Code::getTemplateFiles());
-		foreach ($check as $file)
+		if ($components = \PHPParser::parseScript($file->getContents()))
 		{
-			$data = \PHPParser::parseScript($file->getContents());
-			if ($data)
+			foreach ($components as $component)
 			{
-				foreach ($data as $component)
-				{
-					if ($errors = static::getComponentProbablyNumericIds($component['DATA']))
-					{
-						$result[] = array(
-							'FILE' => $file->getPath(),
-							'LINE' => $component['START'],
-							'COMPONENT' => $component['DATA']['COMPONENT_NAME'],
-							'PARAMS_VALUES' => $errors,
-						);
-					}
-				}
+				$this->checkComponentForErrors($component, $file);
 			}
 		}
+	}
 
-		return $result;
+	/**
+	 * @param array $component
+	 * @param File $file
+	 */
+	protected function checkComponentForErrors(array $component, File $file)
+	{
+		if ($errors = $this->getComponentErrors($component['DATA']))
+		{
+			$this->logComponentErrors($errors, $component, $file);
+		}
+	}
+
+	/**
+	 * @param array $errors
+	 * @param array $component
+	 * @param File $file
+	 */
+	protected function logComponentErrors(array $errors, array $component, File $file)
+	{
+		foreach ($errors as $param => $values)
+		{
+			foreach ($values as $value)
+			{
+				$this->addTableRow(array(
+					'FILE' => $file->getPath(),
+					'LINE' => $component['START'],
+					'OBJECT' => $component['DATA']['COMPONENT_NAME'],
+					'FIELD' => $param,
+					'VALUE' => $value,
+
+					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.CHECK_COMPONENT'),
+					'COMMENT' => 'INTERVOLGA_MIGRATO.CHECK_COMPONENT_COMMENT',
+				));
+			}
+		}
 	}
 
 	/**
 	 * @param array $component
 	 * @return array
 	 */
-	protected function getComponentProbablyNumericIds(array $component)
+	protected function getComponentErrors(array $component)
 	{
 		$result = array();
 		foreach ($component['PARAMS'] as $param => $value)
 		{
-			if ($values = static::getProbablyIdNumeric($param, $value))
+			if ($values = $this->getProbablyIdNumeric($param, $value))
 			{
 				$result[$param] = $values;
 			}
@@ -124,18 +134,18 @@ class CheckExecCommand extends BaseCommand
 	 */
 	protected function getProbablyIdNumeric($param, $value)
 	{
-		if (static::isProbablyIdParam($param))
+		if ($this->isProbablyIdParam($param))
 		{
 			if (is_array($value))
 			{
-				if ($numericValues = static::getNumericValues($value))
+				if ($numericValues = $this->getNumericValues($value))
 				{
 					return $numericValues;
 				}
 			}
 			else
 			{
-				if (static::isNumericValue($value))
+				if ($this->isNumericValue($value))
 				{
 					return array($value);
 				}
@@ -175,7 +185,7 @@ class CheckExecCommand extends BaseCommand
 		$result = array();
 		foreach ($values as $value)
 		{
-			if (static::isNumericValue($value))
+			if ($this->isNumericValue($value))
 			{
 				$result[] = $value;
 			}
@@ -188,8 +198,97 @@ class CheckExecCommand extends BaseCommand
 	 * @param mixed $value
 	 * @return bool
 	 */
-	protected static function isNumericValue($value)
+	protected function isNumericValue($value)
 	{
 		return is_numeric($value);
+	}
+
+	/**
+	 * @return array
+	 * @throws \Bitrix\Main\IO\FileNotFoundException
+	 */
+	protected function checkAccessFiles()
+	{
+		$result = array();
+		foreach (Code::getAccessFiles() as $file)
+		{
+			foreach ($this->parsePermissions($file) as $line => $parsedLine)
+			{
+				if ($this->isNumericValue($parsedLine['GROUP']))
+				{
+					$this->addTableRow(array(
+						'FILE' => $file->getPath(),
+						'LINE' => $line,
+						'OBJECT' => '$PERM',
+						'FIELD' => $parsedLine['RESOURCE'],
+						'VALUE' => $parsedLine['GROUP'],
+
+						'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.CHECK_ACCESS_FILE'),
+						'COMMENT' => 'INTERVOLGA_MIGRATO.CHECK_ACCESS_FILE_COMMENT',
+					));
+				}
+			}
+		}
+		return $result;
+	}
+
+	/**
+	 * @param File $file
+	 * @return array
+	 * @throws \Bitrix\Main\IO\FileNotFoundException
+	 */
+	protected function parsePermissions(File $file)
+	{
+		$result = array();
+		$re = '/^\$PERM\[(?<RESOURCE>.*?)\]\[(?<GROUP>.*?)\]/m';
+		$lines = explode(PHP_EOL, $file->getContents());
+		foreach ($lines as $i => $line)
+		{
+			$matches = array();
+			preg_match($re, $line, $matches);
+			if ($matches)
+			{
+				$group = str_replace('"', '', $matches['GROUP']);
+				$resource = str_replace('"', '', $matches['RESOURCE']);
+				$line = ($i + 1);
+				$result[$line] = array(
+					'RESOURCE' => $resource,
+					'GROUP' => $group,
+				);
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * @param array $row
+	 */
+	protected function addTableRow(array $row)
+	{
+		$root = Application::getDocumentRoot();
+		$row['FILE'] = str_replace($root, '', $row['FILE']);
+
+		$this->logger->addDb(
+			array(
+				'OPERATION' => $row['OPERATION'],
+				'ID' => RecordId::createStringId($row['OBJECT']),
+				'COMMENT' => Loc::getMessage(
+					$row['COMMENT'],
+					array(
+						'#FILE#' => $row['FILE'],
+						'#LINE#' => $row['LINE'],
+						'#FIELD#' => $row['FIELD'],
+						'#VALUE#' => $row['VALUE'],
+					)
+				),
+			),
+			Logger::TYPE_FAIL
+		);
+
+		unset($row['COMMENT']);
+		unset($row['OPERATION']);
+
+		$this->table->addRow($row);
 	}
 }
