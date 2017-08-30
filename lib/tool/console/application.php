@@ -13,6 +13,7 @@ use Intervolga\Migrato\Tool\Console\Command\ImportOptionCommand;
 use Intervolga\Migrato\Tool\Console\Command\ImportXmlIdCommand;
 use Intervolga\Migrato\Tool\Console\Command\LogCommand;
 use Intervolga\Migrato\Tool\Console\Command\ReIndexCommand;
+use Intervolga\Migrato\Tool\Console\Command\ReIndexFacetCommand;
 use Intervolga\Migrato\Tool\Console\Command\UnitTestCommand;
 use Intervolga\Migrato\Tool\Console\Command\UnusedConfigCommand;
 use Intervolga\Migrato\Tool\Console\Command\UrlRewriteCommand;
@@ -54,6 +55,7 @@ class Application extends \Symfony\Component\Console\Application
 			new ImportCommand(),
 			new ImportXmlIdCommand(),
 			new LogCommand(),
+			new ReIndexFacetCommand(),
 		));
 	}
 

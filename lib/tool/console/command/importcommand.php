@@ -1,6 +1,7 @@
 <?namespace Intervolga\Migrato\Tool\Console\Command;
 
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Tool\Console\Command\ReIndexFacetCommand;
 use Symfony\Component\Console\Input\InputOption;
 
 Loc::loadMessages(__FILE__);
@@ -21,6 +22,7 @@ class ImportCommand extends BaseCommand
 
 	public function executeInner()
 	{
+		ReIndexFacetCommand::saveActiveFacet();
 		$this->runSubcommand('importdata');
 		$this->runSubcommand('importoptions');
 		if (!$this->input->getOption('quick'))
@@ -28,6 +30,7 @@ class ImportCommand extends BaseCommand
 			$this->runSubcommand('clearcache');
 			$this->runSubcommand('urlrewrite');
 			$this->runSubcommand('reindex');
+			$this->runSubcommand('reindexfacet');
 		}
 	}
 }
