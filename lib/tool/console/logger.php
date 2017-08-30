@@ -184,7 +184,14 @@ class Logger
 	protected function getDbMessage(array $dbLog)
 	{
 		$replaces = $this->prepareDbMessageReplaces($dbLog);
-		return Loc::getMessage('INTERVOLGA_MIGRATO.STATISTIC_DETAIL', $replaces);
+		if (!strlen($dbLog['ENTITY_NAME']))
+		{
+			return Loc::getMessage('INTERVOLGA_MIGRATO.STATISTIC_DETAIL_NO_MODULE', $replaces);
+		}
+		else
+		{
+			return Loc::getMessage('INTERVOLGA_MIGRATO.STATISTIC_DETAIL', $replaces);
+		}
 	}
 
 	/**
@@ -373,16 +380,27 @@ class Logger
 		while ($logs = $getList->fetch())
 		{
 			$this->shortSummaryStart();
-			$this->add(
-				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.STATISTIC_SHORT',
+			$message = Loc::getMessage(
+				'INTERVOLGA_MIGRATO.STATISTIC_SHORT',
+				array(
+					'#MODULE#' => self::getModuleMessage($logs['MODULE_NAME']),
+					'#ENTITY#' => self::getEntityMessage($logs['ENTITY_NAME']),
+					'#OPERATION#' => $logs['OPERATION'],
+					'#COUNT#' => $logs['CNT'],
+				)
+			);
+			if (!strlen($logs['ENTITY_NAME']))
+			{
+				$message = Loc::getMessage(
+					'INTERVOLGA_MIGRATO.STATISTIC_SHORT_NO_MODULE',
 					array(
-						'#MODULE#' => self::getModuleMessage($logs['MODULE_NAME']),
-						'#ENTITY#' => self::getEntityMessage($logs['ENTITY_NAME']),
 						'#OPERATION#' => $logs['OPERATION'],
 						'#COUNT#' => $logs['CNT'],
 					)
-				),
+				);
+			}
+			$this->add(
+				$message,
 				static::LEVEL_SHORT,
 				$logs['RESULT']
 			);
