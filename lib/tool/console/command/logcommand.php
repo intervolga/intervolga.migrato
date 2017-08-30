@@ -68,10 +68,15 @@ class LogCommand extends BaseCommand
 			$comment = explode(PHP_EOL . PHP_EOL, $log['COMMENT']);
 			$log['COMMENT'] = $comment[0];
 		}
+		$data = '';
+		if (strlen($log['MODULE_NAME']) && strlen($log['ENTITY_NAME']))
+		{
+			$data = $log['MODULE_NAME'] . ':' . $log['ENTITY_NAME'];
+		}
 
 		$row = array(
 			'TIME' => $log['TIMESTAMP_X'],
-			'DATA' => $log['MODULE_NAME'] . ':' . $log['ENTITY_NAME'],
+			'DATA' => $data,
 			'XML_ID' => $log['DATA_XML_ID'],
 			'ID' => $this->getId($log),
 			'OPERATION' => $log['OPERATION'],
