@@ -157,16 +157,19 @@ class TableHelper
 	public function getOutput()
 	{
 		$output = '';
-		$output .= $this->getSeparatorOutput();
-		$output .= $this->getHeaderOutput($this->table[0]);
-		$output .= $this->getSeparatorOutput();
-		$output .= $this->getRowsOutput();
-		if (count($this->table) > static::MIN_LINES_SHOW_HEADER)
+		if (count($this->table) > 1)
 		{
 			$output .= $this->getSeparatorOutput();
 			$output .= $this->getHeaderOutput($this->table[0]);
+			$output .= $this->getSeparatorOutput();
+			$output .= $this->getRowsOutput();
+			if (count($this->table) > static::MIN_LINES_SHOW_HEADER)
+			{
+				$output .= $this->getSeparatorOutput();
+				$output .= $this->getHeaderOutput($this->table[0]);
+			}
+			$output .= $this->getSeparatorOutput();
 		}
-		$output .= $this->getSeparatorOutput();
 		return $output;
 	}
 }
