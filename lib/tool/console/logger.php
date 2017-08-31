@@ -184,13 +184,13 @@ class Logger
 	protected function getDbMessage(array $dbLog)
 	{
 		$replaces = $this->prepareDbMessageReplaces($dbLog);
-		if (!strlen($dbLog['ENTITY_NAME']))
+		if (strlen($replaces['#MODULE#']) && strlen($replaces['#ENTITY#']))
 		{
-			return Loc::getMessage('INTERVOLGA_MIGRATO.STATISTIC_DETAIL_NO_MODULE', $replaces);
+			return Loc::getMessage('INTERVOLGA_MIGRATO.STATISTIC_DETAIL', $replaces);
 		}
 		else
 		{
-			return Loc::getMessage('INTERVOLGA_MIGRATO.STATISTIC_DETAIL', $replaces);
+			return Loc::getMessage('INTERVOLGA_MIGRATO.STATISTIC_DETAIL_NO_MODULE', $replaces);
 		}
 	}
 
