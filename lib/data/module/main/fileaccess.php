@@ -4,8 +4,11 @@ use Bitrix\Main\Application;
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
 use Bitrix\Main\IO\FileSystemEntry;
+use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
 
-class FileAccess
+class FileAccess extends BaseData
 {
 	/**
 	 * @return \Bitrix\Main\IO\File[]
@@ -188,10 +191,7 @@ class FileAccess
 		return $check;
 	}
 
-	/**
-	 * @return bool
-	 */
-	public static function getList()
+	public function getList(array $filter = array())
 	{
 		$result = array();
 		$files = static::getAccessFiles();
@@ -209,6 +209,7 @@ class FileAccess
 				{
 					foreach ($permissions as $group => $permission)
 					{
+						// prepare
 						// dir
 						$replaced = str_replace($root, '', $fileObj->getDirectory()->getPath());
 						$dir = $replaced ? : '/';
@@ -217,23 +218,32 @@ class FileAccess
 						$groupIdObject = Group::getInstance()->createId($group);
 						$groupXmlId = Group::getInstance()->getXmlId($groupIdObject);
 
-						// generate xml id
-						$compName = $dir . $path . $groupXmlId;
-						$xmlId = md5($compName);
-
-						$result[] = array(
-							'XML_ID' => $xmlId,
+						// record
+						$record = new Record($this);
+						$complexId = RecordId::createComplexId(array(
+							$dir, $path, $groupXmlId,
+						));
+						$record->setId($this->createId($complexId));
+						$record->setXmlId($this->getXmlId($complexId));
+						$record->addFieldsRaw(array(
 							'DIR' => $dir,
 							'PATH' => $path,
 							'GROUP' => $groupXmlId,
 							'PERMISSION' => $permission,
-						);
+						));
+
+						$result[] = $record;
 					}
 				}
 			}
 		}
 
 		return $result;
+	}
+
+	public function getXmlId($id)
+	{
+		return md5(serialize($id->getValue()));
 	}
 
 	/**
