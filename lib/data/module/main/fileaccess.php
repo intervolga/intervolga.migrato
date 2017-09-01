@@ -136,40 +136,63 @@ class FileAccess extends BaseData
 
 				include $fileObj->getPath();
 
-				foreach ($PERM as $path => $permissions)
+				$fileAccess = new FileAccess();
+				$result[] = $fileAccess->getResult(
+					$PERM,
+					$fileObj->getDirectory()->getPath(),
+					$root
+				);
+			}
+		}
+
+		return $result;
+	}
+
+	protected function getResult($perm, $fullPath, $root)
+	{
+		$result = array();
+
+		if ($perm)
+		{
+			foreach ($perm as $path => $permissions)
+			{
+				foreach ($permissions as $group => $permission)
 				{
-					foreach ($permissions as $group => $permission)
-					{
-						// prepare
-						// dir
-						$replaced = str_replace($root, '', $fileObj->getDirectory()->getPath());
-						$dir = $replaced ? : '/';
+					$replaced = str_replace($root, '', $fullPath);
+					$dir = $replaced ? : '/';
 
-						// group xml id
-						$groupIdObject = Group::getInstance()->createId($group);
-						$groupXmlId = Group::getInstance()->getXmlId($groupIdObject);
+					$groupIdObject = Group::getInstance()->createId($group);
+					$groupXmlId = Group::getInstance()->getXmlId($groupIdObject);
 
-						// record
-						$record = new Record($this);
-						$complexId = RecordId::createComplexId(array(
-							$dir, $path, $groupXmlId,
-						));
-						$record->setId($this->createId($complexId));
-						$record->setXmlId($this->getXmlId($complexId));
-						$record->addFieldsRaw(array(
-							'DIR' => $dir,
-							'PATH' => $path,
-							'GROUP' => $groupXmlId,
-							'PERMISSION' => $permission,
-						));
-
-						$result[] = $record;
-					}
+					$result[] = $this->record($dir, $path, $groupXmlId, $permission);
 				}
 			}
 		}
 
 		return $result;
+	}
+
+	protected function record($dir, $path, $groupXmlId, $permission)
+	{
+		if ($dir && $path && $permission)
+		{
+			$record = new Record($this);
+			$complexId = RecordId::createComplexId(array(
+				$dir, $path, $groupXmlId,
+			));
+			$record->setId($this->createId($complexId));
+			$record->setXmlId($this->getXmlId($complexId));
+			$record->addFieldsRaw(array(
+				'DIR' => $dir,
+				'PATH' => $path,
+				'GROUP' => $groupXmlId,
+				'PERMISSION' => $permission,
+			));
+
+			return $record;
+		}
+
+		return false;
 	}
 
 	public function getXmlId($id)
