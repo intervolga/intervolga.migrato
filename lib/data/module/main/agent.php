@@ -33,10 +33,9 @@ class Agent extends BaseData
 			));
 			$record->setId(static::createId($agent['ID']));
 
-			\Bitrix\Main\Diag\Debug::writeToFile(__FILE__ . ':' . __LINE__ . "\n(" . date('Y-m-d H:i:s').")\n" . print_r($record->info(), TRUE) . "\n\n", '', 'log/__debug.log');
-
 			$result[] = $record;
 		}
+
 
 		return $result;
 	}
@@ -44,6 +43,13 @@ class Agent extends BaseData
 	public function getXmlId($id)
 	{
 		$agent = \CAgent::getById($id->getValue())->fetch();
+		$agent['NAME'] = strtolower($agent['NAME']);
+		$agent['NAME'] = str_replace('();', '', $agent['NAME']);
+		$agent['NAME'] = str_replace(');', '', $agent['NAME']);
+		$agent['NAME'] = str_replace('(', '_', $agent['NAME']);
+		$agent['NAME'] = str_replace('::', '-', $agent['NAME']);
+		$agent['NAME'] = preg_replace('/[^a-z0-9-_]/', '_', $agent['NAME']);
+		$agent['NAME'] = ltrim($agent['NAME'], '_');
 		return $agent['NAME'];
 	}
 }
