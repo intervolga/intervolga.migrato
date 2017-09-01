@@ -36,7 +36,6 @@ class Agent extends BaseData
 			$result[] = $record;
 		}
 
-
 		return $result;
 	}
 
@@ -51,5 +50,32 @@ class Agent extends BaseData
 		$agent['NAME'] = preg_replace('/[^a-z0-9-_]/', '_', $agent['NAME']);
 		$agent['NAME'] = ltrim($agent['NAME'], '_');
 		return $agent['NAME'];
+	}
+
+	public function update(Record $record)
+	{
+		$id = $this->findRecord($record->getXmlId());
+		if ($id)
+		{
+			$agent = $record->getFieldsRaw();
+			$updateRes = \CAgent::update($id->getValue(), $agent);
+			if (!$updateRes)
+			{
+				global $APPLICATION;
+				if ($exception = $APPLICATION->getException())
+				{
+					throw new \Exception($exception->getString());
+				}
+				else
+				{
+					throw new \Exception('Unknown update error');
+				}
+			}
+			return $id;
+		}
+		else
+		{
+			throw new \Exception('Agent not found');
+		}
 	}
 }
