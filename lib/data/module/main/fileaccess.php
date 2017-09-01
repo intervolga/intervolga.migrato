@@ -188,6 +188,51 @@ class FileAccess
 		return $check;
 	}
 
+	public static function getList()
+	{
+		$result = array();
+		$files = static::getAccessFiles();
+
+		if ($files && is_array($files))
+		{
+			foreach ($files as $fileObj)
+			{
+				$PERM = array();
+
+				include $fileObj->getPath();
+
+				foreach ($PERM as $path => $permissions)
+				{
+					foreach ($permissions as $group => $permission)
+					{
+						$result[] = array(
+							'DIR' => $fileObj->getDirectory()->getPath(),
+							'PATH' => $path,
+							'GROUP' => $group,
+							'PERMISSION' => $permission,
+						);
+					}
+				}
+			}
+
+			$root = Application::getDocumentRoot();
+			foreach ($result as $idItem => $item)
+			{
+				$replaced = str_replace($root, '', $item['DIR']);
+				$result[$idItem]['DIR'] = $replaced ? : '/';
+
+				$groupIdObject = Group::getInstance()->createId($item['GROUP']);
+				$groupXmlId = Group::getInstance()->getXmlId($groupIdObject);
+				if ($groupXmlId)
+				{
+					$result[$idItem]['GROUP'] = $groupXmlId;
+				}
+			}
+		}
+
+		return $result;
+	}
+
 	/**
 	 * @param \Bitrix\Main\IO\File $file
 	 * @return bool
