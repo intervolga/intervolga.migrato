@@ -188,10 +188,14 @@ class FileAccess
 		return $check;
 	}
 
+	/**
+	 * @return bool
+	 */
 	public static function getList()
 	{
 		$result = array();
 		$files = static::getAccessFiles();
+		$root = Application::getDocumentRoot();
 
 		if ($files && is_array($files))
 		{
@@ -205,27 +209,26 @@ class FileAccess
 				{
 					foreach ($permissions as $group => $permission)
 					{
+						// dir
+						$replaced = str_replace($root, '', $fileObj->getDirectory()->getPath());
+						$dir = $replaced ? : '/';
+
+						// group xml id
+						$groupIdObject = Group::getInstance()->createId($group);
+						$groupXmlId = Group::getInstance()->getXmlId($groupIdObject);
+
+						// generate xml id
+						$compName = $dir . $path . $groupXmlId;
+						$xmlId = md5($compName);
+
 						$result[] = array(
-							'DIR' => $fileObj->getDirectory()->getPath(),
+							'XML_ID' => $xmlId,
+							'DIR' => $dir,
 							'PATH' => $path,
-							'GROUP' => $group,
+							'GROUP' => $groupXmlId,
 							'PERMISSION' => $permission,
 						);
 					}
-				}
-			}
-
-			$root = Application::getDocumentRoot();
-			foreach ($result as $idItem => $item)
-			{
-				$replaced = str_replace($root, '', $item['DIR']);
-				$result[$idItem]['DIR'] = $replaced ? : '/';
-
-				$groupIdObject = Group::getInstance()->createId($item['GROUP']);
-				$groupXmlId = Group::getInstance()->getXmlId($groupIdObject);
-				if ($groupXmlId)
-				{
-					$result[$idItem]['GROUP'] = $groupXmlId;
 				}
 			}
 		}
