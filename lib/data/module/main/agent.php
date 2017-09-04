@@ -68,14 +68,20 @@ class Agent extends BaseData
 	public function getXmlId($id)
 	{
 		$agent = \CAgent::getById($id->getValue())->fetch();
-		$agent['NAME'] = strtolower($agent['NAME']);
-		$agent['NAME'] = str_replace('();', '', $agent['NAME']);
-		$agent['NAME'] = str_replace(');', '', $agent['NAME']);
-		$agent['NAME'] = str_replace('(', '_', $agent['NAME']);
-		$agent['NAME'] = str_replace('::', '-', $agent['NAME']);
-		$agent['NAME'] = preg_replace('/[^a-z0-9-_]/', '_', $agent['NAME']);
-		$agent['NAME'] = ltrim($agent['NAME'], '_');
-		return $agent['NAME'];
+		$xmlId = $agent['NAME'];
+		$xmlId = strtolower($xmlId);
+		$xmlId = str_replace('();', '', $xmlId);
+		$xmlId = str_replace(');', '', $xmlId);
+		$xmlId = str_replace('(', '_', $xmlId);
+		$xmlId = str_replace('::', '-', $xmlId);
+		$xmlId = preg_replace('/[^a-z0-9-_]/', '_', $xmlId);
+		$xmlId = ltrim($xmlId, '_');
+
+		if ($agent['USER_ID'] == static::ADMIN_USER_ID)
+		{
+			$xmlId = '__admin_' . $xmlId;
+		}
+		return $xmlId;
 	}
 
 	protected function createInner(Record $record)
