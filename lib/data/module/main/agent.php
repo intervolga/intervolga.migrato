@@ -10,6 +10,8 @@ Loc::loadMessages(__FILE__);
 class Agent extends BaseData
 {
 	const ADMIN_USER_ID = 1;
+	const DELAY_NEW_AGENT = 300;
+
 	/**
 	 * @param string[] $filter
 	 *
@@ -87,6 +89,7 @@ class Agent extends BaseData
 	protected function createInner(Record $record)
 	{
 		$agent = $this->recordToArray($record);
+		$agent['NEXT_EXEC'] = convertTimeStamp(time() + static::DELAY_NEW_AGENT, 'FULL');
 		$addRes = \CAgent::add($agent);
 		if ($addRes)
 		{
@@ -124,11 +127,11 @@ class Agent extends BaseData
 	protected function recordToArray(Record $record)
 	{
 		$agent = $record->getFieldsRaw();
-		if ($agent['AGENT'] == 'Y')
+		if ($agent['ADMIN'] == 'Y')
 		{
 			$agent['USER_ID'] = static::ADMIN_USER_ID;
 		}
-		unset($agent['USER_ID']);
+		unset($agent['ADMIN']);
 
 		return $agent;
 	}
@@ -162,6 +165,7 @@ class Agent extends BaseData
 		if ($exception = $APPLICATION->getException())
 		{
 			$message = $exception->getString();
+			$message = strip_tags($message);
 		}
 		else
 		{
