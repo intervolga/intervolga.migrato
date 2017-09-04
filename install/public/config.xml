@@ -96,6 +96,9 @@
         <entity>
             <name>pricetype</name>
         </entity>
+        <entity>
+            <name>store</name>
+        </entity>
     </module>
     <module>
         <name>sale</name>
