@@ -20,6 +20,27 @@ class Agent extends BaseData
 		$agentsGetList = \CAgent::getList();
 		while ($agent = $agentsGetList->fetch())
 		{
+			if ($record = $this->arrayToRecord($agent))
+			{
+				$result[] = $record;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * @param array $agent
+	 * @return Record|null
+	 */
+	protected function arrayToRecord(array $agent)
+	{
+		if ($agent['USER_ID'])
+		{
+			return null;
+		}
+		else
+		{
 			$record = new Record($this);
 			$id = static::createId($agent['ID']);
 			$record->setId($id);
@@ -33,10 +54,8 @@ class Agent extends BaseData
 			));
 			$record->setId(static::createId($agent['ID']));
 
-			$result[] = $record;
+			return $record;
 		}
-
-		return $result;
 	}
 
 	public function getXmlId($id)
