@@ -9,6 +9,7 @@ Loc::loadMessages(__FILE__);
 
 class Agent extends BaseData
 {
+	const ADMIN_USER_ID = 1;
 	/**
 	 * @param string[] $filter
 	 *
@@ -35,26 +36,32 @@ class Agent extends BaseData
 	 */
 	protected function arrayToRecord(array $agent)
 	{
-		if ($agent['USER_ID'])
-		{
-			return null;
-		}
-		else
+		if (!$agent['USER_ID'] || $agent['USER_ID'] == static::ADMIN_USER_ID)
 		{
 			$record = new Record($this);
 			$id = static::createId($agent['ID']);
 			$record->setId($id);
 			$record->setXmlId($this->getXmlId($id));
+			$admin = 'N';
+			if ($agent['USER_ID'] == static::ADMIN_USER_ID)
+			{
+				$admin = 'Y';
+			}
 			$record->addFieldsRaw(array(
 				'MODULE_ID' => $agent['MODULE_ID'],
 				'NAME' => $agent['NAME'],
 				'ACTIVE' => $agent['ACTIVE'],
 				'AGENT_INTERVAL' => $agent['AGENT_INTERVAL'],
 				'IS_PERIOD' => $agent['IS_PERIOD'],
+				'ADMIN' => $admin,
 			));
 			$record->setId(static::createId($agent['ID']));
 
 			return $record;
+		}
+		else
+		{
+			return null;
 		}
 	}
 
@@ -73,7 +80,7 @@ class Agent extends BaseData
 
 	protected function createInner(Record $record)
 	{
-		$agent = $record->getFieldsRaw();
+		$agent = $this->recordToArray($record);
 		$addRes = \CAgent::add($agent);
 		if ($addRes)
 		{
@@ -90,7 +97,7 @@ class Agent extends BaseData
 		$id = $this->findRecord($record->getXmlId());
 		if ($id)
 		{
-			$agent = $record->getFieldsRaw();
+			$agent = $this->recordToArray($record);
 			$updateRes = \CAgent::update($id->getValue(), $agent);
 			if (!$updateRes)
 			{
@@ -102,6 +109,22 @@ class Agent extends BaseData
 		{
 			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.AGENT_NOT_FOUND'));
 		}
+	}
+
+	/**
+	 * @param Record $record
+	 * @return \string[]
+	 */
+	protected function recordToArray(Record $record)
+	{
+		$agent = $record->getFieldsRaw();
+		if ($agent['AGENT'] == 'Y')
+		{
+			$agent['USER_ID'] = static::ADMIN_USER_ID;
+		}
+		unset($agent['USER_ID']);
+
+		return $agent;
 	}
 
 	protected function deleteInner($xmlId)
