@@ -178,6 +178,14 @@ abstract class BaseData
 	/**
 	 * @return string
 	 */
+	public function getEntityNameLoc()
+	{
+		return $this->getEntityName();
+	}
+
+	/**
+	 * @return string
+	 */
 	public function getFilesSubdir()
 	{
 		return "/";

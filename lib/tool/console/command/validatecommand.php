@@ -233,7 +233,7 @@ class ValidateCommand extends BaseCommand
 					'INTERVOLGA_MIGRTO.REFERENCED_MODULE_NOT_INSTALLED',
 					array(
 						'#MODULE#' => $this->logger->getModuleMessage($data->getModule()),
-						'#ENTITY#' => $this->logger->getEntityMessage($data->getEntityName()),
+						'#ENTITY#' => $this->logger->getEntityMessage($data->getModule(), $data->getEntityName()),
 					)
 				),
 				Logger::LEVEL_NORMAL,

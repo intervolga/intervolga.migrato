@@ -28,7 +28,7 @@ class UnusedConfigCommand extends BaseCommand
 						'INTERVOLGA_MIGRATO.DATA_NOT_USED',
 						array(
 							'#MODULE#' => $this->logger->getModuleMessage($conf->getModule()),
-							'#ENTITY#' => $this->logger->getEntityMessage($conf->getEntityName()),
+							'#ENTITY#' => $this->logger->getEntityMessage($conf->getModule(), $conf->getEntityName()),
 						)
 					),
 					0,

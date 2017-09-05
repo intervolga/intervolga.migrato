@@ -4,7 +4,9 @@ use Bitrix\Main\Application;
 use Bitrix\Main\Entity\ExpressionField;
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Console\Command\BaseCommand;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -200,7 +202,7 @@ class Logger
 			'#OPERATION#' => $dbLog['OPERATION'],
 			'#IDS#' => '',
 			'#MODULE#' => $this->getModuleMessage($dbLog['MODULE_NAME']),
-			'#ENTITY#' => $this->getEntityMessage($dbLog['ENTITY_NAME']),
+			'#ENTITY#' => $this->getEntityMessage($dbLog['MODULE_NAME'], $dbLog['ENTITY_NAME']),
 		);
 		$data = null;
 		if ($dbLog['RECORD'])
@@ -228,7 +230,7 @@ class Logger
 		if ($data)
 		{
 			$replaces['#MODULE#'] = $this->getModuleMessage($data->getModule());
-			$replaces['#ENTITY#'] = $this->getEntityMessage($data->getEntityName());
+			$replaces['#ENTITY#'] = $this->getEntityMessage($data->getModule(), $data->getEntityName());
 		}
 		return $replaces;
 	}
@@ -409,14 +411,24 @@ class Logger
 	}
 
 	/**
+	 * @param string $module
 	 * @param string $entityName
 	 *
 	 * @return string
 	 */
-	public function getEntityMessage($entityName)
+	public function getEntityMessage($module, $entityName)
 	{
-		$langName = Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_' . strtoupper($entityName));
-		return $langName ? $langName : $entityName;
+		$dataClass = Config::getData($module, $entityName);
+		if ($dataClass instanceof BaseData)
+		{
+			$langName = $dataClass->getEntityNameLoc();
+		}
+		else
+		{
+			$langName = $entityName;
+		}
+
+		return $langName;
 	}
 
 	public function addShortSummary()
@@ -429,8 +441,8 @@ class Logger
 				Loc::getMessage(
 					'INTERVOLGA_MIGRATO.STATISTIC_SHORT',
 					array(
-						'#MODULE#' => self::getModuleMessage($logs['MODULE_NAME']),
-						'#ENTITY#' => self::getEntityMessage($logs['ENTITY_NAME']),
+						'#MODULE#' => $this->getModuleMessage($logs['MODULE_NAME']),
+						'#ENTITY#' => $this->getEntityMessage($logs['MODULE_NAME'], $logs['ENTITY_NAME']),
 						'#OPERATION#' => $logs['OPERATION'],
 						'#COUNT#' => $logs['CNT'],
 					)

@@ -249,7 +249,7 @@ class Config
 	 *
 	 * @return \Intervolga\Migrato\Data\BaseData|null|static
 	 */
-	protected static function getData($module, $entity)
+	public static function getData($module, $entity)
 	{
 		$extEntities = static::getExtEntities();
 		$name = "\\Intervolga\\Migrato\\Data\\Module\\" . $module . "\\" . $entity;
