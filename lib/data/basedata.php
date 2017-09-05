@@ -28,15 +28,12 @@ abstract class BaseData
 	{
 		if (!static::$instances[get_called_class()])
 		{
-			static::$instances[get_called_class()] = new static();
+			$dataClass = new static();
+			static::$instances[get_called_class()] = $dataClass;
+			$dataClass->configure();
 		}
 
 		return static::$instances[get_called_class()];
-	}
-
-	protected function __construct()
-	{
-		$this->configure();
 	}
 
 	protected function configure()
