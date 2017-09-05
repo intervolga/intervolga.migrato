@@ -208,4 +208,70 @@ class FileAccess extends BaseData
 	{
 		return ($file->getName() == '.access.php');
 	}
+
+	public function createInner(Record $record)
+	{
+		$fields = $record->getFields();
+		static::managerFile($fields);
+
+		return RecordId::createComplexId(array(
+			$fields['DIR']->getValue(),
+			$fields['PATH']->getValue(),
+			$fields['GROUP']->getValue(),
+		));
+	}
+
+	public function update(Record $record)
+	{
+		$fields = $record->getFields();
+		static::managerFile($fields);
+
+		return RecordId::createComplexId(array(
+			$fields['DIR']->getValue(),
+			$fields['PATH']->getValue(),
+			$fields['GROUP']->getValue(),
+		));
+	}
+
+	protected function managerFile($fields)
+	{
+		$path = $fields['PATH']->getValue();
+		$groupXmlId = $fields['GROUP']->getValue();
+		$group = $groupXmlId ? Group::getInstance()->getPublicId($groupXmlId) : '*';
+		$perm = $fields['PERMISSION']->getValue();
+		$documentRoot = Application::getDocumentRoot() . $fields['DIR']->getValue() . '/.access.php';
+		$PERM = array();
+
+		if (File::isFileExists($documentRoot))
+		{
+			include $documentRoot;
+
+			if (!$PERM[$path][$group] || $PERM[$path][$group] !== $perm)
+			{
+				$PERM[$path][$group] = $perm;
+				static::writeToFile($PERM, $documentRoot);
+			}
+		}
+		else
+		{
+			$PERM[$path][$group] = $perm;
+			static::writeToFile($PERM, $documentRoot);
+		}
+	}
+
+	protected function writeToFile($perm, $documentRoot)
+	{
+		$str = "<?\n";
+		foreach ($perm as $permPath => $permissions)
+		{
+			foreach ($permissions as $permGroup => $permission)
+			{
+				$str .= "\$PERM[\"" . EscapePHPString($permPath) . "\"][\"" .
+					EscapePHPString($permGroup) . "\"]=\"" . EscapePHPString($permission) . "\";\n";
+			}
+		}
+		$str .= "?>";
+
+		File::putFileContents($documentRoot, $str);
+	}
 }
