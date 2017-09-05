@@ -1,4 +1,5 @@
-<? namespace Intervolga\Migrato\Data\Module\Catalog;
+<?php
+namespace Intervolga\Migrato\Data\Module\Catalog;
 
 use Bitrix\Catalog\GroupAccessTable;
 use Bitrix\Catalog\GroupLangTable;
@@ -16,6 +17,11 @@ Loc::loadMessages(__FILE__);
 
 class PriceType extends BaseData
 {
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.CATALOG_PRICE_TYPE');
+	}
+
 	public function __construct()
 	{
 		Loader::includeModule("catalog");
