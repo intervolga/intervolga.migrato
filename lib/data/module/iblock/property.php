@@ -19,7 +19,7 @@ class Property extends BaseData
 {
 	const XML_ID_SEPARATOR = '.';
 
-	public function __construct()
+	protected function configure()
 	{
 		Loader::includeModule("iblock");
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\PropertyTable");

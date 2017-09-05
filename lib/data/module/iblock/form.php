@@ -24,6 +24,11 @@ class Form extends BaseData
 	const XML_ELEMENT = 'el';
 	const XML_SECTION = 'sec';
 
+	protected function configure()
+	{
+		$this->setVirtualXmlId(true);
+	}
+
 	public function getEntityNameLoc()
 	{
 		return Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FORM');
@@ -368,15 +373,5 @@ class Form extends BaseData
 				throw new \Exception(ExceptionText::getUnknown());
 			}
 		}
-	}
-
-	public function generateXmlId()
-	{
-		return '';
-	}
-
-	public function setXmlId($id, $xmlId)
-	{
-
 	}
 }

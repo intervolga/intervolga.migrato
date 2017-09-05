@@ -19,15 +19,15 @@ Loc::loadMessages(__FILE__);
 
 class PriceType extends BaseData
 {
-	public function getEntityNameLoc()
-	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.CATALOG_PRICE_TYPE');
-	}
-
-	public function __construct()
+	protected function configure()
 	{
 		Loader::includeModule("catalog");
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Catalog\\GroupTable");
+	}
+
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.CATALOG_PRICE_TYPE');
 	}
 
 	public function getDependencies()

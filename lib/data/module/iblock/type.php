@@ -19,7 +19,7 @@ Loc::loadMessages(__FILE__);
 
 class Type extends BaseData
 {
-	protected function __construct()
+	protected function configure()
 	{
 		Loader::includeModule("iblock");
 	}

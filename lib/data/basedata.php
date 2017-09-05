@@ -15,6 +15,8 @@ abstract class BaseData
 	protected $cache = array();
 	protected $isAllCached = false;
 
+	protected $virtualXmlId = false;
+
 	/**
 	 * @return static
 	 */
@@ -26,6 +28,15 @@ abstract class BaseData
 		}
 
 		return static::$instances[get_called_class()];
+	}
+
+	protected function __construct()
+	{
+		$this->configure();
+	}
+
+	protected function configure()
+	{
 	}
 
 	/**
@@ -392,5 +403,21 @@ abstract class BaseData
 	public function getValidationXmlId($xmlId)
 	{
 		return $xmlId;
+	}
+
+	/**
+	 * @param bool $virtualXmlId
+	 */
+	public function setVirtualXmlId($virtualXmlId)
+	{
+		$this->virtualXmlId = (bool) $virtualXmlId;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isVirtualXmlId()
+	{
+		return $this->virtualXmlId;
 	}
 }

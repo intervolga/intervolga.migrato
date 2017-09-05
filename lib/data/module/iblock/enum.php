@@ -16,7 +16,7 @@ class Enum extends BaseData
 {
 	const XML_ID_SEPARATOR = '.';
 
-	public function __construct()
+	protected function configure()
 	{
 		Loader::includeModule("iblock");
 	}
