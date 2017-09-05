@@ -1,6 +1,8 @@
 <?namespace Intervolga\Migrato\Tool\Console;
 
+use Bitrix\Main\Application;
 use Bitrix\Main\Entity\ExpressionField;
+use Bitrix\Main\IO\Directory;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\Console\Command\BaseCommand;
@@ -343,8 +345,12 @@ class Logger
 	 */
 	public function getModuleMessage($moduleName)
 	{
-		$name = Loc::getMessage('INTERVOLGA_MIGRATO.MODULE_' . strtoupper($moduleName));
-		if (!$name)
+		$modulesNames = $this->getModulesMessages();
+		if (array_key_exists($moduleName, $modulesNames))
+		{
+			$name = $modulesNames[$moduleName];
+		}
+		else
 		{
 			$name = Loc::getMessage(
 				'INTERVOLGA_MIGRATO.MODULE_UNKNOWN',
@@ -354,6 +360,52 @@ class Logger
 			);
 		}
 		return $name;
+	}
+
+	/**
+	 * @return string[]
+	 */
+	protected function getModulesMessages()
+	{
+		static $result = array();
+		if (!$result)
+		{
+			$result = $this->loadModulesMessages();
+		}
+
+		return $result;
+	}
+
+	/**
+	 * @return string[]
+	 * @throws \Bitrix\Main\IO\FileNotFoundException
+	 */
+	protected function loadModulesMessages()
+	{
+		$result = array();
+		$folders = array(
+			'/local/modules/',
+			'/bitrix/modules/',
+		);
+		foreach ($folders as $folder)
+		{
+			$modulesDirectory = new Directory(Application::getDocumentRoot() . $folder);
+			if ($modulesDirectory->isExists())
+			{
+				foreach ($modulesDirectory->getChildren() as $moduleDirectory)
+				{
+					if ($moduleDirectory instanceof Directory)
+					{
+						if ($info = \CModule::createModuleObject($moduleDirectory->getName()))
+						{
+							$result[$info->MODULE_ID] = $info->MODULE_NAME;
+						}
+					}
+				}
+			}
+		}
+
+		return $result;
 	}
 
 	/**
