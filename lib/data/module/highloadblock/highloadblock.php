@@ -1,12 +1,21 @@
-<? namespace Intervolga\Migrato\Data\Module\Highloadblock;
+<?php
+namespace Intervolga\Migrato\Data\Module\Highloadblock;
 
 use Bitrix\Highloadblock\HighloadBlockTable;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 
+Loc::loadMessages(__FILE__);
+
 class HighloadBlock extends BaseData
 {
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.HIGHLOADBLOCK_HIGHLOADBLOCK');
+	}
+
 	public function getList(array $filter = array())
 	{
 		$hlBlocks = HighloadBlockTable::getList();
