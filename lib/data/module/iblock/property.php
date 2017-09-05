@@ -25,6 +25,9 @@ class Property extends BaseData
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\PropertyTable");
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY'));
 		$this->setFilesSubdir('/type/iblock/');
+		$this->setDependencies(array(
+			'IBLOCK_ID' => new Link(Iblock::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -140,13 +143,6 @@ class Property extends BaseData
 		}
 
 		return $result;
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			"IBLOCK_ID" => new Link(Iblock::getInstance()),
-		);
 	}
 
 	public function getReferences()

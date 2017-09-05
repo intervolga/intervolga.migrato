@@ -19,6 +19,14 @@ class Event extends BaseData
 		$this->setVirtualXmlId(true);
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_EVENT'));
 		$this->setFilesSubdir('/eventtype/');
+		$this->setDependencies(array(
+			'EVENT_NAME' => new Link(
+				EventType::getInstance(),
+				'',
+				'EVENT_NAME'
+			),
+			'SITE' => new Link(Site::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -128,18 +136,6 @@ class Event extends BaseData
 		}
 
 		return "";
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			'EVENT_NAME' => new Link(
-				EventType::getInstance(),
-				"",
-				"EVENT_NAME"
-			),
-			'SITE' => new Link(Site::getInstance()),
-		);
 	}
 
 	public function update(Record $record)

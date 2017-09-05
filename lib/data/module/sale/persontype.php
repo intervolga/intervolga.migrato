@@ -20,6 +20,9 @@ class PersonType extends BaseData
 	{
 		$this->setVirtualXmlId(true);
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.SALE_PERSON_TYPE'));
+		$this->setDependencies(array(
+			'SITE' => new Link(Site::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -79,13 +82,6 @@ class PersonType extends BaseData
 		)));
 
 		return BaseXmlIdProvider::formatXmlId($md5);
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			'SITE' => new Link(Site::getInstance()),
-		);
 	}
 
 	public function update(Record $record)

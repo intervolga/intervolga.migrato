@@ -19,13 +19,9 @@ class PropertyVariant extends BaseData
 		$this->setVirtualXmlId(true);
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.SALE_PROPERTY_VARIANT'));
 		$this->setFilesSubdir('/persontype/propertygroup/property/');
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			"ORDER_PROPS_ID" => new Link(Property::getInstance()),
-		);
+		$this->setDependencies(array(
+			'ORDER_PROPS_ID' => new Link(Property::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())

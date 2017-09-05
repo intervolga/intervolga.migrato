@@ -17,6 +17,9 @@ class Language extends BaseData
 	{
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_LANGUAGE'));
 		$this->setFilesSubdir('/loc/');
+		$this->setDependencies(array(
+			'CULTURE' => new Link(Culture::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -47,13 +50,6 @@ class Language extends BaseData
 		}
 
 		return $result;
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			'CULTURE' => new Link(Culture::getInstance()),
-		);
 	}
 
 	public function createId($id)

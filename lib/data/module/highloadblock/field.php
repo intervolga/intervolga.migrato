@@ -15,6 +15,9 @@ class Field extends BaseUserField
 	{
 		parent::configure();
 		$this->setFilesSubdir('/highloadblock/');
+		$this->setDependencies(array(
+			'HLBLOCK_ID' => new Link(HighloadBlock::getInstance()),
+		));
 	}
 
 	/**
@@ -25,13 +28,6 @@ class Field extends BaseUserField
 	public function isCurrentUserField($userFieldEntityId)
 	{
 		return preg_match("/^HLBLOCK_[0-9]+$/", $userFieldEntityId);
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			"HLBLOCK_ID" => new Link(HighloadBlock::getInstance()),
-		);
 	}
 
 	/**

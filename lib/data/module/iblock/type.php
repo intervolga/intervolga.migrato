@@ -23,6 +23,9 @@ class Type extends BaseData
 	{
 		Loader::includeModule("iblock");
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_TYPE'));
+		$this->setDependencies(array(
+			'LANGUAGE' => new Link(Language::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -48,13 +51,6 @@ class Type extends BaseData
 		}
 
 		return $result;
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			'LANGUAGE' => new Link(Language::getInstance()),
-		);
 	}
 
 	/**

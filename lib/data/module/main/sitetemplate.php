@@ -19,6 +19,9 @@ class SiteTemplate extends BaseData
 		$this->setVirtualXmlId(true);
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_SITE_TEMPLATE'));
 		$this->setFilesSubdir('/site/');
+		$this->setDependencies(array(
+			'SITE' => new Link(Site::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -50,13 +53,6 @@ class SiteTemplate extends BaseData
 			}
 		}
 		return $result;
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			'SITE' => new Link(Site::getInstance()),
-		);
 	}
 
 	public function getXmlId($id)

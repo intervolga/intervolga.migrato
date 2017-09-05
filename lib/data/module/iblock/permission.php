@@ -18,6 +18,10 @@ class Permission extends BaseData
 		$this->setVirtualXmlId(true);
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PERMISSION'));
 		$this->setFilesSubdir('/type/iblock/');
+		$this->setDependencies(array(
+			'GROUP_ID' => new Link(Group::getInstance()),
+			'IBLOCK_ID' => new Link(Iblock::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -72,14 +76,6 @@ class Permission extends BaseData
 		}
 
 		return $result;
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			"GROUP_ID" => new Link(Group::getInstance()),
-			"IBLOCK_ID" => new Link(Iblock::getInstance()),
-		);
 	}
 
 	public function update(Record $record)

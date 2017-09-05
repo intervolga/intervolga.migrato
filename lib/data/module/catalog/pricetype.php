@@ -24,14 +24,10 @@ class PriceType extends BaseData
 		Loader::includeModule("catalog");
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Catalog\\GroupTable");
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.CATALOG_PRICE_TYPE'));
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			"USER_GROUP" => new Link(Group::getInstance()),
-			"USER_GROUP_BUY" => new Link(Group::getInstance()),
-		);
+		$this->setDependencies(array(
+			'USER_GROUP' => new Link(Group::getInstance()),
+			'USER_GROUP_BUY' => new Link(Group::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())

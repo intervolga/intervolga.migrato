@@ -10,6 +10,9 @@ class FieldEnum extends BaseUserFieldEnum
 	{
 		parent::configure();
 		$this->setFilesSubdir('/field/');
+		$this->setDependencies(array(
+			'USER_FIELD_ID' => new Link(Field::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -26,12 +29,5 @@ class FieldEnum extends BaseUserFieldEnum
 			}
 		}
 		return empty($filter["USER_FIELD_ID"]) ? array() : parent::getList($filter);
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			"USER_FIELD_ID" => new Link(Field::getInstance()),
-		);
 	}
 }

@@ -16,6 +16,10 @@ class Site extends BaseData
 	protected function configure()
 	{
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_SITE'));
+		$this->setDependencies(array(
+			'LANGUAGE' => new Link(Language::getInstance()),
+			'CULTURE' => new Link(Culture::getInstance()),
+		));
 	}
 
 	/**
@@ -64,14 +68,6 @@ class Site extends BaseData
 		}
 
 		return $result;
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			'LANGUAGE' => new Link(Language::getInstance()),
-			'CULTURE' => new Link(Culture::getInstance()),
-		);
 	}
 
 	public function createId($id)

@@ -24,6 +24,10 @@ class Iblock extends BaseData
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\IblockTable");
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_IBLOCK'));
 		$this->setFilesSubdir('/type/');
+		$this->setDependencies(array(
+			'IBLOCK_TYPE_ID' => new Link(Type::getInstance()),
+			'SITE' => new Link(Site::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -228,14 +232,6 @@ class Iblock extends BaseData
 		}
 		$dependency->setValues($sites);
 		$record->setDependency('SITE', $dependency);
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			"IBLOCK_TYPE_ID" => new Link(Type::getInstance()),
-			'SITE' => new Link(Site::getInstance()),
-		);
 	}
 
 	public function update(Record $record)

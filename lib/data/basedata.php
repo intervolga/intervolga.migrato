@@ -18,6 +18,8 @@ abstract class BaseData
 	protected $virtualXmlId = false;
 	protected $entityNameLoc;
 	protected $filesSubdir;
+	protected $dependencies = array();
+	protected $references = array();
 
 	/**
 	 * @return static
@@ -247,11 +249,19 @@ abstract class BaseData
 	}
 
 	/**
+	 * @param \Intervolga\Migrato\Data\Link[] $dependencies
+	 */
+	protected function setDependencies(array $dependencies)
+	{
+		$this->dependencies = $dependencies;
+	}
+
+	/**
 	 * @return \Intervolga\Migrato\Data\Link[]
 	 */
 	public function getDependencies()
 	{
-		return array();
+		return $this->dependencies;
 	}
 
 	/**
@@ -267,11 +277,19 @@ abstract class BaseData
 	}
 
 	/**
+	 * @param \Intervolga\Migrato\Data\Link[] $references
+	 */
+	protected function setReferences(array $references)
+	{
+		$this->references = $references;
+	}
+
+	/**
 	 * @return \Intervolga\Migrato\Data\Link[]
 	 */
 	public function getReferences()
 	{
-		return array();
+		return $this->references;
 	}
 
 	/**

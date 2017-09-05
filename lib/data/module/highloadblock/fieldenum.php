@@ -10,6 +10,9 @@ class FieldEnum extends BaseUserFieldEnum
 	{
 		parent::configure();
 		$this->setFilesSubdir('/highloadblock/field/');
+		$this->setDependencies(array(
+			'USER_FIELD_ID' => new Link(Field::getInstance()),
+		));
 	}
 
 	/**
@@ -31,12 +34,5 @@ class FieldEnum extends BaseUserFieldEnum
 			}
 		}
 		return empty($filter["USER_FIELD_ID"]) ? array() : parent::getList($filter);
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			"USER_FIELD_ID" => new Link(Field::getInstance()),
-		);
 	}
 }

@@ -21,6 +21,9 @@ class Enum extends BaseData
 		Loader::includeModule('iblock');
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ENUM'));
 		$this->setFilesSubdir('/type/iblock/property/');
+		$this->setDependencies(array(
+			'PROPERTY_ID' => new Link(Property::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -49,13 +52,6 @@ class Enum extends BaseData
 		}
 
 		return $result;
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			"PROPERTY_ID" => new Link(Property::getInstance()),
-		);
 	}
 
 	public function update(Record $record)

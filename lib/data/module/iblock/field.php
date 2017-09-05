@@ -16,6 +16,9 @@ class Field extends BaseUserField
 	{
 		parent::configure();
 		$this->setFilesSubdir('/type/iblock/section/');
+		$this->setDependencies(array(
+			'IBLOCK_ID' => new Link(Iblock::getInstance()),
+		));
 	}
 
 	/**
@@ -26,13 +29,6 @@ class Field extends BaseUserField
 	public function isCurrentUserField($userFieldEntityId)
 	{
 		return preg_match("/^IBLOCK_[0-9]+_SECTION$/", $userFieldEntityId);
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			"IBLOCK_ID" => new Link(Iblock::getInstance()),
-		);
 	}
 
 	/**
