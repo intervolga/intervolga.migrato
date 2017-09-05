@@ -17,3 +17,4 @@ $MESS['INTERVOLGA_MIGRATO.ERROR'] = '<fail>При выполнении кома�
 $MESS['INTERVOLGA_MIGRATO.ERROR_MESSAGE_CODE'] = '<fail>#MESSAGE# (Код ошибки: #CODE#)</fail>';
 $MESS['INTERVOLGA_MIGRATO.BACKTRACE'] = '<info>Стек вызова:</info>';
 $MESS['INTERVOLGA_MIGRATO.MODULE_UNKNOWN'] = 'Модуль #MODULE#';
+$MESS['INTERVOLGA_MIGRATO.OPTIONS'] = 'Настройки модуля';

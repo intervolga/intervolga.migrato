@@ -426,7 +426,14 @@ class Logger
 		}
 		else
 		{
-			$langName = $entityName;
+			if ($entityName == 'option')
+			{
+				$langName = Loc::getMessage('INTERVOLGA_MIGRATO.OPTIONS');
+			}
+			else
+			{
+				$langName = $entityName;
+			}
 		}
 
 		return $langName;
