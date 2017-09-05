@@ -15,6 +15,7 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.ph
 
 @set_time_limit(0);
 
+Loc::setCurrentLang('ru');
 Loc::loadMessages(__FILE__);
 if (!Loader::includeModule("intervolga.migrato"))
 {
