@@ -1,4 +1,5 @@
-<?namespace Intervolga\Migrato\Tool\Console;
+<?php
+namespace Intervolga\Migrato\Tool\Console;
 
 use Bitrix\Main\Application;
 use Bitrix\Main\Entity\ExpressionField;
@@ -465,6 +466,8 @@ class Logger
 			),
 			'order' => array(
 				'STEP_NUMBER' => 'ASC',
+				'MODULE_NAME' => 'ASC',
+				'ENTITY_NAME' => 'ASC',
 			),
 			'select' => array(
 				'MODULE_NAME',
