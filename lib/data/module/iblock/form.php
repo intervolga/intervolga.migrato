@@ -6,6 +6,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Bitrix\Iblock\PropertyTable;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -304,7 +305,7 @@ class Form extends BaseData
 
 		if (!$isUpdated)
 		{
-			throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_NOT_UPDATED');
+			throw new \Exception(ExceptionText::getUnknown());
 		}
 	}
 
@@ -337,17 +338,17 @@ class Form extends BaseData
 				}
 				else
 				{
-					throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_NOT_CREATED');
+					throw new \Exception(ExceptionText::getUnknown());
 				}
 			}
 			else
 			{
-				throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_NOT_CREATED');
+				throw new \Exception(ExceptionText::getUnknown());
 			}
 		}
 		else
 		{
-			throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_NOT_CREATED');
+			throw new \Exception(ExceptionText::getUnknown());
 		}
 	}
 
@@ -363,7 +364,7 @@ class Form extends BaseData
 		{
 			if (!\CUserOptions::deleteOption($fields['CATEGORY'], $fields['NAME'], $fields['COMMON'] == 'Y', $fields['USER_ID']))
 			{
-				throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_DELETE_ERROR');
+				throw new \Exception(ExceptionText::getUnknown());
 			}
 		}
 	}

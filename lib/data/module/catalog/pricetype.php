@@ -11,6 +11,7 @@ use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Module\Main\Group;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\Value;
+use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
@@ -145,8 +146,7 @@ class PriceType extends BaseData
 		$updateResult = $object->update($id, $update);
 		if (!$updateResult)
 		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->getException()->getString());
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
@@ -158,8 +158,7 @@ class PriceType extends BaseData
 		$id = $object->add($add);
 		if (!$id)
 		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->getException()->getString());
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 		else
 		{
@@ -175,7 +174,7 @@ class PriceType extends BaseData
 			$object = new \CCatalogGroup();
 			if (!$object->delete($id->getValue()))
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
+				throw new \Exception(ExceptionText::getFromApplication());
 			}
 		}
 	}

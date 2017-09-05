@@ -6,6 +6,7 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
@@ -87,13 +88,13 @@ class PropertyVariant extends BaseData
 	{
 		$create = $this->recordToArray($record);
 		$addResult = OrderPropsVariantTable::add($create);
-		if ($addResult)
+		if ($addResult->isSuccess())
 		{
 			return $this->createId($addResult->getId());
 		}
 		else
 		{
-			throw new \Exception(implode(", ", $addResult->getErrorMessages()));
+			throw new \Exception(ExceptionText::getFromResult($addResult));
 		}
 	}
 
@@ -118,9 +119,9 @@ class PropertyVariant extends BaseData
 	{
 		$array = $this->recordToArray($record);
 		$updateResult = OrderPropsVariantTable::update($record->getId()->getValue(), $array);
-		if (!$updateResult)
+		if (!$updateResult->isSuccess())
 		{
-			throw new \Exception(implode("<br>", $updateResult->getErrorMessages()));
+			throw new \Exception(ExceptionText::getFromResult($updateResult));
 		}
 	}
 
@@ -129,9 +130,10 @@ class PropertyVariant extends BaseData
 		$id = $this->findRecord($xmlId);
 		if ($id)
 		{
-			if (!OrderPropsVariantTable::delete($id->getValue()))
+			$result = OrderPropsVariantTable::delete($id->getValue());
+			if (!$result->isSuccess())
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
+				throw new \Exception(ExceptionText::getFromResult($result));
 			}
 		}
 	}

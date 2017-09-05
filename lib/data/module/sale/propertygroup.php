@@ -6,6 +6,7 @@ use Bitrix\Sale\Internals\OrderPropsGroupTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
@@ -90,8 +91,7 @@ class PropertyGroup extends BaseData
 		$updateResult = $object->update($record->getId()->getValue(), $update);
 		if (!$updateResult)
 		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->getException()->getString());
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
@@ -127,8 +127,7 @@ class PropertyGroup extends BaseData
 		}
 		else
 		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->getException()->getString());
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
@@ -141,8 +140,7 @@ class PropertyGroup extends BaseData
 			$result = $object->delete($id->getValue());
 			if (!$result)
 			{
-				global $APPLICATION;
-				throw new \Exception($APPLICATION->getException()->getString());
+				throw new \Exception(ExceptionText::getFromApplication());
 			}
 		}
 	}

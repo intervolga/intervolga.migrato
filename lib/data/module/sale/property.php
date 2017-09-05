@@ -7,6 +7,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\Value;
+use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
@@ -128,7 +129,7 @@ class Property extends BaseData
 		$updateResult = OrderPropsTable::update($record->getId()->getValue(), $array);
 		if ($updateResult->getErrorMessages())
 		{
-			throw new \Exception(implode("<br>", $updateResult->getErrorMessages()));
+			throw new \Exception(ExceptionText::getFromResult($updateResult));
 		}
 	}
 
@@ -167,7 +168,7 @@ class Property extends BaseData
 		}
 		else
 		{
-			throw new \Exception(implode("<br>", $addResult->getErrorMessages()));
+			throw new \Exception(ExceptionText::getFromResult($addResult));
 		}
 	}
 
@@ -176,9 +177,10 @@ class Property extends BaseData
 		$id = $this->findRecord($xmlId);
 		if ($id)
 		{
-			if (!OrderPropsTable::delete($id->getValue()))
+			$result = OrderPropsTable::delete($id->getValue());
+			if (!$result->isSuccess())
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
+				throw new \Exception(ExceptionText::getFromResult($result));
 			}
 		}
 	}

@@ -8,6 +8,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -73,10 +74,10 @@ class Enum extends BaseData
 		{
 			$fields["PROPERTY_ID"] = $propertyId->getValue();
 			$enumObject = new \CIBlockPropertyEnum();
-			$isUpdated = $enumObject->Update($record->getId()->getValue(), $fields);
+			$isUpdated = $enumObject->update($record->getId()->getValue(), $fields);
 			if (!$isUpdated)
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY_ENUM_UNKNOWN_ERROR'));
+				throw new \Exception(ExceptionText::getUnknown());
 			}
 		}
 	}
@@ -97,7 +98,7 @@ class Enum extends BaseData
 			}
 			else
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY_ENUM_UNKNOWN_ERROR'));
+				throw new \Exception(ExceptionText::getUnknown());
 			}
 		}
 		else
@@ -112,9 +113,9 @@ class Enum extends BaseData
 	{
 		if ($id = $this->findRecord($xmlId))
 		{
-			if (!\CIBlockPropertyEnum::Delete($id->getValue()))
+			if (!\CIBlockPropertyEnum::delete($id->getValue()))
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY_ENUM_UNKNOWN_ERROR'));
+				throw new \Exception(ExceptionText::getUnknown());
 			}
 		}
 	}
@@ -128,7 +129,7 @@ class Enum extends BaseData
 		$isUpdated = \CIBlockPropertyEnum::update($id->getValue(), $arFields);
 		if (!$isUpdated)
 		{
-			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY_ENUM_UNKNOWN_ERROR'));
+			throw new \Exception(ExceptionText::getUnknown());
 		}
 	}
 

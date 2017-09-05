@@ -13,6 +13,7 @@ use Bitrix\Main\Localization\LanguageTable;
 use Intervolga\Migrato\Data\Value;
 use Bitrix\Iblock\TypeLanguageTable;
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -135,7 +136,7 @@ class Type extends BaseData
 		$isUpdated = $typeObject->update($record->getId()->getValue(), $fields);
 		if (!$isUpdated)
 		{
-			throw new \Exception(trim(strip_tags($typeObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($typeObject));
 		}
 	}
 
@@ -175,7 +176,7 @@ class Type extends BaseData
 		}
 		else
 		{
-			throw new \Exception(trim(strip_tags($typeObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($typeObject));
 		}
 	}
 
@@ -184,9 +185,9 @@ class Type extends BaseData
 		if ($id = $this->findRecord($xmlId))
 		{
 			$this->deleteContentIBlockType($id->getValue());
-			if (!($isDeleted = \CIBlockType::Delete($id->getValue())))
+			if (!($isDeleted = \CIBlockType::delete($id->getValue())))
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_TYPE_DELETE_ERROR'), array('#ID#' => $xmlId));
+				throw new \Exception(ExceptionText::getUnknown());
 			}
 		}
 	}
@@ -198,21 +199,21 @@ class Type extends BaseData
 		));
 		while ($arIblock = $rsIblock->fetch())
 		{
-			if (\CModule::IncludeModule("catalog"))
+			if (Loader::includeModule('catalog'))
 			{
-				\CCatalog::Delete($arIblock["ID"]);
+				\CCatalog::delete($arIblock["ID"]);
 			}
 
 			$rsElement = \CIBlockElement::GetList(array(), array("IBLOCK_ID" => $arIblock["ID"]));
 			while ($arElement = $rsElement->Fetch())
 			{
-				\CIBlockElement::Delete($arElement["ID"]);
+				\CIBlockElement::delete($arElement["ID"]);
 			}
 
 			$rsSection = \CIBlockSection::GetList(array(), array("IBLOCK_ID" => $arIblock["ID"]));
 			while ($arSection = $rsSection->Fetch())
 			{
-				\CIBlockSection::Delete($arSection["ID"]);
+				\CIBlockSection::delete($arSection["ID"]);
 			}
 		}
 	}
@@ -234,7 +235,7 @@ class Type extends BaseData
 			}
 			else
 			{
-				throw new \Exception(implode(', ', $result->getErrorMessages()));
+				throw new \Exception(ExceptionText::getFromResult($result));
 			}
 		}
 	}

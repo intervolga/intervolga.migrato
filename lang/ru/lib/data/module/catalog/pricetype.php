@@ -1,3 +1,2 @@
 <?
 $MESS['INTERVOLGA_MIGRATO.CATALOG_PRICE_TYPE'] = 'Типы цен';
-$MESS['INTERVOLGA_MIGRATO.UNKNOWN_ERROR'] = 'Неизвестная ошибка';

@@ -4,6 +4,7 @@ namespace Intervolga\Migrato\Data\Module\Main;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -50,7 +51,7 @@ class Group extends BaseData
 		$isUpdated = $groupObject->update($record->getId()->getValue(), $record->getFieldsRaw());
 		if (!$isUpdated)
 		{
-			throw new \Exception(trim(strip_tags($groupObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($groupObject));
 		}
 	}
 
@@ -64,7 +65,7 @@ class Group extends BaseData
 		}
 		else
 		{
-			throw new \Exception(trim(strip_tags($groupObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($groupObject));
 		}
 	}
 
@@ -85,7 +86,7 @@ class Group extends BaseData
 			}
 			if (!$groupObject->delete($id->getValue()))
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
+				throw new \Exception(ExceptionText::getFromApplication());
 			}
 		}
 	}
@@ -96,7 +97,7 @@ class Group extends BaseData
 		$isUpdated = $groupObject->update($id->getValue(), array("STRING_ID" => $xmlId));
 		if (!$isUpdated)
 		{
-			throw new \Exception(trim(strip_tags($groupObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($groupObject));
 		}
 	}
 

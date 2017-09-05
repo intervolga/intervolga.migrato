@@ -11,6 +11,7 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Value;
+use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
@@ -267,7 +268,7 @@ class Iblock extends BaseData
 		}
 		else
 		{
-			throw new \Exception(trim(strip_tags($iblockObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($iblockObject));
 		}
 	}
 
@@ -348,7 +349,7 @@ class Iblock extends BaseData
 			}
 			else
 			{
-				throw new \Exception(trim(strip_tags($iblockObject->LAST_ERROR)));
+				throw new \Exception(ExceptionText::getLastError($iblockObject));
 			}
 		}
 		else
@@ -395,7 +396,7 @@ class Iblock extends BaseData
 			$iblockObject = new \CIBlock();
 			if (!$iblockObject->delete($id->getValue()))
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
+				throw new \Exception(ExceptionText::getFromApplication());
 			}
 		}
 	}

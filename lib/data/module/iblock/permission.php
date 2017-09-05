@@ -109,7 +109,7 @@ class Permission extends BaseData
 				$groupId = $groupLinkId->getValue();
 				$arGroups[$groupId] = $record->getField("PERMISSION")->getValue();
 				$iblock = new \CIBlock();
-				$iblock->SetPermission($iblockId, $arGroups);
+				$iblock->setPermission($iblockId, $arGroups);
 
 				return $this->createId(array(
 					"IBLOCK_ID" => $iblockId,
@@ -137,7 +137,7 @@ class Permission extends BaseData
 			{
 				unset($arGroups[$complexId['GROUP_ID']]);
 				$iblock = new \CIBlock();
-				$iblock->SetPermission($complexId["IBLOCK_ID"], $arGroups);
+				$iblock->setPermission($complexId["IBLOCK_ID"], $arGroups);
 			}
 		}
 	}

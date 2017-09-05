@@ -6,6 +6,7 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\Link;
+use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
@@ -160,7 +161,7 @@ class Event extends BaseData
 		$isUpdated = $eventMessageObject->update($record->getId()->getValue(), $fields);
 		if (!$isUpdated)
 		{
-			throw new \Exception(trim(strip_tags($eventMessageObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($eventMessageObject));
 		}
 	}
 
@@ -209,7 +210,7 @@ class Event extends BaseData
 		}
 		else
 		{
-			throw new \Exception(trim(strip_tags($eventMessageObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($eventMessageObject));
 		}
 	}
 
@@ -221,7 +222,7 @@ class Event extends BaseData
 			$eventMessageObject = new \CEventMessage();
 			if (!$eventMessageObject->delete($id->getValue()))
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.EVENT_UNKNOWN_ERROR'));
+				throw new \Exception(ExceptionText::getFromApplication());
 			}
 		}
 	}

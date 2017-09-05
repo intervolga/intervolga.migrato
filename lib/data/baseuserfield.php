@@ -5,6 +5,7 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\Module\Highloadblock\Field;
 use Intervolga\Migrato\Data\Module\Highloadblock\HighloadBlock;
 use Intervolga\Migrato\Data\Module\Iblock\Iblock;
+use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
@@ -388,8 +389,7 @@ abstract class BaseUserField extends BaseData
 				$isUpdated = $fieldObject->Update($existId, $xmlFields);
 				if (!$isUpdated)
 				{
-					global $APPLICATION;
-					throw new \Exception($APPLICATION->getException()->getString());
+					throw new \Exception(ExceptionText::getFromApplication());
 				}
 			}
 		}
@@ -412,8 +412,7 @@ abstract class BaseUserField extends BaseData
 		}
 		else
 		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->getException()->getString());
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
@@ -424,15 +423,7 @@ abstract class BaseUserField extends BaseData
 			$fieldObject = new \CUserTypeEntity();
 			if (!$fieldObject->delete($id->getValue()))
 			{
-				global $APPLICATION;
-				if ($APPLICATION->GetException())
-				{
-					throw new \Exception($APPLICATION->getException()->getString());
-				}
-				else
-				{
-					throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
-				}
+				throw new \Exception(ExceptionText::getFromApplication());
 			}
 		}
 	}

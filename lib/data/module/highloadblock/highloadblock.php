@@ -6,6 +6,7 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -60,7 +61,7 @@ class HighloadBlock extends BaseData
 		$result = HighloadBlockTable::update($record->getId()->getValue(), $record->getFieldsRaw());
 		if (!$result->isSuccess())
 		{
-			throw new \Exception(trim(strip_tags($result->getErrorMessages())));
+			throw new \Exception(ExceptionText::getFromResult($result));
 		}
 	}
 
@@ -75,7 +76,7 @@ class HighloadBlock extends BaseData
 		}
 		else
 		{
-			throw new \Exception(trim(strip_tags($result->getErrorMessages())));
+			throw new \Exception(ExceptionText::getFromResult($result));
 		}
 	}
 
@@ -86,7 +87,7 @@ class HighloadBlock extends BaseData
 			$result = HighloadBlockTable::delete($id->getValue());
 			if (!$result->isSuccess())
 			{
-				throw new \Exception(trim(strip_tags($result->getErrorMessages())));
+				throw new \Exception(ExceptionText::getFromResult($result));
 			}
 		}
 	}

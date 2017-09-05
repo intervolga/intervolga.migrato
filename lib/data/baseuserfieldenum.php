@@ -2,6 +2,7 @@
 namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -53,10 +54,10 @@ abstract class BaseUserFieldEnum extends BaseData
 			$fields["XML_ID"] = $record->getXmlId();
 			$enumObject = new \CUserFieldEnum();
 
-			$isUpdated = $enumObject->SetEnumValues($fieldId->getValue(), array($record->getId()->getValue() => $fields));
+			$isUpdated = $enumObject->setEnumValues($fieldId->getValue(), array($record->getId()->getValue() => $fields));
 			if (!$isUpdated)
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
+				throw new \Exception(ExceptionText::getFromApplication());
 			}
 		}
 	}
@@ -70,14 +71,14 @@ abstract class BaseUserFieldEnum extends BaseData
 			$fields["USER_FIELD_ID"] = $fieldId->getValue();
 			$enumObject = new \CUserFieldEnum();
 
-			$isUpdated = $enumObject->SetEnumValues($fieldId->getValue(), array("n" => $fields));
+			$isUpdated = $enumObject->setEnumValues($fieldId->getValue(), array("n" => $fields));
 			if ($isUpdated)
 			{
 				return $this->createId($this->findRecord($record->getXmlId())->getValue());
 			}
 			else
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
+				throw new \Exception(ExceptionText::getFromApplication());
 			}
 		}
 		else

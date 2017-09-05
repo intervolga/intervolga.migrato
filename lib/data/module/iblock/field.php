@@ -86,9 +86,15 @@ class Field extends BaseUserField
 		}
 		else
 		{
-			$module = static::getModule();
-			$entity = static::getEntityName();
-			throw new \Exception("Create $module/$entity: record haven`t the dependence for element " . $record->getXmlId());
+			throw new \Exception(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.DEPENDENCY_NOT_RESOLVED',
+					array
+					(
+						'#XML_ID#' => $record->getXmlId()
+					)
+				)
+			);
 		}
 	}
 

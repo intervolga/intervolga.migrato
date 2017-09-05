@@ -8,6 +8,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Module\Main\Site;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
@@ -103,8 +104,7 @@ class PersonType extends BaseData
 		$updateResult = $object->update($id, $update);
 		if (!$updateResult)
 		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->getException()->getString());
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
@@ -145,8 +145,7 @@ class PersonType extends BaseData
 		}
 		else
 		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->getException()->getString());
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
@@ -159,8 +158,7 @@ class PersonType extends BaseData
 			$result = $object->delete($id->getValue());
 			if (!$result)
 			{
-				global $APPLICATION;
-				throw new \Exception($APPLICATION->getException()->getString());
+				throw new \Exception(ExceptionText::getFromApplication());
 			}
 		}
 	}

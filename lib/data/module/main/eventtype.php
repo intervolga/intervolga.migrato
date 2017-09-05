@@ -5,6 +5,7 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -62,11 +63,7 @@ class EventType extends BaseData
 		$isUpdated = \CEventType::update(array("ID" => $record->getId()->getValue()), $record->getFieldsRaw());
 		if (!$isUpdated)
 		{
-			global $APPLICATION;
-			if ($exception = $APPLICATION->GetException())
-			{
-				throw new \Exception(trim(strip_tags($exception->GetString())));
-			}
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
@@ -84,10 +81,7 @@ class EventType extends BaseData
 		}
 		else
 		{
-			global $APPLICATION;
-			$errorMsg = $APPLICATION->getException()->getString() ? $APPLICATION->getException()->getString()
-				: Loc::getMessage('INTERVOLGA_MIGRATO.EVENTTYPE_CREATE_ERROR');
-			throw new \Exception(trim(strip_tags($errorMsg)));
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
@@ -96,7 +90,7 @@ class EventType extends BaseData
 		$id = $this->findRecord($xmlId);
 		if ($id && !\CEventType::delete(array("ID" => $id->getValue())))
 		{
-			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.EVENTTYPE_UNKNOWN_ERROR'));
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
@@ -109,8 +103,7 @@ class EventType extends BaseData
 		);
 		if (!$isUpdated)
 		{
-			global $APPLICATION;
-			throw new \Exception(trim(strip_tags($APPLICATION->getException()->getString())));
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
