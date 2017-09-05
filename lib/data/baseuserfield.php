@@ -1,4 +1,5 @@
-<? namespace Intervolga\Migrato\Data;
+<?php
+namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\Module\Highloadblock\Field;
@@ -10,6 +11,11 @@ Loc::loadMessages(__FILE__);
 
 abstract class BaseUserField extends BaseData
 {
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD');
+	}
+
 	/**
 	 * @return string[]
 	 */
@@ -104,7 +110,7 @@ abstract class BaseUserField extends BaseData
 			$name = $fullname ? $fullname . "." . $name : $name;
 			if (!in_array($name, array_keys($this->getSettingsReferences())))
 			{
-				if(!is_array($setting))
+				if (!is_array($setting))
 				{
 					$fields["SETTINGS." . $name] = $setting;
 				}
@@ -172,15 +178,15 @@ abstract class BaseUserField extends BaseData
 	protected function fieldsToArray(&$fields, $cutKey, $isDelete = false)
 	{
 		$settings = array();
-		foreach($fields as $key => $field)
+		foreach ($fields as $key => $field)
 		{
-			if(strstr($key, $cutKey) !== false)
+			if (strstr($key, $cutKey) !== false)
 			{
 				$workSetting = &$settings;
 				$keys = explode(".", str_replace($cutKey . ".", "", $key));
-				foreach($keys as $pathKey)
+				foreach ($keys as $pathKey)
 				{
-					if(end($keys) == $pathKey)
+					if (end($keys) == $pathKey)
 					{
 						if ($this->isSerializedField($pathKey))
 						{
@@ -198,7 +204,7 @@ abstract class BaseUserField extends BaseData
 					}
 				}
 
-				if($isDelete)
+				if ($isDelete)
 				{
 					unset($fields[$key]);
 				}
@@ -273,11 +279,11 @@ abstract class BaseUserField extends BaseData
 	public function getSettingsLinksFields(array $links)
 	{
 		$settings = array();
-		foreach($links as $entity => $link)
+		foreach ($links as $entity => $link)
 		{
 			$entity = str_replace("SETTINGS.", "", $entity);
 			$xmlId = $link->getValue();
-			if($entityId = $this->getSettingsReference($entity)->getTargetData()->findRecord($xmlId))
+			if ($entityId = $this->getSettingsReference($entity)->getTargetData()->findRecord($xmlId))
 			{
 				$settings[$entity] = $entityId->getValue();
 			}
@@ -344,13 +350,13 @@ abstract class BaseUserField extends BaseData
 			$xmlFields = $record->getFieldsRaw();
 
 			$xmlFields["SETTINGS"] = $this->fieldsToArray($xmlFields, "SETTINGS", true);
-			foreach($this->getLangFieldsNames() as $lang)
+			foreach ($this->getLangFieldsNames() as $lang)
 			{
 				$xmlFields[$lang] = $this->fieldsToArray($xmlFields, $lang, true);
 			}
 
 			$blockIdXml = $record->getDependency($this->getDependencyString());
-			if(!$blockIdXml)
+			if (!$blockIdXml)
 			{
 				$xmlFields["SETTINGS"] = array_merge($xmlFields["SETTINGS"], $this->getSettingsLinksFields($record->getReferences()));
 			}
@@ -393,7 +399,7 @@ abstract class BaseUserField extends BaseData
 	{
 		$fields = $record->getFieldsRaw();
 		$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
-		foreach($this->getLangFieldsNames() as $lang)
+		foreach ($this->getLangFieldsNames() as $lang)
 		{
 			$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
 		}

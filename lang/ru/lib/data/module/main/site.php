@@ -1,0 +1,2 @@
+<?
+$MESS['INTERVOLGA_MIGRATO.MAIN_SITE'] = 'Сайты';

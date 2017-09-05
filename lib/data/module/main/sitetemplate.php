@@ -1,13 +1,22 @@
-<?namespace Intervolga\Migrato\Data\Module\Main;
+<?php
+namespace Intervolga\Migrato\Data\Module\Main;
 
+use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\SiteTemplateTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
+Loc::loadMessages(__FILE__);
+
 class SiteTemplate extends BaseData
 {
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_SITE_TEMPLATE');
+	}
+
 	public function getFilesSubdir()
 	{
 		return '/site/';
@@ -56,7 +65,7 @@ class SiteTemplate extends BaseData
 		$getList = SiteTemplateTable::getList(array(
 			'filter' => array(
 				'=ID' => $id->getValue(),
-			)
+			),
 		));
 
 		$siteTemplate = $getList->fetch();

@@ -1,4 +1,5 @@
-<? namespace Intervolga\Migrato\Data\Module\Main;
+<?php
+namespace Intervolga\Migrato\Data\Module\Main;
 
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
@@ -10,6 +11,11 @@ Loc::loadMessages(__FILE__);
 class EventType extends BaseData
 {
 	const XML_ID_SEPARATOR = "___";
+
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_EVENT_TYPE');
+	}
 
 	public function getList(array $filter = array())
 	{
@@ -57,7 +63,7 @@ class EventType extends BaseData
 		if (!$isUpdated)
 		{
 			global $APPLICATION;
-			if($exception = $APPLICATION->GetException())
+			if ($exception = $APPLICATION->GetException())
 			{
 				throw new \Exception(trim(strip_tags($exception->GetString())));
 			}
@@ -67,7 +73,7 @@ class EventType extends BaseData
 	protected function createInner(Record $record)
 	{
 		$arFields = $record->getFieldsRaw();
-		if($lang = $record->getDependency('LANGUAGE')->getId())
+		if ($lang = $record->getDependency('LANGUAGE')->getId())
 		{
 			$arFields['LID'] = $lang->getValue();
 		}
@@ -113,7 +119,7 @@ class EventType extends BaseData
 		$eventType = \CEventType::GetList(array("ID" => $id->getValue()));
 		if ($type = $eventType->Fetch())
 		{
-			return $type["LID"] . static::XML_ID_SEPARATOR .  $type["EVENT_NAME"];
+			return $type["LID"] . static::XML_ID_SEPARATOR . $type["EVENT_NAME"];
 		}
 		else
 		{

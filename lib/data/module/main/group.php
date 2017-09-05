@@ -1,4 +1,5 @@
-<? namespace Intervolga\Migrato\Data\Module\Main;
+<?php
+namespace Intervolga\Migrato\Data\Module\Main;
 
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
@@ -10,6 +11,11 @@ class Group extends BaseData
 {
 	const GROUP_ADMINS = 1;
 	const GROUP_ALL_USERS = 2;
+
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_GROUP');
+	}
 
 	public function getList(array $filter = array())
 	{

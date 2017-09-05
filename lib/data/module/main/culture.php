@@ -1,11 +1,20 @@
-<?namespace Intervolga\Migrato\Data\Module\Main;
+<?php
+namespace Intervolga\Migrato\Data\Module\Main;
 
 use Bitrix\Main\Localization\CultureTable;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 
+Loc::loadMessages(__FILE__);
+
 class Culture extends BaseData
 {
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_CULTURE');
+	}
+
 	public function getFilesSubdir()
 	{
 		return '/loc/';

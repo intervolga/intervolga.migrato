@@ -1,4 +1,5 @@
-<? namespace Intervolga\Migrato\Data\Module\Main;
+<?php
+namespace Intervolga\Migrato\Data\Module\Main;
 
 use Bitrix\Main\Mail\Internal\EventTypeTable;
 use Bitrix\Main\Localization\Loc;
@@ -11,6 +12,11 @@ Loc::loadMessages(__FILE__);
 
 class Event extends BaseData
 {
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_EVENT');
+	}
+
 	public function getFilesSubdir()
 	{
 		return "/eventtype/";
@@ -103,7 +109,7 @@ class Event extends BaseData
 			$message["EMAIL_FROM"],
 			$message["EMAIL_TO"],
 			$message["EVENT_NAME"],
-			$sites
+			$sites,
 		)));
 
 		return BaseXmlIdProvider::formatXmlId($md5);
@@ -172,7 +178,7 @@ class Event extends BaseData
 		{
 			$rsEventType = EventTypeTable::getList(array(
 				'filter' => array('ID' => $eventType->getValue()),
-				'select' => array('ID', 'EVENT_NAME')
+				'select' => array('ID', 'EVENT_NAME'),
 			));
 			if ($eventType = $rsEventType->fetch())
 			{
