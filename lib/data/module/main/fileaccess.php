@@ -137,11 +137,11 @@ class FileAccess extends BaseData
 				include $fileObj->getPath();
 
 				$fileAccess = new FileAccess();
-				$result[] = $fileAccess->getResult(
+				$result = array_merge($result, $fileAccess->getResult(
 					$PERM,
 					$fileObj->getDirectory()->getPath(),
 					$root
-				);
+				));
 			}
 		}
 
@@ -164,7 +164,7 @@ class FileAccess extends BaseData
 					$groupIdObject = Group::getInstance()->createId($group);
 					$groupXmlId = Group::getInstance()->getXmlId($groupIdObject);
 
-					$result[] = $this->record($dir, $path, $groupXmlId, $permission);
+					$result[$dir . $path . $group] = $this->record($dir, $path, $groupXmlId, $permission);
 				}
 			}
 		}
