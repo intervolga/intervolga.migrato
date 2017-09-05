@@ -80,15 +80,12 @@ class HighloadBlock extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		if ($id = $this->findRecord($xmlId))
+		$result = HighloadBlockTable::delete($id->getValue());
+		if (!$result->isSuccess())
 		{
-			$result = HighloadBlockTable::delete($id->getValue());
-			if (!$result->isSuccess())
-			{
-				throw new \Exception(ExceptionText::getFromResult($result));
-			}
+			throw new \Exception(ExceptionText::getFromResult($result));
 		}
 	}
 }

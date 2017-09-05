@@ -6,6 +6,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Bitrix\Iblock\PropertyTable;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
@@ -357,9 +358,9 @@ class Form extends BaseData
 	 *
 	 * @throws \Exception
 	 */
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$fields = $this->parseXmlId($xmlId);
+		$fields = \CUserOptions::getList(array(), array('ID' => $id))->fetch();
 		if ($fields)
 		{
 			if (!\CUserOptions::deleteOption($fields['CATEGORY'], $fields['NAME'], $fields['COMMON'] == 'Y', $fields['USER_ID']))

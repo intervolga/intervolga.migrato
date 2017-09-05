@@ -130,16 +130,12 @@ class Language extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id)
+		$result = LanguageTable::delete($id->getValue());
+		if (!$result->isSuccess())
 		{
-			$result = LanguageTable::delete($id->getValue());
-			if (!$result->isSuccess())
-			{
-				throw new \Exception(ExceptionText::getFromResult($result));
-			}
+			throw new \Exception(ExceptionText::getFromResult($result));
 		}
 	}
 }

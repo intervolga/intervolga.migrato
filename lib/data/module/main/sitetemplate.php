@@ -6,6 +6,7 @@ use Bitrix\Main\SiteTemplateTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
@@ -147,16 +148,12 @@ class SiteTemplate extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id)
+		$result = SiteTemplateTable::delete($id->getValue());
+		if (!$result->isSuccess())
 		{
-			$result = SiteTemplateTable::delete($id->getValue());
-			if (!$result->isSuccess())
-			{
-				throw new \Exception(ExceptionText::getFromResult($result));
-			}
+			throw new \Exception(ExceptionText::getFromResult($result));
 		}
 	}
 }

@@ -109,14 +109,11 @@ class Enum extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		if ($id = $this->findRecord($xmlId))
+		if (!\CIBlockPropertyEnum::delete($id->getValue()))
 		{
-			if (!\CIBlockPropertyEnum::delete($id->getValue()))
-			{
-				throw new \Exception(ExceptionText::getUnknown());
-			}
+			throw new \Exception(ExceptionText::getUnknown());
 		}
 	}
 

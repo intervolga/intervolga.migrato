@@ -80,18 +80,22 @@ abstract class BaseData
 	 */
 	public function delete($xmlId)
 	{
-		$this->deleteInner($xmlId);
+		$id = $this->findRecord($xmlId);
+		if ($id)
+		{
+			$this->deleteInner($id);
+		}
 		$this->cache[$xmlId] = null;
 	}
 
 	/**
-	 * @param string $xmlId
+	 * @param \Intervolga\Migrato\Data\RecordId $id
 	 *
 	 * @throws \Bitrix\Main\NotImplementedException
 	 */
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		throw new NotImplementedException("Delete for " . $this->getModule() . "/" . $this->getEntityName() . " ($xmlId) is not yet implemented");
+		throw new NotImplementedException("Delete for " . $this->getModule() . "/" . $this->getEntityName() . " (" . $id->getValue() . ") is not yet implemented");
 	}
 
 	/**

@@ -388,16 +388,12 @@ class Iblock extends BaseData
 		$seoProps->set($seo);
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id)
+		$iblockObject = new \CIBlock();
+		if (!$iblockObject->delete($id->getValue()))
 		{
-			$iblockObject = new \CIBlock();
-			if (!$iblockObject->delete($id->getValue()))
-			{
-				throw new \Exception(ExceptionText::getFromApplication());
-			}
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 }

@@ -345,9 +345,8 @@ class Property extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
 		$propertyObject = new \CIBlockProperty();
 		if ($id && !$propertyObject->delete($id->getValue()))
 		{

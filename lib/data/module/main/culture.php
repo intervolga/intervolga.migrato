@@ -5,6 +5,7 @@ use Bitrix\Main\Localization\CultureTable;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
@@ -107,16 +108,12 @@ class Culture extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id)
+		$result = CultureTable::delete($id->getValue());
+		if (!$result->isSuccess())
 		{
-			$result = CultureTable::delete($id->getValue());
-			if (!$result->isSuccess())
-			{
-				throw new \Exception(ExceptionText::getFromResult($result));
-			}
+			throw new \Exception(ExceptionText::getFromResult($result));
 		}
 	}
 }

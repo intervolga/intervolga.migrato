@@ -87,11 +87,10 @@ abstract class BaseUserFieldEnum extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
 		$fieldenumObject = new \CUserFieldEnum();
-		$fieldenumObject->DeleteFieldEnum($id);
+		$fieldenumObject->deleteFieldEnum($id->getValue());
 	}
 
 	public function setXmlId($id, $xmlId)

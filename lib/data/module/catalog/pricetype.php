@@ -10,6 +10,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Module\Main\Group;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Value;
 use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
@@ -166,16 +167,12 @@ class PriceType extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id)
+		$object = new \CCatalogGroup();
+		if (!$object->delete($id->getValue()))
 		{
-			$object = new \CCatalogGroup();
-			if (!$object->delete($id->getValue()))
-			{
-				throw new \Exception(ExceptionText::getFromApplication());
-			}
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 

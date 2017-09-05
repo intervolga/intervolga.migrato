@@ -127,18 +127,15 @@ class Permission extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		if ($linkId = $this->findRecord($xmlId))
+		$complexId = $id->getValue();
+		$arGroups = \CIBlock::GetGroupPermissions($complexId["IBLOCK_ID"]);
+		if (in_array($complexId['GROUP_ID'], array_keys($arGroups)))
 		{
-			$complexId = $linkId->getValue();
-			$arGroups = \CIBlock::GetGroupPermissions($complexId["IBLOCK_ID"]);
-			if (in_array($complexId['GROUP_ID'], array_keys($arGroups)))
-			{
-				unset($arGroups[$complexId['GROUP_ID']]);
-				$iblock = new \CIBlock();
-				$iblock->setPermission($complexId["IBLOCK_ID"], $arGroups);
-			}
+			unset($arGroups[$complexId['GROUP_ID']]);
+			$iblock = new \CIBlock();
+			$iblock->setPermission($complexId["IBLOCK_ID"], $arGroups);
 		}
 	}
 

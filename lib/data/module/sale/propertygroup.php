@@ -6,6 +6,7 @@ use Bitrix\Sale\Internals\OrderPropsGroupTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
@@ -131,17 +132,13 @@ class PropertyGroup extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id)
+		$object = new \CSaleOrderPropsGroup();
+		$result = $object->delete($id->getValue());
+		if (!$result)
 		{
-			$object = new \CSaleOrderPropsGroup();
-			$result = $object->delete($id->getValue());
-			if (!$result)
-			{
-				throw new \Exception(ExceptionText::getFromApplication());
-			}
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 }

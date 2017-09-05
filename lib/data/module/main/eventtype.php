@@ -5,6 +5,7 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
@@ -85,10 +86,9 @@ class EventType extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id && !\CEventType::delete(array("ID" => $id->getValue())))
+		if (!\CEventType::delete(array("ID" => $id->getValue())))
 		{
 			throw new \Exception(ExceptionText::getFromApplication());
 		}

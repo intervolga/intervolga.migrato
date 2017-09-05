@@ -180,15 +180,12 @@ class Type extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		if ($id = $this->findRecord($xmlId))
+		$this->deleteContentIBlockType($id->getValue());
+		if (!($isDeleted = \CIBlockType::delete($id->getValue())))
 		{
-			$this->deleteContentIBlockType($id->getValue());
-			if (!($isDeleted = \CIBlockType::delete($id->getValue())))
-			{
-				throw new \Exception(ExceptionText::getUnknown());
-			}
+			throw new \Exception(ExceptionText::getUnknown());
 		}
 	}
 

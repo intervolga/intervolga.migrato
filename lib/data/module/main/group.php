@@ -4,6 +4,7 @@ namespace Intervolga\Migrato\Data\Module\Main;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
@@ -69,25 +70,20 @@ class Group extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
 		$groupObject = new \CGroup();
-		if ($id)
+		if (in_array($id->getValue(), array(static::GROUP_ADMINS, static::GROUP_ALL_USERS)))
 		{
-			if (in_array($id->getValue(), array(static::GROUP_ADMINS, static::GROUP_ALL_USERS)))
-			{
-				$group = Loc::getMessage("INTERVOLGA_MIGRATO.SYSTEM_GROUP_" . $id->getValue());
-				$message = Loc::getMessage("INTERVOLGA_MIGRATO.DELETE_SYSTEM_GROUP_ERROR", array(
-					"#GROUP#" => $group,
-					"#XMLID#" => $xmlId,
-				));
-				throw new \Exception($message);
-			}
-			if (!$groupObject->delete($id->getValue()))
-			{
-				throw new \Exception(ExceptionText::getFromApplication());
-			}
+			$group = Loc::getMessage("INTERVOLGA_MIGRATO.SYSTEM_GROUP_" . $id->getValue());
+			$message = Loc::getMessage("INTERVOLGA_MIGRATO.DELETE_SYSTEM_GROUP_ERROR", array(
+				"#GROUP#" => $group,
+			));
+			throw new \Exception($message);
+		}
+		if (!$groupObject->delete($id->getValue()))
+		{
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 

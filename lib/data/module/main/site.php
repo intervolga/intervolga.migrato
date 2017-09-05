@@ -155,16 +155,12 @@ class Site extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id)
+		$result = SiteTable::delete($id->getValue());
+		if (!$result->isSuccess())
 		{
-			$result = SiteTable::delete($id->getValue());
-			if (!$result->isSuccess())
-			{
-				throw new \Exception(ExceptionText::getFromResult($result));
-			}
+			throw new \Exception(ExceptionText::getFromResult($result));
 		}
 	}
 }

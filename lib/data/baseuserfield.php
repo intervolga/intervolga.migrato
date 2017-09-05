@@ -416,15 +416,12 @@ abstract class BaseUserField extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		if ($id = $this->findRecord($xmlId))
+		$fieldObject = new \CUserTypeEntity();
+		if (!$fieldObject->delete($id->getValue()))
 		{
-			$fieldObject = new \CUserTypeEntity();
-			if (!$fieldObject->delete($id->getValue()))
-			{
-				throw new \Exception(ExceptionText::getFromApplication());
-			}
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
