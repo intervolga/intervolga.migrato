@@ -1,13 +1,22 @@
-<? namespace Intervolga\Migrato\Data\Module\Sale;
+<?php
+namespace Intervolga\Migrato\Data\Module\Sale;
 
+use Bitrix\Main\Localization\Loc;
 use Bitrix\Sale\Internals\OrderPropsGroupTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
+Loc::loadMessages(__FILE__);
+
 class PropertyGroup extends BaseData
 {
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.SALE_PROPERTY_GROUP');
+	}
+
 	public function getFilesSubdir()
 	{
 		return "/persontype/";

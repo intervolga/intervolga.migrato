@@ -1,4 +1,5 @@
-<? namespace Intervolga\Migrato\Data\Module\Sale;
+<?php
+namespace Intervolga\Migrato\Data\Module\Sale;
 
 use Bitrix\Sale\Internals\OrderPropsVariantTable;
 use Bitrix\Main\Localization\Loc;
@@ -11,6 +12,11 @@ Loc::loadMessages(__FILE__);
 
 class PropertyVariant extends BaseData
 {
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.SALE_PROPERTY_VARIANT');
+	}
+
 	public function getFilesSubdir()
 	{
 		return "/persontype/propertygroup/property/";
