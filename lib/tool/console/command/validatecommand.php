@@ -222,7 +222,7 @@ class ValidateCommand extends BaseCommand
 			throw new LoaderException(Loc::getMessage(
 				$code,
 				array(
-					'#MODULE#' => $this->logger->getModuleMessage($data->getModule()),
+					'#MODULE#' => $this->logger->getModuleNameLoc($data->getModule()),
 				)
 			));
 		}
@@ -232,8 +232,8 @@ class ValidateCommand extends BaseCommand
 				Loc::getMessage(
 					'INTERVOLGA_MIGRTO.REFERENCED_MODULE_NOT_INSTALLED',
 					array(
-						'#MODULE#' => $this->logger->getModuleMessage($data->getModule()),
-						'#ENTITY#' => $this->logger->getEntityMessage($data->getModule(), $data->getEntityName()),
+						'#MODULE#' => $this->logger->getModuleNameLoc($data->getModule()),
+						'#ENTITY#' => $this->logger->getEntityNameLoc($data->getModule(), $data->getEntityName()),
 					)
 				),
 				Logger::LEVEL_NORMAL,

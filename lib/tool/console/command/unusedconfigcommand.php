@@ -27,8 +27,8 @@ class UnusedConfigCommand extends BaseCommand
 					Loc::getMessage(
 						'INTERVOLGA_MIGRATO.DATA_NOT_USED',
 						array(
-							'#MODULE#' => $this->logger->getModuleMessage($conf->getModule()),
-							'#ENTITY#' => $this->logger->getEntityMessage($conf->getModule(), $conf->getEntityName()),
+							'#MODULE#' => $this->logger->getModuleNameLoc($conf->getModule()),
+							'#ENTITY#' => $this->logger->getEntityNameLoc($conf->getModule(), $conf->getEntityName()),
 						)
 					),
 					0,

@@ -201,8 +201,8 @@ class Logger
 		$replaces = array(
 			'#OPERATION#' => $dbLog['OPERATION'],
 			'#IDS#' => '',
-			'#MODULE#' => $this->getModuleMessage($dbLog['MODULE_NAME']),
-			'#ENTITY#' => $this->getEntityMessage($dbLog['MODULE_NAME'], $dbLog['ENTITY_NAME']),
+			'#MODULE#' => $this->getModuleNameLoc($dbLog['MODULE_NAME']),
+			'#ENTITY#' => $this->getEntityNameLoc($dbLog['MODULE_NAME'], $dbLog['ENTITY_NAME']),
 		);
 		$data = null;
 		if ($dbLog['RECORD'])
@@ -229,8 +229,8 @@ class Logger
 		}
 		if ($data)
 		{
-			$replaces['#MODULE#'] = $this->getModuleMessage($data->getModule());
-			$replaces['#ENTITY#'] = $this->getEntityMessage($data->getModule(), $data->getEntityName());
+			$replaces['#MODULE#'] = $this->getModuleNameLoc($data->getModule());
+			$replaces['#ENTITY#'] = $this->getEntityNameLoc($data->getModule(), $data->getEntityName());
 		}
 		return $replaces;
 	}
@@ -345,9 +345,9 @@ class Logger
 	 *
 	 * @return string
 	 */
-	public function getModuleMessage($moduleName)
+	public function getModuleNameLoc($moduleName)
 	{
-		$modulesNames = $this->getModulesMessages();
+		$modulesNames = $this->getModulesNamesLoc();
 		if (array_key_exists($moduleName, $modulesNames))
 		{
 			$name = $modulesNames[$moduleName];
@@ -367,12 +367,12 @@ class Logger
 	/**
 	 * @return string[]
 	 */
-	protected function getModulesMessages()
+	protected function getModulesNamesLoc()
 	{
 		static $result = array();
 		if (!$result)
 		{
-			$result = $this->loadModulesMessages();
+			$result = $this->loadModulesNamesLoc();
 		}
 
 		return $result;
@@ -382,7 +382,7 @@ class Logger
 	 * @return string[]
 	 * @throws \Bitrix\Main\IO\FileNotFoundException
 	 */
-	protected function loadModulesMessages()
+	protected function loadModulesNamesLoc()
 	{
 		$result = array();
 		$folders = array(
@@ -416,7 +416,7 @@ class Logger
 	 *
 	 * @return string
 	 */
-	public function getEntityMessage($module, $entityName)
+	public function getEntityNameLoc($module, $entityName)
 	{
 		$dataClass = Config::getData($module, $entityName);
 		if ($dataClass instanceof BaseData)
@@ -441,8 +441,8 @@ class Logger
 				Loc::getMessage(
 					'INTERVOLGA_MIGRATO.STATISTIC_SHORT',
 					array(
-						'#MODULE#' => $this->getModuleMessage($logs['MODULE_NAME']),
-						'#ENTITY#' => $this->getEntityMessage($logs['MODULE_NAME'], $logs['ENTITY_NAME']),
+						'#MODULE#' => $this->getModuleNameLoc($logs['MODULE_NAME']),
+						'#ENTITY#' => $this->getEntityNameLoc($logs['MODULE_NAME'], $logs['ENTITY_NAME']),
 						'#OPERATION#' => $logs['OPERATION'],
 						'#COUNT#' => $logs['CNT'],
 					)
