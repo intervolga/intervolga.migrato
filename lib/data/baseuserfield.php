@@ -16,6 +16,12 @@ abstract class BaseUserField extends BaseData
 	{
 		$this->setVirtualXmlId(true);
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD'));
+		$references = array();
+		foreach ($this->getSettingsReferences() as $name => $link)
+		{
+			$references["SETTINGS." . $name] = $link;
+		}
+		$this->setReferences($references);
 	}
 
 	/**
@@ -296,17 +302,6 @@ abstract class BaseUserField extends BaseData
 			}
 		}
 		return $settings;
-	}
-
-	public function getReferences()
-	{
-		$references = array();
-		foreach ($this->getSettingsReferences() as $name => $link)
-		{
-			$references["SETTINGS." . $name] = $link;
-		}
-
-		return $references;
 	}
 
 	/**

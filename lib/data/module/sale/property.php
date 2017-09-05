@@ -23,13 +23,9 @@ class Property extends BaseData
 		$this->setDependencies(array(
 			"PERSON_TYPE_ID" => new Link(PersonType::getInstance()),
 		));
-	}
-
-	public function getReferences()
-	{
-		return array(
-			"PROPS_GROUP_ID" => new Link(PropertyGroup::getInstance()),
-		);
+		$this->setReferences(array(
+			'PROPS_GROUP_ID' => new Link(PropertyGroup::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())

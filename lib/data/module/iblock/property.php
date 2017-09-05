@@ -28,6 +28,9 @@ class Property extends BaseData
 		$this->setDependencies(array(
 			'IBLOCK_ID' => new Link(Iblock::getInstance()),
 		));
+		$this->setReferences(array(
+			'LINK_IBLOCK_ID' => new Link(Iblock::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -143,13 +146,6 @@ class Property extends BaseData
 		}
 
 		return $result;
-	}
-
-	public function getReferences()
-	{
-		return array(
-			"LINK_IBLOCK_ID" => new Link(Iblock::getInstance()),
-		);
 	}
 
 	public function update(Record $record)
