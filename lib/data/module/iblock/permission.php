@@ -1,4 +1,5 @@
-<?namespace Intervolga\Migrato\Data\Module\Iblock;
+<?php
+namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Module\Main\Group;
@@ -12,6 +13,11 @@ Loc::loadMessages(__FILE__);
 
 class Permission extends BaseData
 {
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PERMISSION');
+	}
+
 	public function getFilesSubdir()
 	{
 		return "/type/iblock/";
@@ -123,11 +129,11 @@ class Permission extends BaseData
 
 	protected function deleteInner($xmlId)
 	{
-		if($linkId = $this->findRecord($xmlId))
+		if ($linkId = $this->findRecord($xmlId))
 		{
 			$complexId = $linkId->getValue();
 			$arGroups = \CIBlock::GetGroupPermissions($complexId["IBLOCK_ID"]);
-			if(in_array($complexId['GROUP_ID'], array_keys($arGroups)))
+			if (in_array($complexId['GROUP_ID'], array_keys($arGroups)))
 			{
 				unset($arGroups[$complexId['GROUP_ID']]);
 				$iblock = new \CIBlock();
@@ -139,8 +145,8 @@ class Permission extends BaseData
 	public function createId($id)
 	{
 		return RecordId::createComplexId(array(
-			"IBLOCK_ID" => intval($id['IBLOCK_ID']),
-			"GROUP_ID" => intval($id['GROUP_ID']),
+				"IBLOCK_ID" => intval($id['IBLOCK_ID']),
+				"GROUP_ID" => intval($id['GROUP_ID']),
 			)
 		);
 	}
@@ -164,7 +170,7 @@ class Permission extends BaseData
 		$groupXmlId = $groupData->getXmlId($groupData->createId($array['GROUP_ID']));
 		$md5 = md5(serialize(array(
 			$iblockXmlId,
-			$groupXmlId
+			$groupXmlId,
 		)));
 		return BaseXmlIdProvider::formatXmlId($md5);
 	}

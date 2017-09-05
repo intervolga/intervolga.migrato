@@ -1,4 +1,5 @@
-<? namespace Intervolga\Migrato\Data\Module\Iblock;
+<?php
+namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
@@ -20,6 +21,11 @@ class Form extends BaseData
 	const XML_ADMIN = 'admin';
 	const XML_ELEMENT = 'el';
 	const XML_SECTION = 'sec';
+
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FORM');
+	}
 
 	public function getFilesSubdir()
 	{
@@ -139,7 +145,7 @@ class Form extends BaseData
 				array(
 					'select' => array(
 						'ID',
-					)
+					),
 				)
 			);
 			while ($property = $propertiesGetList->fetch())

@@ -1,10 +1,14 @@
-<? namespace Intervolga\Migrato\Data\Module\Iblock;
+<?php
+namespace Intervolga\Migrato\Data\Module\Iblock;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseUserField;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
+
+Loc::loadMessages(__FILE__);
 
 class Field extends BaseUserField
 {

@@ -1,4 +1,5 @@
-<?namespace Intervolga\Migrato\Data\Module\Iblock;
+<?php
+namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Iblock\IblockTable;
 use Bitrix\Iblock\InheritedProperty\IblockTemplates;
@@ -20,6 +21,11 @@ class Iblock extends BaseData
 	{
 		Loader::includeModule("iblock");
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\IblockTable");
+	}
+
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_IBLOCK');
 	}
 
 	public function getFilesSubdir()

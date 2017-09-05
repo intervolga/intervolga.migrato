@@ -1,4 +1,5 @@
-<? namespace Intervolga\Migrato\Data\Module\Iblock;
+<?php
+namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Iblock\PropertyTable;
 use Bitrix\Iblock\SectionPropertyTable;
@@ -21,6 +22,11 @@ class Property extends BaseData
 	{
 		Loader::includeModule("iblock");
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\PropertyTable");
+	}
+
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY');
 	}
 
 	public function getFilesSubdir()

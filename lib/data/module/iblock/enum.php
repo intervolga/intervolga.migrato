@@ -1,4 +1,5 @@
-<?namespace Intervolga\Migrato\Data\Module\Iblock;
+<?php
+namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Iblock\PropertyEnumerationTable;
 use Bitrix\Main\Loader;
@@ -17,6 +18,11 @@ class Enum extends BaseData
 	public function __construct()
 	{
 		Loader::includeModule("iblock");
+	}
+
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ENUM');
 	}
 
 	public function getFilesSubdir()
@@ -63,7 +69,7 @@ class Enum extends BaseData
 	{
 		$fields = $record->getFieldsRaw();
 
-		if($propertyId = $record->getDependency("PROPERTY_ID")->getId())
+		if ($propertyId = $record->getDependency("PROPERTY_ID")->getId())
 		{
 			$fields["PROPERTY_ID"] = $propertyId->getValue();
 			$enumObject = new \CIBlockPropertyEnum();
@@ -78,7 +84,7 @@ class Enum extends BaseData
 	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
-		if($propertyId = $record->getDependency("PROPERTY_ID")->getId())
+		if ($propertyId = $record->getDependency("PROPERTY_ID")->getId())
 		{
 			$fields["PROPERTY_ID"] = $propertyId->getValue();
 			$fields["XML_ID"] = $record->getXmlId();
@@ -97,16 +103,16 @@ class Enum extends BaseData
 		else
 		{
 			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY_ENUM_NOT_PROPERTY', array(
-				'#XML_ID#' => $record->getXmlId()
+				'#XML_ID#' => $record->getXmlId(),
 			)));
 		}
 	}
 
 	protected function deleteInner($xmlId)
 	{
-		if($id = $this->findRecord($xmlId))
+		if ($id = $this->findRecord($xmlId))
 		{
-			if(!\CIBlockPropertyEnum::Delete($id->getValue()))
+			if (!\CIBlockPropertyEnum::Delete($id->getValue()))
 			{
 				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY_ENUM_UNKNOWN_ERROR'));
 			}
@@ -144,7 +150,7 @@ class Enum extends BaseData
 		{
 			if ($enum['XML_ID'] && $enum['IBLOCK_XML_ID'])
 			{
-				$xmlId = $enum['IBLOCK_XML_ID'] . static::XML_ID_SEPARATOR  . $enum['PROPERTY_XML_ID']  . static::XML_ID_SEPARATOR . $enum['XML_ID'];
+				$xmlId = $enum['IBLOCK_XML_ID'] . static::XML_ID_SEPARATOR . $enum['PROPERTY_XML_ID'] . static::XML_ID_SEPARATOR . $enum['XML_ID'];
 			}
 		}
 		return $xmlId;

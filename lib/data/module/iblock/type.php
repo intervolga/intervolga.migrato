@@ -1,4 +1,5 @@
-<?namespace Intervolga\Migrato\Data\Module\Iblock;
+<?php
+namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Iblock\IblockTable;
 use Bitrix\Iblock\TypeTable;
@@ -20,6 +21,11 @@ class Type extends BaseData
 	protected function __construct()
 	{
 		Loader::includeModule("iblock");
+	}
+
+	public function getEntityNameLoc()
+	{
+		return Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_TYPE');
 	}
 
 	public function getList(array $filter = array())
@@ -63,8 +69,8 @@ class Type extends BaseData
 		$result = array();
 		$getList = LanguageTable::getList(array(
 			"select" => array(
-				"LID"
-			)
+				"LID",
+			),
 		));
 		while ($language = $getList->fetch())
 		{
@@ -116,7 +122,7 @@ class Type extends BaseData
 		return array(
 			"NAME",
 			"SECTION_NAME",
-			"ELEMENT_NAME"
+			"ELEMENT_NAME",
 		);
 	}
 
@@ -175,7 +181,7 @@ class Type extends BaseData
 
 	protected function deleteInner($xmlId)
 	{
-		if($id = $this->findRecord($xmlId))
+		if ($id = $this->findRecord($xmlId))
 		{
 			$this->deleteContentIBlockType($id->getValue());
 			if (!($isDeleted = \CIBlockType::Delete($id->getValue())))
@@ -188,23 +194,23 @@ class Type extends BaseData
 	private function deleteContentIBlockType($id)
 	{
 		$rsIblock = IblockTable::getList(array(
-			'filter' => array("IBLOCK_TYPE_ID" => $id)
+			'filter' => array("IBLOCK_TYPE_ID" => $id),
 		));
-		while($arIblock = $rsIblock->fetch())
+		while ($arIblock = $rsIblock->fetch())
 		{
-			if(\CModule::IncludeModule("catalog"))
+			if (\CModule::IncludeModule("catalog"))
 			{
 				\CCatalog::Delete($arIblock["ID"]);
 			}
 
 			$rsElement = \CIBlockElement::GetList(array(), array("IBLOCK_ID" => $arIblock["ID"]));
-			while($arElement = $rsElement->Fetch())
+			while ($arElement = $rsElement->Fetch())
 			{
 				\CIBlockElement::Delete($arElement["ID"]);
 			}
 
 			$rsSection = \CIBlockSection::GetList(array(), array("IBLOCK_ID" => $arIblock["ID"]));
-			while($arSection = $rsSection->Fetch())
+			while ($arSection = $rsSection->Fetch())
 			{
 				\CIBlockSection::Delete($arSection["ID"]);
 			}
@@ -214,13 +220,13 @@ class Type extends BaseData
 	public function setXmlId($id, $xmlId)
 	{
 		$rsType = TypeTable::getById($id->getValue());
-		if($arType = $rsType->fetch())
+		if ($arType = $rsType->fetch())
 		{
 			$arFields = array("ID" => $xmlId);
 			$result = TypeTable::update($id->getValue(), $arFields);
-			if($result->isSuccess())
+			if ($result->isSuccess())
 			{
-				foreach($this->getLanguages() as $language)
+				foreach ($this->getLanguages() as $language)
 				{
 					$langId = array('IBLOCK_TYPE_ID' => $id->getValue(), 'LANGUAGE_ID' => $language);
 					TypeLanguageTable::update($langId, array('IBLOCK_TYPE_ID' => $xmlId));
