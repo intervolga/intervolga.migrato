@@ -12,9 +12,9 @@ Loc::loadMessages(__FILE__);
 
 class Culture extends BaseData
 {
-	public function getEntityNameLoc()
+	protected function configure()
 	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_CULTURE');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_CULTURE'));
 	}
 
 	public function getFilesSubdir()

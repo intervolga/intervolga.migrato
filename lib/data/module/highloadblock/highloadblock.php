@@ -15,11 +15,7 @@ class HighloadBlock extends BaseData
 	protected function configure()
 	{
 		$this->setVirtualXmlId(true);
-	}
-
-	public function getEntityNameLoc()
-	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.HIGHLOADBLOCK_HIGHLOADBLOCK');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.HIGHLOADBLOCK_HIGHLOADBLOCK'));
 	}
 
 	public function getList(array $filter = array())

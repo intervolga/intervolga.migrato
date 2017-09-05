@@ -19,11 +19,7 @@ class PersonType extends BaseData
 	protected function configure()
 	{
 		$this->setVirtualXmlId(true);
-	}
-
-	public function getEntityNameLoc()
-	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.SALE_PERSON_TYPE');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.SALE_PERSON_TYPE'));
 	}
 
 	public function getList(array $filter = array())

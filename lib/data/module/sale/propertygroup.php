@@ -17,11 +17,7 @@ class PropertyGroup extends BaseData
 	protected function configure()
 	{
 		$this->setVirtualXmlId(true);
-	}
-
-	public function getEntityNameLoc()
-	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.SALE_PROPERTY_GROUP');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.SALE_PROPERTY_GROUP'));
 	}
 
 	public function getFilesSubdir()

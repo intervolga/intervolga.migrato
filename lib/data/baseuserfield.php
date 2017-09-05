@@ -15,11 +15,7 @@ abstract class BaseUserField extends BaseData
 	protected function configure()
 	{
 		$this->setVirtualXmlId(true);
-	}
-
-	public function getEntityNameLoc()
-	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD'));
 	}
 
 	/**

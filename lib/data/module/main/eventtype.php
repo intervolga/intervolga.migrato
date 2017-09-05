@@ -14,9 +14,9 @@ class EventType extends BaseData
 {
 	const XML_ID_SEPARATOR = "___";
 
-	public function getEntityNameLoc()
+	protected function configure()
 	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_EVENT_TYPE');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_EVENT_TYPE'));
 	}
 
 	public function getList(array $filter = array())

@@ -22,11 +22,7 @@ class Iblock extends BaseData
 	{
 		Loader::includeModule("iblock");
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\IblockTable");
-	}
-
-	public function getEntityNameLoc()
-	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_IBLOCK');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_IBLOCK'));
 	}
 
 	public function getFilesSubdir()

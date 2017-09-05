@@ -16,6 +16,7 @@ abstract class BaseData
 	protected $isAllCached = false;
 
 	protected $virtualXmlId = false;
+	protected $entityNameLoc;
 
 	/**
 	 * @return static
@@ -37,6 +38,7 @@ abstract class BaseData
 
 	protected function configure()
 	{
+		$this->setEntityNameLoc($this->getEntityName());
 	}
 
 	/**
@@ -191,11 +193,19 @@ abstract class BaseData
 	}
 
 	/**
+	 * @param string $entityNameLoc
+	 */
+	protected function setEntityNameLoc($entityNameLoc)
+	{
+		$this->entityNameLoc = $entityNameLoc;
+	}
+
+	/**
 	 * @return string
 	 */
 	public function getEntityNameLoc()
 	{
-		return $this->getEntityName();
+		return $this->entityNameLoc;
 	}
 
 	/**
@@ -298,7 +308,10 @@ abstract class BaseData
 		}
 		else
 		{
-			throw new NotImplementedException("setXmlId for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
+			if (!$this->isVirtualXmlId())
+			{
+				throw new NotImplementedException("setXmlId for " . $this->getModule() . "/" . $this->getEntityName() . " is not yet implemented");
+			}
 		}
 	}
 

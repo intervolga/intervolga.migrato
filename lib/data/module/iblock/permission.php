@@ -16,11 +16,7 @@ class Permission extends BaseData
 	protected function configure()
 	{
 		$this->setVirtualXmlId(true);
-	}
-
-	public function getEntityNameLoc()
-	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PERMISSION');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PERMISSION'));
 	}
 
 	public function getFilesSubdir()

@@ -8,9 +8,9 @@ Loc::loadMessages(__FILE__);
 
 abstract class BaseUserFieldEnum extends BaseData
 {
-	public function getEntityNameLoc()
+	protected function configure()
 	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD_ENUM');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD_ENUM'));
 	}
 
 	/**

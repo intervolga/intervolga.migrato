@@ -17,11 +17,7 @@ class SiteTemplate extends BaseData
 	protected function configure()
 	{
 		$this->setVirtualXmlId(true);
-	}
-
-	public function getEntityNameLoc()
-	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_SITE_TEMPLATE');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_SITE_TEMPLATE'));
 	}
 
 	public function getFilesSubdir()

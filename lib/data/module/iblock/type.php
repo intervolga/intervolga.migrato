@@ -22,11 +22,7 @@ class Type extends BaseData
 	protected function configure()
 	{
 		Loader::includeModule("iblock");
-	}
-
-	public function getEntityNameLoc()
-	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_TYPE');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_TYPE'));
 	}
 
 	public function getList(array $filter = array())

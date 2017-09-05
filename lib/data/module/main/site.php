@@ -13,9 +13,9 @@ Loc::loadMessages(__FILE__);
 
 class Site extends BaseData
 {
-	public function getEntityNameLoc()
+	protected function configure()
 	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_SITE');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_SITE'));
 	}
 
 	/**

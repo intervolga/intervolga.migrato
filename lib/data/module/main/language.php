@@ -13,9 +13,9 @@ Loc::loadMessages(__FILE__);
 
 class Language extends BaseData
 {
-	public function getEntityNameLoc()
+	protected function configure()
 	{
-		return Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_LANGUAGE');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_LANGUAGE'));
 	}
 
 	public function getFilesSubdir()
