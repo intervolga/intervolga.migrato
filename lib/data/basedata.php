@@ -17,7 +17,7 @@ abstract class BaseData
 
 	protected $virtualXmlId = false;
 	protected $entityNameLoc;
-	protected $filesSubdir;
+	protected $filesSubdir = '/';
 	protected $dependencies = array();
 	protected $references = array();
 
@@ -39,7 +39,6 @@ abstract class BaseData
 	protected function configure()
 	{
 		$this->setEntityNameLoc($this->getEntityName());
-		$this->setFilesSubdir('/');
 	}
 
 	/**
