@@ -19,11 +19,7 @@ class Property extends BaseData
 	{
 		$this->setVirtualXmlId(true);
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.SALE_PROPERTY'));
-	}
-
-	public function getFilesSubdir()
-	{
-		return "/persontype/propertygroup/";
+		$this->setFilesSubdir('/persontype/propertygroup/');
 	}
 
 	public function getDependencies()

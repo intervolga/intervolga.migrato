@@ -20,14 +20,10 @@ class Iblock extends BaseData
 {
 	protected function configure()
 	{
-		Loader::includeModule("iblock");
+		Loader::includeModule('iblock');
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\IblockTable");
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_IBLOCK'));
-	}
-
-	public function getFilesSubdir()
-	{
-		return "/type/";
+		$this->setFilesSubdir('/type/');
 	}
 
 	public function getList(array $filter = array())

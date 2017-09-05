@@ -7,10 +7,10 @@ use Intervolga\Migrato\Data\Record;
 
 class FieldEnum extends BaseUserFieldEnum
 {
-
-	public function getFilesSubdir()
+	protected function configure()
 	{
-		return "/type/iblock/section/field/";
+		parent::configure();
+		$this->setFilesSubdir('/type/iblock/section/field/');
 	}
 
 	/**

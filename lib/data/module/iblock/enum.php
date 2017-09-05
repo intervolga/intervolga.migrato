@@ -18,13 +18,9 @@ class Enum extends BaseData
 
 	protected function configure()
 	{
-		Loader::includeModule("iblock");
+		Loader::includeModule('iblock');
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ENUM'));
-	}
-
-	public function getFilesSubdir()
-	{
-		return "/type/iblock/property/";
+		$this->setFilesSubdir('/type/iblock/property/');
 	}
 
 	public function getList(array $filter = array())

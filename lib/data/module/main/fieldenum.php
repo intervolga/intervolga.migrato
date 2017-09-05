@@ -6,9 +6,10 @@ use Intervolga\Migrato\Data\Link;
 
 class FieldEnum extends BaseUserFieldEnum
 {
-	public function getFilesSubdir()
+	protected function configure()
 	{
-		return '/field/';
+		parent::configure();
+		$this->setFilesSubdir('/field/');
 	}
 
 	public function getList(array $filter = array())

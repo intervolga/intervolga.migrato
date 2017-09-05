@@ -18,11 +18,7 @@ class Event extends BaseData
 	{
 		$this->setVirtualXmlId(true);
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_EVENT'));
-	}
-
-	public function getFilesSubdir()
-	{
-		return "/eventtype/";
+		$this->setFilesSubdir('/eventtype/');
 	}
 
 	public function getList(array $filter = array())

@@ -12,9 +12,10 @@ Loc::loadMessages(__FILE__);
 
 class Field extends BaseUserField
 {
-	public function getFilesSubdir()
+	protected function configure()
 	{
-		return "/type/iblock/section/";
+		parent::configure();
+		$this->setFilesSubdir('/type/iblock/section/');
 	}
 
 	/**

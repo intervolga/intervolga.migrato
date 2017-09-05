@@ -16,11 +16,7 @@ class Language extends BaseData
 	protected function configure()
 	{
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_LANGUAGE'));
-	}
-
-	public function getFilesSubdir()
-	{
-		return '/loc/';
+		$this->setFilesSubdir('/loc/');
 	}
 
 	public function getList(array $filter = array())

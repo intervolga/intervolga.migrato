@@ -18,11 +18,7 @@ class SiteTemplate extends BaseData
 	{
 		$this->setVirtualXmlId(true);
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_SITE_TEMPLATE'));
-	}
-
-	public function getFilesSubdir()
-	{
-		return '/site/';
+		$this->setFilesSubdir('/site/');
 	}
 
 	public function getList(array $filter = array())

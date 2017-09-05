@@ -28,11 +28,7 @@ class Form extends BaseData
 	{
 		$this->setVirtualXmlId(true);
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FORM'));
-	}
-
-	public function getFilesSubdir()
-	{
-		return '/type/iblock/';
+		$this->setFilesSubdir('/type/iblock/');
 	}
 
 	public function getDependencies()

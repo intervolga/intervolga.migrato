@@ -11,9 +11,10 @@ Loc::loadMessages(__FILE__);
 
 class Field extends BaseUserField
 {
-	public function getFilesSubdir()
+	protected function configure()
 	{
-		return "/highloadblock/";
+		parent::configure();
+		$this->setFilesSubdir('/highloadblock/');
 	}
 
 	/**

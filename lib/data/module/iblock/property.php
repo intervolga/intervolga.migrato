@@ -24,11 +24,7 @@ class Property extends BaseData
 		Loader::includeModule("iblock");
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\PropertyTable");
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY'));
-	}
-
-	public function getFilesSubdir()
-	{
-		return "/type/iblock/";
+		$this->setFilesSubdir('/type/iblock/');
 	}
 
 	public function getList(array $filter = array())
