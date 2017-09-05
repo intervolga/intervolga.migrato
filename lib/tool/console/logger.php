@@ -6,8 +6,8 @@ use Bitrix\Main\IO\Directory;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\RecordId;
-use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Console\Command\BaseCommand;
+use Intervolga\Migrato\Tool\DataList;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -418,7 +418,7 @@ class Logger
 	 */
 	public function getEntityNameLoc($module, $entityName)
 	{
-		$dataClass = Config::getData($module, $entityName);
+		$dataClass = DataList::get($module, $entityName);
 		if ($dataClass instanceof BaseData)
 		{
 			$langName = $dataClass->getEntityNameLoc();
