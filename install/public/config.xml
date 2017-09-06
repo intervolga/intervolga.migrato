@@ -93,6 +93,9 @@
         <entity>
             <name>fileaccess</name>
         </entity>
+        <entity>
+            <name>agent</name>
+        </entity>
     </module>
     <module>
         <name>catalog</name>
