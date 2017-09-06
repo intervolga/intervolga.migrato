@@ -145,7 +145,7 @@ class ExportDataCommand extends BaseCommand
 			{
 				throw new \Exception(Loc::getMessage(
 					'INTERVOLGA_MIGRATO.DEPENDENCY_VALUE_NOT_SET',
-					array('#NAME' => $name)
+					array('#NAME#' => $name)
 				));
 			}
 		}
