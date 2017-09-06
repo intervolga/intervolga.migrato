@@ -271,51 +271,24 @@ class FileAccess extends BaseData
 
 	protected function deleteInner(RecordId $id)
 	{
-		if ($arRecord = $this->getList())
-		{
-			foreach ($arRecord as $idRecord => $record)
-			{
-				$fields = $record->getFields();
-				$complexId = RecordId::createComplexId(array(
-					'DIR' => $fields['DIR']->getValue(),
-					'PATH' => $fields['PATH']->getValue(),
-					'GROUP' => $fields['GROUP']->getValue(),
-				));
+		$array = $id->getValue();
 
-				if (implode('.', $id->getValue()) === implode('.', $complexId->getValue()))
-				{
-					$this->deleteRecord($fields);
-					break;
-				}
-			}
-		}
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\Value[] $fields
-	 */
-	protected function deleteRecord(array $fields)
-	{
-		$accessPath = Application::getDocumentRoot() . $fields['DIR']->getValue() . '/.access.php';
-		$groupXmlId = $fields['GROUP']->getValue();
-		$group = $groupXmlId ? Group::getInstance()->getPublicId($groupXmlId) : '*';
-		$path = $fields['PATH']->getValue();
+		$accessPath = Application::getDocumentRoot() . $array['DIR'] . '/.access.php';
 
 		if (File::isFileExists($accessPath))
 		{
-			$PERM = array();
+			$path = $array['PATH'];
+			$group = $array['GROUP'];
 
+			$PERM = array();
 			include $accessPath;
 
 			if ($PERM[$path][$group])
 			{
-				if (count($PERM[$path][$group]) == 1)
+				unset($PERM[$path][$group]);
+				if (!count($PERM[$path]))
 				{
 					unset($PERM[$path]);
-				}
-				else
-				{
-					unset($PERM[$path][$group]);
 				}
 
 				if (count($PERM) > 0)
@@ -332,48 +305,72 @@ class FileAccess extends BaseData
 
 	public function createInner(Record $record)
 	{
-		$fields = $record->getFields();
+		$fields = $this->recordToArray($record);
 		$this->updateFile($fields);
 
-		return RecordId::createComplexId(array(
-			'DIR' => $fields['DIR']->getValue(),
-			'PATH' => $fields['PATH']->getValue(),
-			'GROUP' => $fields['GROUP']->getValue(),
-		));
+		return $this->createId($fields);
 	}
 
 	public function update(Record $record)
 	{
-		$fields = $record->getFields();
+		$fields = $this->recordToArray($record);
 		$this->updateFile($fields);
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\Value[] $fields
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @return \string[]
+	 * @throws \Exception
+	 */
+	protected function recordToArray(Record $record)
+	{
+		$result = $record->getFieldsRaw();
+		if ($result['FOR_ALL'] == 'Y')
+		{
+			$result['GROUP'] = '*';
+		}
+		else
+		{
+			$groupDependency = $record->getDependency('GROUP');
+			if ($groupDependency)
+			{
+				$groupId = $groupDependency->findId();
+				if ($groupId)
+				{
+					$result['GROUP'] = $groupId->getValue();
+				}
+			}
+		}
+		unset($result['FOR_ALL']);
+
+		return $result;
+	}
+
+	/**
+	 * @param array $fields
 	 */
 	protected function updateFile(array $fields)
 	{
-		$path = $fields['PATH']->getValue();
-		$groupXmlId = $fields['GROUP']->getValue();
-		$group = $groupXmlId ? Group::getInstance()->getPublicId($groupXmlId) : '*';
-		$perm = $fields['PERMISSION']->getValue();
-		$documentRoot = Application::getDocumentRoot() . $fields['DIR']->getValue() . '/.access.php';
-		$PERM = array();
+		$path = $fields['PATH'];
+		$group = $fields['GROUP'];
+		$perm = $fields['PERMISSION'];
+		$accessPath = Application::getDocumentRoot() . $fields['DIR'] . '/.access.php';
 
-		if (File::isFileExists($documentRoot))
+		$PERM = array();
+		if (File::isFileExists($accessPath))
 		{
-			include $documentRoot;
+			include $accessPath;
 
 			if (!$PERM[$path][$group] || $PERM[$path][$group] !== $perm)
 			{
 				$PERM[$path][$group] = $perm;
-				$this->writeToFile($PERM, $documentRoot);
+				$this->writeToFile($PERM, $accessPath);
 			}
 		}
 		else
 		{
 			$PERM[$path][$group] = $perm;
-			$this->writeToFile($PERM, $documentRoot);
+			$this->writeToFile($PERM, $accessPath);
 		}
 	}
 
