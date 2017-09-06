@@ -74,7 +74,7 @@ class Agent extends BaseData
 		$xmlId = strtolower($xmlId);
 		$xmlId = str_replace('();', '', $xmlId);
 		$xmlId = str_replace(');', '', $xmlId);
-		$xmlId = str_replace('(', '_', $xmlId);
+		$xmlId = str_replace('(', '-', $xmlId);
 		$xmlId = str_replace('::', '-', $xmlId);
 		$xmlId = preg_replace('/[^a-z0-9-_]/', '_', $xmlId);
 		$xmlId = ltrim($xmlId, '_');
