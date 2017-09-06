@@ -6,8 +6,10 @@ use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
 
@@ -17,6 +19,9 @@ class FileAccess extends BaseData
 	{
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_FILE_ACCESS'));
 		$this->setVirtualXmlId(true);
+		$this->setDependencies(array(
+			'GROUP' => new Link(Group::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -24,19 +29,21 @@ class FileAccess extends BaseData
 		$result = array();
 		$files = $this->getAccessFiles();
 
-		if ($files && is_array($files))
+		if ($files)
 		{
-			foreach ($files as $fileObj)
+			foreach ($files as $file)
 			{
 				$PERM = array();
 
-				include $fileObj->getPath();
+				include $file->getPath();
 
-				$fileAccess = new FileAccess();
-				$result = array_merge($result, $fileAccess->permToRecords(
-					$PERM,
-					$fileObj->getDirectory()->getPath()
-				));
+				if ($PERM)
+				{
+					$result = array_merge($result, $this->permToRecords(
+						$PERM,
+						$file->getDirectory()->getPath()
+					));
+				}
 			}
 		}
 
@@ -157,13 +164,10 @@ class FileAccess extends BaseData
 					$replaced = str_replace($root, '', $fullPath);
 					$dir = $replaced ?: '/';
 
-					$groupIdObject = Group::getInstance()->createId($group);
-					$groupXmlId = Group::getInstance()->getXmlId($groupIdObject);
-
-					$record = $this->makeRecord($dir, $path, $groupXmlId, $permission);
+					$record = $this->makeRecord($dir, $path, $group, $permission);
 					if ($record)
 					{
-						$result[$dir . $path . $group] = $record;
+						$result[] = $record;
 					}
 				}
 			}
@@ -175,26 +179,38 @@ class FileAccess extends BaseData
 	/**
 	 * @param string $dir
 	 * @param string $path
-	 * @param string $groupXmlId
+	 * @param int $group
 	 * @param string $permission
 	 * @return null|\Intervolga\Migrato\Data\Record
 	 */
-	protected function makeRecord($dir, $path, $groupXmlId, $permission)
+	protected function makeRecord($dir, $path, $group, $permission)
 	{
 		if ($dir && $path && $permission)
 		{
 			$record = new Record($this);
-			$complexId = RecordId::createComplexId(array(
-				$dir, $path, $groupXmlId,
+			$complexId = $this->createId(array(
+				'DIR' => $dir,
+				'PATH' => $path,
+				'GROUP' => $group,
 			));
-			$record->setId($this->createId($complexId));
+			$record->setId($complexId);
 			$record->setXmlId($this->getXmlId($complexId));
+
+			$isForAll = false;
+			if ($group == '*')
+			{
+				$isForAll = true;
+				$group = Group::GROUP_ALL_USERS;
+			}
+
 			$record->addFieldsRaw(array(
 				'DIR' => $dir,
 				'PATH' => $path,
-				'GROUP' => $groupXmlId,
 				'PERMISSION' => $permission,
+				'FOR_ALL' => ($isForAll ? 'Y' : 'N'),
 			));
+
+			$this->addGroupDependency($record, $group);
 
 			return $record;
 		}
@@ -202,9 +218,55 @@ class FileAccess extends BaseData
 		return null;
 	}
 
+	public function createId($id)
+	{
+		return RecordId::createComplexId(array(
+			'DIR' => $id['DIR'],
+			'PATH' => $id['PATH'],
+			'GROUP' => $id['GROUP'],
+		));
+	}
+
 	public function getXmlId($id)
 	{
-		return md5(serialize($id->getValue()));
+		$array = $id->getValue();
+		$groupData = Group::getInstance();
+		$groupXmlId = $groupData->getXmlId($groupData->createId($array['GROUP']));
+
+		$md5 = md5(serialize(array(
+			$array['DIR'],
+			$array['PATH'],
+			$groupXmlId,
+		)));
+		return BaseXmlIdProvider::formatXmlId($md5);
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @param int $group
+	 * @throws \Exception
+	 */
+	protected function addGroupDependency(Record $record, $group)
+	{
+		$groupIdObject = Group::getInstance()->createId($group);
+		$groupXmlId = Group::getInstance()->getXmlId($groupIdObject);
+		if (!strlen($groupXmlId))
+		{
+			throw new \Exception(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.MAIN_GROUP_NOT_FOUND_FOR_PERMISSION',
+					array(
+						'#DIR#' => $record->getFieldRaw('DIR'),
+						'#PATH#' => $record->getFieldRaw('PATH'),
+						'#GROUP#' => $group,
+					)
+				)
+			);
+		}
+
+		$link = clone $this->getDependency('GROUP');
+		$link->setValue($groupXmlId);
+		$record->setDependency('GROUP', $link);
 	}
 
 	protected function deleteInner(RecordId $id)
@@ -215,9 +277,9 @@ class FileAccess extends BaseData
 			{
 				$fields = $record->getFields();
 				$complexId = RecordId::createComplexId(array(
-					$fields['DIR']->getValue(),
-					$fields['PATH']->getValue(),
-					$fields['GROUP']->getValue(),
+					'DIR' => $fields['DIR']->getValue(),
+					'PATH' => $fields['PATH']->getValue(),
+					'GROUP' => $fields['GROUP']->getValue(),
 				));
 
 				if (implode('.', $id->getValue()) === implode('.', $complexId->getValue()))
@@ -274,9 +336,9 @@ class FileAccess extends BaseData
 		$this->updateFile($fields);
 
 		return RecordId::createComplexId(array(
-			$fields['DIR']->getValue(),
-			$fields['PATH']->getValue(),
-			$fields['GROUP']->getValue(),
+			'DIR' => $fields['DIR']->getValue(),
+			'PATH' => $fields['PATH']->getValue(),
+			'GROUP' => $fields['GROUP']->getValue(),
 		));
 	}
 
@@ -284,12 +346,6 @@ class FileAccess extends BaseData
 	{
 		$fields = $record->getFields();
 		$this->updateFile($fields);
-
-		return RecordId::createComplexId(array(
-			$fields['DIR']->getValue(),
-			$fields['PATH']->getValue(),
-			$fields['GROUP']->getValue(),
-		));
 	}
 
 	/**
