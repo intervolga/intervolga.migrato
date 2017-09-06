@@ -90,6 +90,9 @@
         <entity>
             <name>sitetemplate</name>
         </entity>
+        <entity>
+            <name>fileaccess</name>
+        </entity>
     </module>
     <module>
         <name>catalog</name>
