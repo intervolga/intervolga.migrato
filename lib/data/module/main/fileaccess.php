@@ -1,82 +1,42 @@
-<? namespace Intervolga\Migrato\Data\Module\Main;
+<?php
+namespace Intervolga\Migrato\Data\Module\Main;
 
 use Bitrix\Main\Application;
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
-use Bitrix\Main\IO\FileSystemEntry;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 
+Loc::loadMessages(__FILE__);
+
 class FileAccess extends BaseData
 {
-	/**
-	 * @param \Bitrix\Main\IO\FileSystemEntry $fileSystemEntry
-	 * @return bool
-	 */
-	protected static function isServiceEntry(FileSystemEntry $fileSystemEntry)
+	protected function configure()
 	{
-		if ($fileSystemEntry->isFile())
-		{
-			if ($fileSystemEntry->getName() == 'urlrewrite.php')
-			{
-				return true;
-			}
-		}
-		if ($fileSystemEntry->isDirectory())
-		{
-			$names = array(
-				'bitrix',
-				'local',
-				'upload',
-				'.git',
-				'.svn',
-			);
-			if (in_array($fileSystemEntry->getName(), $names))
-			{
-				return true;
-			}
-		}
-
-		return false;
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_FILE_ACCESS'));
+		$this->setVirtualXmlId(true);
 	}
 
-	/**
-	 * @param \Bitrix\Main\IO\File $file
-	 * @return bool
-	 */
-	protected static function isCodeFile(File $file)
-	{
-		return ($file->getExtension() == 'php');
-	}
-
-	/**
-	 * @param Directory $dir
-	 * @param bool $accessFilter
-	 * @return array
-	 * @throws \Bitrix\Main\IO\FileNotFoundException
-	 */
-	protected static function getFilesRecursive(Directory $dir, $accessFilter = false)
+	public function getList(array $filter = array())
 	{
 		$result = array();
-		if ($dir->isExists())
+		$files = $this->getAccessFiles();
+
+		if ($files && is_array($files))
 		{
-			foreach ($dir->getChildren() as $fileSystemEntry)
+			foreach ($files as $fileObj)
 			{
-				if ($fileSystemEntry instanceof File)
-				{
-					if (static::isCodeFile($fileSystemEntry))
-					{
-						if (!$accessFilter || static::isAccessFile($fileSystemEntry))
-						{
-							$result[] = $fileSystemEntry;
-						}
-					}
-				}
-				if ($fileSystemEntry instanceof Directory)
-				{
-					$result = array_merge($result, static::getFilesRecursive($fileSystemEntry, $accessFilter));
-				}
+				$PERM = array();
+
+				include $fileObj->getPath();
+
+				$fileAccess = new FileAccess();
+				$result = array_merge($result, $fileAccess->permToRecords(
+					$PERM,
+					$fileObj->getDirectory()->getPath()
+				));
 			}
 		}
 
@@ -87,28 +47,25 @@ class FileAccess extends BaseData
 	 * @return \Bitrix\Main\IO\File[]
 	 * @throws \Bitrix\Main\IO\FileNotFoundException
 	 */
-	public static function getAccessFiles()
+	protected function getAccessFiles()
 	{
 		$root = Application::getDocumentRoot();
 		$dir = new Directory($root);
-		/**
-		 * @var \Bitrix\Main\IO\File[] $check
-		 */
 		$check = array();
 		foreach ($dir->getChildren() as $fileSystemEntry)
 		{
-			if (!static::isServiceEntry($fileSystemEntry))
+			if ($fileSystemEntry instanceof File)
 			{
-				if ($fileSystemEntry instanceof File)
+				if ($this->isAccessFile($fileSystemEntry))
 				{
-					if (static::isAccessFile($fileSystemEntry))
-					{
-						$check[] = $fileSystemEntry;
-					}
+					$check[] = $fileSystemEntry;
 				}
-				if ($fileSystemEntry instanceof Directory)
+			}
+			if ($fileSystemEntry instanceof Directory)
+			{
+				if (!$this->isServiceDirectory($fileSystemEntry))
 				{
-					$check = array_merge($check, static::getFilesRecursive($fileSystemEntry, true));
+					$check = array_merge($check, $this->getFilesRecursive($fileSystemEntry));
 				}
 			}
 		}
@@ -122,35 +79,74 @@ class FileAccess extends BaseData
 		return $check;
 	}
 
-	public function getList(array $filter = array())
+	/**
+	 * @param \Bitrix\Main\IO\File $file
+	 * @return bool
+	 */
+	protected function isAccessFile(File $file)
+	{
+		return ($file->getName() == '.access.php');
+	}
+
+	/**
+	 * @param \Bitrix\Main\IO\Directory $directory
+	 * @return bool
+	 */
+	protected function isServiceDirectory(Directory $directory)
+	{
+		$names = array(
+			'bitrix',
+			'local',
+			'upload',
+			'.git',
+			'.svn',
+		);
+		if (in_array($directory->getName(), $names))
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * @param \Bitrix\Main\IO\Directory $dir
+	 * @return \Bitrix\Main\IO\File[]
+	 * @throws \Bitrix\Main\IO\FileNotFoundException
+	 */
+	protected function getFilesRecursive(Directory $dir)
 	{
 		$result = array();
-		$files = static::getAccessFiles();
-		$root = Application::getDocumentRoot();
-
-		if ($files && is_array($files))
+		if ($dir->isExists())
 		{
-			foreach ($files as $fileObj)
+			foreach ($dir->getChildren() as $fileSystemEntry)
 			{
-				$PERM = array();
-
-				include $fileObj->getPath();
-
-				$fileAccess = new FileAccess();
-				$result = array_merge($result, $fileAccess->getResult(
-					$PERM,
-					$fileObj->getDirectory()->getPath(),
-					$root
-				));
+				if ($fileSystemEntry instanceof File)
+				{
+					if ($this->isAccessFile($fileSystemEntry))
+					{
+						$result[] = $fileSystemEntry;
+					}
+				}
+				if ($fileSystemEntry instanceof Directory)
+				{
+					$result = array_merge($result, $this->getFilesRecursive($fileSystemEntry));
+				}
 			}
 		}
 
 		return $result;
 	}
 
-	protected function getResult($perm, $fullPath, $root)
+	/**
+	 * @param array $perm
+	 * @param string $fullPath
+	 * @return array
+	 */
+	protected function permToRecords($perm, $fullPath)
 	{
 		$result = array();
+		$root = Application::getDocumentRoot();
 
 		if ($perm)
 		{
@@ -159,12 +155,16 @@ class FileAccess extends BaseData
 				foreach ($permissions as $group => $permission)
 				{
 					$replaced = str_replace($root, '', $fullPath);
-					$dir = $replaced ? : '/';
+					$dir = $replaced ?: '/';
 
 					$groupIdObject = Group::getInstance()->createId($group);
 					$groupXmlId = Group::getInstance()->getXmlId($groupIdObject);
 
-					$result[$dir . $path . $group] = $this->record($dir, $path, $groupXmlId, $permission);
+					$record = $this->makeRecord($dir, $path, $groupXmlId, $permission);
+					if ($record)
+					{
+						$result[$dir . $path . $group] = $record;
+					}
 				}
 			}
 		}
@@ -172,7 +172,14 @@ class FileAccess extends BaseData
 		return $result;
 	}
 
-	protected function record($dir, $path, $groupXmlId, $permission)
+	/**
+	 * @param string $dir
+	 * @param string $path
+	 * @param string $groupXmlId
+	 * @param string $permission
+	 * @return null|\Intervolga\Migrato\Data\Record
+	 */
+	protected function makeRecord($dir, $path, $groupXmlId, $permission)
 	{
 		if ($dir && $path && $permission)
 		{
@@ -192,7 +199,7 @@ class FileAccess extends BaseData
 			return $record;
 		}
 
-		return false;
+		return null;
 	}
 
 	public function getXmlId($id)
@@ -200,14 +207,9 @@ class FileAccess extends BaseData
 		return md5(serialize($id->getValue()));
 	}
 
-	public function setXmlId($id, $xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		// XML ID is autogenerated, cannot be modified
-	}
-
-	public function deleteInner($xmlId)
-	{
-		if ($arRecord = static::getList())
+		if ($arRecord = $this->getList())
 		{
 			foreach ($arRecord as $idRecord => $record)
 			{
@@ -217,29 +219,31 @@ class FileAccess extends BaseData
 					$fields['PATH']->getValue(),
 					$fields['GROUP']->getValue(),
 				));
-				$recordXmlId = $this->getXmlId($complexId);
 
-				if ($xmlId === $recordXmlId)
+				if (implode('.', $id->getValue()) === implode('.', $complexId->getValue()))
 				{
-					static::deleteRecord($fields);
+					$this->deleteRecord($fields);
 					break;
 				}
 			}
 		}
 	}
 
-	protected function deleteRecord($fields)
+	/**
+	 * @param \Intervolga\Migrato\Data\Value[] $fields
+	 */
+	protected function deleteRecord(array $fields)
 	{
-		$documentRoot = Application::getDocumentRoot() . $fields['DIR']->getValue() . '/.access.php';
+		$accessPath = Application::getDocumentRoot() . $fields['DIR']->getValue() . '/.access.php';
 		$groupXmlId = $fields['GROUP']->getValue();
 		$group = $groupXmlId ? Group::getInstance()->getPublicId($groupXmlId) : '*';
 		$path = $fields['PATH']->getValue();
 
-		if (File::isFileExists($documentRoot))
+		if (File::isFileExists($accessPath))
 		{
 			$PERM = array();
 
-			include $documentRoot;
+			include $accessPath;
 
 			if ($PERM[$path][$group])
 			{
@@ -254,29 +258,20 @@ class FileAccess extends BaseData
 
 				if (count($PERM) > 0)
 				{
-					static::writeToFile($PERM, $documentRoot);
+					$this->writeToFile($PERM, $accessPath);
 				}
 				else
 				{
-					File::deleteFile($documentRoot);
+					File::deleteFile($accessPath);
 				}
 			}
 		}
 	}
 
-	/**
-	 * @param \Bitrix\Main\IO\File $file
-	 * @return bool
-	 */
-	protected static function isAccessFile(File $file)
-	{
-		return ($file->getName() == '.access.php');
-	}
-
 	public function createInner(Record $record)
 	{
 		$fields = $record->getFields();
-		static::managerFile($fields);
+		$this->updateFile($fields);
 
 		return RecordId::createComplexId(array(
 			$fields['DIR']->getValue(),
@@ -288,7 +283,7 @@ class FileAccess extends BaseData
 	public function update(Record $record)
 	{
 		$fields = $record->getFields();
-		static::managerFile($fields);
+		$this->updateFile($fields);
 
 		return RecordId::createComplexId(array(
 			$fields['DIR']->getValue(),
@@ -297,7 +292,10 @@ class FileAccess extends BaseData
 		));
 	}
 
-	protected function managerFile($fields)
+	/**
+	 * @param \Intervolga\Migrato\Data\Value[] $fields
+	 */
+	protected function updateFile(array $fields)
 	{
 		$path = $fields['PATH']->getValue();
 		$groupXmlId = $fields['GROUP']->getValue();
@@ -313,17 +311,21 @@ class FileAccess extends BaseData
 			if (!$PERM[$path][$group] || $PERM[$path][$group] !== $perm)
 			{
 				$PERM[$path][$group] = $perm;
-				static::writeToFile($PERM, $documentRoot);
+				$this->writeToFile($PERM, $documentRoot);
 			}
 		}
 		else
 		{
 			$PERM[$path][$group] = $perm;
-			static::writeToFile($PERM, $documentRoot);
+			$this->writeToFile($PERM, $documentRoot);
 		}
 	}
 
-	protected function writeToFile($perm, $documentRoot)
+	/**
+	 * @param array $perm
+	 * @param string $accessPath
+	 */
+	protected function writeToFile($perm, $accessPath)
 	{
 		$str = "<?\n";
 		foreach ($perm as $permPath => $permissions)
@@ -336,6 +338,6 @@ class FileAccess extends BaseData
 		}
 		$str .= "?>";
 
-		File::putFileContents($documentRoot, $str);
+		File::putFileContents($accessPath, $str);
 	}
 }

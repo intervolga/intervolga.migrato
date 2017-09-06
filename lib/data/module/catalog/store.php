@@ -6,16 +6,19 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
 
 class Store extends BaseData
 {
-	public function __construct()
+	public function configure()
 	{
 		Loader::includeModule("catalog");
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Catalog\\StoreTable");
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.CATALOG_STORE'));
 	}
 
 	public function getList(array $filter = array())
@@ -55,8 +58,7 @@ class Store extends BaseData
 		$updateResult = $object->update($id, $update);
 		if (!$updateResult)
 		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->getException()->getString());
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
@@ -68,8 +70,7 @@ class Store extends BaseData
 		$id = $object->add($add);
 		if (!$id)
 		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->getException()->getString());
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 		else
 		{
@@ -77,16 +78,12 @@ class Store extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id)
+		$object = new \CCatalogStore();
+		if (!$object->delete($id->getValue()))
 		{
-			$object = new \CCatalogStore();
-			if (!$object->delete($id->getValue()))
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
-			}
+			throw new \Exception(ExceptionText::getUnknown());
 		}
 	}
 
