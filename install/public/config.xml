@@ -90,11 +90,23 @@
         <entity>
             <name>sitetemplate</name>
         </entity>
+        <entity>
+            <name>fileaccess</name>
+        </entity>
+        <entity>
+            <name>agent</name>
+        </entity>
     </module>
     <module>
         <name>catalog</name>
         <entity>
             <name>pricetype</name>
+        </entity>
+        <entity>
+            <name>store</name>
+        </entity>
+        <entity>
+            <name>extra</name>
         </entity>
     </module>
     <module>

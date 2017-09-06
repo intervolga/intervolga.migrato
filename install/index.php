@@ -107,6 +107,17 @@ class intervolga_migrato extends CModule
 			'onBeforeUpdateOrderPropsTable'
 		);
 
+		/**
+		 * @see \Intervolga\Migrato\Tool\EventHandlers\Catalog::onBeforeCatalogStoreAdd
+		 */
+		EventManager::getInstance()->registerEventHandler(
+			'catalog',
+			'OnBeforeCatalogStoreAdd',
+			$this->MODULE_ID,
+			'\Intervolga\Migrato\Tool\EventHandlers\Catalog',
+			'onBeforeCatalogStoreAdd'
+		);
+
 		return true;
 	}
 
@@ -163,6 +174,17 @@ class intervolga_migrato extends CModule
 			$this->MODULE_ID,
 			'\Intervolga\Migrato\Tool\EventHandlers\Sale',
 			'onBeforeUpdateOrderPropsTable'
+		);
+
+		/**
+		 * @see \Intervolga\Migrato\Tool\EventHandlers\Catalog::onBeforeCatalogStoreAdd
+		 */
+		EventManager::getInstance()->unRegisterEventHandler(
+			'catalog',
+			'OnBeforeCatalogStoreAdd',
+			$this->MODULE_ID,
+			'\Intervolga\Migrato\Tool\EventHandlers\Catalog',
+			'onBeforeCatalogStoreAdd'
 		);
 
 		return true;
