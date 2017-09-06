@@ -105,6 +105,9 @@
         <entity>
             <name>store</name>
         </entity>
+        <entity>
+            <name>extra</name>
+        </entity>
     </module>
     <module>
         <name>sale</name>
