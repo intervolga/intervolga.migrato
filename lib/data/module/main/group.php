@@ -1,8 +1,11 @@
-<? namespace Intervolga\Migrato\Data\Module\Main;
+<?php
+namespace Intervolga\Migrato\Data\Module\Main;
 
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -10,6 +13,11 @@ class Group extends BaseData
 {
 	const GROUP_ADMINS = 1;
 	const GROUP_ALL_USERS = 2;
+
+	protected function configure()
+	{
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_GROUP'));
+	}
 
 	public function getList(array $filter = array())
 	{
@@ -44,7 +52,7 @@ class Group extends BaseData
 		$isUpdated = $groupObject->update($record->getId()->getValue(), $record->getFieldsRaw());
 		if (!$isUpdated)
 		{
-			throw new \Exception(trim(strip_tags($groupObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($groupObject));
 		}
 	}
 
@@ -58,29 +66,24 @@ class Group extends BaseData
 		}
 		else
 		{
-			throw new \Exception(trim(strip_tags($groupObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($groupObject));
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
 		$groupObject = new \CGroup();
-		if ($id)
+		if (in_array($id->getValue(), array(static::GROUP_ADMINS, static::GROUP_ALL_USERS)))
 		{
-			if (in_array($id->getValue(), array(static::GROUP_ADMINS, static::GROUP_ALL_USERS)))
-			{
-				$group = Loc::getMessage("INTERVOLGA_MIGRATO.SYSTEM_GROUP_" . $id->getValue());
-				$message = Loc::getMessage("INTERVOLGA_MIGRATO.DELETE_SYSTEM_GROUP_ERROR", array(
-					"#GROUP#" => $group,
-					"#XMLID#" => $xmlId,
-				));
-				throw new \Exception($message);
-			}
-			if (!$groupObject->delete($id->getValue()))
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
-			}
+			$group = Loc::getMessage("INTERVOLGA_MIGRATO.SYSTEM_GROUP_" . $id->getValue());
+			$message = Loc::getMessage("INTERVOLGA_MIGRATO.DELETE_SYSTEM_GROUP_ERROR", array(
+				"#GROUP#" => $group,
+			));
+			throw new \Exception($message);
+		}
+		if (!$groupObject->delete($id->getValue()))
+		{
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
@@ -90,7 +93,7 @@ class Group extends BaseData
 		$isUpdated = $groupObject->update($id->getValue(), array("STRING_ID" => $xmlId));
 		if (!$isUpdated)
 		{
-			throw new \Exception(trim(strip_tags($groupObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($groupObject));
 		}
 	}
 

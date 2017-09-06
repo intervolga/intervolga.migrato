@@ -6,9 +6,13 @@ use Intervolga\Migrato\Data\Record;
 
 class FieldEnum extends BaseUserFieldEnum
 {
-	public function getFilesSubdir()
+	protected function configure()
 	{
-		return "/highloadblock/field/";
+		parent::configure();
+		$this->setFilesSubdir('/highloadblock/field/');
+		$this->setDependencies(array(
+			'USER_FIELD_ID' => new Link(Field::getInstance()),
+		));
 	}
 
 	/**
@@ -30,12 +34,5 @@ class FieldEnum extends BaseUserFieldEnum
 			}
 		}
 		return empty($filter["USER_FIELD_ID"]) ? array() : parent::getList($filter);
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			"USER_FIELD_ID" => new Link(Field::getInstance()),
-		);
 	}
 }

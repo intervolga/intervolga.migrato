@@ -1,4 +1,5 @@
-<?namespace Intervolga\Migrato\Data\Module\Iblock;
+<?php
+namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Iblock\IblockTable;
 use Bitrix\Iblock\TypeTable;
@@ -12,14 +13,19 @@ use Bitrix\Main\Localization\LanguageTable;
 use Intervolga\Migrato\Data\Value;
 use Bitrix\Iblock\TypeLanguageTable;
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
 class Type extends BaseData
 {
-	protected function __construct()
+	protected function configure()
 	{
 		Loader::includeModule("iblock");
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_TYPE'));
+		$this->setDependencies(array(
+			'LANGUAGE' => new Link(Language::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -47,13 +53,6 @@ class Type extends BaseData
 		return $result;
 	}
 
-	public function getDependencies()
-	{
-		return array(
-			'LANGUAGE' => new Link(Language::getInstance()),
-		);
-	}
-
 	/**
 	 * @return array|string[]
 	 * @throws \Bitrix\Main\ArgumentException
@@ -63,8 +62,8 @@ class Type extends BaseData
 		$result = array();
 		$getList = LanguageTable::getList(array(
 			"select" => array(
-				"LID"
-			)
+				"LID",
+			),
 		));
 		while ($language = $getList->fetch())
 		{
@@ -116,7 +115,7 @@ class Type extends BaseData
 		return array(
 			"NAME",
 			"SECTION_NAME",
-			"ELEMENT_NAME"
+			"ELEMENT_NAME",
 		);
 	}
 
@@ -129,7 +128,7 @@ class Type extends BaseData
 		$isUpdated = $typeObject->update($record->getId()->getValue(), $fields);
 		if (!$isUpdated)
 		{
-			throw new \Exception(trim(strip_tags($typeObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($typeObject));
 		}
 	}
 
@@ -169,44 +168,41 @@ class Type extends BaseData
 		}
 		else
 		{
-			throw new \Exception(trim(strip_tags($typeObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($typeObject));
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		if($id = $this->findRecord($xmlId))
+		$this->deleteContentIBlockType($id->getValue());
+		if (!($isDeleted = \CIBlockType::delete($id->getValue())))
 		{
-			$this->deleteContentIBlockType($id->getValue());
-			if (!($isDeleted = \CIBlockType::Delete($id->getValue())))
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_TYPE_DELETE_ERROR'), array('#ID#' => $xmlId));
-			}
+			throw new \Exception(ExceptionText::getUnknown());
 		}
 	}
 
 	private function deleteContentIBlockType($id)
 	{
 		$rsIblock = IblockTable::getList(array(
-			'filter' => array("IBLOCK_TYPE_ID" => $id)
+			'filter' => array("IBLOCK_TYPE_ID" => $id),
 		));
-		while($arIblock = $rsIblock->fetch())
+		while ($arIblock = $rsIblock->fetch())
 		{
-			if(\CModule::IncludeModule("catalog"))
+			if (Loader::includeModule('catalog'))
 			{
-				\CCatalog::Delete($arIblock["ID"]);
+				\CCatalog::delete($arIblock["ID"]);
 			}
 
 			$rsElement = \CIBlockElement::GetList(array(), array("IBLOCK_ID" => $arIblock["ID"]));
-			while($arElement = $rsElement->Fetch())
+			while ($arElement = $rsElement->Fetch())
 			{
-				\CIBlockElement::Delete($arElement["ID"]);
+				\CIBlockElement::delete($arElement["ID"]);
 			}
 
 			$rsSection = \CIBlockSection::GetList(array(), array("IBLOCK_ID" => $arIblock["ID"]));
-			while($arSection = $rsSection->Fetch())
+			while ($arSection = $rsSection->Fetch())
 			{
-				\CIBlockSection::Delete($arSection["ID"]);
+				\CIBlockSection::delete($arSection["ID"]);
 			}
 		}
 	}
@@ -214,13 +210,13 @@ class Type extends BaseData
 	public function setXmlId($id, $xmlId)
 	{
 		$rsType = TypeTable::getById($id->getValue());
-		if($arType = $rsType->fetch())
+		if ($arType = $rsType->fetch())
 		{
 			$arFields = array("ID" => $xmlId);
 			$result = TypeTable::update($id->getValue(), $arFields);
-			if($result->isSuccess())
+			if ($result->isSuccess())
 			{
-				foreach($this->getLanguages() as $language)
+				foreach ($this->getLanguages() as $language)
 				{
 					$langId = array('IBLOCK_TYPE_ID' => $id->getValue(), 'LANGUAGE_ID' => $language);
 					TypeLanguageTable::update($langId, array('IBLOCK_TYPE_ID' => $xmlId));
@@ -228,7 +224,7 @@ class Type extends BaseData
 			}
 			else
 			{
-				throw new \Exception(implode(', ', $result->getErrorMessages()));
+				throw new \Exception(ExceptionText::getFromResult($result));
 			}
 		}
 	}

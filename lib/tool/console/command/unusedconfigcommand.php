@@ -3,6 +3,7 @@
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Console\Logger;
+use Intervolga\Migrato\Tool\DataList;
 
 Loc::loadMessages(__FILE__);
 
@@ -18,8 +19,8 @@ class UnusedConfigCommand extends BaseCommand
 	public function executeInner()
 	{
 		$configDataClassesString = $this->getConfigDataCodes();
-		$allConfigDataClasses = Config::getInstance()->getAllDataClasses();
-		foreach ($allConfigDataClasses as $conf)
+		$dataClasses = DataList::getAll();
+		foreach ($dataClasses as $conf)
 		{
 			if (!in_array($conf->getEntityName(), $configDataClassesString[$conf->getModule()]))
 			{
@@ -27,8 +28,8 @@ class UnusedConfigCommand extends BaseCommand
 					Loc::getMessage(
 						'INTERVOLGA_MIGRATO.DATA_NOT_USED',
 						array(
-							'#MODULE#' => $this->logger->getModuleMessage($conf->getModule()),
-							'#ENTITY#' => $this->logger->getEntityMessage($conf->getEntityName()),
+							'#MODULE#' => $this->logger->getModuleNameLoc($conf->getModule()),
+							'#ENTITY#' => $this->logger->getEntityNameLoc($conf->getModule(), $conf->getEntityName()),
 						)
 					),
 					0,

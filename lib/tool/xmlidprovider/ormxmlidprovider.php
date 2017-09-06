@@ -3,6 +3,7 @@
 use Bitrix\Main\Entity\DataManager;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 class OrmXmlIdProvider extends BaseXmlIdProvider
 {
@@ -27,7 +28,7 @@ class OrmXmlIdProvider extends BaseXmlIdProvider
 		$updateResult = $dataManager::update($id->getValue(), array("XML_ID" => $xmlId));
 		if (!$updateResult->isSuccess())
 		{
-			throw new \Exception(implode(";", $updateResult->getErrorMessages()));
+			throw new \Exception(ExceptionText::getFromResult($updateResult));
 		}
 	}
 

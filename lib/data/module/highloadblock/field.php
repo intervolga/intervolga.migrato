@@ -1,16 +1,23 @@
 <? namespace Intervolga\Migrato\Data\Module\Highloadblock;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseUserField;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
+Loc::loadMessages(__FILE__);
+
 class Field extends BaseUserField
 {
-	public function getFilesSubdir()
+	protected function configure()
 	{
-		return "/highloadblock/";
+		parent::configure();
+		$this->setFilesSubdir('/highloadblock/');
+		$this->setDependencies(array(
+			'HLBLOCK_ID' => new Link(HighloadBlock::getInstance()),
+		));
 	}
 
 	/**
@@ -21,13 +28,6 @@ class Field extends BaseUserField
 	public function isCurrentUserField($userFieldEntityId)
 	{
 		return preg_match("/^HLBLOCK_[0-9]+$/", $userFieldEntityId);
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			"HLBLOCK_ID" => new Link(HighloadBlock::getInstance()),
-		);
 	}
 
 	/**
@@ -81,9 +81,15 @@ class Field extends BaseUserField
 		}
 		else
 		{
-			$module = static::getModule();
-			$entity = static::getEntityName();
-			throw new \Exception("Create $module/$entity: record haven`t the dependence for element " . $record->getXmlId());
+			throw new \Exception(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.DEPENDENCY_NOT_RESOLVED',
+					array
+					(
+						'#XML_ID#' => $record->getXmlId()
+					)
+				)
+			);
 		}
 	}
 

@@ -1,16 +1,25 @@
-<?namespace Intervolga\Migrato\Data\Module\Main;
+<?php
+namespace Intervolga\Migrato\Data\Module\Main;
 
 use Bitrix\Main\Localization\LanguageTable;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\ExceptionText;
+
+Loc::loadMessages(__FILE__);
 
 class Language extends BaseData
 {
-	public function getFilesSubdir()
+	protected function configure()
 	{
-		return '/loc/';
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_LANGUAGE'));
+		$this->setFilesSubdir('/loc/');
+		$this->setDependencies(array(
+			'CULTURE' => new Link(Culture::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -43,13 +52,6 @@ class Language extends BaseData
 		return $result;
 	}
 
-	public function getDependencies()
-	{
-		return array(
-			'CULTURE' => new Link(Culture::getInstance()),
-		);
-	}
-
 	public function createId($id)
 	{
 		return RecordId::createStringId($id);
@@ -71,9 +73,9 @@ class Language extends BaseData
 		$data = $this->recordToArray($record);
 		$id = $record->getId()->getValue();
 		$result = LanguageTable::update($id, $data);
-		if ($result->getErrorMessages())
+		if (!$result->isSuccess())
 		{
-			throw new \Exception(implode(', ', $result->getErrorMessages()));
+			throw new \Exception(ExceptionText::getFromResult($result));
 		}
 	}
 
@@ -110,9 +112,9 @@ class Language extends BaseData
 	{
 		$data = $this->recordToArray($record);
 		$result = LanguageTable::add($data);
-		if ($result->getErrorMessages())
+		if (!$result->isSuccess())
 		{
-			throw new \Exception(implode(', ', $result->getErrorMessages()));
+			throw new \Exception(ExceptionText::getFromResult($result));
 		}
 		else
 		{
@@ -120,12 +122,12 @@ class Language extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id)
+		$result = LanguageTable::delete($id->getValue());
+		if (!$result->isSuccess())
 		{
-			LanguageTable::delete($id->getValue());
+			throw new \Exception(ExceptionText::getFromResult($result));
 		}
 	}
 }

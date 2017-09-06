@@ -1,10 +1,13 @@
-<? namespace Intervolga\Migrato\Data\Module\Iblock;
+<?php
+namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Bitrix\Iblock\PropertyTable;
+use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -21,17 +24,15 @@ class Form extends BaseData
 	const XML_ELEMENT = 'el';
 	const XML_SECTION = 'sec';
 
-	public function getFilesSubdir()
+	protected function configure()
 	{
-		return '/type/iblock/';
-	}
-
-	public function getDependencies()
-	{
-		return array(
+		$this->setVirtualXmlId(true);
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FORM'));
+		$this->setFilesSubdir('/type/iblock/');
+		$this->setDependencies(array(
 			'IBLOCK_ID' => new Link(Iblock::getInstance()),
 			'PROPERTY_ID' => new Link(Property::getInstance()),
-		);
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -139,7 +140,7 @@ class Form extends BaseData
 				array(
 					'select' => array(
 						'ID',
-					)
+					),
 				)
 			);
 			while ($property = $propertiesGetList->fetch())
@@ -298,7 +299,7 @@ class Form extends BaseData
 
 		if (!$isUpdated)
 		{
-			throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_NOT_UPDATED');
+			throw new \Exception(ExceptionText::getUnknown());
 		}
 	}
 
@@ -331,17 +332,17 @@ class Form extends BaseData
 				}
 				else
 				{
-					throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_NOT_CREATED');
+					throw new \Exception(ExceptionText::getUnknown());
 				}
 			}
 			else
 			{
-				throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_NOT_CREATED');
+				throw new \Exception(ExceptionText::getUnknown());
 			}
 		}
 		else
 		{
-			throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_NOT_CREATED');
+			throw new \Exception(ExceptionText::getUnknown());
 		}
 	}
 
@@ -350,25 +351,15 @@ class Form extends BaseData
 	 *
 	 * @throws \Exception
 	 */
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$fields = $this->parseXmlId($xmlId);
+		$fields = \CUserOptions::getList(array(), array('ID' => $id))->fetch();
 		if ($fields)
 		{
 			if (!\CUserOptions::deleteOption($fields['CATEGORY'], $fields['NAME'], $fields['COMMON'] == 'Y', $fields['USER_ID']))
 			{
-				throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_FORM_DELETE_ERROR');
+				throw new \Exception(ExceptionText::getUnknown());
 			}
 		}
-	}
-
-	public function generateXmlId()
-	{
-		return '';
-	}
-
-	public function setXmlId($id, $xmlId)
-	{
-
 	}
 }

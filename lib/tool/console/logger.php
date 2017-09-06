@@ -1,9 +1,14 @@
-<?namespace Intervolga\Migrato\Tool\Console;
+<?php
+namespace Intervolga\Migrato\Tool\Console;
 
+use Bitrix\Main\Application;
 use Bitrix\Main\Entity\ExpressionField;
+use Bitrix\Main\IO\Directory;
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\Console\Command\BaseCommand;
+use Intervolga\Migrato\Tool\DataList;
 use Intervolga\Migrato\Tool\Orm\LogTable;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -197,8 +202,8 @@ class Logger
 		$replaces = array(
 			'#OPERATION#' => $dbLog['OPERATION'],
 			'#IDS#' => '',
-			'#MODULE#' => $this->getModuleMessage($dbLog['MODULE_NAME']),
-			'#ENTITY#' => $this->getEntityMessage($dbLog['ENTITY_NAME']),
+			'#MODULE#' => $this->getModuleNameLoc($dbLog['MODULE_NAME']),
+			'#ENTITY#' => $this->getEntityNameLoc($dbLog['MODULE_NAME'], $dbLog['ENTITY_NAME']),
 		);
 		$data = null;
 		if ($dbLog['RECORD'])
@@ -225,8 +230,8 @@ class Logger
 		}
 		if ($data)
 		{
-			$replaces['#MODULE#'] = $this->getModuleMessage($data->getModule());
-			$replaces['#ENTITY#'] = $this->getEntityMessage($data->getEntityName());
+			$replaces['#MODULE#'] = $this->getModuleNameLoc($data->getModule());
+			$replaces['#ENTITY#'] = $this->getEntityNameLoc($data->getModule(), $data->getEntityName());
 		}
 		return $replaces;
 	}
@@ -341,10 +346,14 @@ class Logger
 	 *
 	 * @return string
 	 */
-	public function getModuleMessage($moduleName)
+	public function getModuleNameLoc($moduleName)
 	{
-		$name = Loc::getMessage('INTERVOLGA_MIGRATO.MODULE_' . strtoupper($moduleName));
-		if (!$name)
+		$modulesNames = $this->getModulesNamesLoc();
+		if (array_key_exists($moduleName, $modulesNames))
+		{
+			$name = $modulesNames[$moduleName];
+		}
+		else
 		{
 			$name = Loc::getMessage(
 				'INTERVOLGA_MIGRATO.MODULE_UNKNOWN',
@@ -357,14 +366,77 @@ class Logger
 	}
 
 	/**
+	 * @return string[]
+	 */
+	protected function getModulesNamesLoc()
+	{
+		static $result = array();
+		if (!$result)
+		{
+			$result = $this->loadModulesNamesLoc();
+		}
+
+		return $result;
+	}
+
+	/**
+	 * @return string[]
+	 * @throws \Bitrix\Main\IO\FileNotFoundException
+	 */
+	protected function loadModulesNamesLoc()
+	{
+		$result = array();
+		$folders = array(
+			'/local/modules/',
+			'/bitrix/modules/',
+		);
+		foreach ($folders as $folder)
+		{
+			$modulesDirectory = new Directory(Application::getDocumentRoot() . $folder);
+			if ($modulesDirectory->isExists())
+			{
+				foreach ($modulesDirectory->getChildren() as $moduleDirectory)
+				{
+					if ($moduleDirectory instanceof Directory)
+					{
+						if ($info = \CModule::createModuleObject($moduleDirectory->getName()))
+						{
+							$result[$info->MODULE_ID] = $info->MODULE_NAME;
+						}
+					}
+				}
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * @param string $module
 	 * @param string $entityName
 	 *
 	 * @return string
 	 */
-	public function getEntityMessage($entityName)
+	public function getEntityNameLoc($module, $entityName)
 	{
-		$langName = Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_' . strtoupper($entityName));
-		return $langName ? $langName : $entityName;
+		$dataClass = DataList::get($module, $entityName);
+		if ($dataClass instanceof BaseData)
+		{
+			$langName = $dataClass->getEntityNameLoc();
+		}
+		else
+		{
+			if ($entityName == 'option')
+			{
+				$langName = Loc::getMessage('INTERVOLGA_MIGRATO.OPTIONS');
+			}
+			else
+			{
+				$langName = $entityName;
+			}
+		}
+
+		return $langName;
 	}
 
 	public function addShortSummary()
@@ -377,8 +449,8 @@ class Logger
 				Loc::getMessage(
 					'INTERVOLGA_MIGRATO.STATISTIC_SHORT',
 					array(
-						'#MODULE#' => self::getModuleMessage($logs['MODULE_NAME']),
-						'#ENTITY#' => self::getEntityMessage($logs['ENTITY_NAME']),
+						'#MODULE#' => $this->getModuleNameLoc($logs['MODULE_NAME']),
+						'#ENTITY#' => $this->getEntityNameLoc($logs['MODULE_NAME'], $logs['ENTITY_NAME']),
 						'#OPERATION#' => $logs['OPERATION'],
 						'#COUNT#' => $logs['CNT'],
 					)
@@ -401,6 +473,8 @@ class Logger
 			),
 			'order' => array(
 				'STEP_NUMBER' => 'ASC',
+				'MODULE_NAME' => 'ASC',
+				'ENTITY_NAME' => 'ASC',
 			),
 			'select' => array(
 				'MODULE_NAME',

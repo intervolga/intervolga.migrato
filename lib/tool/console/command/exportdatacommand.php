@@ -133,14 +133,20 @@ class ExportDataCommand extends BaseCommand
 		{
 			if (!$dependency->getValues())
 			{
-				throw new \Exception("Values for dependency <$name> are not set!");
+				throw new \Exception(Loc::getMessage(
+					'INTERVOLGA_MIGRATO.DEPENDENCY_VALUES_NOT_SET',
+					array('#NAME' => $name)
+				));
 			}
 		}
 		else
 		{
 			if (!$dependency->getValue())
 			{
-				throw new \Exception("Value for dependency <$name> is not set!");
+				throw new \Exception(Loc::getMessage(
+					'INTERVOLGA_MIGRATO.DEPENDENCY_VALUE_NOT_SET',
+					array('#NAME' => $name)
+				));
 			}
 		}
 	}

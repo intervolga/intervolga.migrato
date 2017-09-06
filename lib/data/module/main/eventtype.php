@@ -1,15 +1,26 @@
-<? namespace Intervolga\Migrato\Data\Module\Main;
+<?php
+namespace Intervolga\Migrato\Data\Module\Main;
 
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
 class EventType extends BaseData
 {
 	const XML_ID_SEPARATOR = "___";
+
+	protected function configure()
+	{
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_EVENT_TYPE'));
+		$this->setDependencies(array(
+			'LANGUAGE' => new Link(Language::getInstance()),
+		));
+	}
 
 	public function getList(array $filter = array())
 	{
@@ -44,30 +55,19 @@ class EventType extends BaseData
 		return $result;
 	}
 
-	public function getDependencies()
-	{
-		return array(
-			'LANGUAGE' => new Link(Language::getInstance()),
-		);
-	}
-
 	public function update(Record $record)
 	{
 		$isUpdated = \CEventType::update(array("ID" => $record->getId()->getValue()), $record->getFieldsRaw());
 		if (!$isUpdated)
 		{
-			global $APPLICATION;
-			if($exception = $APPLICATION->GetException())
-			{
-				throw new \Exception(trim(strip_tags($exception->GetString())));
-			}
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
 	protected function createInner(Record $record)
 	{
 		$arFields = $record->getFieldsRaw();
-		if($lang = $record->getDependency('LANGUAGE')->getId())
+		if ($lang = $record->getDependency('LANGUAGE')->getId())
 		{
 			$arFields['LID'] = $lang->getValue();
 		}
@@ -78,19 +78,15 @@ class EventType extends BaseData
 		}
 		else
 		{
-			global $APPLICATION;
-			$errorMsg = $APPLICATION->getException()->getString() ? $APPLICATION->getException()->getString()
-				: Loc::getMessage('INTERVOLGA_MIGRATO.EVENTTYPE_CREATE_ERROR');
-			throw new \Exception(trim(strip_tags($errorMsg)));
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id && !\CEventType::delete(array("ID" => $id->getValue())))
+		if (!\CEventType::delete(array("ID" => $id->getValue())))
 		{
-			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.EVENTTYPE_UNKNOWN_ERROR'));
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
@@ -103,8 +99,7 @@ class EventType extends BaseData
 		);
 		if (!$isUpdated)
 		{
-			global $APPLICATION;
-			throw new \Exception(trim(strip_tags($APPLICATION->getException()->getString())));
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
@@ -113,7 +108,7 @@ class EventType extends BaseData
 		$eventType = \CEventType::GetList(array("ID" => $id->getValue()));
 		if ($type = $eventType->Fetch())
 		{
-			return $type["LID"] . static::XML_ID_SEPARATOR .  $type["EVENT_NAME"];
+			return $type["LID"] . static::XML_ID_SEPARATOR . $type["EVENT_NAME"];
 		}
 		else
 		{
