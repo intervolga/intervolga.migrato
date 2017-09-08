@@ -1,4 +1,4 @@
-\<?
+<?
 $MESS['INTERVOLGA_MIGRATO.CHECK_EXEC_DESCRIPTION'] = 'Найти использование ID сущностей в коде сайта';
 $MESS['INTERVOLGA_MIGRATO.HEADER_FILE'] = 'Файл';
 $MESS['INTERVOLGA_MIGRATO.HEADER_LINE'] = 'Строка';
