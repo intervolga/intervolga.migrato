@@ -1,4 +1,5 @@
-<? namespace Intervolga\Migrato\Data\Module\Main;
+<?php
+namespace Intervolga\Migrato\Data\Module\Main;
 
 use Intervolga\Migrato\Data\BaseUserField;
 use \Intervolga\Migrato\Data\Module\Highloadblock;

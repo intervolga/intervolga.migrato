@@ -1,13 +1,27 @@
-<?namespace Intervolga\Migrato\Data\Module\Main;
+<?php
+namespace Intervolga\Migrato\Data\Module\Main;
 
+use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\SiteTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\ExceptionText;
+
+Loc::loadMessages(__FILE__);
 
 class Site extends BaseData
 {
+	protected function configure()
+	{
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_SITE'));
+		$this->setDependencies(array(
+			'LANGUAGE' => new Link(Language::getInstance()),
+			'CULTURE' => new Link(Culture::getInstance()),
+		));
+	}
+
 	/**
 	 * @param string[] $filter
 	 *
@@ -56,14 +70,6 @@ class Site extends BaseData
 		return $result;
 	}
 
-	public function getDependencies()
-	{
-		return array(
-			'LANGUAGE' => new Link(Language::getInstance()),
-			'CULTURE' => new Link(Culture::getInstance()),
-		);
-	}
-
 	public function createId($id)
 	{
 		return RecordId::createStringId($id);
@@ -84,9 +90,9 @@ class Site extends BaseData
 		$data = $this->recordToArray($record);
 		$id = $record->getId()->getValue();
 		$result = SiteTable::update($id, $data);
-		if ($result->getErrorMessages())
+		if (!$result->isSuccess())
 		{
-			throw new \Exception(implode(', ', $result->getErrorMessages()));
+			throw new \Exception(ExceptionText::getFromResult($result));
 		}
 	}
 
@@ -135,9 +141,9 @@ class Site extends BaseData
 	{
 		$data = $this->recordToArray($record);
 		$result = SiteTable::add($data);
-		if ($result->getErrorMessages())
+		if (!$result->isSuccess())
 		{
-			throw new \Exception(implode(', ', $result->getErrorMessages()));
+			throw new \Exception(ExceptionText::getFromResult($result));
 		}
 		else
 		{
@@ -145,12 +151,12 @@ class Site extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id)
+		$result = SiteTable::delete($id->getValue());
+		if (!$result->isSuccess())
 		{
-			SiteTable::delete($id->getValue());
+			throw new \Exception(ExceptionText::getFromResult($result));
 		}
 	}
 }

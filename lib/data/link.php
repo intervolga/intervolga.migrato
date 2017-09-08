@@ -1,5 +1,9 @@
 <?namespace Intervolga\Migrato\Data;
 
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
+
 class Link extends Value
 {
 	protected $targetData = null;
@@ -95,7 +99,7 @@ class Link extends Value
 		}
 		else
 		{
-			throw new \Exception("Use getId() for geting single id");
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.USE_GET_ID'));
 		}
 	}
 
@@ -118,12 +122,12 @@ class Link extends Value
 			}
 			else
 			{
-				throw new \Exception("Use findId() for finding single ids");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.USE_FIND_ID'));
 			}
 		}
 		else
 		{
-			throw new \Exception("Set target data to find link id");
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.SET_TARGET_DATA'));
 		}
 	}
 
@@ -141,12 +145,12 @@ class Link extends Value
 			}
 			else
 			{
-				throw new \Exception("Use findIds() for finding multiple ids");
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.USE_FIND_IDS'));
 			}
 		}
 		else
 		{
-			throw new \Exception("Set target data to find link id");
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.SET_TARGET_DATA'));
 		}
 	}
 }

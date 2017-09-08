@@ -1,11 +1,18 @@
-<? namespace Intervolga\Migrato\Data;
+<?php
+namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\Localization\Loc;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
 abstract class BaseUserFieldEnum extends BaseData
 {
+	protected function configure()
+	{
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD_ENUM'));
+	}
+
 	/**
 	 * @param string[] $filter
 	 *
@@ -16,7 +23,7 @@ abstract class BaseUserFieldEnum extends BaseData
 		$result = array();
 		$enumFieldObject = new \CUserFieldEnum();
 		$rsEnum = $enumFieldObject->GetList(array(), $filter);
-		while($enum = $rsEnum->Fetch())
+		while ($enum = $rsEnum->Fetch())
 		{
 			$record = new Record($this);
 			$record->setXmlId($enum["XML_ID"]);
@@ -42,15 +49,15 @@ abstract class BaseUserFieldEnum extends BaseData
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
-		if($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
+		if ($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
 		{
 			$fields["XML_ID"] = $record->getXmlId();
 			$enumObject = new \CUserFieldEnum();
 
-			$isUpdated = $enumObject->SetEnumValues($fieldId->getValue(), array($record->getId()->getValue() => $fields));
+			$isUpdated = $enumObject->setEnumValues($fieldId->getValue(), array($record->getId()->getValue() => $fields));
 			if (!$isUpdated)
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
+				throw new \Exception(ExceptionText::getFromApplication());
 			}
 		}
 	}
@@ -58,20 +65,20 @@ abstract class BaseUserFieldEnum extends BaseData
 	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
-		if($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
+		if ($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
 		{
 			$fields["XML_ID"] = $record->getXmlId();
 			$fields["USER_FIELD_ID"] = $fieldId->getValue();
 			$enumObject = new \CUserFieldEnum();
 
-			$isUpdated = $enumObject->SetEnumValues($fieldId->getValue(), array("n" => $fields));
+			$isUpdated = $enumObject->setEnumValues($fieldId->getValue(), array("n" => $fields));
 			if ($isUpdated)
 			{
-			    return $this->createId($this->findRecord($record->getXmlId())->getValue());
+				return $this->createId($this->findRecord($record->getXmlId())->getValue());
 			}
 			else
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
+				throw new \Exception(ExceptionText::getFromApplication());
 			}
 		}
 		else
@@ -80,11 +87,10 @@ abstract class BaseUserFieldEnum extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
 		$fieldenumObject = new \CUserFieldEnum();
-		$fieldenumObject->DeleteFieldEnum($id);
+		$fieldenumObject->deleteFieldEnum($id->getValue());
 	}
 
 	public function setXmlId($id, $xmlId)
@@ -108,11 +114,11 @@ abstract class BaseUserFieldEnum extends BaseData
 	public function getXmlId($id)
 	{
 		$xmlId = "";
-		if($id = $id->getValue())
+		if ($id = $id->getValue())
 		{
 			$obEnum = new \CUserFieldEnum();
 			$rsEnum = $obEnum->getList(array(), array("ID" => $id));
-			if($arEnum = $rsEnum->fetch())
+			if ($arEnum = $rsEnum->fetch())
 			{
 				$xmlId = $arEnum["XML_ID"];
 			}

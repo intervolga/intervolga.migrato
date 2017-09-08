@@ -3,8 +3,8 @@
 use Bitrix\Main\IO\File;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\SystemException;
-use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\DataFileViewXml;
+use Intervolga\Migrato\Tool\DataList;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
@@ -71,7 +71,7 @@ class ImportXmlIdCommand extends ImportDataCommand
 		$module = $this->input->getArgument('module');
 		$data = $this->input->getArgument('data');
 
-		$dataClasses = Config::getInstance()->getAllDataClasses();
+		$dataClasses = DataList::getAll();
 		foreach ($dataClasses as $dataClass)
 		{
 			if ($dataClass->getModule() == $module

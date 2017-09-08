@@ -17,6 +17,7 @@ class RecordId
 
 	protected function __construct()
 	{
+		// use create... functions for new instance
 	}
 
 	/**

@@ -1,4 +1,5 @@
-<?namespace Intervolga\Migrato\Data\Module\Iblock;
+<?php
+namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Iblock\IblockTable;
 use Bitrix\Iblock\InheritedProperty\IblockTemplates;
@@ -10,21 +11,23 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Value;
+use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
 
 class Iblock extends BaseData
 {
-	protected function __construct()
+	protected function configure()
 	{
-		Loader::includeModule("iblock");
+		Loader::includeModule('iblock');
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\IblockTable");
-	}
-
-	public function getFilesSubdir()
-	{
-		return "/type/";
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_IBLOCK'));
+		$this->setFilesSubdir('/type/');
+		$this->setDependencies(array(
+			'IBLOCK_TYPE_ID' => new Link(Type::getInstance()),
+			'SITE' => new Link(Site::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -231,14 +234,6 @@ class Iblock extends BaseData
 		$record->setDependency('SITE', $dependency);
 	}
 
-	public function getDependencies()
-	{
-		return array(
-			"IBLOCK_TYPE_ID" => new Link(Type::getInstance()),
-			'SITE' => new Link(Site::getInstance()),
-		);
-	}
-
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsRaw(array("SEO", "FIELDS", "MESSAGES"));
@@ -261,7 +256,7 @@ class Iblock extends BaseData
 		}
 		else
 		{
-			throw new \Exception(trim(strip_tags($iblockObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($iblockObject));
 		}
 	}
 
@@ -342,7 +337,7 @@ class Iblock extends BaseData
 			}
 			else
 			{
-				throw new \Exception(trim(strip_tags($iblockObject->LAST_ERROR)));
+				throw new \Exception(ExceptionText::getLastError($iblockObject));
 			}
 		}
 		else
@@ -381,16 +376,12 @@ class Iblock extends BaseData
 		$seoProps->set($seo);
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id)
+		$iblockObject = new \CIBlock();
+		if (!$iblockObject->delete($id->getValue()))
 		{
-			$iblockObject = new \CIBlock();
-			if (!$iblockObject->delete($id->getValue()))
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
-			}
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 }

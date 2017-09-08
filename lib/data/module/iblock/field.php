@@ -1,16 +1,24 @@
-<? namespace Intervolga\Migrato\Data\Module\Iblock;
+<?php
+namespace Intervolga\Migrato\Data\Module\Iblock;
 
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseUserField;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
+Loc::loadMessages(__FILE__);
+
 class Field extends BaseUserField
 {
-	public function getFilesSubdir()
+	protected function configure()
 	{
-		return "/type/iblock/section/";
+		parent::configure();
+		$this->setFilesSubdir('/type/iblock/section/');
+		$this->setDependencies(array(
+			'IBLOCK_ID' => new Link(Iblock::getInstance()),
+		));
 	}
 
 	/**
@@ -21,13 +29,6 @@ class Field extends BaseUserField
 	public function isCurrentUserField($userFieldEntityId)
 	{
 		return preg_match("/^IBLOCK_[0-9]+_SECTION$/", $userFieldEntityId);
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			"IBLOCK_ID" => new Link(Iblock::getInstance()),
-		);
 	}
 
 	/**
@@ -82,9 +83,15 @@ class Field extends BaseUserField
 		}
 		else
 		{
-			$module = static::getModule();
-			$entity = static::getEntityName();
-			throw new \Exception("Create $module/$entity: record haven`t the dependence for element " . $record->getXmlId());
+			throw new \Exception(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.DEPENDENCY_NOT_RESOLVED',
+					array
+					(
+						'#XML_ID#' => $record->getXmlId()
+					)
+				)
+			);
 		}
 	}
 

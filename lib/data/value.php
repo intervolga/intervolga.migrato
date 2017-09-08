@@ -1,5 +1,9 @@
 <? namespace Intervolga\Migrato\Data;
 
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
+
 class Value
 {
 	/**
@@ -121,7 +125,7 @@ class Value
 	{
 		if ($this->multiple)
 		{
-			throw new \Exception("Use getValues() for getting multiple Value values");
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.USE_GET_VALUES'));
 		}
 		else
 		{
@@ -171,7 +175,7 @@ class Value
 		}
 		else
 		{
-			throw new \Exception("Use getValue() for getting single Value value");
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.USE_GET_VALUE'));
 		}
 	}
 
@@ -193,7 +197,7 @@ class Value
 	{
 		if ($this->multiple)
 		{
-			throw new \Exception("Use getDescriptions() for getting multiple Value descriptions");
+			throw new \Exception(Loc::getMessage('USE_GET_DESCRIPTIONS'));
 		}
 		else
 		{
@@ -246,7 +250,7 @@ class Value
 		}
 		else
 		{
-			throw new \Exception("Use getDescription() for getting single Value description");
+			throw new \Exception(Loc::getMessage('USE_GET_DESCRIPTION'));
 		}
 	}
 

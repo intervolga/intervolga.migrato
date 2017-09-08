@@ -486,7 +486,7 @@ class ImportDataCommand extends BaseCommand
 				$id = $dataRecord->getData()->findRecord($dataRecord->getXmlId());
 				if (!$id)
 				{
-					throw new \Exception('Record not found');
+					throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_NOT_FOUND'));
 				}
 				$clone->setId($id);
 				$clone->updateReferences();

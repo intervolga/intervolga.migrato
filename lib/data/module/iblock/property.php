@@ -1,4 +1,5 @@
-<? namespace Intervolga\Migrato\Data\Module\Iblock;
+<?php
+namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Iblock\PropertyTable;
 use Bitrix\Iblock\SectionPropertyTable;
@@ -9,6 +10,7 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Value;
+use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
@@ -17,15 +19,18 @@ class Property extends BaseData
 {
 	const XML_ID_SEPARATOR = '.';
 
-	public function __construct()
+	protected function configure()
 	{
 		Loader::includeModule("iblock");
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Iblock\\PropertyTable");
-	}
-
-	public function getFilesSubdir()
-	{
-		return "/type/iblock/";
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY'));
+		$this->setFilesSubdir('/type/iblock/');
+		$this->setDependencies(array(
+			'IBLOCK_ID' => new Link(Iblock::getInstance()),
+		));
+		$this->setReferences(array(
+			'LINK_IBLOCK_ID' => new Link(Iblock::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -143,20 +148,6 @@ class Property extends BaseData
 		return $result;
 	}
 
-	public function getDependencies()
-	{
-		return array(
-			"IBLOCK_ID" => new Link(Iblock::getInstance()),
-		);
-	}
-
-	public function getReferences()
-	{
-		return array(
-			"LINK_IBLOCK_ID" => new Link(Iblock::getInstance()),
-		);
-	}
-
 	public function update(Record $record)
 	{
 		$fields = $this->recordToArray($record);
@@ -164,7 +155,7 @@ class Property extends BaseData
 		$propertyObject = new \CIBlockProperty();
 		if (!$propertyObject->update($record->getId()->getValue(), $fields))
 		{
-			throw new \Exception(trim(strip_tags($propertyObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($propertyObject));
 		}
 		if ($record->isReferenceUpdate())
 		{
@@ -193,7 +184,9 @@ class Property extends BaseData
 			}
 			else
 			{
-				throw new \Exception("Not found IBlock " . $iblock->getValue());
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_NOT_FOUND', array(
+					'#IBLOCK#' => '$iblock->getValue()',
+				)));
 			}
 		}
 		if ($reference = $record->getReference("LINK_IBLOCK_ID"))
@@ -332,17 +325,16 @@ class Property extends BaseData
 		}
 		else
 		{
-			throw new \Exception(trim(strip_tags($propertyObject->LAST_ERROR)));
+			throw new \Exception(ExceptionText::getLastError($propertyObject));
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
 		$propertyObject = new \CIBlockProperty();
 		if ($id && !$propertyObject->delete($id->getValue()))
 		{
-			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_PROPERTY_UNKNOWN_ERROR'));
+			throw new \Exception(ExceptionText::getUnknown());
 		}
 	}
 
@@ -353,8 +345,7 @@ class Property extends BaseData
 		$isUpdated = $propertyObject->update($id->getValue(), array('XML_ID' => $fields[1]));
 		if (!$isUpdated)
 		{
-			global $APPLICATION;
-			throw new \Exception(trim(strip_tags($APPLICATION->getException()->getString())));
+			throw new \Exception(ExceptionText::getLastError($propertyObject));
 		}
 	}
 

@@ -1,4 +1,5 @@
-<? namespace Intervolga\Migrato\Data\Module\Catalog;
+<?php
+namespace Intervolga\Migrato\Data\Module\Catalog;
 
 use Bitrix\Catalog\GroupAccessTable;
 use Bitrix\Catalog\GroupLangTable;
@@ -9,25 +10,24 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Module\Main\Group;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Value;
+use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
 
 class PriceType extends BaseData
 {
-	public function __construct()
+	protected function configure()
 	{
 		Loader::includeModule("catalog");
 		$this->xmlIdProvider = new OrmXmlIdProvider($this, "\\Bitrix\\Catalog\\GroupTable");
-	}
-
-	public function getDependencies()
-	{
-		return array(
-			"USER_GROUP" => new Link(Group::getInstance()),
-			"USER_GROUP_BUY" => new Link(Group::getInstance()),
-		);
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.CATALOG_PRICE_TYPE'));
+		$this->setDependencies(array(
+			'USER_GROUP' => new Link(Group::getInstance()),
+			'USER_GROUP_BUY' => new Link(Group::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -139,8 +139,7 @@ class PriceType extends BaseData
 		$updateResult = $object->update($id, $update);
 		if (!$updateResult)
 		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->getException()->getString());
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
@@ -152,8 +151,7 @@ class PriceType extends BaseData
 		$id = $object->add($add);
 		if (!$id)
 		{
-			global $APPLICATION;
-			throw new \Exception($APPLICATION->getException()->getString());
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 		else
 		{
@@ -161,16 +159,12 @@ class PriceType extends BaseData
 		}
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$id = $this->findRecord($xmlId);
-		if ($id)
+		$object = new \CCatalogGroup();
+		if (!$object->delete($id->getValue()))
 		{
-			$object = new \CCatalogGroup();
-			if (!$object->delete($id->getValue()))
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.UNKNOWN_ERROR'));
-			}
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
