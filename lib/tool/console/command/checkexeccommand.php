@@ -7,17 +7,11 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\Code;
 use Intervolga\Migrato\Tool\Console\Logger;
-use Intervolga\Migrato\Tool\Console\TableHelper;
 
 Loc::loadMessages(__FILE__);
 
 class CheckExecCommand extends BaseCommand
 {
-	/**
-	 * @var \Intervolga\Migrato\Tool\Console\TableHelper table
-	 */
-	protected $table = null;
-
 	protected function configure()
 	{
 		$this->setName('checkexec');
@@ -26,22 +20,7 @@ class CheckExecCommand extends BaseCommand
 
 	public function executeInner()
 	{
-		$this->initTable();
 		$this->checkComponents();
-		$this->logger->add($this->table->getOutput());
-	}
-
-	protected function initTable()
-	{
-		$this->table = new TableHelper();
-		$headers = array(
-			'FILE' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_FILE'),
-			'LINE' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_LINE'),
-			'OBJECT' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_OBJECT'),
-			'FIELD' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_FIELD'),
-			'VALUE' => Loc::getMessage('INTERVOLGA_MIGRATO.HEADER_VALUE'),
-		);
-		$this->table->addHeader($headers);
 	}
 
 	protected function checkComponents()
@@ -94,15 +73,13 @@ class CheckExecCommand extends BaseCommand
 		{
 			foreach ($values as $value)
 			{
-				$this->addTableRow(array(
+				$this->logComponentError(array(
 					'FILE' => $file->getPath(),
 					'LINE' => $component['START'],
 					'OBJECT' => $component['DATA']['COMPONENT_NAME'],
 					'FIELD' => $param,
 					'VALUE' => $value,
-
 					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.CHECK_COMPONENT'),
-					'COMMENT' => 'INTERVOLGA_MIGRATO.CHECK_COMPONENT_COMMENT',
 				));
 			}
 		}
@@ -205,7 +182,7 @@ class CheckExecCommand extends BaseCommand
 	/**
 	 * @param array $row
 	 */
-	protected function addTableRow(array $row)
+	protected function logComponentError(array $row)
 	{
 		$root = Application::getDocumentRoot();
 		$row['FILE'] = str_replace($root, '', $row['FILE']);
@@ -213,23 +190,21 @@ class CheckExecCommand extends BaseCommand
 		$this->logger->addDb(
 			array(
 				'OPERATION' => $row['OPERATION'],
-				'ID' => RecordId::createStringId($row['OBJECT']),
+				'ID' => RecordId::createComplexId(
+					array(
+						'COMPONENT' => $row['OBJECT'],
+						$row['FIELD'] => $row['VALUE'],
+					)
+				),
 				'COMMENT' => Loc::getMessage(
-					$row['COMMENT'],
+					'INTERVOLGA_MIGRATO.CHECK_COMPONENT_COMMENT',
 					array(
 						'#FILE#' => $row['FILE'],
 						'#LINE#' => $row['LINE'],
-						'#FIELD#' => $row['FIELD'],
-						'#VALUE#' => $row['VALUE'],
 					)
 				),
 			),
 			Logger::TYPE_FAIL
 		);
-
-		unset($row['COMMENT']);
-		unset($row['OPERATION']);
-
-		$this->table->addRow($row);
 	}
 }
