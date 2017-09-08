@@ -28,7 +28,6 @@ class CheckExecCommand extends BaseCommand
 	{
 		$this->initTable();
 		$this->checkComponents();
-		$this->checkAccessFiles();
 		$this->logger->add($this->table->getOutput());
 	}
 
@@ -201,64 +200,6 @@ class CheckExecCommand extends BaseCommand
 	protected function isNumericValue($value)
 	{
 		return is_numeric($value);
-	}
-
-	/**
-	 * @return array
-	 * @throws \Bitrix\Main\IO\FileNotFoundException
-	 */
-	protected function checkAccessFiles()
-	{
-		$result = array();
-		foreach (Code::getAccessFiles() as $file)
-		{
-			foreach ($this->parsePermissions($file) as $line => $parsedLine)
-			{
-				if ($this->isNumericValue($parsedLine['GROUP']))
-				{
-					$this->addTableRow(array(
-						'FILE' => $file->getPath(),
-						'LINE' => $line,
-						'OBJECT' => '$PERM',
-						'FIELD' => $parsedLine['RESOURCE'],
-						'VALUE' => $parsedLine['GROUP'],
-
-						'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.CHECK_ACCESS_FILE'),
-						'COMMENT' => 'INTERVOLGA_MIGRATO.CHECK_ACCESS_FILE_COMMENT',
-					));
-				}
-			}
-		}
-		return $result;
-	}
-
-	/**
-	 * @param File $file
-	 * @return array
-	 * @throws \Bitrix\Main\IO\FileNotFoundException
-	 */
-	protected function parsePermissions(File $file)
-	{
-		$result = array();
-		$re = '/^\$PERM\[(?<RESOURCE>.*?)\]\[(?<GROUP>.*?)\]/m';
-		$lines = explode(PHP_EOL, $file->getContents());
-		foreach ($lines as $i => $line)
-		{
-			$matches = array();
-			preg_match($re, $line, $matches);
-			if ($matches)
-			{
-				$group = str_replace('"', '', $matches['GROUP']);
-				$resource = str_replace('"', '', $matches['RESOURCE']);
-				$line = ($i + 1);
-				$result[$line] = array(
-					'RESOURCE' => $resource,
-					'GROUP' => $group,
-				);
-			}
-		}
-
-		return $result;
 	}
 
 	/**
