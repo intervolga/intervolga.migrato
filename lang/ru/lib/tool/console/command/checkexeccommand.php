@@ -1,0 +1,4 @@
+<?
+$MESS['INTERVOLGA_MIGRATO.CHECK_EXEC_DESCRIPTION'] = 'Найти использование ID сущностей в коде сайта';
+$MESS['INTERVOLGA_MIGRATO.CHECK_COMPONENT'] = 'Проверка компонента';
+$MESS['INTERVOLGA_MIGRATO.CHECK_COMPONENT_COMMENT'] = "#FILE#:#LINE#";

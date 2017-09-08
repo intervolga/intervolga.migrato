@@ -19,9 +19,12 @@ abstract class BaseCommand extends Command
 	protected static $mainCommand = '';
 
 	/**
-	 * @var InputInterface $input
+	 * @var \Symfony\Component\Console\Input\InputInterface $input
 	 */
 	protected $input = null;
+	/**
+	 * @var \Symfony\Component\Console\Output\OutputInterface $output
+	 */
 	protected $output = null;
 	protected $clearLogs = true;
 	/**
