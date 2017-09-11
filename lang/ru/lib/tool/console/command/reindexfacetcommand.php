@@ -1,3 +1,2 @@
 <?
-$MESS['INTERVOLGA_MIGRATO.REINDEX_FACET_DESCRIPTION'] = 'Обновление Фасетных индексов';
-$MESS['INTERVOLGA_MIGRATO.REINDEX_FACET_UPDATED'] = 'Обработано инфоблоков: #COUNT# из #TOTAL#';
+$MESS['INTERVOLGA_MIGRATO.REINDEX_FACET_DESCRIPTION'] = 'Обновление фасетных индексов';

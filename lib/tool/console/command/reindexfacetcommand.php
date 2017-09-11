@@ -1,11 +1,11 @@
-<?namespace Intervolga\Migrato\Tool\Console\Command;
+<?php
+namespace Intervolga\Migrato\Tool\Console\Command;
 
 use Bitrix\Catalog\CatalogIblockTable;
 use Bitrix\Iblock\IblockTable;
 use Bitrix\Iblock\PropertyIndex\Manager;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
-use Intervolga\Migrato\Tool\Console\Logger;
 
 Loc::loadMessages(__FILE__);
 
@@ -43,10 +43,6 @@ class ReIndexFacetCommand extends BaseCommand
 	{
 		if (!empty($iblockIds))
 		{
-			$progress = array(
-				'TOTAL' => count($iblockIds),
-				'COUNT' => 0,
-			);
 			foreach ($iblockIds as $key => $item)
 			{
 				$index = Manager::createIndexer($key);
@@ -55,22 +51,10 @@ class ReIndexFacetCommand extends BaseCommand
 				$index->endIndex();
 
 				\CIBlock::clearIblockTagCache($key);
-
-				$progress['COUNT']++;
-				$this->logger->registerFinal(
-					Loc::getMessage(
-						'INTERVOLGA_MIGRATO.REINDEX_FACET_UPDATED',
-						array(
-							'#TOTAL#' => $progress["TOTAL"],
-							'#COUNT#' => $progress['COUNT'],
-						)
-					),
-					Logger::TYPE_OK
-				);
 			}
 
 			Manager::checkAdminNotification();
-			\CBitrixComponent::clearComponentCache("bitrix:catalog.smart.filter");
+			\CBitrixComponent::clearComponentCache('bitrix:catalog.smart.filter');
 		}
 
 		return true;
@@ -88,11 +72,11 @@ class ReIndexFacetCommand extends BaseCommand
 			$offerIblocks = array();
 			$offersIterator = CatalogIblockTable::getList(array(
 				'select' => array('IBLOCK_ID'),
-				'filter' => array('!PRODUCT_IBLOCK_ID' => 0)
+				'filter' => array('!PRODUCT_IBLOCK_ID' => 0),
 			));
 			while ($offer = $offersIterator->fetch())
 			{
-				$offerIblocks[] = (int)$offer['IBLOCK_ID'];
+				$offerIblocks[] = (int) $offer['IBLOCK_ID'];
 			}
 			unset($offer);
 			if (!empty($offerIblocks))
@@ -104,7 +88,7 @@ class ReIndexFacetCommand extends BaseCommand
 		$iblockList = IblockTable::getList(array(
 			'select' => array('ID', 'NAME', 'ACTIVE'),
 			'filter' => $iblockFilter,
-			'order'  => array('ID' => 'asc', 'NAME' => 'asc'),
+			'order' => array('ID' => 'asc', 'NAME' => 'asc'),
 		));
 		while ($iblockInfo = $iblockList->fetch())
 		{
