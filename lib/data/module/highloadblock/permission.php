@@ -3,10 +3,16 @@ namespace Intervolga\Migrato\Data\Module\Highloadblock;
 
 use Bitrix\Highloadblock\HighloadBlockTable;
 use Bitrix\Highloadblock\HighloadBlockRightsTable;
+use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\TaskTable;
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\Module\Main\Group;
+use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\Console\Application;
+use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
@@ -24,59 +30,116 @@ class Permission extends BaseData
 	{
 		Loader::includeModule('highloadblock');
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.HIGHLOADBLOCK_HIGHLOADBLOCK'));
-		$this->setFilesSubdir('/type/');
+		$this->setFilesSubdir('/highloadblock/permissions/');
 		$this->setDependencies(array(
-			'IBLOCK_TYPE_ID' => new Link(Type::getInstance()),
-			'SITE' => new Link(Site::getInstance()),
+			'HL_ID' => new Link(HighloadBlock::getInstance()),
+			'GROUP_ID' => new Link(Group::getInstance()),
 		));
 	}
 
+	/**
+	 * Получает список всех прав на доступ к Highload-блоку, параллельно проверяя их на возможность экспорта
+	 * @param array $filter
+	 * @return array
+	 */
 	public function getList(array $filter = array())
 	{
 		$hlBlocks = HighloadBlockTable::getList();
 		$result = array();
-		while ($hlBlock = $hlBlocks->fetch())
-		{
-			$record = new Record($this);
-			$id = RecordId::createNumericId($hlBlock["ID"]);
-			$xmlId = $this->getXmlId($id);
-			$record->setXmlId($xmlId);
-			$record->setId($id);
-			$record->addFieldsRaw(array(
-				"NAME" => $hlBlock["NAME"],
-				"TABLE_NAME" => $hlBlock["TABLE_NAME"],
+		while ($hlBlock = $hlBlocks->fetch()) {
+			$hlBlockId = $hlBlock['ID'];
+			$rightsCursor = HighloadBlockRightsTable::getList(array(
+				'filter' => array(
+					'HL_ID' => $hlBlockId
+				)
 			));
-			$this->addMessages($hlBlock, $record);
+			while ($arPermission = $rightsCursor->fetch()) {
+				if (mb_strlen($arPermission['ACCESS_CODE'])) {
+					$accessCode =  $arPermission['ACCESS_CODE'];
+					if ($accessCode[0] == 'G') {
+						$groupId = intval(mb_substr($accessCode, 1));
 
-			$result[] = $record;
+						$id = $this->createId(array(
+							"IBLOCK_ID" => $hlBlockId,
+							"GROUP_ID" => $groupId,
+						));
+						$record = new Record($this);
+						$record->setXmlId($this->getXmlId($id));
+						$record->setId($id);
+
+						// Получаем по TASK_ID
+						$taskId = $arPermission['TASK_ID'];
+						$taskCursor = TaskTable::getList(array(
+							'filter' => array('ID' => $taskId)
+						));
+						if ($arTask = $taskCursor->fetch()) {
+							$record->addFieldsRaw(array(
+								"PERMISSION" => $arTask['NAME'],
+							));
+
+							$dependency = clone $this->getDependency("GROUP_ID");
+							$dependency->setValue(
+								Group::getInstance()->getXmlId(RecordId::createNumericId($groupId))
+							);
+							$record->setDependency("GROUP_ID", $dependency);
+
+							$dependency = clone $this->getDependency("HL_ID");
+							$dependency->setValue(
+								HighloadBlock::getInstance()->getXmlId(RecordId::createNumericId($hlBlockId))
+							);
+							$record->setDependency("HL_ID", $dependency);
+
+							$result[] = $record;
+						} else {
+							Application::getInstance()->renderWarning("У Highload-блока $hlBlockId не найдено значение уровня доступа с ID $taskId (таблица b_task_table). Возможно произошел сбой БД.");
+						}
+					} else {
+						Application::getInstance()->renderWarning("У Highload-блока $hlBlockId право доступа сформулировано, как $accessCode. Это значит, что оно привязано к пользователю или к группе соц. сети. Данный модуль не поддерживает такие привязки. Данное правило не будет экспортировано.");
+					}
+				} else {
+					Application::getInstance()->renderWarning("У Highload-блока $hlBlockId есть пустое разрешение на доступ. Возможно произошел сбой БД.");
+				}
+			}
 		}
 
 		return $result;
 	}
 
-	/**
-	 * Пытается добавить локалезависимые сообщения о пергру
-	 * @param array $hlBlock данные хайлоадблока
-	 * @param Record $record запись, в которую записываются данные
-	 */
-	protected function addMessages($hlBlock, $record)
-	{
-		$cursor = HighloadBlockLangTable::getList(array(
-			'filter' => array('ID' => $hlBlock['ID'])
-		));
-		$arMessages = array();
-		while($arLangSetting = $cursor->fetch()) {
-			$arMessages['MESSAGES.' . $arLangSetting['LID']]  = $arLangSetting['NAME'];
-		}
-		$record->addFieldsRaw($arMessages);
-	}
 
+	/**
+	 * Возвращает XML_ID для записи
+	 * @param RecordId $id
+	 * @return string
+	 */
 	public function getXmlId($id)
 	{
-		$record = HighloadBlockTable::getById($id->getValue())->fetch();
-
-		return strtolower($record['TABLE_NAME']);
+		$array = $id->getValue();
+		$hlData = HighloadBlock::getInstance();
+		$groupData = Group::getInstance();
+		$iblockXmlId = $hlData->getXmlId($hlData->createId($array['HL_ID']));
+		$groupXmlId = $groupData->getXmlId($groupData->createId($array['GROUP_ID']));
+		$md5 = md5(serialize(array(
+			$iblockXmlId,
+			$groupXmlId,
+		)));
+		return BaseXmlIdProvider::formatXmlId($md5);
 	}
+
+	/**
+	 * Создает ID для записи
+	 * @param mixed $id
+	 * @return RecordId
+	 */
+	public function createId($id)
+	{
+		return RecordId::createComplexId(array(
+				"HL_ID" => intval($id['HL_ID']),
+				"GROUP_ID" => intval($id['GROUP_ID']),
+			)
+		);
+	}
+
+	// TODO: Пофиксить все ошибки ниже
 
 	/**
 	 * Возвращает набор строк ключ-значение для вставки или обновления элемента инфоблока

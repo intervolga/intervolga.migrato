@@ -30,6 +30,7 @@ class Application extends \Symfony\Component\Console\Application
 {
 	public function __construct()
 	{
+		self::$instance = $this;
 		$moduleDir = dirname(dirname(dirname(__DIR__)));
 		$moduleName = basename($moduleDir);
 		$arModuleVersion = array('VERSION' => '');
@@ -61,6 +62,7 @@ class Application extends \Symfony\Component\Console\Application
 
 	protected function configureIO(InputInterface $input, OutputInterface $output)
 	{
+		$this->output = $output;
 		$output->setDecorated(true);
 		parent::configureIO($input, $output);
 		if (true === $input->hasParameterOption(array('--win', '-W'), true))
@@ -79,6 +81,15 @@ class Application extends \Symfony\Component\Console\Application
 				$formatter->setUnicodeCharset(true);
 			}
 		}
+	}
+
+	/**
+	 * Рендерит предупреждение в консоль
+	 * @param string $text текст
+	 */
+	public function renderWarning($text)
+	{
+		$this->output->writeln("<fg=yellow>$text</>");
 	}
 
 	protected function getDefaultInputDefinition()
@@ -109,4 +120,25 @@ class Application extends \Symfony\Component\Console\Application
 		$inputDefinition->addOption($option);
 		return $inputDefinition;
 	}
+
+
+	/**
+	 * Возвращает инстанс приложения
+	 * @return Application
+	 */
+	public static function getInstance()
+	{
+		return self::$instance;
+	}
+
+	/**
+	 * Выходной интерфейс для вывода ворнингов
+	 * @var OutputInterface
+	 */
+	protected $output = null;
+	/**
+	 * Инстанс текущего приложения для логирования
+	 * @var Application
+	 */
+	protected static $instance;
 }
