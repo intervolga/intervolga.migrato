@@ -57,8 +57,6 @@ class HighloadBlock extends BaseData
 			$arMessages['MESSAGES.' . $arLangSetting['LID']]  = $arLangSetting['NAME'];
 		}
 		$record->addFieldsRaw($arMessages);
-
-		HighloadBlockLangTable::delete(1);
 	}
 
 	public function getXmlId($id)
