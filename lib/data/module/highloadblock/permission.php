@@ -30,7 +30,8 @@ class Permission extends BaseData
 	protected function configure()
 	{
 		Loader::includeModule('highloadblock');
-		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.HIGHLOADBLOCK_HIGHLOADBLOCK'));
+		$this->setVirtualXmlId(true);
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.HIGHLOADBLOCK_PERMISSION'));
 		$this->setFilesSubdir('/highloadblock/permissions/');
 		$this->setDependencies(array(
 			'HL_ID' => new Link(HighloadBlock::getInstance()),
@@ -59,9 +60,8 @@ class Permission extends BaseData
 					$accessCode =  $arPermission['ACCESS_CODE'];
 					if ($accessCode[0] == 'G') {
 						$groupId = intval(mb_substr($accessCode, 1));
-
 						$id = $this->createId(array(
-							"IBLOCK_ID" => $hlBlockId,
+							"HL_ID" => $hlBlockId,
 							"GROUP_ID" => $groupId,
 						));
 						$record = new Record($this);
@@ -95,7 +95,7 @@ class Permission extends BaseData
 							Application::getInstance()->renderWarning("У Highload-блока $hlBlockId не найдено значение уровня доступа с ID $taskId (таблица b_task_table). Возможно произошел сбой БД.");
 						}
 					} else {
-						Application::getInstance()->renderWarning("У Highload-блока $hlBlockId право доступа сформулировано, как $accessCode. Это значит, что оно привязано к пользователю или к группе соц. сети. Данный модуль не поддерживает такие привязки. Данное правило не будет экспортировано.");
+						Application::getInstance()->renderWarning("У Highload-блока $hlBlockId право доступа сформулировано, как $accessCode. Это значит, что оно привязано к пользователю или к группе соц. сети. Данный модуль не поддерживает такие привязки. Данное правило не будет обработано.");
 					}
 				} else {
 					Application::getInstance()->renderWarning("У Highload-блока $hlBlockId есть пустое разрешение на доступ. Возможно произошел сбой БД.");
@@ -117,10 +117,10 @@ class Permission extends BaseData
 		$array = $id->getValue();
 		$hlData = HighloadBlock::getInstance();
 		$groupData = Group::getInstance();
-		$iblockXmlId = $hlData->getXmlId($hlData->createId($array['HL_ID']));
+		$hlBlockXmlId = $hlData->getXmlId($hlData->createId($array['HL_ID']));
 		$groupXmlId = $groupData->getXmlId($groupData->createId($array['GROUP_ID']));
 		$md5 = md5(serialize(array(
-			$iblockXmlId,
+			$hlBlockXmlId,
 			$groupXmlId,
 		)));
 		return BaseXmlIdProvider::formatXmlId($md5);
@@ -182,7 +182,7 @@ class Permission extends BaseData
 	public function createOrUpdate($hlBlockId, $groupId, Record $record)
 	{
 		$arCurFields = $record->getFieldsRaw();
-		$permission = $arCurFields['PERMISSIONS'];
+		$permission = $arCurFields['PERMISSION'];
 
 		$taskCursor = TaskTable::getList(array(
 			'filter' => array('NAME' => $permission)
@@ -202,7 +202,7 @@ class Permission extends BaseData
 					'TASK_ID' => $taskId
 				));
 			} else {
-				$result = HighloadBlockTable::add(array(
+				$result = HighloadBlockRightsTable::add(array(
 					'HL_ID' => $hlBlockId,
 					'ACCESS_CODE' => 'G' . $groupId,
 					'TASK_ID' => $taskId
