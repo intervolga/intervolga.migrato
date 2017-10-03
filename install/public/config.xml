@@ -162,5 +162,8 @@
         <entity>
             <name>fieldenum</name>
         </entity>
+        <entity>
+            <name>permission</name>
+        </entity>
     </module>
 </config>
