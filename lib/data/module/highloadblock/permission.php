@@ -3,6 +3,7 @@ namespace Intervolga\Migrato\Data\Module\Highloadblock;
 
 use Bitrix\Highloadblock\HighloadBlockTable;
 use Bitrix\Highloadblock\HighloadBlockRightsTable;
+use Bitrix\Main\DB\Exception;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\TaskTable;
@@ -139,93 +140,100 @@ class Permission extends BaseData
 		);
 	}
 
-	// TODO: Пофиксить все ошибки ниже
-
-	/**
-	 * Возвращает набор строк ключ-значение для вставки или обновления элемента инфоблока
-	 * @param string[] $arFields массив
-	 * @return string[] обработанный массив, из которого извлечены изменённые строки
-	 */
-	public static function getFieldsForCreateOrUpdate($arFields)
-	{
-		$arResult = array();
-		if (count($arFields)) {
-			$messagesKeys = "MESSAGES.";
-			$messagesKeysLength = mb_strlen($messagesKeys);
-			foreach($arFields as $key => $value) {
-				if (mb_substr($key, 0, $messagesKeysLength) != $messagesKeys) {
-					$arResult[$key] = $value;
-				}
-			}
-		}
-		return $arResult;
-	}
-
-	/**
-	 * Обновляет подписи Highload-блока
-	 * @param int $hlBlockId ID блока
-	 * @param array $arFields массив полей блока
-	 */
-	public static function updateMessages($hlBlockId, $arFields)
-	{
-		if ($hlBlockId > 0) {
-			// Удаляем все предыдущие записи. Здесь ID не уникально, поэтому самый простой способ импорта
-			// - удалить вообще всё.
-			HighloadBlockLangTable::delete($hlBlockId);
-			$messagesKeys = "MESSAGES.";
-			$messagesKeysLength = mb_strlen($messagesKeys);
-			foreach($arFields as $key => $value) {
-				if (mb_substr($key, 0, $messagesKeysLength) == $messagesKeys) {
-					$lid = mb_substr($key, $messagesKeysLength);
-					HighloadBlockLangTable::add(array(
-						'ID' => $hlBlockId,
-						'LID' => $lid,
-						'NAME' => $value
-					));
-				}
-			}
-		}
-	}
 
 	public function update(Record $record)
 	{
-		$arFields = $record->getFieldsRaw();
-		$arUpdateFields = self::getFieldsForCreateOrUpdate($arFields);
-		$hlBlockId = $record->getId()->getValue();
-		$result = HighloadBlockTable::update($record->getId()->getValue(), $arUpdateFields);
-		if (!$result->isSuccess())
-		{
-			throw new \Exception(ExceptionText::getFromResult($result));
-		}
-		else
-		{
-			self::updateMessages($hlBlockId, $arFields);
-		}
+		$arCurValue = $record->getId()->getValue();
+		$hlBlockId = $arCurValue["HL_ID"];
+		$groupId = $arCurValue["GROUP_ID"];
+
+		$this->createOrUpdate($hlBlockId, $groupId, $record);
 	}
 
 	protected function createInner(Record $record)
 	{
-		$arFields = $record->getFieldsRaw();
-		$arCreateFields = self::getFieldsForCreateOrUpdate($arFields);
-		$result = HighloadBlockTable::add($record->getFieldsRaw($arCreateFields));
-		if ($result->isSuccess())
-		{
-			$id = RecordId::createNumericId($result->getId());
-			self::updateMessages($result->getId(), $arFields);
-			return $id;
+		$hlLinkId = HighloadBlock::getInstance()->findRecord($record->getDependency("HL_ID")->getValue());
+		$groupLinkId = Group::getInstance()->findRecord($record->getDependency("GROUP_ID")->getValue());
+		if ($hlLinkId) {
+			$hlBlockId = $hlLinkId->getValue();
+			if ($groupLinkId) {
+				$groupId = $groupLinkId->getValue();
+				$this->createOrUpdate($hlBlockId, $groupId, $record);
+
+				return $this->createId(array(
+					"HL_ID" => $hlBlockId,
+					"GROUP_ID" => $groupId,
+				));
+			} else {
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.GROUP_NOT_FOUND'));
+			}
+		} else {
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.HIGHLOADBLOCK_NOT_FOUND'));
 		}
-		else
-		{
-			throw new \Exception(ExceptionText::getFromResult($result));
+	}
+
+	/**
+	 * Создает или обновляет право доступа к ИБ
+	 * @param int $hlBlockId ID ХЛБ
+	 * @param int $groupId ID группы
+	 * @param Record $record запись
+	 * @throws \Exception исключение в случае проблемы
+	 */
+	public function createOrUpdate($hlBlockId, $groupId, Record $record)
+	{
+		$arCurFields = $record->getFieldsRaw();
+		$permission = $arCurFields['PERMISSIONS'];
+
+		$taskCursor = TaskTable::getList(array(
+			'filter' => array('NAME' => $permission)
+		));
+		// Если такое значение уровня доступа есть в Task Table
+		if ($arTask = $taskCursor->fetch()) {
+			// Если такое правило есть для группы - обновляем его иначе, добавляем новое
+			$taskId = $arTask['ID'];
+			$rightsCursor = HighloadBlockRightsTable::getList(array(
+				'filter' => array(
+					'HL_ID' => $hlBlockId,
+					'ACCESS_CODE' => 'G' . $groupId
+				)
+			));
+			if ($arRight = $rightsCursor->fetch()) {
+				HighloadBlockRightsTable::update($arRight['ID'], array(
+					'TASK_ID' => $taskId
+				));
+			} else {
+				$result = HighloadBlockTable::add(array(
+					'HL_ID' => $hlBlockId,
+					'ACCESS_CODE' => 'G' . $groupId,
+					'TASK_ID' => $taskId
+				));
+				if (!$result->isSuccess()) {
+					throw new \Exception(ExceptionText::getFromResult($result));
+				}
+			}
+		} else {
+			Application::getInstance()->renderWarning("Не найдено правило для доступа к ХЛБ с именем $permission. Возможно произошел сбой БД.");
 		}
 	}
 
 	protected function deleteInner(RecordId $id)
 	{
-		$result = HighloadBlockTable::delete($id->getValue());
-		if (!$result->isSuccess())
-		{
-			throw new \Exception(ExceptionText::getFromResult($result));
+		$arComplexId = $id->getValue();
+		$hlBlockId = $arComplexId["HL_ID"];
+		$groupId = $arComplexId['GROUP_ID'];
+
+		$rightsCursor = HighloadBlockRightsTable::getList(array(
+			'filter' => array(
+				'HL_ID' => $hlBlockId,
+				'ACCESS_CODE' => 'G' . $groupId
+			)
+		));
+		if ($arRight = $rightsCursor->fetch()) {
+			$result = HighloadBlockRightsTable::delete($arRight['ID']);
+			if (!$result->isSuccess())
+			{
+				throw new \Exception(ExceptionText::getFromResult($result));
+			}
 		}
 	}
 }
