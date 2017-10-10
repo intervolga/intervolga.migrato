@@ -65,6 +65,10 @@ class Filter extends BaseData
 		return $result;
 	}
 
+	/**
+	 * @param $filter_id - b_filter table field
+	 * @return string
+	 */
 	private function getIblockXmlIdByFilterId($filter_id)
 	{
 		if(Loader::includeModule('iblock'))
@@ -72,7 +76,7 @@ class Filter extends BaseData
 			$hash = substr($filter_id, strlen(static::FILTER_IBLOCK_TABLE_NAME));
 			$hash = substr($hash, 0, strlen($hash) - 7); // strlen('_filter') == 7
 			$res = \CIBlock::GetList();
-			if ($iblock = $res->Fetch())
+			while ($iblock = $res->Fetch())
 			{
 				if (md5($iblock['IBLOCK_TYPE_ID'] . '.' . $iblock['ID']) == $hash)
 					return $iblock['ID'];
@@ -120,8 +124,6 @@ class Filter extends BaseData
 		$xmlFields = explode(static::XML_ID_SEPARATOR, $xmlId);
 		if($xmlFields[0] == 'Y')
 			$fields['USER_ID'] = 1;
-		else
-			$fields['USER_ID'] = 2;
 
 		//создаем FILTER_ID записи
 		$iblockXmlId = $xmlFields[3];
@@ -169,6 +171,10 @@ class Filter extends BaseData
 		return "";
 	}
 
+	/**
+	 * @param array $filter - filter fields
+	 * @return string
+	 */
 	protected function getXmlIdByObject(array $filter)
 	{
 		$iblockId = $this->getIblockXmlIdByFilterId($filter['FILTER_ID']);
