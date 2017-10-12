@@ -69,6 +69,7 @@ class Iblock extends BaseData
 				"LIST_MODE" => $iblock["LIST_MODE"],
 				"EDIT_FILE_BEFORE" => $iblock["EDIT_FILE_BEFORE"],
 				"EDIT_FILE_AFTER" => $iblock["EDIT_FILE_AFTER"],
+				"SECTION_PROPERTY" => $iblock["SECTION_PROPERTY"],
 			));
 			$this->addLanguageStrings($record);
 			$this->addFieldsSettings($record);
