@@ -15,6 +15,7 @@ class Filter extends BaseData
 {
 	const XML_ID_SEPARATOR = '.';
 	const FILTER_IBLOCK_TABLE_NAME = 'tbl_iblock_element_';
+	const PROPERTY_FIELD_PREFIX = 'find_el_property_';
 
 	public function __construct()
 	{
@@ -56,7 +57,7 @@ class Filter extends BaseData
 					$record->setFieldRaw('PRESET', $arFilter['PRESET']);
 					$record->setFieldRaw('LANGUAGE_ID', $arFilter['LANGUAGE_ID']);
 					$record->setFieldRaw('PRESET_ID', $arFilter['PRESET_ID']);
-					$record->setFieldRaw('FIELDS', $arFilter['FIELDS']);
+					$this->addPropsDependencies($record, $arFilter['FIELDS']);
 					$this->setDependencies($record, $arFilter);
 					$result[] = $record;
 				}
@@ -90,6 +91,7 @@ class Filter extends BaseData
 		return array(
 			"LANGUAGE_ID" => new Link(Language::getInstance()),
 			"IBLOCK_ID" => new Link(MigratoIblock::getInstance()),
+			"PROPERTY_ID" => new Link(Property::getInstance())
 		);
 	}
 
@@ -116,6 +118,66 @@ class Filter extends BaseData
 		}
 	}
 
+	/**
+	 * @param Record $record
+	 * @param $fields - FIELDS field
+	 */
+	protected function addPropsDependencies(Record $record, $fields)
+	{
+		$newArrFields = $arrFields = unserialize($fields);
+		$propsId = array();
+		$propertyXmlIds = array();
+		foreach ($arrFields as $fieldName => $arrField)
+		{
+			if(strpos($fieldName, static::PROPERTY_FIELD_PREFIX) === 0)
+			{
+				$propId = substr($fieldName, strlen(static::PROPERTY_FIELD_PREFIX));
+				if($propId)
+				{
+					$idObject = Property::getInstance()->createId($propId);
+					$propertyXmlId = Property::getInstance()->getXmlId($idObject);
+					$propertyXmlIds[] = $propertyXmlId;
+					//convert field name using propery xmlId
+					unset($newArrFields[$fieldName]);
+					$newArrFields[static::PROPERTY_FIELD_PREFIX.$propertyXmlId] = $arrField;
+				}
+			}
+		}
+		//add field
+		$record->setFieldRaw('FIELDS', serialize($newArrFields));
+		//add dependency
+		if($propertyXmlIds)
+		{
+			$dependency = clone $this->getDependency('PROPERTY_ID');
+			$dependency->setValues($propertyXmlIds);
+			$record->setDependency('PROPERTY_ID', $dependency);
+		}
+	}
+
+	/**
+	 * Replace properties xmlId to id
+	 * @param $fields
+	 * @return string
+	 */
+	private function convertFieldsFromXml($fields)
+	{
+		$newArrFields = $arrFields = unserialize($fields);
+		foreach ($arrFields as $key => $arrField)
+		{
+			if(strpos($key, static::PROPERTY_FIELD_PREFIX) === 0)
+			{
+				$xmlId = substr($key,strlen(static::PROPERTY_FIELD_PREFIX));
+				$id = $this->findRecord($xmlId);
+				if($id)
+				{
+					unset($newArrFields[$key]);
+					$newArrFields[static::PROPERTY_FIELD_PREFIX.$id->getValue()] = $arrField;
+				}
+			}
+		}
+		return serialize($newArrFields);
+	}
+
 	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
@@ -134,6 +196,7 @@ class Filter extends BaseData
 			if($iblockInfo = $dbres->GetNext())
 			{
 				$fields['FILTER_ID'] = static::FILTER_IBLOCK_TABLE_NAME . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
+				$fields['FIELDS'] = $this->convertFieldsFromXml($fields['FIELDS']);
 				$id = \CAdminFilter::Add($fields);
 				if($id)
 					return $this->createId($id);
