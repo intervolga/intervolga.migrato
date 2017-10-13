@@ -10,6 +10,10 @@ use Bitrix\Main\Localization\Loc,
 
 Loc::loadMessages(__FILE__);
 
+/**
+ * Class ListOptions
+ * @package Intervolga\Migrato\Data\Module\Iblock
+ */
 class ListOptions extends BaseData
 {
 	const CATEGORY = 'list';
@@ -61,7 +65,6 @@ class ListOptions extends BaseData
 						$record->setFieldRaw('COMMON', $uoption['COMMON']);
 						$record->setFieldRaw('CATEGORY', $uoption['CATEGORY']);
 						$this->setDependencies($record, $uoption);
-
 						$this->addPropsDependencies($record, $value);
 						$result[] = $record;
 					}
@@ -71,6 +74,10 @@ class ListOptions extends BaseData
 		return $result;
 	}
 
+	/**
+	 * @param Record $record
+	 * @param $value - VALUE field
+	 */
 	protected function addPropsDependencies(Record $record, $value)
 	{
 		//Get properties Id
@@ -105,10 +112,11 @@ class ListOptions extends BaseData
 	}
 
 	/**
-	 * @param $value -
-	 * @param $propertyIds
-	 * @param $propertyXmlIds
-	 * @return mixed
+	 * Replace properties id to xmlId
+	 * @param $value - VALUE field
+	 * @param $propertyIds - key = column name, value = property Id
+	 * @param $propertyXmlIds - key = property Id, value = property xmlId
+	 * @return mixed - new VALUE field
 	 */
 	private function convertValueFieldToXml($value, $propertyIds, $propertyXmlIds)
 	{
@@ -151,6 +159,10 @@ class ListOptions extends BaseData
 		return $newValueField;
 	}
 
+	/**
+	 * @param $propsId - Iblock properties id
+	 * @return array - key = property id, value = property xmlId
+	 */
 	protected function getIblockPropertiesXmlId($propsId)
 	{
 		$properties = array();
@@ -164,6 +176,11 @@ class ListOptions extends BaseData
 		return $properties;
 	}
 
+	/**
+	 * Replace properties xmlId to Id
+	 * @param $value - VALUE field
+	 * @return mixed
+	 */
 	private function convertValueFieldFromXml($value)
 	{
 		if($value['columns'])
@@ -205,6 +222,11 @@ class ListOptions extends BaseData
 		return $value;
 	}
 
+	/**
+	 * Generate xmlId
+	 * @param array $uoption
+	 * @return string
+	 */
 	protected function getXmlIdByObject(array $uoption)
 	{
 		$iblockId = $this->getIblockXmlIdByName($uoption['NAME']);
@@ -234,6 +256,10 @@ class ListOptions extends BaseData
 		return array();
 	}
 
+	/**
+	 * @param $name - NAME field
+	 * @return string
+	 */
 	private function getIblockXmlIdByName($name)
 	{
 		if(Loader::includeModule('iblock'))
