@@ -15,6 +15,7 @@ class ListOptions extends BaseData
 	const CATEGORY = 'list';
 	const NAME_PREFIX = 'tbl_iblock_element_';
 	const XML_ID_SEPARATOR = '.';
+	const COLUMNS_DELIMITER = ',';
 
 	public function __construct()
 	{
@@ -29,7 +30,8 @@ class ListOptions extends BaseData
 	public function getDependencies()
 	{
 		return array(
-			'IBLOCK_ID' => new Link(MigratoIblock::getInstance())
+			'IBLOCK_ID' => new Link(MigratoIblock::getInstance()),
+			'PROPERTY_ID' => new Link(Property::getInstance())
 		);
 	}
 
@@ -50,19 +52,157 @@ class ListOptions extends BaseData
 			{
 				if (strpos($uoption['NAME'], static::NAME_PREFIX) == 0 && !in_array($uoption['ID'], $recordsId))
 				{
-					$recordsId[] = $uoption['ID'];
-					$record = new Record($this);
-					$record->setId($this->createId($uoption['ID']));
-					$record->setXmlId($this->getXmlIdByObject($uoption));
-					$record->setFieldRaw('COMMON', $uoption['COMMON']);
-					$record->setFieldRaw('VALUE', $uoption['VALUE']);
-					$record->setFieldRaw('CATEGORY', $uoption['CATEGORY']);
-					$this->setDependencies($record, $uoption);
-					$result[] = $record;
+					if ($value = unserialize($uoption['VALUE']))
+					{
+						$recordsId[] = $uoption['ID'];
+						$record = new Record($this);
+						$record->setId($this->createId($uoption['ID']));
+						$record->setXmlId($this->getXmlIdByObject($uoption));
+						$record->setFieldRaw('COMMON', $uoption['COMMON']);
+						$record->setFieldRaw('CATEGORY', $uoption['CATEGORY']);
+						$this->setDependencies($record, $uoption);
+
+						$this->addPropsDependencies($record, $value);
+						$result[] = $record;
+					}
 				}
 			}
 		}
 		return $result;
+	}
+
+	protected function addPropsDependencies(Record $record, $value)
+	{
+		//Get properties Id
+		$propertyIds = array();
+		$properties = array();
+		if ($value['columns'])
+			$columns = $properties = explode(static::COLUMNS_DELIMITER, $value['columns']);
+		if($value['by'] && strpos($value['by'], 'PROPERTY_') == 0 && !in_array($value['by'],$properties))
+			$properties[] = $value['by'];
+		if ($properties)
+			foreach ($properties as $property)
+				if (strpos($property, 'PROPERTY_') == 0)
+				{
+					$propertyId = substr($property, 9); // strlen('PROPERTY_') == 9
+					if ($propertyId)
+						$propertyIds[$property] = $propertyId;
+				}
+		//Set dependencies
+		if($propertyIds)
+		{
+			$propertyXmlIds = $this->getIblockPropertiesXmlId($propertyIds);
+			if ($propertyXmlIds)
+			{
+				$dependency = clone $this->getDependency('PROPERTY_ID');
+				$dependency->setValues($propertyXmlIds);
+				$record->setDependency('PROPERTY_ID', $dependency);
+			}
+		}
+		//Set VALUE field
+		$newValue = $this->convertValueFieldToXml($value,$propertyIds,$propertyXmlIds);
+		$record->setFieldRaw('VALUE',serialize($newValue));
+	}
+
+	/**
+	 * @param $value -
+	 * @param $propertyIds
+	 * @param $propertyXmlIds
+	 * @return mixed
+	 */
+	private function convertValueFieldToXml($value, $propertyIds, $propertyXmlIds)
+	{
+		$columns = explode(static::COLUMNS_DELIMITER, $value['columns']);
+		//Convert field 'COULMNS'
+		$newColumns = array();
+		if ($columns && $propertyXmlIds)
+		{
+			foreach ($columns as $column)
+			{
+				if (strpos($column, 'PROPERTY_') == 0)
+				{
+					if ($propertyIds[$column])
+					{
+						$id = $propertyIds[$column];
+						if ($propertyXmlIds[$id])
+							$newColumns[] = 'PROPERTY_' . $propertyXmlIds[$id];
+					}
+				}
+				else
+					$newColumns[] = $column;
+			}
+		}
+		//Convert field 'BY'
+		if($value['by'] && strpos($value['by'], 'PROPERTY_') == 0 )
+		{
+			if($propertyIds[$value['by']])
+			{
+				$id = $propertyIds[$value['by']];
+				if($propertyXmlIds[$id])
+				{
+					$newfieldBy = 'PROPERTY_'.$propertyXmlIds[$id];
+				}
+			}
+		}
+		$newValueField = $value;
+		if($newfieldBy)
+			$newValueField['by'] = $newfieldBy;
+		$newValueField['columns'] = implode(static::COLUMNS_DELIMITER,$newColumns);
+		return $newValueField;
+	}
+
+	protected function getIblockPropertiesXmlId($propsId)
+	{
+		$properties = array();
+		foreach ($propsId as $id)
+		{
+			$idObject = Property::getInstance()->createId($id);
+			$xmlId = Property::getInstance()->getXmlId($idObject);
+			if ($xmlId)
+				$properties[$id] = $xmlId;
+		}
+		return $properties;
+	}
+
+	private function convertValueFieldFromXml($value)
+	{
+		if($value['columns'])
+		{
+			$columns = explode(static::COLUMNS_DELIMITER, $value['columns']);
+			$newColumns = array();
+			foreach ($columns as $column)
+			{
+				if(strpos($column,'PROPERTY_') === 0)
+				{
+					$propXmlId = substr($column, 9);
+					if($propXmlId)
+					{
+						$propId = Property::getInstance()->findRecord($propXmlId);
+						if ($propId)
+						{
+							$newColumns[] = 'PROPERTY_'.$propId->getValue();
+						}
+					}
+				}
+				else
+					$newColumns[] = $column;
+			}
+			$value['columns'] = implode(static::COLUMNS_DELIMITER, $newColumns);
+		}
+		if($value['by'])
+		{
+			if(strpos($value['by'], 'PROPERTY_') === 0)
+			{
+				$propXmlId = substr($value['by'], 9);
+				if($propXmlId)
+				{
+					$propId = Property::getInstance()->findRecord($propXmlId);
+					if ($propId)
+						$value['by'] = 'PROPERTY_'.$propId->getValue();
+				}
+			}
+		}
+		return $value;
 	}
 
 	protected function getXmlIdByObject(array $uoption)
@@ -158,6 +298,8 @@ class ListOptions extends BaseData
 			if($iblockInfo = $dbres->GetNext())
 			{
 				$fields['NAME'] = static::NAME_PREFIX . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId );
+				if($value = unserialize($fields['VALUE']))
+					$fields['VALUE'] = $this->convertValueFieldFromXml($value);
 				If(\CUserOptions::SetOption($fields['CATEGORY'],$fields['NAME'],$fields['VALUE'],$fields['COMMON'] === 'Y',$fields['USER_ID']))
 				{
 					$filter=array(
