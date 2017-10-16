@@ -57,6 +57,8 @@ class Filter extends BaseData
 					$record->setFieldRaw('PRESET', $arFilter['PRESET']);
 					$record->setFieldRaw('LANGUAGE_ID', $arFilter['LANGUAGE_ID']);
 					$record->setFieldRaw('PRESET_ID', $arFilter['PRESET_ID']);
+					$record->setFieldRaw('SORT', $arFilter['SORT']);
+					$record->setFieldRaw('SORT_FIELD', $arFilter['SORT_FIELD']);
 					$this->addPropsDependencies($record, $arFilter['FIELDS']);
 					$this->setDependencies($record, $arFilter);
 					$result[] = $record;
@@ -159,9 +161,9 @@ class Filter extends BaseData
 	 * @param $fields
 	 * @return string
 	 */
-	private function convertFieldsFromXml($fields)
+	private function convertFieldsFromXml(array $arrFields)
 	{
-		$newArrFields = $arrFields = unserialize($fields);
+		$newArrFields = $arrFields;
 		foreach ($arrFields as $key => $arrField)
 		{
 			if(strpos($key, static::PROPERTY_FIELD_PREFIX) === 0)
@@ -175,13 +177,12 @@ class Filter extends BaseData
 				}
 			}
 		}
-		return serialize($newArrFields);
+		return $newArrFields;
 	}
 
 	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
-		$fields['FIELDS'] = unserialize($fields['FIELDS']);
 		$xmlId = $record->getXmlId();
 		$xmlFields = explode(static::XML_ID_SEPARATOR, $xmlId);
 		if($xmlFields[0] == 'Y')
@@ -196,13 +197,51 @@ class Filter extends BaseData
 			if($iblockInfo = $dbres->GetNext())
 			{
 				$fields['FILTER_ID'] = static::FILTER_IBLOCK_TABLE_NAME . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
-				$fields['FIELDS'] = $this->convertFieldsFromXml($fields['FIELDS']);
-				$id = \CAdminFilter::Add($fields);
-				if($id)
-					return $this->createId($id);
+				$arFields = unserialize($fields['FIELDS']);
+				if($arFields)
+				{
+					$fields['FIELDS'] = $this->convertFieldsFromXml($arFields);
+					$id = \CAdminFilter::Add($fields);
+					if ($id)
+						return $this->createId($id);
+				}
 			}
 		}
-		return new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FILTER_ADD_ERROR'));
+		throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FILTER_ADD_ERROR'));
+	}
+
+	public function update(Record $record)
+	{
+		$xmlId = $record->getXmlId();
+		$filterId = $this->findRecord($xmlId);
+		if($filterId)
+		{
+			$fields = $record->getFieldsRaw();
+			$xmlId = $record->getXmlId();
+			$xmlFields = explode(static::XML_ID_SEPARATOR, $xmlId);
+			if($xmlFields[0] == 'Y')
+				$fields['USER_ID'] = 1;
+
+			//создаем FILTER_ID записи
+			$iblockXmlId = $xmlFields[3];
+			$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
+			if(Loader::includeModule('iblock'))
+			{
+				$dbres = \CIBlock::GetById($iblockId);
+				if($iblockInfo = $dbres->GetNext())
+				{
+					$fields['FILTER_ID'] = static::FILTER_IBLOCK_TABLE_NAME . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
+					$arFields = unserialize($fields['FIELDS']);
+					if($arFields)
+					{
+						$fields['FIELDS'] = $this->convertFieldsFromXml($arFields);
+						if (\CAdminFilter::Update($filterId->getValue(), $fields))
+							return;
+					}
+				}
+			}
+		}
+		throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FILTER_UPDATE_ERROR'));
 	}
 
 	protected function deleteInner($xmlId)
@@ -214,7 +253,7 @@ class Filter extends BaseData
 			$res = \CAdminFilter::Delete($id);
 			if (!$res)
 			{
-				return new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FILTER_DELETE_ERROR'));
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FILTER_DELETE_ERROR'));
 			}
 		}
 	}
