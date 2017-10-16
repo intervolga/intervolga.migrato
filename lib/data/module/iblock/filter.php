@@ -169,7 +169,7 @@ class Filter extends BaseData
 			if(strpos($key, static::PROPERTY_FIELD_PREFIX) === 0)
 			{
 				$xmlId = substr($key,strlen(static::PROPERTY_FIELD_PREFIX));
-				$id = $this->findRecord($xmlId);
+				$id = Property::getInstance()->findRecord($xmlId);
 				if($id)
 				{
 					unset($newArrFields[$key]);
@@ -296,7 +296,6 @@ class Filter extends BaseData
 
 	public function findRecord($xmlId)
 	{
-		$id = null;
 		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
 
 		$arFilter = array('COMMON' => $fields[1]);
@@ -304,23 +303,26 @@ class Filter extends BaseData
 			$filter['USER_ID'] = 1;
 		$name = $fields[2];
 		$iblockXmlId = $fields[3];
-
-		$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
-		if(Loader::includeModule('iblock') && $iblockId)
+		if($iblockRecord =  MigratoIblock::getInstance()->findRecord($iblockXmlId))
 		{
-			$dbres = \CIBlock::GetById($iblockId);
-			if($iblockInfo = $dbres->GetNext())
+			$iblockId = $iblockRecord->getValue();
+			if (Loader::includeModule('iblock') && $iblockId)
 			{
-				$dbres = \CAdminFilter::getList([],$arFilter);
-				while ($filter = $dbres->Fetch())
+				$dbres = \CIBlock::GetById($iblockId);
+				if ($iblockInfo = $dbres->GetNext())
 				{
-					if (strpos($filter['FILTER_ID'], static::FILTER_IBLOCK_TABLE_NAME) === 0 &&
-						md5($filter['NAME']) === $name)
+					$dbres = \CAdminFilter::getList([], $arFilter);
+					while ($filter = $dbres->Fetch())
 					{
-						$hash = substr($filter['FILTER_ID'], strlen(static::FILTER_IBLOCK_TABLE_NAME));
-						$hash = substr($hash, 0, strlen($hash) - 7); // strlen('_filter') == 7
-						if(md5($iblockInfo['IBLOCK_TYPE_ID'].'.'.$iblockId) === $hash)
-							return $this->createId($filter['ID']);
+						if (strpos($filter['FILTER_ID'], static::FILTER_IBLOCK_TABLE_NAME) === 0 && md5($filter['NAME']) === $name)
+						{
+							$hash = substr($filter['FILTER_ID'], strlen(static::FILTER_IBLOCK_TABLE_NAME));
+							$hash = substr($hash, 0, strlen($hash) - 7); // strlen('_filter') == 7
+							if (md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId) === $hash)
+							{
+								return $this->createId($filter['ID']);
+							}
+						}
 					}
 				}
 			}
