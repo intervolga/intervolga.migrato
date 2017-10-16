@@ -1,6 +1,7 @@
 <?php
 namespace Intervolga\Migrato\Data\Module\Iblock;
 
+use Bitrix\Iblock\PropertyEnumerationTable;
 use \Intervolga\Migrato\Data\BaseData,
 	\Intervolga\Migrato\Data\Record,
 	\Intervolga\Migrato\Data\Link,
@@ -93,7 +94,8 @@ class Filter extends BaseData
 		return array(
 			"LANGUAGE_ID" => new Link(Language::getInstance()),
 			"IBLOCK_ID" => new Link(MigratoIblock::getInstance()),
-			"PROPERTY_ID" => new Link(Property::getInstance())
+			"PROPERTY_ID" => new Link(Property::getInstance()),
+			"PROPERTY_ENUM_ID" => new Link(Enum::getInstance()),
 		);
 	}
 
@@ -136,6 +138,7 @@ class Filter extends BaseData
 				$propId = substr($fieldName, strlen(static::PROPERTY_FIELD_PREFIX));
 				if($propId)
 				{
+					$propsId[] = $propId;
 					$idObject = Property::getInstance()->createId($propId);
 					$propertyXmlId = Property::getInstance()->getXmlId($idObject);
 					$propertyXmlIds[] = $propertyXmlId;
@@ -145,15 +148,56 @@ class Filter extends BaseData
 				}
 			}
 		}
+		//add property enum dependency
+		$newArrFields = $this->addPropsEnumDependencies($record,$newArrFields,$propsId);
 		//add field
 		$record->setFieldRaw('FIELDS', serialize($newArrFields));
-		//add dependency
+		//add property dependency
 		if($propertyXmlIds)
 		{
 			$dependency = clone $this->getDependency('PROPERTY_ID');
 			$dependency->setValues($propertyXmlIds);
 			$record->setDependency('PROPERTY_ID', $dependency);
 		}
+	}
+
+	private function addPropsEnumDependencies(Record $record, $fields, array $propertyIds)
+	{
+		if(Loader::includeModule('iblock'))
+		{
+			$dbRes = \CIBlockProperty::GetList(
+				array(),
+				array(
+					'PROPERTY_TYPE' => 'L'
+				)
+			);
+			$enumXmlIds = array();
+			while ($el = $dbRes->Fetch())
+			{
+				if(in_array($el['ID'],$propertyIds))
+				{
+					$propertyId = Property::getInstance()->createId($el['ID']);
+					$propertyXmlId = Property::getInstance()->getXmlId($propertyId);
+					if ($fields[static::PROPERTY_FIELD_PREFIX . $propertyXmlId])
+					{
+						$enumId = Enum::getInstance()->createId($fields[static::PROPERTY_FIELD_PREFIX . $propertyXmlId]['value']);
+						$enumXmlId = Enum::getInstance()->getXmlId($enumId);
+						if ($enumXmlId)
+						{
+							$enumXmlIds[] = $enumXmlId;
+						}
+						$fields[static::PROPERTY_FIELD_PREFIX . $propertyXmlId]['value'] = $enumXmlId;
+					}
+				}
+			}
+			if($enumXmlIds)
+			{
+				$dependency = clone $this->getDependency('PROPERTY_ENUM_ID');
+				$dependency->setValues($enumXmlIds);
+				$record->setDependency('PROPERTY_ENUM_ID', $dependency);
+			}
+		}
+		return $fields;
 	}
 
 	/**
@@ -172,6 +216,12 @@ class Filter extends BaseData
 				$id = Property::getInstance()->findRecord($xmlId);
 				if($id)
 				{
+					if(!is_array($arrField['value']))
+					{
+						$enumId = Enum::getInstance()->findRecord($arrField['value']);
+						if($enumId)
+							$arrField['value'] = $enumId->getValue();
+					}
 					unset($newArrFields[$key]);
 					$newArrFields[static::PROPERTY_FIELD_PREFIX.$id->getValue()] = $arrField;
 				}
