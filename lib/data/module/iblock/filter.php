@@ -201,6 +201,7 @@ class Filter extends BaseData
 				if($arFields)
 				{
 					$fields['FIELDS'] = $this->convertFieldsFromXml($arFields);
+					$fields['SORT_FIELD'] = unserialize($fields['SORT_FIELD']);
 					$id = \CAdminFilter::Add($fields);
 					if ($id)
 						return $this->createId($id);
@@ -235,6 +236,7 @@ class Filter extends BaseData
 					if($arFields)
 					{
 						$fields['FIELDS'] = $this->convertFieldsFromXml($arFields);
+						$fields['SORT_FIELD'] = unserialize($fields['SORT_FIELD']);
 						if (\CAdminFilter::Update($filterId->getValue(), $fields))
 							return;
 					}
