@@ -1,7 +1,6 @@
 <?php
 namespace Intervolga\Migrato\Data\Module\Iblock;
 
-use Bitrix\Iblock\PropertyEnumerationTable;
 use \Intervolga\Migrato\Data\BaseData,
 	\Intervolga\Migrato\Data\Record,
 	\Intervolga\Migrato\Data\Link,
@@ -161,6 +160,12 @@ class Filter extends BaseData
 		}
 	}
 
+	/**
+	 * @param Record $record
+	 * @param $fields - field FIELDS with properties xmlId
+	 * @param array $propertyIds
+	 * @return mixed - converted FIELDS array with properties enum xmlId
+	 */
 	private function addPropsEnumDependencies(Record $record, $fields, array $propertyIds)
 	{
 		if(Loader::includeModule('iblock'))
