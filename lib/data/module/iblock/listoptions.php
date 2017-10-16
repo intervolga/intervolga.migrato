@@ -370,6 +370,8 @@ class ListOptions extends BaseData
 
 		if ($fields['CATEGORY'] && $fields['NAME'])
 		{
+			if($value = unserialize($fields['VALUE']));
+				$fields['VALUE'] = $this->convertValueFieldFromXml($value);
 			$isUpdated = $options->setOption(
 				$fields['CATEGORY'],
 				$fields['NAME'],
@@ -390,7 +392,8 @@ class ListOptions extends BaseData
 		$fields = $record->getFieldsRaw();
 		$xmlId = $record->getXmlId();
 		$xmlFields = $this->xmlIdToArray($xmlId);
-
+		if($xmlFields['IS_ADMIN'] == 'Y')
+			$fields['USER_ID'] = 1;
 		//создаем NAME записи
 		$iblockXmlId = $xmlFields['IBLOCK_XML_ID'];
 		$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
@@ -410,7 +413,8 @@ class ListOptions extends BaseData
 		$id = null;
 		$fields = $this->xmlIdToArray($xmlId);
 
-		$arFilter = array('COMMON' => $fields['COMMON']);
+		$arFilter = array('COMMON' => $fields['COMMON'],
+		'CATEGORY'=> static::CATEGORY);
 		if($fields['IS_ADMIN'] === 'Y')
 			$arFilter['USER_ID'] = 1;
 		$iblockXmlId = $fields['IBLOCK_XML_ID'];
@@ -421,7 +425,7 @@ class ListOptions extends BaseData
 			$dbres = \CIBlock::GetById($iblockId);
 			if($iblockInfo = $dbres->GetNext())
 			{
-				$dbres = \CAdminFilter::getList([],$arFilter);
+				$dbres = \CUserOptions::getList([],$arFilter);
 				while ($uoption = $dbres->Fetch())
 				{
 					if (strpos($uoption['NAME'], static::NAME_PREFIX) === 0)
