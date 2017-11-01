@@ -1,7 +1,7 @@
 <?php
 namespace Intervolga\Migrato\Tool\Console;
 
-use Bitrix\Main\Application;
+use Bitrix\Main\Application as BitrixApplication;
 use Bitrix\Main\Entity\ExpressionField;
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\Localization\Loc;
@@ -399,7 +399,7 @@ class Logger
 		);
 		foreach ($folders as $folder)
 		{
-			$modulesDirectory = new Directory(Application::getDocumentRoot() . $folder);
+			$modulesDirectory = new Directory(BitrixApplication::getDocumentRoot() . $folder);
 			if ($modulesDirectory->isExists())
 			{
 				foreach ($modulesDirectory->getChildren() as $moduleDirectory)
