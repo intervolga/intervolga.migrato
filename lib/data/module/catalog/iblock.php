@@ -77,7 +77,6 @@ class Iblock extends BaseData
 			$record->addFieldsRaw(array(
 				'YANDEX_EXPORT' => $iblock['YANDEX_EXPORT'],
 				'SUBSCRIPTION' => $iblock['SUBSCRIPTION'],
-				'VAT_ID' => $iblock['VAT_ID'],
 			));
 			$result[] = $record;
 		}
@@ -141,7 +140,7 @@ class Iblock extends BaseData
 	 */
 	protected function recordToArray(Record $record)
 	{
-		$array = $record->getFieldsRaw(array("YANDEX_EXPORT", "SUBSCRIPTION", "VAT_ID"));
+		$array = $record->getFieldsRaw(array("YANDEX_EXPORT", "SUBSCRIPTION"));
 
 		if($record->getDependency('IBLOCK_ID')->getValue() && $iblockId = $record->getDependency('IBLOCK_ID')->findId()) {
 			$array['IBLOCK_ID'] = $iblockId->getValue();
