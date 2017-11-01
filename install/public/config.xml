@@ -138,6 +138,12 @@
         <entity>
             <name>form</name>
         </entity>
+        <entity>
+            <name>filter</name>
+        </entity>
+        <entity>
+            <name>listoptions</name>
+        </entity>
     </module>
     <module>
         <name>highloadblock</name>
