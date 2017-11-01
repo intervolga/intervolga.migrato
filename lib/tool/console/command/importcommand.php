@@ -2,7 +2,6 @@
 
 use Bitrix\Main\Config\Option;
 use Bitrix\Main\Localization\Loc;
-use Intervolga\Migrato\Tool\Console\Command\ReIndexFacetCommand;
 use Intervolga\Migrato\Tool\Console\Logger;
 use Symfony\Component\Console\Input\InputOption;
 
