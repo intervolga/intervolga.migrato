@@ -36,6 +36,7 @@ class Group extends BaseData
 				$record->addFieldsRaw(array(
 					"ACTIVE" => $group["ACTIVE"],
 					"NAME" => $group["NAME"],
+					"C_SORT" => $group["C_SORT"],
 					"DESCRIPTION" => $group["DESCRIPTION"],
 					"STRING_ID" => $group["STRING_ID"],
 				));
