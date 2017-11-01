@@ -123,6 +123,9 @@
         <entity>
             <name>propertyvariant</name>
         </entity>
+        <entity>
+            <name>iblock</name>
+        </entity>
     </module>
     <module>
         <name>iblock</name>
