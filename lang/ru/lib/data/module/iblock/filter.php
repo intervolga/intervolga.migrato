@@ -1,4 +1,4 @@
 <?
-$MESS['INTERVOLGA_MIGRATO.IBLOCK_FILTER_ADD_ERROR'] = 'Îøèáêà ïðè ñîçäàíèè ôèëüòðà';
-$MESS['INTERVOLGA_MIGRATO.IBLOCK_FILTER_DELETE_ERROR'] = 'Îøèáêà ïðè óäàëåíèè ôèëüòðà';
-$MESS['INTERVOLGA_MIGRATO.IBLOCK_FILTER_UPDATE_ERROR'] = 'Îøèáêà ïðè îáíîâëåíèè ôèëüòðà';
+$MESS['INTERVOLGA_MIGRATO.IBLOCK_FILTER_ADD_ERROR'] = 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð¿Ñ€Ð¸ ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ð¸ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ð°';
+$MESS['INTERVOLGA_MIGRATO.IBLOCK_FILTER_DELETE_ERROR'] = 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð¿Ñ€Ð¸ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ð¸ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ð°';
+$MESS['INTERVOLGA_MIGRATO.IBLOCK_FILTER_UPDATE_ERROR'] = 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð¿Ñ€Ð¸ Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ð¸ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ð°';
