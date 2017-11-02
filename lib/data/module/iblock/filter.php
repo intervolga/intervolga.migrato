@@ -242,7 +242,7 @@ class Filter extends BaseData
 		if($xmlFields[0] == 'Y')
 			$fields['USER_ID'] = 1;
 
-		//создаем FILTER_ID записи
+		// FILTER_ID creating
 		$iblockXmlId = $xmlFields[3];
 		$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
 		if(Loader::includeModule('iblock'))
@@ -277,7 +277,7 @@ class Filter extends BaseData
 			if($xmlFields[0] == 'Y')
 				$fields['USER_ID'] = 1;
 
-			//создаем FILTER_ID записи
+			// FILTER_ID creating
 			$iblockXmlId = $xmlFields[3];
 			$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
 			if(Loader::includeModule('iblock'))
