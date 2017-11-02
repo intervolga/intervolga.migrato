@@ -55,7 +55,6 @@ class Filter extends BaseData
 					$record->setFieldRaw('NAME', $arFilter['NAME']);
 					$record->setFieldRaw('COMMON', $arFilter['COMMON']);
 					$record->setFieldRaw('PRESET', $arFilter['PRESET']);
-					$record->setFieldRaw('LANGUAGE_ID', $arFilter['LANGUAGE_ID']);
 					$record->setFieldRaw('PRESET_ID', $arFilter['PRESET_ID']);
 					$record->setFieldRaw('SORT', $arFilter['SORT']);
 					$record->setFieldRaw('SORT_FIELD', $arFilter['SORT_FIELD']);
