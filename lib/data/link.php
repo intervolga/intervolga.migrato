@@ -36,11 +36,11 @@ class Link extends Value
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\BaseData $tragetData
+	 * @param \Intervolga\Migrato\Data\BaseData $targetData
 	 */
-	public function setTargetData($tragetData)
+	public function setTargetData($targetData)
 	{
-		$this->targetData = $tragetData;
+		$this->targetData = $targetData;
 	}
 
 	/**
