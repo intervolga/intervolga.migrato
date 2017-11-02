@@ -256,6 +256,7 @@ class Filter extends BaseData
 				{
 					$fields['FIELDS'] = $this->convertFieldsFromXml($arFields);
 					$fields['SORT_FIELD'] = unserialize($fields['SORT_FIELD']);
+					//TODO add LANGUAGE_ID field
 					$id = \CAdminFilter::Add($fields);
 					if ($id)
 						return $this->createId($id);
