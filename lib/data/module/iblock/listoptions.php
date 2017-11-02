@@ -54,7 +54,7 @@ class ListOptions extends BaseData
 			$dbRes = \CUserOptions::getList(array(), $filter);
 			while ($uoption = $dbRes->fetch())
 			{
-				if (strpos($uoption['NAME'], static::NAME_PREFIX) == 0 && !in_array($uoption['ID'], $recordsId))
+				if (strpos($uoption['NAME'], static::NAME_PREFIX) === 0 && !in_array($uoption['ID'], $recordsId))
 				{
 					if ($value = unserialize($uoption['VALUE']))
 					{
