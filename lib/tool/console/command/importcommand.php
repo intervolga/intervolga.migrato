@@ -29,6 +29,7 @@ class ImportCommand extends BaseCommand
 		$this->closeSite();
 		try
 		{
+			ReIndexFacetCommand::saveActiveFacet();
 			$this->runSubcommand('importdata');
 			$this->runSubcommand('importoptions');
 			if (!$this->input->getOption('quick'))
@@ -36,6 +37,7 @@ class ImportCommand extends BaseCommand
 				$this->runSubcommand('clearcache');
 				$this->runSubcommand('urlrewrite');
 				$this->runSubcommand('reindex');
+				$this->runSubcommand('reindexfacet');
 			}
 		}
 		catch (\Throwable $throwable)

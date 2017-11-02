@@ -42,6 +42,7 @@ class ImportXmlIdCommand extends ImportDataCommand
 
 	public function executeInner()
 	{
+		ReIndexFacetCommand::saveActiveFacet();
 		$dataClass = $this->findDataClass();
 		$record = $this->readRecordFile($dataClass);
 
@@ -59,6 +60,7 @@ class ImportXmlIdCommand extends ImportDataCommand
 			$this->runSubcommand('clearcache');
 			$this->runSubcommand('urlrewrite');
 			$this->runSubcommand('reindex');
+			$this->runSubcommand('reindexfacet');
 		}
 	}
 

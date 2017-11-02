@@ -6,6 +6,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\ExceptionText;
+use Intervolga\Migrato\Data\Value;
 
 Loc::loadMessages(__FILE__);
 
@@ -36,9 +37,13 @@ class Group extends BaseData
 				$record->addFieldsRaw(array(
 					"ACTIVE" => $group["ACTIVE"],
 					"NAME" => $group["NAME"],
+					"C_SORT" => $group["C_SORT"],
 					"DESCRIPTION" => $group["DESCRIPTION"],
 					"STRING_ID" => $group["STRING_ID"],
 				));
+
+				$this->addSecurityPolicySettings($record);
+
 				$result[] = $record;
 			}
 		}
@@ -46,10 +51,28 @@ class Group extends BaseData
 		return $result;
 	}
 
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 */
+	protected function addSecurityPolicySettings(Record $record)
+	{
+		$getElement = \CGroup::GetByID($record->getId()->getValue(), "N");
+		$groupElement = $getElement->Fetch();
+		$arSecurityPolicy = unserialize($groupElement['SECURITY_POLICY']);
+
+		if ($arSecurityPolicy)
+		{
+			$arSecurityPolicyValues = Value::treeToList($arSecurityPolicy, "SECURITY_POLICY");
+			$record->addFieldsRaw($arSecurityPolicyValues);
+		}
+	}
+
 	public function update(Record $record)
 	{
 		$groupObject = new \CGroup();
-		$isUpdated = $groupObject->update($record->getId()->getValue(), $record->getFieldsRaw());
+		$fields = $record->getFieldsRaw(array("SECURITY_POLICY"));
+		$fields["SECURITY_POLICY"] = serialize($fields["SECURITY_POLICY"]);
+		$isUpdated = $groupObject->update($record->getId()->getValue(), $fields);
 		if (!$isUpdated)
 		{
 			throw new \Exception(ExceptionText::getLastError($groupObject));

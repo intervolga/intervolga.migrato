@@ -23,11 +23,24 @@ class Link extends Value
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\BaseData $tragetData
+	 * @param string[] $values
+	 *
+	 * @return static
 	 */
-	public function setTargetData($tragetData)
+	public static function createMultiple(array $values)
 	{
-		$this->targetData = $tragetData;
+		$object = new static(null);
+		$object->setValues($values);
+
+		return $object;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $targetData
+	 */
+	public function setTargetData($targetData)
+	{
+		$this->targetData = $targetData;
 	}
 
 	/**
