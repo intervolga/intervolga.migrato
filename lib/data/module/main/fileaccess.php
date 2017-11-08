@@ -233,9 +233,9 @@ class FileAccess extends BaseData
 
 			$record->addFieldsRaw($arFields);
 
-			if(!$isForAll)
+			if(!$isForAll && !$this->addGroupDependency($record, $group))
 			{
-				$this->addGroupDependency($record, $group);
+				return null;
 			}
 
 			return $record;
@@ -282,28 +282,24 @@ class FileAccess extends BaseData
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @param int $group
 	 * @throws \Exception
+	 * @return bool
 	 */
 	protected function addGroupDependency(Record $record, $group)
 	{
 		$groupIdObject = Group::getInstance()->createId($group);
 		$groupXmlId = Group::getInstance()->getXmlId($groupIdObject);
-		if (!strlen($groupXmlId))
+		if (strlen($groupXmlId))
 		{
-			throw new \Exception(
-				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.MAIN_GROUP_NOT_FOUND_FOR_PERMISSION',
-					array(
-						'#DIR#' => $record->getFieldRaw('DIR'),
-						'#PATH#' => $record->getFieldRaw('PATH'),
-						'#GROUP#' => $group,
-					)
-				)
-			);
-		}
+			$link = clone $this->getDependency('GROUP');
+			$link->setValue($groupXmlId);
+			$record->setDependency('GROUP', $link);
 
-		$link = clone $this->getDependency('GROUP');
-		$link->setValue($groupXmlId);
-		$record->setDependency('GROUP', $link);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	protected function deleteInner(RecordId $id)
