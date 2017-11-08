@@ -200,32 +200,43 @@ class FileAccess extends BaseData
 	 */
 	protected function makeRecord($dir, $path, $group, $permission)
 	{
-		if ($dir && $path && $permission)
+		if ($dir && $path && $group && $permission)
 		{
-			$record = new Record($this);
-			$complexId = $this->createId(array(
-				'DIR' => $dir,
-				'PATH' => $path,
-				'GROUP' => $group,
-			));
-			$record->setId($complexId);
-			$record->setXmlId($this->getXmlId($complexId));
-
 			$isForAll = false;
 			if ($group == '*')
 			{
 				$isForAll = true;
-				$group = Group::GROUP_ALL_USERS;
 			}
 
-			$record->addFieldsRaw(array(
+			$record = new Record($this);
+			$arComplex = array(
+				'DIR' => $dir,
+				'PATH' => $path,
+				'GROUP' => $group ? : false,
+			);
+
+			$complexId = $this->createId($arComplex);
+			$record->setId($complexId);
+			$record->setXmlId($xmlId = $this->getXmlId($complexId));
+
+			$arFields = array(
 				'DIR' => $dir,
 				'PATH' => $path,
 				'PERMISSION' => $permission,
 				'FOR_ALL' => ($isForAll ? 'Y' : 'N'),
-			));
+			);
 
-			$this->addGroupDependency($record, $group);
+			if ($isForAll)
+			{
+				$arFields = array_merge(array('GROUP' => '*'), $arFields);
+			}
+
+			$record->addFieldsRaw($arFields);
+
+			if(!$isForAll)
+			{
+				$this->addGroupDependency($record, $group);
+			}
 
 			return $record;
 		}
@@ -235,25 +246,36 @@ class FileAccess extends BaseData
 
 	public function createId($id)
 	{
-		return RecordId::createComplexId(array(
+		$arComplex = array(
 			'DIR' => $id['DIR'],
 			'PATH' => $id['PATH'],
-			'GROUP' => $id['GROUP'],
-		));
+		);
+
+		if ($id['GROUP'])
+		{
+			$arComplex['GROUP'] = $id['GROUP'];
+		}
+
+		return RecordId::createComplexId($arComplex);
 	}
 
 	public function getXmlId($id)
 	{
 		$array = $id->getValue();
-		$groupData = Group::getInstance();
-		$groupXmlId = $groupData->getXmlId($groupData->createId($array['GROUP']));
 
-		$md5 = md5(serialize(array(
+		$arSerialize = array(
 			$array['DIR'],
 			$array['PATH'],
-			$groupXmlId,
-		)));
-		return BaseXmlIdProvider::formatXmlId($md5);
+		);
+
+		if ($array['GROUP'])
+		{
+			$groupData = Group::getInstance();
+			$groupXmlId = $groupData->getXmlId($groupData->createId($array['GROUP']));
+			$arSerialize[] = $groupXmlId;
+		}
+
+		return BaseXmlIdProvider::formatXmlId(md5(serialize($arSerialize)));
 	}
 
 	/**
