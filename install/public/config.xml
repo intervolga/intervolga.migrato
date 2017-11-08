@@ -108,6 +108,9 @@
         <entity>
             <name>extra</name>
         </entity>
+        <entity>
+            <name>iblock</name>
+        </entity>
     </module>
     <module>
         <name>sale</name>
