@@ -316,6 +316,7 @@ class FileAccess extends BaseData
 			$PERM = array();
 			include $accessPath;
 
+			$PERM = $this->permissionReformat($PERM, $path, $group);
 			if ($PERM[$path][$group])
 			{
 				unset($PERM[$path][$group]);
@@ -394,6 +395,8 @@ class FileAccess extends BaseData
 		{
 			include $accessPath;
 
+			$PERM = $this->permissionReformat($PERM, $path, $group);
+
 			if (!$PERM[$path][$group] || $PERM[$path][$group] !== $perm)
 			{
 				$PERM[$path][$group] = $perm;
@@ -405,6 +408,17 @@ class FileAccess extends BaseData
 			$PERM[$path][$group] = $perm;
 			$this->writeToFile($PERM, $accessPath);
 		}
+	}
+
+	public function permissionReformat($PERM, $path, $group)
+	{
+		if ($PERM[$path]['G' . $group])
+		{
+			$PERM[$path][$group] = $PERM[$path]['G' . $group];
+			unset($PERM[$path]['G' . $group]);
+		}
+
+		return $PERM;
 	}
 
 	/**
