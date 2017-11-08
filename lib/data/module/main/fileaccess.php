@@ -200,24 +200,27 @@ class FileAccess extends BaseData
 	 */
 	protected function makeRecord($dir, $path, $group, $permission)
 	{
-		if ($dir && $path && $group && $permission)
+		if ($dir && $path && $permission)
 		{
 			$isForAll = false;
-			if ($group == '*')
+			if ($this->isForAllGroup($group))
 			{
 				$isForAll = true;
 			}
 
 			$record = new Record($this);
-			$arComplex = array(
+
+			$complexId = $this->createId(array(
 				'DIR' => $dir,
 				'PATH' => $path,
-				'GROUP' => $group ? : false,
-			);
+				'GROUP' => $group,
+			));
 
-			$complexId = $this->createId($arComplex);
 			$record->setId($complexId);
-			$record->setXmlId($xmlId = $this->getXmlId($complexId));
+			if ($xmlId = $this->getXmlId($complexId))
+			{
+				$record->setXmlId($xmlId);
+			}
 
 			$arFields = array(
 				'DIR' => $dir,
@@ -232,9 +235,9 @@ class FileAccess extends BaseData
 
 			$record->addFieldsRaw($arFields);
 
-			if(!$isForAll && !$this->addGroupDependency($record, $group))
+			if (!$isForAll)
 			{
-				return null;
+				$this->addGroupDependency($record, $group);
 			}
 
 			return $record;
@@ -243,17 +246,22 @@ class FileAccess extends BaseData
 		return null;
 	}
 
+	/**
+	 * @param string $group
+	 * @return bool
+	 */
+	public function isForAllGroup($group)
+	{
+		return $group === '*';
+	}
+
 	public function createId($id)
 	{
 		$arComplex = array(
 			'DIR' => $id['DIR'],
 			'PATH' => $id['PATH'],
+			'GROUP' => $id['GROUP'],
 		);
-
-		if ($id['GROUP'])
-		{
-			$arComplex['GROUP'] = $id['GROUP'];
-		}
 
 		return RecordId::createComplexId($arComplex);
 	}
@@ -261,20 +269,32 @@ class FileAccess extends BaseData
 	public function getXmlId($id)
 	{
 		$array = $id->getValue();
+		$md5 = array();
 
-		$arSerialize = array(
-			$array['DIR'],
-			$array['PATH'],
-		);
-
-		if ($array['GROUP'])
+		if ($this->isForAllGroup($array['GROUP']))
+		{
+			$md5 = md5(serialize(array(
+				$array['DIR'],
+				$array['PATH'],
+				$array['GROUP'],
+			)));
+		}
+		else
 		{
 			$groupData = Group::getInstance();
 			$groupXmlId = $groupData->getXmlId($groupData->createId($array['GROUP']));
-			$arSerialize[] = $groupXmlId;
+
+			if ($groupXmlId)
+			{
+				$md5 = md5(serialize(array(
+					$array['DIR'],
+					$array['PATH'],
+					$groupXmlId,
+				)));
+			}
 		}
 
-		return BaseXmlIdProvider::formatXmlId(md5(serialize($arSerialize)));
+		return BaseXmlIdProvider::formatXmlId($md5);
 	}
 
 	/**
@@ -287,17 +307,12 @@ class FileAccess extends BaseData
 	{
 		$groupIdObject = Group::getInstance()->createId($group);
 		$groupXmlId = Group::getInstance()->getXmlId($groupIdObject);
+
 		if (strlen($groupXmlId))
 		{
 			$link = clone $this->getDependency('GROUP');
 			$link->setValue($groupXmlId);
 			$record->setDependency('GROUP', $link);
-
-			return true;
-		}
-		else
-		{
-			return false;
 		}
 	}
 
