@@ -223,7 +223,6 @@ class FileAccess extends BaseData
 				'DIR' => $dir,
 				'PATH' => $path,
 				'PERMISSION' => $permission,
-				'FOR_ALL' => ($isForAll ? 'Y' : 'N'),
 			);
 
 			if ($isForAll)
@@ -359,11 +358,8 @@ class FileAccess extends BaseData
 	protected function recordToArray(Record $record)
 	{
 		$result = $record->getFieldsRaw();
-		if ($result['FOR_ALL'] == 'Y')
-		{
-			$result['GROUP'] = '*';
-		}
-		else
+
+		if ($result['GROUP'] != '*')
 		{
 			$groupDependency = $record->getDependency('GROUP');
 			if ($groupDependency)
@@ -375,7 +371,6 @@ class FileAccess extends BaseData
 				}
 			}
 		}
-		unset($result['FOR_ALL']);
 
 		return $result;
 	}
