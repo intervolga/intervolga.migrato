@@ -164,6 +164,7 @@ class FileAccess extends BaseData
 					$replaced = str_replace($root, '', $fullPath);
 					$dir = $replaced ?: '/';
 
+					$group = $this->prepareGroup($group);
 					$record = $this->makeRecord($dir, $path, $group, $permission);
 					if ($record)
 					{
@@ -174,6 +175,20 @@ class FileAccess extends BaseData
 		}
 
 		return $result;
+	}
+
+	/**
+	 * @param string|int $group
+	 * @return string|int $group
+	 */
+	protected function prepareGroup($group)
+	{
+		if (preg_match('/^G([0-9]+)$/', $group, $match))
+		{
+			return $match[1];
+		}
+
+		return $group;
 	}
 
 	/**
