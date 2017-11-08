@@ -85,16 +85,30 @@ class ReIndexFacetCommand extends BaseCommand
 			}
 			unset($offersIterator, $offerIblocks);
 		}
-		$iblockList = IblockTable::getList(array(
-			'select' => array('ID', 'NAME', 'ACTIVE'),
-			'filter' => $iblockFilter,
-			'order' => array('ID' => 'asc', 'NAME' => 'asc'),
-		));
-		while ($iblockInfo = $iblockList->fetch())
+		if (Loader::includeModule('iblock'))
 		{
-			$iblockDropDown[$iblockInfo['ID']] = $iblockInfo['ID'];
+			$iblockList = IblockTable::getList(
+				array(
+					'select' => array(
+						'ID',
+						'NAME',
+						'ACTIVE',
+					),
+					'filter' => $iblockFilter,
+					'order' => array(
+						'ID' => 'asc',
+						'NAME' => 'asc',
+					),
+				)
+			);
+
+			while ($iblockInfo = $iblockList->fetch())
+			{
+				$iblockDropDown[$iblockInfo['ID']] = $iblockInfo['ID'];
+			}
+
+			unset($iblockInfo, $iblockList);
 		}
-		unset($iblockInfo, $iblockList);
 
 		return $iblockDropDown;
 	}
