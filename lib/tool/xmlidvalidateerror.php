@@ -29,25 +29,25 @@ class XmlIdValidateError
 	{
 		if ($type == static::TYPE_EMPTY)
 		{
-			return Loc::getMessage("INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_EMPTY");
+			return Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_EMPTY");
 		}
 		if ($type == static::TYPE_REPEAT)
 		{
-			return Loc::getMessage("INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_REPEAT");
+			return Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_REPEAT");
 		}
 		if ($type == static::TYPE_INVALID)
 		{
-			return Loc::getMessage("INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_INVALID");
+			return Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_INVALID");
 		}
 		if ($type == static::TYPE_INVALID_EXT)
 		{
-			return Loc::getMessage("INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_INVALID_EXT");
+			return Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_INVALID_EXT");
 		}
 		if ($type == static::TYPE_SIMPLE)
 		{
-			return Loc::getMessage("INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_SIMPLE");
+			return Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_SIMPLE");
 		}
-		return Loc::getMessage("INTEVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_UNKNOWN");
+		return Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_UNKNOWN");
 	}
 
 	/**
