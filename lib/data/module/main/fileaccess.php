@@ -164,6 +164,7 @@ class FileAccess extends BaseData
 					$replaced = str_replace($root, '', $fullPath);
 					$dir = $replaced ?: '/';
 
+					$group = $this->prepareGroup($group);
 					$record = $this->makeRecord($dir, $path, $group, $permission);
 					if ($record)
 					{
@@ -177,6 +178,20 @@ class FileAccess extends BaseData
 	}
 
 	/**
+	 * @param string|int $group
+	 * @return string|int $group
+	 */
+	protected function prepareGroup($group)
+	{
+		if (preg_match('/^G([0-9]+)$/', $group, $match))
+		{
+			return $match[1];
+		}
+
+		return $group;
+	}
+
+	/**
 	 * @param string $dir
 	 * @param string $path
 	 * @param int $group
@@ -187,30 +202,43 @@ class FileAccess extends BaseData
 	{
 		if ($dir && $path && $permission)
 		{
+			$isForAll = false;
+			if ($this->isForAllGroup($group))
+			{
+				$isForAll = true;
+			}
+
 			$record = new Record($this);
+
 			$complexId = $this->createId(array(
 				'DIR' => $dir,
 				'PATH' => $path,
 				'GROUP' => $group,
 			));
-			$record->setId($complexId);
-			$record->setXmlId($this->getXmlId($complexId));
 
-			$isForAll = false;
-			if ($group == '*')
+			$record->setId($complexId);
+			if ($xmlId = $this->getXmlId($complexId))
 			{
-				$isForAll = true;
-				$group = Group::GROUP_ALL_USERS;
+				$record->setXmlId($xmlId);
 			}
 
-			$record->addFieldsRaw(array(
+			$arFields = array(
 				'DIR' => $dir,
 				'PATH' => $path,
 				'PERMISSION' => $permission,
-				'FOR_ALL' => ($isForAll ? 'Y' : 'N'),
-			));
+			);
 
-			$this->addGroupDependency($record, $group);
+			if ($isForAll)
+			{
+				$arFields = array_merge(array('GROUP' => '*'), $arFields);
+			}
+
+			$record->addFieldsRaw($arFields);
+
+			if (!$isForAll)
+			{
+				$this->addGroupDependency($record, $group);
+			}
 
 			return $record;
 		}
@@ -218,26 +246,54 @@ class FileAccess extends BaseData
 		return null;
 	}
 
+	/**
+	 * @param string $group
+	 * @return bool
+	 */
+	public function isForAllGroup($group)
+	{
+		return $group === '*';
+	}
+
 	public function createId($id)
 	{
-		return RecordId::createComplexId(array(
+		$arComplex = array(
 			'DIR' => $id['DIR'],
 			'PATH' => $id['PATH'],
 			'GROUP' => $id['GROUP'],
-		));
+		);
+
+		return RecordId::createComplexId($arComplex);
 	}
 
 	public function getXmlId($id)
 	{
 		$array = $id->getValue();
-		$groupData = Group::getInstance();
-		$groupXmlId = $groupData->getXmlId($groupData->createId($array['GROUP']));
+		$md5 = array();
 
-		$md5 = md5(serialize(array(
-			$array['DIR'],
-			$array['PATH'],
-			$groupXmlId,
-		)));
+		if ($this->isForAllGroup($array['GROUP']))
+		{
+			$md5 = md5(serialize(array(
+				$array['DIR'],
+				$array['PATH'],
+				$array['GROUP'],
+			)));
+		}
+		else
+		{
+			$groupData = Group::getInstance();
+			$groupXmlId = $groupData->getXmlId($groupData->createId($array['GROUP']));
+
+			if ($groupXmlId)
+			{
+				$md5 = md5(serialize(array(
+					$array['DIR'],
+					$array['PATH'],
+					$groupXmlId,
+				)));
+			}
+		}
+
 		return BaseXmlIdProvider::formatXmlId($md5);
 	}
 
@@ -245,28 +301,19 @@ class FileAccess extends BaseData
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @param int $group
 	 * @throws \Exception
+	 * @return bool
 	 */
 	protected function addGroupDependency(Record $record, $group)
 	{
 		$groupIdObject = Group::getInstance()->createId($group);
 		$groupXmlId = Group::getInstance()->getXmlId($groupIdObject);
-		if (!strlen($groupXmlId))
-		{
-			throw new \Exception(
-				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.MAIN_GROUP_NOT_FOUND_FOR_PERMISSION',
-					array(
-						'#DIR#' => $record->getFieldRaw('DIR'),
-						'#PATH#' => $record->getFieldRaw('PATH'),
-						'#GROUP#' => $group,
-					)
-				)
-			);
-		}
 
-		$link = clone $this->getDependency('GROUP');
-		$link->setValue($groupXmlId);
-		$record->setDependency('GROUP', $link);
+		if (strlen($groupXmlId))
+		{
+			$link = clone $this->getDependency('GROUP');
+			$link->setValue($groupXmlId);
+			$record->setDependency('GROUP', $link);
+		}
 	}
 
 	protected function deleteInner(RecordId $id)
@@ -283,6 +330,7 @@ class FileAccess extends BaseData
 			$PERM = array();
 			include $accessPath;
 
+			$PERM = $this->permissionReformat($PERM, $path, $group);
 			if ($PERM[$path][$group])
 			{
 				unset($PERM[$path][$group]);
@@ -325,11 +373,8 @@ class FileAccess extends BaseData
 	protected function recordToArray(Record $record)
 	{
 		$result = $record->getFieldsRaw();
-		if ($result['FOR_ALL'] == 'Y')
-		{
-			$result['GROUP'] = '*';
-		}
-		else
+
+		if ($result['GROUP'] != '*')
 		{
 			$groupDependency = $record->getDependency('GROUP');
 			if ($groupDependency)
@@ -341,7 +386,6 @@ class FileAccess extends BaseData
 				}
 			}
 		}
-		unset($result['FOR_ALL']);
 
 		return $result;
 	}
@@ -361,6 +405,8 @@ class FileAccess extends BaseData
 		{
 			include $accessPath;
 
+			$PERM = $this->permissionReformat($PERM, $path, $group);
+
 			if (!$PERM[$path][$group] || $PERM[$path][$group] !== $perm)
 			{
 				$PERM[$path][$group] = $perm;
@@ -372,6 +418,17 @@ class FileAccess extends BaseData
 			$PERM[$path][$group] = $perm;
 			$this->writeToFile($PERM, $accessPath);
 		}
+	}
+
+	public function permissionReformat($PERM, $path, $group)
+	{
+		if ($PERM[$path]['G' . $group])
+		{
+			$PERM[$path][$group] = $PERM[$path]['G' . $group];
+			unset($PERM[$path]['G' . $group]);
+		}
+
+		return $PERM;
 	}
 
 	/**
