@@ -22,18 +22,33 @@ class XmlIdValidateError
 
 	/**
 	 * @param string $type
+	 * @param bool $isVirtualXmlId
 	 *
 	 * @return string
 	 */
-	public static function typeToString($type)
+	public static function typeToString($type, $isVirtualXmlId = false)
 	{
 		if ($type == static::TYPE_EMPTY)
 		{
-			return Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_EMPTY");
+			if ($isVirtualXmlId)
+			{
+				return Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_EMPTY_VIRTUAL");
+			}
+			else
+			{
+				return Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_EMPTY");
+			}
 		}
 		if ($type == static::TYPE_REPEAT)
 		{
-			return Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_REPEAT");
+			if ($isVirtualXmlId)
+			{
+				return Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_REPEAT_VIRTUAL");
+			}
+			else
+			{
+				return Loc::getMessage("INTERVOLGA_MIGRATO.VALIDATE_ERROR_TYPE_REPEAT");
+			}
 		}
 		if ($type == static::TYPE_INVALID)
 		{
@@ -116,15 +131,15 @@ class XmlIdValidateError
 		$xmlId = $this->getXmlId();
 		if ($this->getType() == static::TYPE_EMPTY)
 		{
-			$string = $name . " " . $this->getId()->getValue() . " " . static::typeToString($this->getType());
+			$string = $name . " " . $this->getId()->getValue() . " " . static::typeToString($this->getType(), $this->getDataClass()->isVirtualXmlId());
 		}
 		if ($this->getType() == static::TYPE_REPEAT)
 		{
-			$string = $name . " " . $xmlId . " " . static::typeToString($this->getType());
+			$string = $name . " " . $xmlId . " " . static::typeToString($this->getType(), $this->getDataClass()->isVirtualXmlId());
 		}
 		if ($this->getType() == static::TYPE_INVALID)
 		{
-			$string = $name . " " . $xmlId . " " . static::typeToString($this->getType());
+			$string = $name . " " . $xmlId . " " . static::typeToString($this->getType(), $this->getDataClass()->isVirtualXmlId());
 		}
 		if ($this->getType() == static::TYPE_INVALID_EXT)
 		{
@@ -134,12 +149,12 @@ class XmlIdValidateError
 			}
 			else
 			{
-				$string = $name . " " . $xmlId . " " . static::typeToString($this->getType());
+				$string = $name . " " . $xmlId . " " . static::typeToString($this->getType(), $this->getDataClass()->isVirtualXmlId());
 			}
 		}
 		if ($this->getType() == static::TYPE_SIMPLE)
 		{
-			$string = $name . " " . $xmlId . " " . static::typeToString($this->getType());
+			$string = $name . " " . $xmlId . " " . static::typeToString($this->getType(), $this->getDataClass()->isVirtualXmlId());
 		}
 
 		return $string;
