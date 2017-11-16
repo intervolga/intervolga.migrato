@@ -9,6 +9,8 @@ use Intervolga\Migrato\Data\RecordId;
 
 class Task extends BaseData
 {
+	const XML_ID_SEPARATOR = "___";
+
 	protected function configure()
 	{
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_TASK'));
@@ -22,13 +24,17 @@ class Task extends BaseData
 	 */
 	public function getList(array $filter = array())
 	{
-		$dbRes = \CTask::GetList(array(),$filter);
+		$dbRes = \CTask::GetList(array(),array("BINDING"=>"module"));
+		
 		while ($task = $dbRes->fetch())
 		{
 			$record = new Record($this);
 			$id = $this->createId($task['ID']);
+
 			if($id)
 			{
+				$operationsId = \CTask::GetOperations($task['ID']);
+				$operations = \Bitrix\Main\OperationTable::getList(array('select' => array('NAME'), 'filter'=>array('ID' => $operationsId)))->fetchAll();
 				$record->setId($id);
 				$record->setXmlId($this->createXmlId($task));
 				$record->addFieldsRaw(array(
@@ -37,9 +43,9 @@ class Task extends BaseData
 					'MODULE_ID' => $task['MODULE_ID'],
 					'LETTER' => $task['LETTER'],
 					'SYS' => $task['SYS'],
-					'BINDING' => $task['BINDING'],
 					'TITLE' => $task['TITLE'],
-					'DESC' => $task['DESC']
+					'DESC' => $task['DESC'],
+					'OPERATION' => $operations
 				));
 				$result[] = $record;
 			}
@@ -50,7 +56,8 @@ class Task extends BaseData
 
 	private function createXmlId($fields)
 	{
-		return md5($fields['NAME']);
+		$fields['MODULE_ID'] = str_replace ( "." , "_", $fields['MODULE_ID']);
+		return strtolower($fields['MODULE_ID'].static::XML_ID_SEPARATOR.$fields['LETTER']);
 	}
 
 	public function getXmlId($id)
