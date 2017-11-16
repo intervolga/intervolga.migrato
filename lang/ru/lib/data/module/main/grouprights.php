@@ -1,2 +1,2 @@
 <?
-$MESS['INTERVOLGA_MIGRATO.MAIN_GROUP_RIGHT'] = 'Ïðàâà äîñòóïà ãðóïïû ïîëüçîâàòåëåé';
+$MESS['INTERVOLGA_MIGRATO.MAIN_GROUP_RIGHT'] = 'ÐŸÑ€Ð°Ð²Ð° Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð° Ð³Ñ€ÑƒÐ¿Ð¿Ñ‹ Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»ÐµÐ¹';
