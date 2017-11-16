@@ -19,15 +19,15 @@ class GroupRights extends BaseData
 	 */
 	public function getList(array $filter = array())
 	{
-		//Ïîëó÷èòü ñïèñîê âñåõ ãðóïï ïîëüçîâàòåëåé
-		$rsGroups = \CGroup::GetList($by="ID", $order="asc", array("ADMIN"=>'N')); // âûáèðàåì ãðóïïû
+		//ÐŸÐ¾Ð»ÑƒÑ‡Ð¸Ñ‚ÑŒ ÑÐ¿Ð¸ÑÐ¾Ðº Ð²ÑÐµÑ… Ð³Ñ€ÑƒÐ¿Ð¿ Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»ÐµÐ¹
+		$rsGroups = \CGroup::GetList($by="ID", $order="asc", array("ADMIN"=>'N')); // Ð²Ñ‹Ð±Ð¸Ñ€Ð°ÐµÐ¼ Ð³Ñ€ÑƒÐ¿Ð¿Ñ‹
 		$groups = array();
 		while($g = $rsGroups->Fetch())
 		{
 			if($g['ID'] != ALL_USERS_GROUP_ID)
 				$groups[] = $g['ID'];
 		}
-		//Ïîëó÷èòü ñïèñîê âñåõ ìîäóëåé
+		//ÐŸÐ¾Ð»ÑƒÑ‡Ð¸Ñ‚ÑŒ ÑÐ¿Ð¸ÑÐ¾Ðº Ð²ÑÐµÑ… Ð¼Ð¾Ð´ÑƒÐ»ÐµÐ¹
 		$rsInstalledModules = \CModule::GetList();
 		$result = array();
 		while ($m = $rsInstalledModules->Fetch())
