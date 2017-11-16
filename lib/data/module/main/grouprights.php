@@ -11,6 +11,7 @@ use Intervolga\Migrato\Data\RecordId;
 class GroupRights extends BaseData
 {
 	const ALL_USERS_GROUP_ID = 2;
+	const XML_ID_DELIMITER = '_';
 	/**
 	 * @param string[] $filter
 	 *
@@ -145,7 +146,22 @@ class GroupRights extends BaseData
 	 */
 	public function findRecord($xmlId)
 	{
-
+		$delPos = strpos ($xmlId , XML_ID_DELIMITER);
+		if($delPos)
+		{
+			$moduleId = substr($xmlId, 0, $delPos);
+			$groupXmlId = substr($xmlId, $delPos+1);
+			$groupRecId = Group::getInstance()->findRecord($groupXmlId);
+			$groupId = $groupRecId->getValue();
+			if(\CMain::GetUserRoles($moduleId, array($groupId),'N'))
+			{
+				return $this->createId(array(
+					'MODULE_ID'=>$moduleId,
+					'GROUP_ID'=>$groupId)
+				);
+			}
+			return null;
+		}
 	}
 
 	/**
@@ -173,7 +189,7 @@ class GroupRights extends BaseData
 
 	private function createXmlId($data)
 	{
-		return ($data['MODULE_ID'].'_'.Group::getInstance()->getXmlId(Group::getInstance()->createId(intval($data['GROUP_ID']))));
+		return ($data['MODULE_ID'].XML_ID_DELIMITER.Group::getInstance()->getXmlId(Group::getInstance()->createId(intval($data['GROUP_ID']))));
 	}
 
 
