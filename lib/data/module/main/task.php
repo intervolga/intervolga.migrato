@@ -84,6 +84,12 @@ class Task extends BaseData
 	{
 		$fields = $record->getFieldsRaw();
 		$id = \CTask::Add($fields);
+		$rsOperationsID = \Bitrix\Main\OperationTable::getList(array('select' => array('ID'), 'filter'=>array('NAME' => $fields["OPERATION"])))->fetchAll();
+		$operationsID = array();
+		foreach ($rsOperationsID as $operationID){
+			$operationsID[] = $operationID["ID"];
+		}
+		\CTask::SetOperations($id,$operationsID);
 		if(is_int($id))
 			return $this->createId($id);
 		else
