@@ -12,6 +12,17 @@ class GroupRights extends BaseData
 {
 	const ALL_USERS_GROUP_ID = 2;
 	const XML_ID_DELIMITER = '_';
+
+	protected function configure()
+	{
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_GROUP_RIGHT'));
+		$this->setFilesSubdir('/');
+		$this->setDependencies(array(
+			'GROUP' => new Link(Group::getInstance()),
+			'TASK' => new Link(Task::getInstance()),
+		));
+	}
+
 	/**
 	 * @param string[] $filter
 	 *
@@ -25,48 +36,47 @@ class GroupRights extends BaseData
 		while($g = $rsGroups->Fetch())
 		{
 			if($g['ID'] != ALL_USERS_GROUP_ID)
-				$groups[] = $g['ID'];
+				$groups["ID"] = $g['ID'];
+				$groups["STRING_ID"] = $g['STRING_ID'];
 		}
 		//Получить список всех модулей
 		$rsInstalledModules = \CModule::GetList();
 		$result = array();
-		while ($m = $rsInstalledModules->Fetch())
-		{
-			$moduleId = $m['ID'];
-			foreach ($groups as $groupId)
-			{
-				$roles = \CMain::GetUserRoles($moduleId, array($groupId),'N');
-				if($roles)
-				{
+		foreach ($groups as $groupId) {
+			$record = new Record($this);
+			$record->setId($this->createId($groupId["STRING_ID"]));
+			$record->setXmlId($this->createXmlId($groupId["STRING_ID"]));
+			$fields = array();
+			$dependencylist = array();
+			while ($m = $rsInstalledModules->Fetch()){
+				$moduleId = $m['ID'];
+				$roles = \CMain::GetUserRoles($moduleId, array($groupId["ID"]),'N');
+				if($roles) {
+//					var_dump(array($roles,$moduleId,$groupId["ID"]));
 					$tasksId = array();
-					$dbRes = \CTask::GetList(array(),array(
+					$dbRes = \CTask::GetList(array(), array(
 						'MODULE_ID' => $moduleId
 					));
-					while ($task = $dbRes->fetch())
-					{
-						if (in_array($task['LETTER'], $roles))
-						{
+					while ($task = $dbRes->fetch()) {
+						if (in_array($task['LETTER'], $roles)) {
 							$tasksId[] = $task['ID'];
-
 						}
 					}
-					if($tasksId)
-					{
-						$uniqData = array(
-							'MODULE_ID' => $moduleId, 'GROUP_ID' => $groupId
-						);
-						$record = new Record($this);
-						$record->setId($this->createId($uniqData));
-						$record->setXmlId($this->createXmlId($uniqData));
-						$record->addFieldsRaw(array(
-							'MODULE_ID' => $moduleId,
-						));
-						$this->addTaskDependency($record, $tasksId);
-						$this->addGroupDependency($record, $groupId);
-						$result[] = $record;
+					if ($tasksId) {
+						$dependencylist[$moduleId] = $tasksId;
 					}
+					else{
+						$fields[$moduleId] = $moduleId."___".$roles[0];
+					}
+
 				}
 			}
+			$record->addFieldsRaw(array(
+				'CODE_RIGHT' => $fields,
+			));
+			$this->addGroupDependency($record, $groupId);
+			$this->addTaskDependency($record, $dependencylist);
+			$result[] = $record;
 		}
 		return $result;
 	}
@@ -89,22 +99,15 @@ class GroupRights extends BaseData
 	 */
 	private function addTaskDependency($record,array $tasksId)
 	{
-		foreach ($tasksId as $taskId)
+		$taskLinks =array();
+		foreach ($tasksId as $ID=>$taskId)
 		{
 			$taskLink = clone($this->getDependency('TASK'));
-			$taskLink->setValue(Task::getInstance()->getXmlId($taskId));
-			$record->setDependency('TASK', $taskLink);
+			$taskLink->setValue(Task::getInstance()->getXmlId($taskId[0]));
+			$taskLinks[$ID] = $taskLink;
+//			$record->setDependency("RIGHT[]",$taskLink);
 		}
-	}
-
-	protected function configure()
-	{
-		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_GROUP_RIGHT'));
-		$this->setFilesSubdir('/');
-		$this->setDependencies(array(
-			'GROUP' => new Link(Group::getInstance()),
-			'TASK' => new Link(Task::getInstance()),
-		));
+		$record->setDependencies($taskLinks);
 	}
 
 	/**
@@ -146,7 +149,7 @@ class GroupRights extends BaseData
 	 */
 	public function findRecord($xmlId)
 	{
-		$delPos = strpos ($xmlId , XML_ID_DELIMITER);
+		$delPos = strpos ($xmlId , static::XML_ID_DELIMITER);
 		if($delPos)
 		{
 			$moduleId = substr($xmlId, 0, $delPos);
@@ -189,7 +192,7 @@ class GroupRights extends BaseData
 
 	private function createXmlId($data)
 	{
-		return ($data['MODULE_ID'].XML_ID_DELIMITER.Group::getInstance()->getXmlId(Group::getInstance()->createId(intval($data['GROUP_ID']))));
+		return ($data['MODULE_ID'].static::XML_ID_DELIMITER.Group::getInstance()->getXmlId(Group::getInstance()->createId(intval($data['GROUP_ID']))));
 	}
 
 
