@@ -13,6 +13,7 @@ class Task extends BaseData
 
 	protected function configure()
 	{
+		$this->setVirtualXmlId(true);
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_TASK'));
 		$this->setFilesSubdir('/');
 	}
@@ -67,33 +68,6 @@ class Task extends BaseData
 		{
 			return $this->createXmlId($task);
 		}
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\RecordId $id
-	 * @param string $xmlId
-	 */
-	public function setXmlId($id, $xmlId)
-	{
-	}
-
-	/**
-	 * @param string $xmlId
-	 *
-	 * @return \Intervolga\Migrato\Data\RecordId|null
-	 */
-	public function findRecord($xmlId)
-	{
-		$id = null;
-		$dbRes = \CTask::GetList();
-		while($task = $dbRes->fetch())
-		{
-			if(md5($task["NAME"]) == $xmlId)
-			{
-				$id = $this->createId($task["ID"]);
-			}
-		}
-		return $id;
 	}
 
 	/**
