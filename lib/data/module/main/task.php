@@ -35,7 +35,12 @@ class Task extends BaseData
 			if($id)
 			{
 				$operationsId = \CTask::GetOperations($task['ID']);
-				$operations = \Bitrix\Main\OperationTable::getList(array('select' => array('NAME'), 'filter'=>array('ID' => $operationsId)))->fetchAll();
+				$rsOperations = \Bitrix\Main\OperationTable::getList(array('select' => array('NAME'), 'filter'=>array('ID' => $operationsId)))->fetchAll();
+				$operations = array();
+				foreach ($rsOperations as $operation)
+				{
+					$operations[] = $operation["NAME"];
+				}
 				$record->setId($id);
 				$record->setXmlId($this->createXmlId($task));
 				$record->addFieldsRaw(array(
@@ -119,6 +124,12 @@ class Task extends BaseData
 		{
 			$id = $recordId->getValue();
 			$fields = $record->getFieldsRaw();
+			$rsOperationsID = \Bitrix\Main\OperationTable::getList(array('select' => array('ID'), 'filter'=>array('NAME' => $fields["OPERATION"])))->fetchAll();
+			$operationsID = array();
+			foreach ($rsOperationsID as $operationID){
+				$operationsID[] = $operationID["ID"];
+			}
+			\CTask::SetOperations($id,$operationsID);
 			if(!\CTask::Update($fields,$id))
 				throw new  \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_TASK_UPDATE_ERROR'));
 		}
