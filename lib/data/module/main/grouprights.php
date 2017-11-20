@@ -93,7 +93,7 @@ class GroupRights extends BaseData
 		$groupLink = clone($this->getDependency('GROUP'));
 		$groupXmlId = Group::getInstance()->getXmlId(Group::getInstance()->createId($groupId));
 		$groupLink->setValue($groupXmlId);
-		$record->setDependency('GROUP', $groupLink);
+		$record->addDependencies(array('GROUP'=>$groupLink));
 	}
 
 	/**
@@ -109,7 +109,7 @@ class GroupRights extends BaseData
 			$taskLink->setValue(Task::getInstance()->getXmlId($taskId[0]));
 			$taskLinks['RIGHT_'.$id] = $taskLink;
 		}
-		$record->setDependencies($taskLinks);
+		$record->addDependencies($taskLinks);
 	}
 
 	/**
