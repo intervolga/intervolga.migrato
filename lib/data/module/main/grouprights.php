@@ -52,9 +52,8 @@ class GroupRights extends BaseData
 				$moduleId = $m['ID'];
 				$roles = \CMain::GetUserRoles($moduleId, array($groupId["ID"]),'N');
 				if($roles) {
-//					var_dump(array($roles,$moduleId,$groupId["ID"]));
 					$tasksId = array();
-					$dbRes = \CTask::GetList(array(), array(
+					$dbRes = \CTask::GetList(array(), array( // TODO BINDING
 						'MODULE_ID' => $moduleId
 					));
 					while ($task = $dbRes->fetch()) {
@@ -71,11 +70,13 @@ class GroupRights extends BaseData
 
 				}
 			}
-			$record->addFieldsRaw(array(
-				'CODE_RIGHT' => $fields,
-			));
+			if($fields)
+				$record->addFieldsRaw(array(
+					'CODE_RIGHT' => $fields,
+				));
 			$this->addGroupDependency($record, $groupId);
-			$this->addTaskDependency($record, $dependencylist);
+			if($dependencylist)
+				$this->addTaskDependency($record, $dependencylist);
 			$result[] = $record;
 		}
 		return $result;
@@ -99,13 +100,12 @@ class GroupRights extends BaseData
 	 */
 	private function addTaskDependency($record,array $tasksId)
 	{
-		$taskLinks =array();
-		foreach ($tasksId as $ID=>$taskId)
+		$taskLinks = array();
+		foreach ($tasksId as $id => $taskId)
 		{
 			$taskLink = clone($this->getDependency('TASK'));
 			$taskLink->setValue(Task::getInstance()->getXmlId($taskId[0]));
-			$taskLinks[$ID] = $taskLink;
-//			$record->setDependency("RIGHT[]",$taskLink);
+			$taskLinks['RIGHT_'.$id] = $taskLink;
 		}
 		$record->setDependencies($taskLinks);
 	}
