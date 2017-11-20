@@ -30,27 +30,29 @@ class GroupRights extends BaseData
 	 */
 	public function getList(array $filter = array())
 	{
-		//Получить список всех групп пользователей
+		//Get all users groups
 		$rsGroups = \CGroup::GetList($by="ID", $order="asc", array("ADMIN"=>'N')); // выбираем группы
 		$groups = array();
 		while($g = $rsGroups->Fetch())
 		{
-			if($g['ID'] != ALL_USERS_GROUP_ID)
-				$groups["ID"] = $g['ID'];
-				$groups["STRING_ID"] = $g['STRING_ID'];
+			if($g['ID'] != static::ALL_USERS_GROUP_ID)
+				$groups[] = $g;
 		}
-		//Получить список всех модулей
+		//Get all modules
+		$modulesId = array();
 		$rsInstalledModules = \CModule::GetList();
+		while ($m = $rsInstalledModules->Fetch())
+			$modulesId[] = $m['ID'];
 		$result = array();
-		foreach ($groups as $groupId) {
+		foreach ($groups as $group) {
 			$record = new Record($this);
-			$record->setId($this->createId($groupId["STRING_ID"]));
-			$record->setXmlId($this->createXmlId($groupId["STRING_ID"]));
+			$record->setId($this->createId($group["ID"]));
+			$record->setXmlId($group["STRING_ID"]);
 			$fields = array();
 			$dependencylist = array();
-			while ($m = $rsInstalledModules->Fetch()){
-				$moduleId = $m['ID'];
-				$roles = \CMain::GetUserRoles($moduleId, array($groupId["ID"]),'N');
+			foreach ($modulesId as $moduleId)
+			{
+				$roles = \CMain::GetUserRoles($moduleId, array($group["ID"]),'N');
 				if($roles) {
 					$tasksId = array();
 					$dbRes = \CTask::GetList(array(), array( // TODO BINDING
@@ -74,7 +76,7 @@ class GroupRights extends BaseData
 				$record->addFieldsRaw(array(
 					'CODE_RIGHT' => $fields,
 				));
-			$this->addGroupDependency($record, $groupId);
+			$this->addGroupDependency($record, $group['ID']);
 			if($dependencylist)
 				$this->addTaskDependency($record, $dependencylist);
 			$result[] = $record;
@@ -188,20 +190,5 @@ class GroupRights extends BaseData
 	{
 		$data = $id->getValue();
 		return $this->createXmlId($data);
-	}
-
-	private function createXmlId($data)
-	{
-		return ($data['MODULE_ID'].static::XML_ID_DELIMITER.Group::getInstance()->getXmlId(Group::getInstance()->createId(intval($data['GROUP_ID']))));
-	}
-
-
-	public function createId($id)
-	{
-		return RecordId::createComplexId(array(
-				"MODULE_ID" => $id['MODULE_ID'],
-				"GROUP_ID" => $id['GROUP_ID']
-			)
-		);
 	}
 }
