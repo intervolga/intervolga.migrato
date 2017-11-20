@@ -88,8 +88,8 @@ class GroupRights extends BaseData
 	private function addGroupDependency($record, $groupId)
 	{
 		$groupLink = clone($this->getDependency('GROUP'));
-		$groupRecordId = Group::getInstance()->createId($groupId);
-		$groupLink->setValue($groupRecordId->getValue());
+		$groupXmlId = Group::getInstance()->getXmlId(Group::getInstance()->createId($groupId));
+		$groupLink->setValue($groupXmlId);
 		$record->setDependency('GROUP', $groupLink);
 	}
 
