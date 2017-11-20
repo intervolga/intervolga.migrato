@@ -6,6 +6,7 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
 
 class GroupRights extends BaseData
 {
@@ -54,8 +55,9 @@ class GroupRights extends BaseData
 				$roles = \CMain::GetUserRoles($moduleId, array($group["ID"]),'N');
 				if($roles) {
 					$tasksId = array();
-					$dbRes = \CTask::GetList(array(), array( // TODO BINDING
-						'MODULE_ID' => $moduleId
+					$dbRes = \CTask::GetList(array(), array(
+						'MODULE_ID' => $moduleId,
+						'BINDING'=>'module'
 					));
 					while ($task = $dbRes->fetch()) {
 						if (in_array($task['LETTER'], $roles)) {
@@ -125,13 +127,10 @@ class GroupRights extends BaseData
 			{
 				$groupId = $links['GROUP']->getId()->getValue();
 				$tasks = $this->getRightsFromRecord($record);
-				//Get all modules
-				$modulesId = array();
 				$rsInstalledModules = \CModule::GetList();
 				while ($m = $rsInstalledModules->Fetch())
-					$modulesId[] = $m['ID'];
-				foreach ($modulesId as $moduleId)
 				{
+					$moduleId = $m['ID'];
 					$roles = \CMain::GetGroupRight($moduleId, array($groupId),'N'); //\CAllGroup::GetModulePermission
 					if($tasks[$moduleId] && $tasks[$moduleId]['LETTER'] != $roles)
 					{
@@ -221,6 +220,20 @@ class GroupRights extends BaseData
 		else
 		{
 			return "";
+		}
+	}
+
+	/**
+	 *
+	 * @throws \Bitrix\Main\NotImplementedException
+	 */
+	protected function deleteInner(RecordId $id)
+	{
+		$groupId = $id->getValue();
+		$rsInstalledModules = \CModule::GetList();
+		while ($m = $rsInstalledModules->Fetch())
+		{
+			\CAllGroup::SetModulePermission($groupId, $m['ID'], false);
 		}
 	}
 }
