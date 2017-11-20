@@ -131,7 +131,7 @@ class GroupRights extends BaseData
 				while ($m = $rsInstalledModules->Fetch())
 				{
 					$moduleId = $m['ID'];
-					$roles = \CMain::GetGroupRight($moduleId, array($groupId),'N'); //\CAllGroup::GetModulePermission
+					$roles = \CMain::GetGroupRight($moduleId, array($groupId),'N');
 					if($tasks[$moduleId] && $tasks[$moduleId]['LETTER'] != $roles)
 					{
 						if($tasks[$moduleId]['ID'])
@@ -148,6 +148,10 @@ class GroupRights extends BaseData
 		}
 	}
 
+	/**
+	 * @param Record $record
+	 * @return array
+	 */
 	private function getRightsFromRecord(Record $record)
 	{
 		$taskLinks = $record->getDependency('TASK');
@@ -224,6 +228,7 @@ class GroupRights extends BaseData
 	}
 
 	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $id
 	 *
 	 * @throws \Bitrix\Main\NotImplementedException
 	 */
