@@ -9,8 +9,6 @@ use Intervolga\Migrato\Data\RecordId;
 
 class GroupRights extends BaseData
 {
-	const CODE_RIGHT_DELIMITER = '___';
-
 	protected function configure()
 	{
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_GROUP_RIGHT'));
@@ -21,11 +19,7 @@ class GroupRights extends BaseData
 		));
 	}
 
-	/**
-	 * @param string[] $filter
-	 *
-	 * @return \Intervolga\Migrato\Data\Record[]
-	 */
+
 	public function getList(array $filter = array())
 	{
 		//Get all users groups
@@ -50,9 +44,10 @@ class GroupRights extends BaseData
 		{
 			$record = new Record($this);
 			$record->setId($this->createId($group["ID"]));
-			$record->setXmlId($group["STRING_ID"]);
+			$groupClass = Group::getInstance();
+			$record->setXmlId($groupClass->getXmlId($groupClass->createId($group["ID"])));
 			$fields = array();
-			$dependencylist = array();
+			$dependencyList = array();
 			foreach ($modulesId as $moduleId)
 			{
 				$roles = \CMain::GetUserRoles($moduleId, array($group["ID"]), 'N');
@@ -72,11 +67,14 @@ class GroupRights extends BaseData
 					}
 					if ($tasksId)
 					{
-						$dependencylist[$moduleId] = $tasksId;
+						$dependencyList[$moduleId] = $tasksId;
 					}
 					else
 					{
-						$fields[$moduleId] = $moduleId . static::CODE_RIGHT_DELIMITER . $roles[0];
+						$fields[$moduleId] = Task::createXmlId(array(
+							'MODULE_ID' => $moduleId,
+							'LETTER' => $roles[0],
+						));
 					}
 
 				}
@@ -88,9 +86,9 @@ class GroupRights extends BaseData
 				));
 			}
 			$this->addGroupDependency($record, $group['ID']);
-			if ($dependencylist)
+			if ($dependencyList)
 			{
-				$this->addTaskDependency($record, $dependencylist);
+				$this->addTaskDependency($record, $dependencyList);
 			}
 			$result[] = $record;
 		}
@@ -125,11 +123,6 @@ class GroupRights extends BaseData
 		$record->setDependency('TASK', $taskLink);
 	}
 
-	/**
-	 * @param \Intervolga\Migrato\Data\Record $record
-	 *
-	 * @throws \Bitrix\Main\NotImplementedException
-	 */
 	public function update(Record $record)
 	{
 		$links = $record->getDependencies();
@@ -165,8 +158,9 @@ class GroupRights extends BaseData
 	}
 
 	/**
-	 * @param Record $record
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return array
+	 * @throws \Exception
 	 */
 	private function getRightsFromRecord(Record $record)
 	{
@@ -193,7 +187,7 @@ class GroupRights extends BaseData
 		$codeRights = $record->getFieldRaws('CODE_RIGHT');
 		foreach ($codeRights as $codeRight)
 		{
-			$arCodeRight = explode(static::CODE_RIGHT_DELIMITER, $codeRight);
+			$arCodeRight = explode(Task::XML_ID_SEPARATOR, $codeRight);
 			if (count($arCodeRight) == 2)
 			{
 				$tasks[$arCodeRight[0]]['LETTER'] = $arCodeRight[1];
@@ -202,11 +196,6 @@ class GroupRights extends BaseData
 		return $tasks;
 	}
 
-	/**
-	 * @param string $xmlId
-	 *
-	 * @return \Intervolga\Migrato\Data\RecordId|null
-	 */
 	public function findRecord($xmlId)
 	{
 		$rsGroups = \CGroup::GetList($by = "ID", $order = "asc", array(
@@ -220,41 +209,17 @@ class GroupRights extends BaseData
 		return null;
 	}
 
-	/**
-	 * @param \Intervolga\Migrato\Data\RecordId $id
-	 * @param string $xmlId
-	 *
-	 * @throws \Bitrix\Main\NotImplementedException
-	 */
 	public function setXmlId($id, $xmlId)
 	{
 		//Is implemented in Group class.
 	}
 
-	/**
-	 * @param \Intervolga\Migrato\Data\RecordId $id
-	 *
-	 * @return string
-	 * @throws \Bitrix\Main\NotImplementedException
-	 */
 	public function getXmlId($id)
 	{
-		$element = \CGroup::getByID($id->getValue());
-		if ($element = $element->fetch())
-		{
-			return $element["STRING_ID"];
-		}
-		else
-		{
-			return "";
-		}
+		$groupClass = Group::getInstance();
+		return $groupClass->getXmlId($id);
 	}
 
-	/**
-	 * @param \Intervolga\Migrato\Data\RecordId $id
-	 *
-	 * @throws \Bitrix\Main\NotImplementedException
-	 */
 	protected function deleteInner(RecordId $id)
 	{
 		$groupId = $id->getValue();

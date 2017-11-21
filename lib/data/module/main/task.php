@@ -18,11 +18,6 @@ class Task extends BaseData
 		$this->setFilesSubdir('/');
 	}
 
-	/**
-	 * @param string[] $filter
-	 *
-	 * @return \Intervolga\Migrato\Data\Record[]
-	 */
 	public function getList(array $filter = array())
 	{
 		$dbRes = \CTask::GetList(array(), array("BINDING" => "module"));
@@ -52,7 +47,7 @@ class Task extends BaseData
 					$operations[] = $operation["NAME"];
 				}
 				$record->setId($id);
-				$record->setXmlId($this->createXmlId($task));
+				$record->setXmlId(static::createXmlId($task));
 				$record->addFieldsRaw(array(
 					'NAME' => $task['NAME'],
 					'DESCRIPTION' => $task['DESCRIPTION'],
@@ -70,7 +65,11 @@ class Task extends BaseData
 		return $result;
 	}
 
-	protected function createXmlId($fields)
+	/**
+	 * @param array $fields
+	 * @return string
+	 */
+	public static function createXmlId($fields)
 	{
 		$fields['MODULE_ID'] = str_replace(".", "_", $fields['MODULE_ID']);
 		return strtolower($fields['MODULE_ID'] . static::XML_ID_SEPARATOR . $fields['LETTER']);
@@ -81,17 +80,12 @@ class Task extends BaseData
 		$dbRes = \CTask::GetList(array(), array('ID' => $id));
 		while ($task = $dbRes->fetch())
 		{
-			return $this->createXmlId($task);
+			return static::createXmlId($task);
 		}
 
 		return '';
 	}
 
-	/**
-	 * @param \Intervolga\Migrato\Data\Record $record
-	 *
-	 * @return \Intervolga\Migrato\Data\RecordId
-	 */
 	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
@@ -123,9 +117,6 @@ class Task extends BaseData
 	}
 
 
-	/**
-	 * @param \Intervolga\Migrato\Data\RecordId $id
-	 */
 	protected function deleteInner(RecordId $id)
 	{
 		$idVal = $id->getValue();
@@ -139,9 +130,6 @@ class Task extends BaseData
 		}
 	}
 
-	/**
-	 * @param \Intervolga\Migrato\Data\Record $record
-	 */
 	public function update(Record $record)
 	{
 		$xmlId = $record->getXmlId();
