@@ -26,6 +26,7 @@ class Task extends BaseData
 	{
 		$dbRes = \CTask::GetList(array(), array("BINDING" => "module"));
 
+		$result = array();
 		while ($task = $dbRes->fetch())
 		{
 			$record = new Record($this);
@@ -72,6 +73,8 @@ class Task extends BaseData
 		{
 			return $this->createXmlId($task);
 		}
+
+		return '';
 	}
 
 	/**
