@@ -2,16 +2,20 @@
 
 use Bitrix\advertising\banner;
 use Bitrix\Main\Loader;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Bitrix\Main\Localization\LanguageTable;
+
+Loc::loadMessages(__FILE__);
 
 class BannerType extends BaseData{
 
     protected function configure()
     {
         Loader::includeModule("advertising");
+        $this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.ADVERTISING_BANNER_TYPE'));
     }
 
     /**
