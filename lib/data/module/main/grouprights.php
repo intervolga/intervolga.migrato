@@ -50,33 +50,17 @@ class GroupRights extends BaseData
 			$dependencyList = array();
 			foreach ($modulesId as $moduleId)
 			{
-				$roles = \CMain::GetUserRoles($moduleId, array($group["ID"]), 'N');
-				if ($roles)
+				$task = \CAllGroup::GetModulePermission($group["ID"], $moduleId);
+				if ($task && intval($task))
 				{
-					$tasksId = array();
-					$dbRes = \CTask::GetList(array(), array(
+					$dependencyList[$moduleId] = $task;
+				}
+				elseif($task)
+				{
+					$fields[$moduleId] = Task::createXmlId(array(
 						'MODULE_ID' => $moduleId,
-						'BINDING' => 'module',
+						'LETTER' => $task,
 					));
-					while ($task = $dbRes->fetch())
-					{
-						if (in_array($task['LETTER'], $roles))
-						{
-							$tasksId[] = $task['ID'];
-						}
-					}
-					if ($tasksId)
-					{
-						$dependencyList[$moduleId] = $tasksId;
-					}
-					else
-					{
-						$fields[$moduleId] = Task::createXmlId(array(
-							'MODULE_ID' => $moduleId,
-							'LETTER' => $roles[0],
-						));
-					}
-
 				}
 			}
 			if ($fields)
@@ -116,7 +100,7 @@ class GroupRights extends BaseData
 		$tasks = array();
 		foreach ($tasksId as $id => $taskId)
 		{
-			$tasks[] = Task::getInstance()->getXmlId($taskId[0]);
+			$tasks[] = Task::getInstance()->getXmlId($taskId);
 		}
 		$taskLink = clone($this->getDependency('TASK'));
 		$taskLink->setValues($tasks);
@@ -136,8 +120,10 @@ class GroupRights extends BaseData
 				while ($m = $rsInstalledModules->Fetch())
 				{
 					$moduleId = $m['ID'];
-					$roles = \CMain::GetGroupRight($moduleId, array($groupId), 'N');
-					if ($tasks[$moduleId] && $tasks[$moduleId]['LETTER'] != $roles)
+					$curTask = \CAllGroup::GetModulePermission($groupId, $moduleId);
+					if ($tasks[$moduleId ] && (
+						(intval($curTask)&& isset($tasks[$moduleId]['ID']) && $tasks[$moduleId]['ID'] !== $curTask) ||
+						($tasks[$moduleId]['LETTER'] !== $curTask )))
 					{
 						if ($tasks[$moduleId]['ID'])
 						{
@@ -148,7 +134,7 @@ class GroupRights extends BaseData
 							\CAllGroup::SetModulePermission($groupId, $moduleId, $tasks[$moduleId]['LETTER']);
 						}
 					}
-					elseif (!($tasks[$moduleId]) && $roles != null)
+					elseif (!($tasks[$moduleId]) && $curTask != null)
 					{
 						\CAllGroup::SetModulePermission($groupId, $moduleId, false);
 					}
