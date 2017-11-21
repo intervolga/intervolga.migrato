@@ -121,16 +121,6 @@ class Task extends BaseData
 	}
 
 	/**
-	 * @param mixed $id
-	 *
-	 * @return \Intervolga\Migrato\Data\RecordId
-	 */
-	public function createId($id)
-	{
-		return RecordId::createNumericId($id);
-	}
-
-	/**
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 */
 	public function update(Record $record)
