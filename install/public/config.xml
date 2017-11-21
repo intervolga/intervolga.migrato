@@ -96,6 +96,12 @@
         <entity>
             <name>agent</name>
         </entity>
+        <entity>
+            <name>task</name>
+        </entity>
+        <entity>
+            <name>grouprights</name>
+        </entity>
     </module>
     <module>
         <name>catalog</name>
