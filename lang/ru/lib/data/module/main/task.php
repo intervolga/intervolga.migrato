@@ -1,5 +1,5 @@
 <?php
-$MESS['INTERVOLGA_MIGRATO.MAIN_TASK'] = 'Óðîâíè äîñòóïà';
-$MESS['INTERVOLGA_MIGRATO.MAIN_TASK_ADD_ERROR'] = 'Ïðè ñîçäàíèè óðîâíÿ äîñòóïà ïðîèçîøëà îøèáêà';
-$MESS['INTERVOLGA_MIGRATO.MAIN_TASK_DELETE_ERROR'] = 'Ïðè óäàëåíèè óðîâíÿ äîñòóïà ïðîèçîøëà îøèáêà';
-$MESS['INTERVOLGA_MIGRATO.MAIN_TASK_UPDATE_ERROR'] = 'Ïðè îáíîâëåíèè óðîâíÿ äîñòóïà ïðîèçîøëà îøèáêà';
+$MESS['INTERVOLGA_MIGRATO.MAIN_TASK'] = 'Ð£Ñ€Ð¾Ð²Ð½Ð¸ Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð°';
+$MESS['INTERVOLGA_MIGRATO.MAIN_TASK_ADD_ERROR'] = 'ÐŸÑ€Ð¸ ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ð¸ ÑƒÑ€Ð¾Ð²Ð½Ñ Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð° Ð¿Ñ€Ð¾Ð¸Ð·Ð¾ÑˆÐ»Ð° Ð¾ÑˆÐ¸Ð±ÐºÐ°';
+$MESS['INTERVOLGA_MIGRATO.MAIN_TASK_DELETE_ERROR'] = 'ÐŸÑ€Ð¸ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ð¸ ÑƒÑ€Ð¾Ð²Ð½Ñ Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð° Ð¿Ñ€Ð¾Ð¸Ð·Ð¾ÑˆÐ»Ð° Ð¾ÑˆÐ¸Ð±ÐºÐ°';
+$MESS['INTERVOLGA_MIGRATO.MAIN_TASK_UPDATE_ERROR'] = 'ÐŸÑ€Ð¸ Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ð¸ ÑƒÑ€Ð¾Ð²Ð½Ñ Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð° Ð¿Ñ€Ð¾Ð¸Ð·Ð¾ÑˆÐ»Ð° Ð¾ÑˆÐ¸Ð±ÐºÐ°';
