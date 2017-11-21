@@ -115,14 +115,12 @@ class BannerType extends BaseData{
         global $strError;
         if (strlen($strError)<=0)
         {
-            return $this->createId($result->getId());
+            return $this->createId($result);
         }
         else
         {
             throw new \Exception(implode(', ', $strError));
         }
-
-
     }
 
     /**
