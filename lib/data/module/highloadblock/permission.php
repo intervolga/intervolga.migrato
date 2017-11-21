@@ -3,7 +3,6 @@ namespace Intervolga\Migrato\Data\Module\Highloadblock;
 
 use Bitrix\Highloadblock\HighloadBlockTable;
 use Bitrix\Highloadblock\HighloadBlockRightsTable;
-use Bitrix\Main\DB\Exception;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\TaskTable;
@@ -48,17 +47,21 @@ class Permission extends BaseData
 	{
 		$hlBlocks = HighloadBlockTable::getList();
 		$result = array();
-		while ($hlBlock = $hlBlocks->fetch()) {
+		while ($hlBlock = $hlBlocks->fetch())
+		{
 			$hlBlockId = $hlBlock['ID'];
 			$rightsCursor = HighloadBlockRightsTable::getList(array(
 				'filter' => array(
-					'HL_ID' => $hlBlockId
-				)
+					'HL_ID' => $hlBlockId,
+				),
 			));
-			while ($arPermission = $rightsCursor->fetch()) {
-				if (mb_strlen($arPermission['ACCESS_CODE'])) {
-					$accessCode =  $arPermission['ACCESS_CODE'];
-					if ($accessCode[0] == 'G') {
+			while ($arPermission = $rightsCursor->fetch())
+			{
+				if (mb_strlen($arPermission['ACCESS_CODE']))
+				{
+					$accessCode = $arPermission['ACCESS_CODE'];
+					if ($accessCode[0] == 'G')
+					{
 						$groupId = intval(mb_substr($accessCode, 1));
 						$id = $this->createId(array(
 							"HL_ID" => $hlBlockId,
@@ -71,9 +74,10 @@ class Permission extends BaseData
 						// Получаем по TASK_ID
 						$taskId = $arPermission['TASK_ID'];
 						$taskCursor = TaskTable::getList(array(
-							'filter' => array('ID' => $taskId)
+							'filter' => array('ID' => $taskId),
 						));
-						if ($arTask = $taskCursor->fetch()) {
+						if ($arTask = $taskCursor->fetch())
+						{
 							$record->addFieldsRaw(array(
 								"PERMISSION" => $arTask['NAME'],
 							));
@@ -91,29 +95,35 @@ class Permission extends BaseData
 							$record->setDependency("HL_ID", $dependency);
 
 							$result[] = $record;
-						} else {
+						}
+						else
+						{
 							$this->showWarning(
 								'INTERVOLGA_MIGRATO.HIGHLOADBLOCK_PERMISSION_VALUE_NOT_FOUND',
 								array(
 									'#HL_BLOCK_ID#' => $hlBlockId,
-									'#TASK_ID#' => $taskId
+									'#TASK_ID#' => $taskId,
 								)
 							);
 						}
-					} else {
+					}
+					else
+					{
 						$this->showWarning(
 							'INTERVOLGA_MIGRATO.HIGHLOADBLOCK_PERMISSION_WRONG_ACCESS_CODE',
 							array(
 								'#HL_BLOCK_ID#' => $hlBlockId,
-								'#ACCESS_CODE#' => $accessCode
+								'#ACCESS_CODE#' => $accessCode,
 							)
 						);
 					}
-				} else {
+				}
+				else
+				{
 					$this->showWarning(
 						'INTERVOLGA_MIGRATO.HIGHLOADBLOCK_PERMISSION_EMPTY_ACCESS_CODE',
 						array(
-							'#HL_BLOCK_ID#' => $hlBlockId
+							'#HL_BLOCK_ID#' => $hlBlockId,
 						)
 					);
 				}
@@ -183,9 +193,11 @@ class Permission extends BaseData
 	{
 		$hlLinkId = HighloadBlock::getInstance()->findRecord($record->getDependency("HL_ID")->getValue());
 		$groupLinkId = Group::getInstance()->findRecord($record->getDependency("GROUP_ID")->getValue());
-		if ($hlLinkId) {
+		if ($hlLinkId)
+		{
 			$hlBlockId = $hlLinkId->getValue();
-			if ($groupLinkId) {
+			if ($groupLinkId)
+			{
 				$groupId = $groupLinkId->getValue();
 				$this->createOrUpdate($hlBlockId, $groupId, $record);
 
@@ -193,10 +205,14 @@ class Permission extends BaseData
 					"HL_ID" => $hlBlockId,
 					"GROUP_ID" => $groupId,
 				));
-			} else {
+			}
+			else
+			{
 				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.GROUP_NOT_FOUND'));
 			}
-		} else {
+		}
+		else
+		{
 			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.HIGHLOADBLOCK_NOT_FOUND'));
 		}
 	}
@@ -214,37 +230,44 @@ class Permission extends BaseData
 		$permission = $arCurFields['PERMISSION'];
 
 		$taskCursor = TaskTable::getList(array(
-			'filter' => array('NAME' => $permission)
+			'filter' => array('NAME' => $permission),
 		));
 		// Если такое значение уровня доступа есть в Task Table
-		if ($arTask = $taskCursor->fetch()) {
+		if ($arTask = $taskCursor->fetch())
+		{
 			// Если такое правило есть для группы - обновляем его иначе, добавляем новое
 			$taskId = $arTask['ID'];
 			$rightsCursor = HighloadBlockRightsTable::getList(array(
 				'filter' => array(
 					'HL_ID' => $hlBlockId,
-					'ACCESS_CODE' => 'G' . $groupId
-				)
+					'ACCESS_CODE' => 'G' . $groupId,
+				),
 			));
-			if ($arRight = $rightsCursor->fetch()) {
+			if ($arRight = $rightsCursor->fetch())
+			{
 				HighloadBlockRightsTable::update($arRight['ID'], array(
-					'TASK_ID' => $taskId
+					'TASK_ID' => $taskId,
 				));
-			} else {
+			}
+			else
+			{
 				$result = HighloadBlockRightsTable::add(array(
 					'HL_ID' => $hlBlockId,
 					'ACCESS_CODE' => 'G' . $groupId,
-					'TASK_ID' => $taskId
+					'TASK_ID' => $taskId,
 				));
-				if (!$result->isSuccess()) {
+				if (!$result->isSuccess())
+				{
 					throw new \Exception(ExceptionText::getFromResult($result));
 				}
 			}
-		} else {
+		}
+		else
+		{
 			$this->showWarning(
 				"INTERVOLGA_MIGRATO.HIGHLOADBLOCK_PERMISSION_NOT_FOUND",
 				array(
-					'#PERMISSION#' => $permission
+					'#PERMISSION#' => $permission,
 				)
 			);
 		}
@@ -259,10 +282,11 @@ class Permission extends BaseData
 		$rightsCursor = HighloadBlockRightsTable::getList(array(
 			'filter' => array(
 				'HL_ID' => $hlBlockId,
-				'ACCESS_CODE' => 'G' . $groupId
-			)
+				'ACCESS_CODE' => 'G' . $groupId,
+			),
 		));
-		if ($arRight = $rightsCursor->fetch()) {
+		if ($arRight = $rightsCursor->fetch())
+		{
 			$result = HighloadBlockRightsTable::delete($arRight['ID']);
 			if (!$result->isSuccess())
 			{
