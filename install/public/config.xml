@@ -166,4 +166,10 @@
             <name>fieldenum</name>
         </entity>
     </module>
+    <module>
+        <name>advertising</name>
+        <entity>
+            <name>bannertype</name>
+        </entity>
+    </module>
 </config>
