@@ -123,16 +123,8 @@ class BannerType extends BaseData{
         }
     }
 
-    /**
-     * @param RecordId $xmlId
-     * @throws \Exception
-     */
-    protected function deleteInner($xmlId)
+    protected function deleteInner(RecordId $id)
     {
-        $id = $this->findRecord($xmlId);
-        if ($id)
-        {
-            \CAdvType::delete($id->getValue());
-        }
+        \CAdvType::delete($id->getValue());
     }
 }
