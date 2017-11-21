@@ -168,7 +168,7 @@ class Task extends BaseData
 			\CTask::SetOperations($id, $operationsID);
 			if (!\CTask::Update($fields, $id))
 			{
-				throw new  \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_TASK_UPDATE_ERROR'));
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_TASK_UPDATE_ERROR'));
 			}
 		}
 	}
