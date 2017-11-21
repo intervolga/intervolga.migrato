@@ -187,10 +187,9 @@ class GroupRights extends BaseData
 		$codeRights = $record->getFieldRaws('CODE_RIGHT');
 		foreach ($codeRights as $codeRight)
 		{
-			$arCodeRight = explode(Task::XML_ID_SEPARATOR, $codeRight);
-			if (count($arCodeRight) == 2)
+			if ($fields = Task::getFieldsFromXmlId($codeRight))
 			{
-				$tasks[$arCodeRight[0]]['LETTER'] = $arCodeRight[1];
+				$tasks[$fields['MODULE_ID']]['LETTER'] = $fields['LETTER'];
 			}
 		}
 		return $tasks;

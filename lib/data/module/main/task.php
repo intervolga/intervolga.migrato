@@ -75,6 +75,21 @@ class Task extends BaseData
 		return strtolower($fields['MODULE_ID'] . static::XML_ID_SEPARATOR . $fields['LETTER']);
 	}
 
+	/**
+	 * @param string $xmlId
+	 * @return array
+	 */
+	public static function getFieldsFromXmlId($xmlId)
+	{
+		$explode = explode(static::XML_ID_SEPARATOR, $xmlId);
+		$fields = array(
+			'MODULE_ID' => trim(str_replace('_', '.', $explode[0])),
+			'LETTER' => trim($explode[1]),
+		);
+
+		return $fields;
+	}
+
 	public function getXmlId($id)
 	{
 		$dbRes = \CTask::GetList(array(), array('ID' => $id));
