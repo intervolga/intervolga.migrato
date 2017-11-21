@@ -2,6 +2,7 @@
 namespace Intervolga\Migrato\Data\Module\Main;
 
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\OperationTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
@@ -35,7 +36,16 @@ class Task extends BaseData
 			if ($id)
 			{
 				$operationsId = \CTask::GetOperations($task['ID']);
-				$rsOperations = \Bitrix\Main\OperationTable::getList(array('select' => array('NAME'), 'filter' => array('ID' => $operationsId)))->fetchAll();
+				$rsOperations = OperationTable::getList(
+					array(
+						'select' => array(
+							'NAME',
+						),
+						'filter' => array(
+							'ID' => $operationsId,
+						),
+					)
+				)->fetchAll();
 				$operations = array();
 				foreach ($rsOperations as $operation)
 				{
@@ -86,7 +96,16 @@ class Task extends BaseData
 	{
 		$fields = $record->getFieldsRaw();
 		$id = \CTask::Add($fields);
-		$rsOperationsID = \Bitrix\Main\OperationTable::getList(array('select' => array('ID'), 'filter' => array('NAME' => $fields["OPERATION"])))->fetchAll();
+		$rsOperationsID = OperationTable::getList(
+			array(
+				'select' => array(
+					'ID',
+				),
+				'filter' => array(
+					'NAME' => $fields["OPERATION"],
+				),
+			)
+		)->fetchAll();
 		$operationsID = array();
 		foreach ($rsOperationsID as $operationID)
 		{
@@ -131,7 +150,16 @@ class Task extends BaseData
 		{
 			$id = $recordId->getValue();
 			$fields = $record->getFieldsRaw();
-			$rsOperationsID = \Bitrix\Main\OperationTable::getList(array('select' => array('ID'), 'filter' => array('NAME' => $fields["OPERATION"])))->fetchAll();
+			$rsOperationsID = OperationTable::getList(
+				array(
+					'select' => array(
+						'ID',
+					),
+					'filter' => array(
+						'NAME' => $fields["OPERATION"],
+					),
+				)
+			)->fetchAll();
 			$operationsID = array();
 			foreach ($rsOperationsID as $operationID)
 			{
