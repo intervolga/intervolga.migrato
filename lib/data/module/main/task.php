@@ -1,5 +1,4 @@
 <?php
-
 namespace Intervolga\Migrato\Data\Module\Main;
 
 use Bitrix\Main\Localization\Loc;
@@ -25,17 +24,17 @@ class Task extends BaseData
 	 */
 	public function getList(array $filter = array())
 	{
-		$dbRes = \CTask::GetList(array(),array("BINDING"=>"module"));
-		
+		$dbRes = \CTask::GetList(array(), array("BINDING" => "module"));
+
 		while ($task = $dbRes->fetch())
 		{
 			$record = new Record($this);
 			$id = $this->createId($task['ID']);
 
-			if($id)
+			if ($id)
 			{
 				$operationsId = \CTask::GetOperations($task['ID']);
-				$rsOperations = \Bitrix\Main\OperationTable::getList(array('select' => array('NAME'), 'filter'=>array('ID' => $operationsId)))->fetchAll();
+				$rsOperations = \Bitrix\Main\OperationTable::getList(array('select' => array('NAME'), 'filter' => array('ID' => $operationsId)))->fetchAll();
 				$operations = array();
 				foreach ($rsOperations as $operation)
 				{
@@ -51,7 +50,7 @@ class Task extends BaseData
 					'SYS' => $task['SYS'],
 					'TITLE' => $task['TITLE'],
 					'DESC' => $task['DESC'],
-					'OPERATION' => $operations
+					'OPERATION' => $operations,
 				));
 				$result[] = $record;
 			}
@@ -62,14 +61,14 @@ class Task extends BaseData
 
 	protected function createXmlId($fields)
 	{
-		$fields['MODULE_ID'] = str_replace ( "." , "_", $fields['MODULE_ID']);
-		return strtolower($fields['MODULE_ID'].static::XML_ID_SEPARATOR.$fields['LETTER']);
+		$fields['MODULE_ID'] = str_replace(".", "_", $fields['MODULE_ID']);
+		return strtolower($fields['MODULE_ID'] . static::XML_ID_SEPARATOR . $fields['LETTER']);
 	}
 
 	public function getXmlId($id)
 	{
-		$dbRes = \CTask::GetList(array(), array('ID'=>$id));
-		while($task = $dbRes->fetch())
+		$dbRes = \CTask::GetList(array(), array('ID' => $id));
+		while ($task = $dbRes->fetch())
 		{
 			return $this->createXmlId($task);
 		}
@@ -84,16 +83,21 @@ class Task extends BaseData
 	{
 		$fields = $record->getFieldsRaw();
 		$id = \CTask::Add($fields);
-		$rsOperationsID = \Bitrix\Main\OperationTable::getList(array('select' => array('ID'), 'filter'=>array('NAME' => $fields["OPERATION"])))->fetchAll();
+		$rsOperationsID = \Bitrix\Main\OperationTable::getList(array('select' => array('ID'), 'filter' => array('NAME' => $fields["OPERATION"])))->fetchAll();
 		$operationsID = array();
-		foreach ($rsOperationsID as $operationID){
+		foreach ($rsOperationsID as $operationID)
+		{
 			$operationsID[] = $operationID["ID"];
 		}
-		\CTask::SetOperations($id,$operationsID);
-		if(is_int($id))
+		\CTask::SetOperations($id, $operationsID);
+		if (is_int($id))
+		{
 			return $this->createId($id);
+		}
 		else
+		{
 			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_TASK_ADD_ERROR'));
+		}
 	}
 
 
@@ -103,10 +107,14 @@ class Task extends BaseData
 	protected function deleteInner(RecordId $id)
 	{
 		$idVal = $id->getValue();
-		if(is_int($idVal))
+		if (is_int($idVal))
+		{
 			\CTask::Delete($idVal);
+		}
 		else
+		{
 			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_TASK_DELETE_ERROR'));
+		}
 	}
 
 	/**
@@ -126,18 +134,21 @@ class Task extends BaseData
 	{
 		$xmlId = $record->getXmlId();
 		$recordId = $this->findRecord($xmlId);
-		if($recordId)
+		if ($recordId)
 		{
 			$id = $recordId->getValue();
 			$fields = $record->getFieldsRaw();
-			$rsOperationsID = \Bitrix\Main\OperationTable::getList(array('select' => array('ID'), 'filter'=>array('NAME' => $fields["OPERATION"])))->fetchAll();
+			$rsOperationsID = \Bitrix\Main\OperationTable::getList(array('select' => array('ID'), 'filter' => array('NAME' => $fields["OPERATION"])))->fetchAll();
 			$operationsID = array();
-			foreach ($rsOperationsID as $operationID){
+			foreach ($rsOperationsID as $operationID)
+			{
 				$operationsID[] = $operationID["ID"];
 			}
-			\CTask::SetOperations($id,$operationsID);
-			if(!\CTask::Update($fields,$id))
+			\CTask::SetOperations($id, $operationsID);
+			if (!\CTask::Update($fields, $id))
+			{
 				throw new  \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_TASK_UPDATE_ERROR'));
+			}
 		}
 	}
 }
