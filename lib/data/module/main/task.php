@@ -60,7 +60,7 @@ class Task extends BaseData
 		return $result;
 	}
 
-	private function createXmlId($fields)
+	protected function createXmlId($fields)
 	{
 		$fields['MODULE_ID'] = str_replace ( "." , "_", $fields['MODULE_ID']);
 		return strtolower($fields['MODULE_ID'].static::XML_ID_SEPARATOR.$fields['LETTER']);
