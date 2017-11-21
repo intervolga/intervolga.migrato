@@ -32,7 +32,7 @@ class Permission extends BaseData
 		Loader::includeModule('highloadblock');
 		$this->setVirtualXmlId(true);
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.HIGHLOADBLOCK_PERMISSION'));
-		$this->setFilesSubdir('/highloadblock/permissions/');
+		$this->setFilesSubdir('/highloadblock/');
 		$this->setDependencies(array(
 			'HL_ID' => new Link(HighloadBlock::getInstance()),
 			'GROUP_ID' => new Link(Group::getInstance()),
@@ -92,18 +92,47 @@ class Permission extends BaseData
 
 							$result[] = $record;
 						} else {
-							Application::getInstance()->renderWarning("У Highload-блока $hlBlockId не найдено значение уровня доступа с ID $taskId (таблица b_task_table). Возможно произошел сбой БД.");
+							$this->showWarning(
+								'INTERVOLGA_MIGRATO.HIGHLOADBLOCK_PERMISSION_VALUE_NOT_FOUND',
+								array(
+									'#HL_BLOCK_ID#' => $hlBlockId,
+									'#TASK_ID#' => $taskId
+								)
+							);
 						}
 					} else {
-						Application::getInstance()->renderWarning("У Highload-блока $hlBlockId право доступа сформулировано, как $accessCode. Это значит, что оно привязано к пользователю или к группе соц. сети. Данный модуль не поддерживает такие привязки. Данное правило не будет обработано.");
+						$this->showWarning(
+							'INTERVOLGA_MIGRATO.HIGHLOADBLOCK_PERMISSION_WRONG_ACCESS_CODE',
+							array(
+								'#HL_BLOCK_ID#' => $hlBlockId,
+								'#ACCESS_CODE#' => $accessCode
+							)
+						);
 					}
 				} else {
-					Application::getInstance()->renderWarning("У Highload-блока $hlBlockId есть пустое разрешение на доступ. Возможно произошел сбой БД.");
+					$this->showWarning(
+						'INTERVOLGA_MIGRATO.HIGHLOADBLOCK_PERMISSION_EMPTY_ACCESS_CODE',
+						array(
+							'#HL_BLOCK_ID#' => $hlBlockId
+						)
+					);
 				}
 			}
 		}
 
 		return $result;
+	}
+
+
+	/**
+	 * Показывает предупреждение, используя текст из локализации
+	 * @param string $locText текст
+	 * @param array $arReplaces файлы из замены текста
+	 */
+	private function showWarning($locText, $arReplaces)
+	{
+		$warning = Loc::getMessage($locText, $arReplaces);
+		Application::getInstance()->renderWarning($warning);
 	}
 
 
@@ -212,7 +241,12 @@ class Permission extends BaseData
 				}
 			}
 		} else {
-			Application::getInstance()->renderWarning("Не найдено правило для доступа к ХЛБ с именем $permission. Возможно произошел сбой БД.");
+			$this->showWarning(
+				"INTERVOLGA_MIGRATO.HIGHLOADBLOCK_PERMISSION_NOT_FOUND",
+				array(
+					'#PERMISSION#' => $permission
+				)
+			);
 		}
 	}
 
