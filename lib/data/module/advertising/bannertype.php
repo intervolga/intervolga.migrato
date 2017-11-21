@@ -18,11 +18,7 @@ class BannerType extends BaseData{
         $this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.ADVERTISING_BANNER_TYPE'));
     }
 
-    /**
-     * @param array $filter
-     * @return array
-     */
-    public function getList(array $filter = array())//+
+    public function getList(array $filter = array())
     {
         $result = array();
         $getList = \CAdvType::getList();
@@ -45,40 +41,22 @@ class BannerType extends BaseData{
         return $result;
     }
 
-    /**
-     * @param mixed $id
-     * @return static
-     */
     public function createId($id)
     {
         return RecordId::createStringId($id);
     }
 
-    /**
-     * @param RecordId $id
-     * @return mixed
-     * @throws \Exception
-     */
     public function getXmlId($id)
     {
         $bannertype = \CAdvType::getById($id->getValue())->fetch();
         return $bannertype['SID'];
     }
 
-    /**
-     * @param RecordId $id
-     * @param string $xmlId
-     * @throws \Exception
-     */
     public function setXmlId($id, $xmlId)
     {
         \CAdvType::Set(array('SID' => $xmlId), $id->getValue());
     }
 
-    /**
-     * @param Record $record
-     * @throws \Exception
-     */
     public function update(Record $record)
     {
         $data = $this->recordToArray($record);
@@ -107,11 +85,6 @@ class BannerType extends BaseData{
         return $array;
     }
 
-    /**
-     * @param Record $record
-     * @return RecordId|static
-     * @throws \Exception
-     */
     protected function createInner(Record $record)
     {
         $data = $this->recordToArray($record);
