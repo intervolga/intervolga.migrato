@@ -9,7 +9,7 @@ use Bitrix\Main\Localization\LanguageTable;
 
 class BannerType extends BaseData{
 
-    protected function __construct()
+    protected function configure()
     {
         Loader::includeModule("advertising");
     }
