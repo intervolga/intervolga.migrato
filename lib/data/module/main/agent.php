@@ -41,7 +41,7 @@ class Agent extends BaseData
 				{
 					$record->setXmlId('');
 				}
-					$result[] = $record;
+				$result[] = $record;
 			}
 		}
 
@@ -125,12 +125,15 @@ class Agent extends BaseData
 	protected function verifyAgentParams(array $agent)
 	{
 		//Check module
-		if($agent['MODULE_ID'])
+		if ($agent['MODULE_ID'])
 		{
 			$moduleInstalled = \IsModuleInstalled($agent['MODULE_ID']);
 			if ($moduleInstalled)
+			{
 				\Bitrix\Main\Loader::includeModule($agent['MODULE_ID']);
+			}
 			else
+			{
 				throw new \Exception(
 					Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_MODULE_NOT_INSTALLED',
 						array(
@@ -138,15 +141,17 @@ class Agent extends BaseData
 						)
 					)
 				);
+			}
 		}
-		$colonPos = strpos($agent['NAME'],'::');
+		$colonPos = strpos($agent['NAME'], '::');
 		$isMethod = ($colonPos !== false);
-		if($isMethod)
+		if ($isMethod)
 		{
 			//Check class
-			$className = substr($agent['NAME'] ,0 ,$colonPos); //text before colons
+			$className = substr($agent['NAME'], 0, $colonPos); //text before colons
 			$className = $className ? trim($className) : $className;
 			if (!$className || !class_exists($className))
+			{
 				throw new \Exception(
 					Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_CLASS_NOT_EXISTS',
 						array(
@@ -154,19 +159,21 @@ class Agent extends BaseData
 						)
 					)
 				);
+			}
 			//Check method
-			$method = substr($agent['NAME'],$colonPos+2); //text after colons
+			$method = substr($agent['NAME'], $colonPos + 2); //text after colons
 			$method = $method ? trim($method) : $method;
-			if($method)
+			if ($method)
 			{
 				$bracketPos = strpos($method, '('); //text before bracket
-				if($bracketPos !== false)
+				if ($bracketPos !== false)
 				{
 					$method = substr($method, 0, $bracketPos);
 					$method = $method ? trim($method) : $method;
 				}
 			}
-			if(!$method || !method_exists($className, $method))
+			if (!$method || !method_exists($className, $method))
+			{
 				throw new \Exception(
 					Loc::getMessage(
 						'INTERVOLGA_MIGRATO.MAIN_AGENT_METHOD_NOT_EXISTS',
@@ -176,17 +183,19 @@ class Agent extends BaseData
 						)
 					)
 				);
+			}
 		}
 		else
 		{
 			//Check function
-			$bracketPos = strpos($agent['NAME'],'(');
-			if($bracketPos !== false)
+			$bracketPos = strpos($agent['NAME'], '(');
+			if ($bracketPos !== false)
 			{
 				$function = substr($agent['NAME'], 0, $bracketPos);
 				$function = $function ? trim($function) : $function;
 			}
-			if(!$function || !function_exists($function))
+			if (!$function || !function_exists($function))
+			{
 				throw new \Exception(
 					Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_FUNCTION_NOT_EXISTS',
 						array(
@@ -194,6 +203,7 @@ class Agent extends BaseData
 						)
 					)
 				);
+			}
 		}
 	}
 
