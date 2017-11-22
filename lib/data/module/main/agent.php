@@ -124,25 +124,7 @@ class Agent extends BaseData
 	 */
 	protected function verifyAgentParams(array $agent)
 	{
-		//Check module
-		if ($agent['MODULE_ID'])
-		{
-			$moduleInstalled = \IsModuleInstalled($agent['MODULE_ID']);
-			if ($moduleInstalled)
-			{
-				\Bitrix\Main\Loader::includeModule($agent['MODULE_ID']);
-			}
-			else
-			{
-				throw new \Exception(
-					Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_MODULE_NOT_INSTALLED',
-						array(
-							'#MODULE#' => $agent['MODULE_ID'],
-						)
-					)
-				);
-			}
-		}
+		$this->checkAgentModule($agent);
 		$colonPos = strpos($agent['NAME'], '::');
 		$isMethod = ($colonPos !== false);
 		if ($isMethod)
@@ -201,6 +183,33 @@ class Agent extends BaseData
 					Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_FUNCTION_NOT_EXISTS',
 						array(
 							'#FUNCTION#' => $function,
+						)
+					)
+				);
+			}
+		}
+	}
+
+	/**
+	 * @param array $agent
+	 * @throws \Bitrix\Main\LoaderException
+	 * @throws \Exception
+	 */
+	protected function checkAgentModule(array $agent)
+	{
+		if ($agent['MODULE_ID'])
+		{
+			$moduleInstalled = \IsModuleInstalled($agent['MODULE_ID']);
+			if ($moduleInstalled)
+			{
+				\Bitrix\Main\Loader::includeModule($agent['MODULE_ID']);
+			}
+			else
+			{
+				throw new \Exception(
+					Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_MODULE_NOT_INSTALLED',
+						array(
+							'#MODULE#' => $agent['MODULE_ID'],
 						)
 					)
 				);
