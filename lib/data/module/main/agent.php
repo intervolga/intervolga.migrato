@@ -33,7 +33,15 @@ class Agent extends BaseData
 		{
 			if ($record = $this->arrayToRecord($agent))
 			{
-				$result[] = $record;
+				try
+				{
+					$this->verifyAgentParams($agent);
+				}
+				catch (\Exception $exception)
+				{
+					$record->setXmlId('');
+				}
+					$result[] = $record;
 			}
 		}
 
@@ -97,6 +105,7 @@ class Agent extends BaseData
 	protected function createInner(Record $record)
 	{
 		$agent = $this->recordToArray($record);
+		$this->verifyAgentParams($agent);
 		$agent['NEXT_EXEC'] = convertTimeStamp(time() + static::DELAY_NEW_AGENT, 'FULL');
 		$addRes = \CAgent::add($agent);
 		if ($addRes)
@@ -109,12 +118,66 @@ class Agent extends BaseData
 		}
 	}
 
+	/**
+	 * @param array $agent
+	 * @throws \Exception
+	 */
+	protected function verifyAgentParams(array $agent)
+	{
+		//Check module
+		if($agent['MODULE_ID'])
+		{
+			$moduleInstalled = \IsModuleInstalled($agent['MODULE_ID']);
+			if ($moduleInstalled)
+				\Bitrix\Main\Loader::includeModule($agent['MODULE_ID']);
+			else
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_MODULE_NOT_INSTALLED').' - '.$agent['MODULE_ID']);
+		}
+		$colonPos = strpos($agent['NAME'],'::');
+		$isMethod = ($colonPos !== false);
+		if($isMethod)
+		{
+			//Check class
+			$className = substr($agent['NAME'] ,0 ,$colonPos); //text before colons
+			$className = $className ? trim($className) : $className;
+			if (!$className || !class_exists($className))
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_CLASS_NOT_EXISTS').' - '.$className);
+			//Check method
+			$method = substr($agent['NAME'],$colonPos+2); //text after colons
+			$method = $method ? trim($method) : $method;
+			if($method)
+			{
+				$bracketPos = strpos($method, '('); //text before bracket
+				if($bracketPos !== false)
+				{
+					$method = substr($method, 0, $bracketPos);
+					$method = $method ? trim($method) : $method;
+				}
+			}
+			if(!$method || !method_exists($className, $method))
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_METHOD_NOT_EXISTS').' - '.$className.'::'.$method);
+		}
+		else
+		{
+			//Check function
+			$bracketPos = strpos($agent['NAME'],'(');
+			if($bracketPos !== false)
+			{
+				$function = substr($agent['NAME'], 0, $bracketPos);
+				$function = $function ? trim($function) : $function;
+			}
+			if(!$function || !function_exists($function))
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_FUNCTION_NOT_EXISTS').' - '.$function);
+		}
+	}
+
 	public function update(Record $record)
 	{
 		$id = $this->findRecord($record->getXmlId());
 		if ($id)
 		{
 			$agent = $this->recordToArray($record);
+			$this->verifyAgentParams($agent);
 			$updateRes = \CAgent::update($id->getValue(), $agent);
 			if (!$updateRes)
 			{
