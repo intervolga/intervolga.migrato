@@ -131,7 +131,13 @@ class Agent extends BaseData
 			if ($moduleInstalled)
 				\Bitrix\Main\Loader::includeModule($agent['MODULE_ID']);
 			else
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_MODULE_NOT_INSTALLED').' - '.$agent['MODULE_ID']);
+				throw new \Exception(
+					Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_MODULE_NOT_INSTALLED',
+						array(
+							'#MODULE#' => $agent['MODULE_ID'],
+						)
+					)
+				);
 		}
 		$colonPos = strpos($agent['NAME'],'::');
 		$isMethod = ($colonPos !== false);
@@ -141,7 +147,13 @@ class Agent extends BaseData
 			$className = substr($agent['NAME'] ,0 ,$colonPos); //text before colons
 			$className = $className ? trim($className) : $className;
 			if (!$className || !class_exists($className))
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_CLASS_NOT_EXISTS').' - '.$className);
+				throw new \Exception(
+					Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_CLASS_NOT_EXISTS',
+						array(
+							'#CLASS#' => $className,
+						)
+					)
+				);
 			//Check method
 			$method = substr($agent['NAME'],$colonPos+2); //text after colons
 			$method = $method ? trim($method) : $method;
@@ -155,7 +167,15 @@ class Agent extends BaseData
 				}
 			}
 			if(!$method || !method_exists($className, $method))
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_METHOD_NOT_EXISTS').' - '.$className.'::'.$method);
+				throw new \Exception(
+					Loc::getMessage(
+						'INTERVOLGA_MIGRATO.MAIN_AGENT_METHOD_NOT_EXISTS',
+						array(
+							'#CLASS#' => $className,
+							'#METHOD#' => $method,
+						)
+					)
+				);
 		}
 		else
 		{
@@ -167,7 +187,13 @@ class Agent extends BaseData
 				$function = $function ? trim($function) : $function;
 			}
 			if(!$function || !function_exists($function))
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_FUNCTION_NOT_EXISTS').' - '.$function);
+				throw new \Exception(
+					Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_FUNCTION_NOT_EXISTS',
+						array(
+							'#FUNCTION#' => $function,
+						)
+					)
+				);
 		}
 	}
 
