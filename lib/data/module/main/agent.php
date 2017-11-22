@@ -189,6 +189,7 @@ class Agent extends BaseData
 		{
 			//Check function
 			$bracketPos = strpos($agent['NAME'], '(');
+			$function = '';
 			if ($bracketPos !== false)
 			{
 				$function = substr($agent['NAME'], 0, $bracketPos);
