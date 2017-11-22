@@ -169,24 +169,7 @@ class Agent extends BaseData
 		}
 		else
 		{
-			//Check function
-			$bracketPos = strpos($agent['NAME'], '(');
-			$function = '';
-			if ($bracketPos !== false)
-			{
-				$function = substr($agent['NAME'], 0, $bracketPos);
-				$function = $function ? trim($function) : $function;
-			}
-			if (!$function || !function_exists($function))
-			{
-				throw new \Exception(
-					Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_FUNCTION_NOT_EXISTS',
-						array(
-							'#FUNCTION#' => $function,
-						)
-					)
-				);
-			}
+			$this->checkAgentFunction($agent);
 		}
 	}
 
@@ -214,6 +197,31 @@ class Agent extends BaseData
 					)
 				);
 			}
+		}
+	}
+
+	/**
+	 * @param array $agent
+	 * @throws \Exception
+	 */
+	protected function checkAgentFunction(array $agent)
+	{
+		$bracketPos = strpos($agent['NAME'], '(');
+		$function = '';
+		if ($bracketPos !== false)
+		{
+			$function = substr($agent['NAME'], 0, $bracketPos);
+			$function = $function ? trim($function) : $function;
+		}
+		if (!$function || !function_exists($function))
+		{
+			throw new \Exception(
+				Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_FUNCTION_NOT_EXISTS',
+					array(
+						'#FUNCTION#' => $function,
+					)
+				)
+			);
 		}
 	}
 
