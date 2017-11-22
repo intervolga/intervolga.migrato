@@ -129,43 +129,7 @@ class Agent extends BaseData
 		$isMethod = ($colonPos !== false);
 		if ($isMethod)
 		{
-			//Check class
-			$className = substr($agent['NAME'], 0, $colonPos); //text before colons
-			$className = $className ? trim($className) : $className;
-			if (!$className || !class_exists($className))
-			{
-				throw new \Exception(
-					Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_CLASS_NOT_EXISTS',
-						array(
-							'#CLASS#' => $className,
-						)
-					)
-				);
-			}
-			//Check method
-			$method = substr($agent['NAME'], $colonPos + 2); //text after colons
-			$method = $method ? trim($method) : $method;
-			if ($method)
-			{
-				$bracketPos = strpos($method, '('); //text before bracket
-				if ($bracketPos !== false)
-				{
-					$method = substr($method, 0, $bracketPos);
-					$method = $method ? trim($method) : $method;
-				}
-			}
-			if (!$method || !method_exists($className, $method))
-			{
-				throw new \Exception(
-					Loc::getMessage(
-						'INTERVOLGA_MIGRATO.MAIN_AGENT_METHOD_NOT_EXISTS',
-						array(
-							'#CLASS#' => $className,
-							'#METHOD#' => $method,
-						)
-					)
-				);
-			}
+			$this->checkAgentMethod($agent);
 		}
 		else
 		{
@@ -197,6 +161,51 @@ class Agent extends BaseData
 					)
 				);
 			}
+		}
+	}
+
+	/**
+	 * @param array $agent
+	 * @throws \Exception
+	 */
+	protected function checkAgentMethod(array $agent)
+	{
+		$colonPos = strpos($agent['NAME'], '::');
+		$className = substr($agent['NAME'], 0, $colonPos);
+		$className = $className ? trim($className) : $className;
+		if (!$className || !class_exists($className))
+		{
+			throw new \Exception(
+				Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_AGENT_CLASS_NOT_EXISTS',
+					array(
+						'#CLASS#' => $className,
+					)
+				)
+			);
+		}
+		//Check method
+		$method = substr($agent['NAME'], $colonPos + strlen('::'));
+		$method = $method ? trim($method) : $method;
+		if ($method)
+		{
+			$bracketPos = strpos($method, '(');
+			if ($bracketPos !== false)
+			{
+				$method = substr($method, 0, $bracketPos);
+				$method = $method ? trim($method) : $method;
+			}
+		}
+		if (!$method || !method_exists($className, $method))
+		{
+			throw new \Exception(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.MAIN_AGENT_METHOD_NOT_EXISTS',
+					array(
+						'#CLASS#' => $className,
+						'#METHOD#' => $method,
+					)
+				)
+			);
 		}
 	}
 
