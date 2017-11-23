@@ -1,12 +1,11 @@
 <?namespace Intervolga\Migrato\Data\Module\advertising;
 
-use Bitrix\advertising\banner;
+
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
-use Bitrix\Main\Localization\LanguageTable;
 
 Loc::loadMessages(__FILE__);
 
@@ -37,7 +36,6 @@ class BannerType extends BaseData{
             ));
             $result[] = $record;
         }
-
         return $result;
     }
 
@@ -61,11 +59,13 @@ class BannerType extends BaseData{
     {
         $data = $this->recordToArray($record);
         $id = $record->getId()->getValue();
-        \CAdvType::Set($data, $id);
+        $result = \CAdvType::Set($data, $id);
         global $strError;
-        if (!strlen($strError)<=0)
-        {
-            throw new \Exception(implode(', ', $strError));
+        if (!$result){
+            throw new \Exception($strError);
+        }
+        else if(!$result && !$strError){
+            throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.ADVERTISING_UNKNOWN_ERROR'));
         }
     }
 
@@ -88,15 +88,18 @@ class BannerType extends BaseData{
     protected function createInner(Record $record)
     {
         $data = $this->recordToArray($record);
-        $result = \CAdvType::Set($data);
+        $result = \CAdvType::Set($data,"");
         global $strError;
-        if (strlen($strError)<=0)
-        {
+        if ($result){
             return $this->createId($result);
         }
-        else
-        {
-            throw new \Exception(implode(', ', $strError));
+        else {
+            if ($strError){
+                throw new \Exception($strError);
+            }
+            else{
+                throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.ADVERTISING_UNKNOWN_ERROR'));
+            }
         }
     }
 
