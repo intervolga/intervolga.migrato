@@ -50,7 +50,7 @@ class GroupRights extends BaseData
 			$dependencyList = array();
 			foreach ($modulesId as $moduleId)
 			{
-				$task = \CAllGroup::GetModulePermission($group["ID"], $moduleId);
+				$task = $this->GetModulePermission($group["ID"], $moduleId);
 				if ($task && intval($task))
 				{
 					$dependencyList[$moduleId] = $task;
@@ -120,7 +120,7 @@ class GroupRights extends BaseData
 				while ($m = $rsInstalledModules->Fetch())
 				{
 					$moduleId = $m['ID'];
-					$curTask = \CAllGroup::GetModulePermission($groupId, $moduleId);
+					$curTask = $this->GetModulePermission($groupId, $moduleId);
 					if ($tasks[$moduleId ] && (
 						(intval($curTask)&& isset($tasks[$moduleId]['ID']) && $tasks[$moduleId]['ID'] !== $curTask) ||
 						($tasks[$moduleId]['LETTER'] !== $curTask )))
@@ -212,6 +212,26 @@ class GroupRights extends BaseData
 		while ($m = $rsInstalledModules->Fetch())
 		{
 			\CAllGroup::SetModulePermission($groupId, $m['ID'], false);
+		}
+	}
+
+	/**
+	 * @param $group_id
+	 * @param $module_id
+	 * @return bool|null|string
+	 */
+	protected function GetModulePermission($group_id, $module_id)
+	{
+		global $APPLICATION;
+		$arTasksModules = \CTask::GetTasksInModules(true,$module_id,'module');
+		$arTasks = \CGroup::GetTasks($group_id,true, $module_id);
+		if ($arTasksModules && isset($arTasksModules[$module_id]))
+		{
+			return ($arTasks[$module_id] ? $arTasks[$module_id] : false);
+		}
+		else
+		{
+			return $APPLICATION->GetGroupRight($module_id, array($group_id), "N", "N", false);
 		}
 	}
 }
