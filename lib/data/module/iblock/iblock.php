@@ -87,7 +87,7 @@ class Iblock extends BaseData
 	 */
 	protected function addLanguageStrings(Record $record)
 	{
-		$messages = \CIBlock::getMessages($record->getId());
+		$messages = \CIBlock::getMessages($record->getId()->getValue());
 		if ($messages)
 		{
 			$messagesValues = Value::treeToList($messages, "MESSAGES");
