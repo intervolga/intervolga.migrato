@@ -96,6 +96,12 @@
         <entity>
             <name>agent</name>
         </entity>
+        <entity>
+            <name>task</name>
+        </entity>
+        <entity>
+            <name>grouprights</name>
+        </entity>
     </module>
     <module>
         <name>catalog</name>
@@ -164,6 +170,9 @@
         </entity>
         <entity>
             <name>fieldenum</name>
+        </entity>
+        <entity>
+            <name>permission</name>
         </entity>
     </module>
 </config>
