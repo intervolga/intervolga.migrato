@@ -132,7 +132,7 @@ class HighloadBlock extends BaseData
 	{
 		$arFields = $record->getFieldsRaw();
 		$arCreateFields = self::getFieldsForCreateOrUpdate($arFields);
-		$result = HighloadBlockTable::add($record->getFieldsRaw($arCreateFields));
+		$result = HighloadBlockTable::add($arCreateFields);
 		if ($result->isSuccess())
 		{
 			$id = RecordId::createNumericId($result->getId());
