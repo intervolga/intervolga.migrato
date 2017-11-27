@@ -14,6 +14,7 @@ class Status extends BaseData
 {
 	protected function configure()
 	{
+		Loader::includeModule('workflow');
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.WORKFLOW_STATUS'));
 	}
 
@@ -38,11 +39,6 @@ class Status extends BaseData
 	protected function getWorkFlowStatus()
 	{
 		$arStatus = array();
-
-		if (!Loader::includeModule('workflow'))
-		{
-			return $arStatus;
-		}
 
 		$rsStatus = \CWorkflowStatus::GetList(
 			$by = 's_id',
@@ -113,11 +109,6 @@ class Status extends BaseData
 	{
 		$result = $record->getFieldsRaw();
 
-		if (!Loader::includeModule('workflow'))
-		{
-			return false;
-		}
-
 		$obWorkflowStatus = new \CWorkflowStatus;
 
 		$obWorkflowStatus->Add(
@@ -139,11 +130,6 @@ class Status extends BaseData
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
-
-		if (!Loader::includeModule('workflow'))
-		{
-			return false;
-		}
 
 		$obWorkflowStatus = new \CWorkflowStatus;
 		$rsStatus = $obWorkflowStatus::GetList(
