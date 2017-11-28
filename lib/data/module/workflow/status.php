@@ -170,8 +170,6 @@ class Status extends BaseData
 
 	protected function deleteInner(RecordId $record)
 	{
-		$isDelete = false;
-
 		$rsStatus = StatusTable::getList(
 			array(
 				'filter' => array(
@@ -182,32 +180,23 @@ class Status extends BaseData
 
 		if ($status = $rsStatus->fetch())
 		{
-			$isDelete = StatusTable::delete($status['ID']);
-		}
-
-		if ($isDelete->isSuccess())
-		{
-			$rsStatusGroup = StatusGroupTable::getList(
-				array(
-					'filter' => array(
-						'STATUS_ID' => $status['ID'],
-					),
-					'select' => array(
-						'ID',
-					),
-				)
-			);
-
-			while ($statusGroup = $rsStatusGroup->fetch())
+			if ($isDelete = StatusTable::delete($status['ID']))
 			{
-				\Bitrix\Main\Diag\Debug::writeToFile(
-					__FILE__ . ":" . __LINE__ .
-					"\n(" . date("Y-m-d H:i:s").")\n" .
-					print_r($statusGroup, TRUE) .
-					"\n\n", '', '/logs/__soprunovv6.log'
+				$rsStatusGroup = StatusGroupTable::getList(
+					array(
+						'filter' => array(
+							'STATUS_ID' => $status['ID'],
+						),
+						'select' => array(
+							'ID',
+						),
+					)
 				);
 
-				StatusGroupTable::delete($statusGroup['ID']);
+				while ($statusGroup = $rsStatusGroup->fetch())
+				{
+					StatusGroupTable::delete($statusGroup['ID']);
+				}
 			}
 		}
 	}
@@ -292,8 +281,10 @@ class Status extends BaseData
 
 		if ($status = $rsStatus->fetch())
 		{
-			$obWorkflowStatus->Update($status['ID'], $fields);
-			$this->setPermissions($status['ID'], $record);
+			if ($isUpdate = $obWorkflowStatus->Update($status['ID'], $fields))
+			{
+				$this->setPermissions($status['ID'], $record);
+			}
 		}
 	}
 }
