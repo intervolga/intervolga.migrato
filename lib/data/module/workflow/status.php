@@ -20,6 +20,7 @@ class Status extends BaseData
 	{
 		Loader::includeModule('workflow');
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.WORKFLOW_STATUS'));
+		$this->setVirtualXmlId(true);
 		$this->setDependencies(array(
 			'USER_GROUP_MOVE' => new Link(Group::getInstance()),
 			'USER_GROUP_EDIT' => new Link(Group::getInstance()),
