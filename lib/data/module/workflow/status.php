@@ -278,6 +278,8 @@ class Status extends BaseData
 
 	public function update(Record $record)
 	{
+		$obWorkflowStatus = new \CWorkflowStatus;
+
 		$fields = $record->getFieldsRaw();
 
 		$rsStatus = StatusTable::getList(
@@ -288,9 +290,9 @@ class Status extends BaseData
 			)
 		);
 
-		while ($status = $rsStatus->fetch())
+		if ($status = $rsStatus->fetch())
 		{
-			StatusTable::update($status['ID'], array('fields' => $fields));
+			$obWorkflowStatus->Update($status['ID'], $fields);
 			$this->setPermissions($status['ID'], $record);
 		}
 	}
