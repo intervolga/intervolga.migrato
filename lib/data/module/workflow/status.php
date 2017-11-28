@@ -9,6 +9,7 @@ use Intervolga\Migrato\Data\Module\Main\Group;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\Orm\WorkFlow\StatusGroupTable;
+use Intervolga\Migrato\Tool\Orm\WorkFlow\StatusTable;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
@@ -47,13 +48,7 @@ class Status extends BaseData
 	{
 		$arStatus = array();
 
-		$rsStatus = \CWorkflowStatus::GetList(
-			$by = 's_id',
-			$order = 'desc',
-			array(),
-			$is_filtered = false,
-			array()
-		);
+		$rsStatus = StatusTable::getList();
 
 		while ($arResStatus = $rsStatus->fetch())
 		{
@@ -85,7 +80,6 @@ class Status extends BaseData
 				'TITLE' => $status['TITLE'],
 				'DESCRIPTION' => $status['DESCRIPTION'] ? : '',
 				'IS_FINAL' => $status['IS_FINAL'],
-				'TIMESTAMP_X_TEMP' => $status['TIMESTAMP_X_TEMP'],
 				'TIMESTAMP_X' => $status['TIMESTAMP_X'],
 				'NOTIFY' => $status['NOTIFY'],
 			));
@@ -175,22 +169,23 @@ class Status extends BaseData
 
 	protected function deleteInner(RecordId $record)
 	{
-		$name = $record->getValue();
-		global $DB;
+		$isDelete = false;
 
-		$rsStatus = \CWorkflowStatus::GetList(
-			$by = 's_id',
-			$order = 'desc',
+		$rsStatus = StatusTable::getList(
 			array(
-				'TITLE' => $name,
-			),
-			$is_filtered = false,
-			array()
+				'filter' => array(
+					'TITLE' => $record->getValue(),
+				),
+			)
 		);
 
-		while ($status = $rsStatus->fetch())
+		if ($status = $rsStatus->fetch())
 		{
-			$DB->Query("DELETE FROM b_workflow_status WHERE TITLE='" . $status['TITLE'] . "'");
+			$isDelete = StatusTable::delete($status['ID']);
+		}
+
+		if ($isDelete->isSuccess())
+		{
 			$rsStatusGroup = StatusGroupTable::getList(
 				array(
 					'filter' => array(
@@ -204,6 +199,13 @@ class Status extends BaseData
 
 			while ($statusGroup = $rsStatusGroup->fetch())
 			{
+				\Bitrix\Main\Diag\Debug::writeToFile(
+					__FILE__ . ":" . __LINE__ .
+					"\n(" . date("Y-m-d H:i:s").")\n" .
+					print_r($statusGroup, TRUE) .
+					"\n\n", '', '/logs/__soprunovv6.log'
+				);
+
 				StatusGroupTable::delete($statusGroup['ID']);
 			}
 		}
@@ -222,7 +224,6 @@ class Status extends BaseData
 				'TITLE' => $result['TITLE'],
 				'DESCRIPTION' => $result['DESCRIPTION'] ? : '',
 				'IS_FINAL' => $result['IS_FINAL'],
-				'TIMESTAMP_X_TEMP' => $result['TIMESTAMP_X_TEMP'],
 				'TIMESTAMP_X' => $result['TIMESTAMP_X'],
 				'NOTIFY' => $result['NOTIFY'],
 			)
@@ -278,20 +279,17 @@ class Status extends BaseData
 	{
 		$fields = $record->getFieldsRaw();
 
-		$obWorkflowStatus = new \CWorkflowStatus;
-		$rsStatus = $obWorkflowStatus::GetList(
-			$by = 's_id',
-			$order = 'desc',
+		$rsStatus = StatusTable::getList(
 			array(
-				'TITLE' => $fields['TITLE'],
-			),
-			$is_filtered = false,
-			array()
+				'filter' => array(
+					'TITLE' => $fields['TITLE'],
+				),
+			)
 		);
 
 		while ($status = $rsStatus->fetch())
 		{
-			$obWorkflowStatus->Update($status['ID'], $fields);
+			StatusTable::update($status['ID'], array('fields' => $fields));
 			$this->setPermissions($status['ID'], $record);
 		}
 	}
