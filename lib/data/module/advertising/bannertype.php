@@ -66,11 +66,11 @@ class BannerType extends BaseData
 		global $strError;
 		if (!$result)
 		{
-			throw new \Exception($strError);
-		}
-		else
-		{
-			if (!$result && !$strError)
+			if ($strError)
+			{
+				throw new \Exception($strError);
+			}
+			else
 			{
 				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.ADVERTISING_UNKNOWN_ERROR'));
 			}
