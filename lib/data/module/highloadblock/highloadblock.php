@@ -50,11 +50,12 @@ class HighloadBlock extends BaseData
 	protected function addMessages($hlBlock, $record)
 	{
 		$cursor = HighloadBlockLangTable::getList(array(
-			'filter' => array('ID' => $hlBlock['ID'])
+			'filter' => array('ID' => $hlBlock['ID']),
 		));
 		$arMessages = array();
-		while($arLangSetting = $cursor->fetch()) {
-			$arMessages['MESSAGES.' . $arLangSetting['LID']]  = $arLangSetting['NAME'];
+		while ($arLangSetting = $cursor->fetch())
+		{
+			$arMessages['MESSAGES.' . $arLangSetting['LID']] = $arLangSetting['NAME'];
 		}
 		$record->addFieldsRaw($arMessages);
 	}
@@ -74,11 +75,14 @@ class HighloadBlock extends BaseData
 	public static function getFieldsForCreateOrUpdate($arFields)
 	{
 		$arResult = array();
-		if (count($arFields)) {
+		if (count($arFields))
+		{
 			$messagesKeys = "MESSAGES.";
 			$messagesKeysLength = mb_strlen($messagesKeys);
-			foreach($arFields as $key => $value) {
-				if (mb_substr($key, 0, $messagesKeysLength) != $messagesKeys) {
+			foreach ($arFields as $key => $value)
+			{
+				if (mb_substr($key, 0, $messagesKeysLength) != $messagesKeys)
+				{
 					$arResult[$key] = $value;
 				}
 			}
@@ -93,19 +97,22 @@ class HighloadBlock extends BaseData
 	 */
 	public static function updateMessages($hlBlockId, $arFields)
 	{
-		if ($hlBlockId > 0) {
+		if ($hlBlockId > 0)
+		{
 			// Удаляем все предыдущие записи. Здесь ID не уникально, поэтому самый простой способ импорта
 			// - удалить вообще всё.
 			HighloadBlockLangTable::delete($hlBlockId);
 			$messagesKeys = "MESSAGES.";
 			$messagesKeysLength = mb_strlen($messagesKeys);
-			foreach($arFields as $key => $value) {
-				if (mb_substr($key, 0, $messagesKeysLength) == $messagesKeys) {
+			foreach ($arFields as $key => $value)
+			{
+				if (mb_substr($key, 0, $messagesKeysLength) == $messagesKeys)
+				{
 					$lid = mb_substr($key, $messagesKeysLength);
 					HighloadBlockLangTable::add(array(
 						'ID' => $hlBlockId,
 						'LID' => $lid,
-						'NAME' => $value
+						'NAME' => $value,
 					));
 				}
 			}
