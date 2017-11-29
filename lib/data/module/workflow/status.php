@@ -79,9 +79,8 @@ class Status extends BaseData
 				'C_SORT' => $status['C_SORT'],
 				'ACTIVE' => $status['ACTIVE'],
 				'TITLE' => $status['TITLE'],
-				'DESCRIPTION' => $status['DESCRIPTION'] ? : '',
+				'DESCRIPTION' => $status['DESCRIPTION'] ?: '',
 				'IS_FINAL' => $status['IS_FINAL'],
-				'TIMESTAMP_X' => $status['TIMESTAMP_X'],
 				'NOTIFY' => $status['NOTIFY'],
 			));
 
@@ -212,9 +211,8 @@ class Status extends BaseData
 				'C_SORT' => $result['C_SORT'],
 				'ACTIVE' => $result['ACTIVE'],
 				'TITLE' => $result['TITLE'],
-				'DESCRIPTION' => $result['DESCRIPTION'] ? : '',
+				'DESCRIPTION' => $result['DESCRIPTION'] ?: '',
 				'IS_FINAL' => $result['IS_FINAL'],
-				'TIMESTAMP_X' => $result['TIMESTAMP_X'],
 				'NOTIFY' => $result['NOTIFY'],
 			)
 		);
