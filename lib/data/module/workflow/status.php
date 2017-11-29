@@ -81,7 +81,6 @@ class Status extends BaseData
 				'TITLE' => $status['TITLE'],
 				'DESCRIPTION' => $status['DESCRIPTION'] ?: '',
 				'IS_FINAL' => $status['IS_FINAL'],
-				'TIMESTAMP_X' => $status['TIMESTAMP_X'],
 				'NOTIFY' => $status['NOTIFY'],
 			));
 
@@ -214,7 +213,6 @@ class Status extends BaseData
 				'TITLE' => $result['TITLE'],
 				'DESCRIPTION' => $result['DESCRIPTION'] ?: '',
 				'IS_FINAL' => $result['IS_FINAL'],
-				'TIMESTAMP_X' => $result['TIMESTAMP_X'],
 				'NOTIFY' => $result['NOTIFY'],
 			)
 		);
