@@ -20,7 +20,10 @@ class BannerType extends BaseData
 	public function getList(array $filter = array())
 	{
 		$result = array();
-		$getList = \CAdvType::getList();
+		$by = 'ID';
+		$order = 'ASC';
+		$isFiltered = false;
+		$getList = \CAdvType::getList($by, $order, array(), $isFiltered);
 		while ($bannertype = $getList->fetch())
 		{
 			$record = new Record($this);
