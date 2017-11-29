@@ -1,4 +1,5 @@
-<?namespace Intervolga\Migrato\Tool\Orm\WorkFlow;
+<?php
+namespace Intervolga\Migrato\Tool\Orm\WorkFlow;
 
 use Bitrix\Main;
 use Bitrix\Main\Entity\BooleanField;
