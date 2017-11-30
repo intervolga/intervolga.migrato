@@ -8,6 +8,7 @@ use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Module\Main\Group;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\Orm\WorkFlow\StatusGroupTable;
 use Intervolga\Migrato\Tool\Orm\WorkFlow\StatusTable;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
@@ -216,7 +217,7 @@ class Status extends BaseData
 
 		$obWorkflowStatus = new \CWorkflowStatus;
 
-		$id = $obWorkflowStatus->Add(
+		$resultId = $obWorkflowStatus->Add(
 			array(
 				'C_SORT' => $result['C_SORT'],
 				'ACTIVE' => $result['ACTIVE'],
@@ -227,7 +228,14 @@ class Status extends BaseData
 			)
 		);
 
-		$this->setPermissions($id, $record);
+		if ($resultId)
+		{
+			$this->setPermissions($resultId, $record);
+		}
+		else
+		{
+			throw new \Exception(ExceptionText::getFromApplication());
+		}
 
 		return $this->createId($result['TITLE']);
 	}
@@ -292,6 +300,10 @@ class Status extends BaseData
 			if ($isUpdate = $obWorkflowStatus->Update($status['ID'], $fields))
 			{
 				$this->setPermissions($status['ID'], $record);
+			}
+			else
+			{
+				throw new \Exception(ExceptionText::getFromApplication());
 			}
 		}
 	}
