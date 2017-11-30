@@ -16,6 +16,8 @@ Loc::loadMessages(__FILE__);
 
 class Status extends BaseData
 {
+	const FINAL_XML_ID = 'FINAL';
+
 	protected function configure()
 	{
 		Loader::includeModule('workflow');
@@ -71,9 +73,17 @@ class Status extends BaseData
 		if ($status)
 		{
 			$record = new Record($this);
-			$id = $this->createId($status["TITLE"]);
+			$id = $this->createId($status["ID"]);
 			$record->setId($id);
-			$record->setXmlId($this->getXmlId($status["TITLE"]));
+
+			if ($status['IS_FINAL'] == 'Y')
+			{
+				$record->setXmlId(static::FINAL_XML_ID);
+			}
+			else
+			{
+				$record->setXmlId($this->getXmlId($status["TITLE"]));
+			}
 
 			$record->addFieldsRaw(array(
 				'C_SORT' => $status['C_SORT'],
@@ -159,7 +169,7 @@ class Status extends BaseData
 
 	public function createId($id)
 	{
-		return RecordId::createStringId(strval($id));
+		return RecordId::createNumericId(intval($id));
 	}
 
 	public function getXmlId($id)
