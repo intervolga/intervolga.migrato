@@ -132,7 +132,7 @@ class Status extends BaseData
 	 * @param string $type
 	 * @return int
 	 */
-	public function getPermissionType($type)
+	protected function getPermissionType($type)
 	{
 		return ($type == 'USER_GROUP_MOVE') ? '1' : '2';
 	}
@@ -142,7 +142,7 @@ class Status extends BaseData
 	 * @param $type
 	 * @return array
 	 */
-	public function getAccessesList($id, $type)
+	protected function getAccessesList($id, $type)
 	{
 		$arAccess = array();
 		$permissionType = $this->getPermissionType($type);
@@ -236,7 +236,7 @@ class Status extends BaseData
 	 * @param int $id
 	 * @param \Intervolga\Migrato\Data\Record
 	 */
-	public function setPermissions($id, Record $record)
+	protected function setPermissions($id, Record $record)
 	{
 		$obWorkflowStatus = new \CWorkflowStatus;
 
@@ -258,7 +258,7 @@ class Status extends BaseData
 	 * @param string $type
 	 * @return array
 	 */
-	public function extractGroups(Record $record, $type)
+	protected function extractGroups(Record $record, $type)
 	{
 		$arGroup = array();
 
