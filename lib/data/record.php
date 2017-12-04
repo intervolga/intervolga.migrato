@@ -197,7 +197,7 @@ class Record extends BaseDataObject
 
 	public function delete()
 	{
-		$this->getData()->delete($this->getXmlId());
+		$this->getData()->delete($this->getXmlId(), $this->getId());
 	}
 
 	/**
