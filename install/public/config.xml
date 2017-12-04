@@ -117,6 +117,9 @@
         <entity>
             <name>iblock</name>
         </entity>
+        <entity>
+            <name>rounding</name>
+        </entity>
     </module>
     <module>
         <name>sale</name>
