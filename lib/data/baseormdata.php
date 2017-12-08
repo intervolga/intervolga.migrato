@@ -3,6 +3,7 @@
 use Bitrix\Main\ArgumentException;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\Type\Date;
 use Bitrix\Main\Type\DateTime;
 use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
@@ -12,6 +13,7 @@ abstract class BaseOrmData extends BaseData
     const ORM_ENTITY_PARENT_CLASS_NAME = '\Bitrix\Main\Entity\DataManager';
     const ORM_BOOLEAN_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\BooleanField';
     const ORM_DATETIME_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\DatetimeField';
+    const ORM_DATE_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\DateField';
 
     private $moduleName = '';
     private $ormEntityClass = '';
@@ -87,8 +89,6 @@ abstract class BaseOrmData extends BaseData
     {
         $this->configureOrm();
         $this->processUserOrmEntity();
-
-        $this->setEntityNameLoc($this->entityName);
         $this->xmlIdProvider = new OrmXmlIdProvider($this, $this->ormEntityClass);
 
     }
@@ -125,7 +125,7 @@ abstract class BaseOrmData extends BaseData
         if(Loader::includeModule($this->moduleName))
         {
             $this->processEntityClassName($this->ormEntityClass);
-            $this->processEntityName($this->entityName);
+            $this->processEntityName($this->entityNameLoc);
         }
         else
         {
@@ -159,6 +159,11 @@ abstract class BaseOrmData extends BaseData
 
     private function processEntityClassName($entityClassName)
     {
+        if(empty($entityClassName))
+        {
+            throw new ArgumentException(Loc::getMessage('INTERVOLGA_MIGRATO.ORM_ENTITY.NOT_SET'));
+        }
+
         if(is_string($entityClassName))
         {
             if($entityClassName[0] !== '\\')
@@ -186,7 +191,7 @@ abstract class BaseOrmData extends BaseData
     {
         if($entityName == '')
         {
-            $this->entityName = substr(strrchr($this->ormEntityClass, '\\'), 1);
+            $this->entityNameLoc = substr(strrchr($this->ormEntityClass, '\\'), 1);
 
         }
     }
@@ -257,6 +262,7 @@ abstract class BaseOrmData extends BaseData
         $dataManager = $this->ormEntityClass;
         $booleanField = static::ORM_BOOLEAN_FIELD_CLASS_NAME;
         $dataTimeField = static::ORM_DATETIME_FIELD_CLASS_NAME;
+        $dateField = static::ORM_DATE_FIELD_CLASS_NAME;
 
         $fields = $dataManager::getEntity()->getFields();
         foreach ($fields as $field)
@@ -270,9 +276,11 @@ abstract class BaseOrmData extends BaseData
             {
                 $recordAsArray[$fieldName] = new DateTime($recordAsArray[$fieldName]);
             }
+            elseif($field instanceof $dateField)
+            {
+                $recordAsArray[$fieldName] = new Date($recordAsArray[$fieldName]);
+            }
         }
     }
-
-    // TODO: Add casting for DateField, FloatField, EnumField. Test before adding.
     // TODO: Check if has xml id
 }
