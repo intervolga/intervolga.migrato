@@ -11,20 +11,21 @@ use \Intervolga\Migrato\Data\BaseData,
 
 Loc::loadMessages(__FILE__);
 
-class Filter extends BaseData
+class ElementListFilter extends BaseData
 {
 	const XML_ID_SEPARATOR = '.';
-	const FILTER_IBLOCK_TABLE_NAME = 'tbl_iblock_element_';
+	const TABLE_NAMES = array ('L' => 'tbl_iblock_list_',
+								'E' => 'tbl_iblock_element_');
 	const PROPERTY_FIELD_PREFIX = 'find_el_property_';
 
 	public function __construct()
 	{
-		Loader::includeModule("iblock");
+		Loader::includeModule('iblock');
 	}
 
 	public function getFilesSubdir()
 	{
-		return "/";
+		return '/';
 	}
 
 	/**
@@ -46,7 +47,7 @@ class Filter extends BaseData
 			$dbRes = \CAdminFilter::GetList(array(), $newFilter);
 			while ($arFilter = $dbRes->Fetch())
 			{
-				if (strpos($arFilter['FILTER_ID'], static::FILTER_IBLOCK_TABLE_NAME) === 0 && !in_array($arFilter['ID'], $filtersId))
+				if ($this->getTypeById($arFilter['FILTER_ID']) && !in_array($arFilter['ID'], $filtersId))
 				{
 					$filtersId[] = $arFilter['ID'];
 					$record = new Record($this);
@@ -58,6 +59,7 @@ class Filter extends BaseData
 					$record->setFieldRaw('PRESET_ID', $arFilter['PRESET_ID']);
 					$record->setFieldRaw('SORT', $arFilter['SORT']);
 					$record->setFieldRaw('SORT_FIELD', $arFilter['SORT_FIELD']);
+					$record->setFieldRaw('IS_ADMIN', $arFilter['USER_ID'] == 1 ? 'Y' : 'N');
 					$this->addPropsDependencies($record, $arFilter['FIELDS']);
 					$this->setDependencies($record, $arFilter);
 					$result[] = $record;
@@ -68,32 +70,40 @@ class Filter extends BaseData
 	}
 
 	/**
-	 * @param $filter_id - b_filter table field
+	 * @param $filterId - b_filter table field
 	 * @return string
 	 */
-	private function getIblockXmlIdByFilterId($filter_id)
+	private function getIblockXmlIdByFilterId($filterId)
 	{
+		$result = '';
 		if(Loader::includeModule('iblock'))
 		{
-			$hash = substr($filter_id, strlen(static::FILTER_IBLOCK_TABLE_NAME));
-			$hash = substr($hash, 0, strlen($hash) - 7); // strlen('_filter') == 7
-			$res = \CIBlock::GetList();
-			while ($iblock = $res->Fetch())
+			$type = $this->getTypeById($filterId);
+			$prefix = static::TABLE_NAMES[$type];
+			if($prefix)
 			{
-				if (md5($iblock['IBLOCK_TYPE_ID'] . '.' . $iblock['ID']) == $hash)
-					return $iblock['ID'];
+				$hash = substr($filterId, strlen($prefix));
+				$hash = substr($hash, 0, strlen($hash) - 7); // strlen('_filter') == 7
+				$res = \CIBlock::GetList();
+				while ($iblock = $res->Fetch())
+				{
+					if (md5($iblock['IBLOCK_TYPE_ID'] . '.' . $iblock['ID']) == $hash)
+					{
+						$result = $iblock['ID'];
+					}
+				}
 			}
 		}
-		return '';
+		return $result;
 	}
 
 	public function getDependencies()
 	{
 		return array(
-			"LANGUAGE_ID" => new Link(Language::getInstance()),
-			"IBLOCK_ID" => new Link(MigratoIblock::getInstance()),
-			"PROPERTY_ID" => new Link(Property::getInstance()),
-			"PROPERTY_ENUM_ID" => new Link(Enum::getInstance()),
+			'LANGUAGE_ID' => new Link(Language::getInstance()),
+			'IBLOCK_ID' => new Link(MigratoIblock::getInstance()),
+			'PROPERTY_ID' => new Link(Property::getInstance()),
+			'PROPERTY_ENUM_ID' => new Link(Enum::getInstance()),
 		);
 	}
 
@@ -234,23 +244,30 @@ class Filter extends BaseData
 		return $newArrFields;
 	}
 
+	protected function xmlIdToArray($xmlId)
+	{
+		$xmlFields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		$xmlFields[0] = static::TABLE_NAMES[$xmlFields[0]];
+		return $xmlFields;
+	}
+
 	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
 		$xmlId = $record->getXmlId();
-		$xmlFields = explode(static::XML_ID_SEPARATOR, $xmlId);
-		if($xmlFields[0] == 'Y')
+		$xmlFields = $this->xmlIdToArray($xmlId);
+		if($xmlFields[1] == 'Y')
 			$fields['USER_ID'] = 1;
 
 		// FILTER_ID creating
-		$iblockXmlId = $xmlFields[3];
+		$iblockXmlId = $xmlFields[4];
 		$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
 		if(Loader::includeModule('iblock'))
 		{
 			$dbres = \CIBlock::GetById($iblockId);
 			if($iblockInfo = $dbres->GetNext())
 			{
-				$fields['FILTER_ID'] = static::FILTER_IBLOCK_TABLE_NAME . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
+				$fields['FILTER_ID'] = $xmlFields[0] . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
 				$arFields = unserialize($fields['FIELDS']);
 				if($arFields)
 				{
@@ -274,19 +291,19 @@ class Filter extends BaseData
 		{
 			$fields = $record->getFieldsRaw();
 			$xmlId = $record->getXmlId();
-			$xmlFields = explode(static::XML_ID_SEPARATOR, $xmlId);
-			if($xmlFields[0] == 'Y')
+			$xmlFields = $this->xmlIdToArray($xmlId);
+			if($xmlFields[1] == 'Y')
 				$fields['USER_ID'] = 1;
 
 			// FILTER_ID creating
-			$iblockXmlId = $xmlFields[3];
+			$iblockXmlId = $xmlFields[4];
 			$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
 			if(Loader::includeModule('iblock'))
 			{
 				$dbres = \CIBlock::GetById($iblockId);
 				if($iblockInfo = $dbres->GetNext())
 				{
-					$fields['FILTER_ID'] = static::FILTER_IBLOCK_TABLE_NAME . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
+					$fields['FILTER_ID'] = $xmlFields[0] . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
 					$arFields = unserialize($fields['FIELDS']);
 					if($arFields)
 					{
@@ -327,7 +344,7 @@ class Filter extends BaseData
 		{
 			return $this->getXmlIdByObject($filter);
 		}
-		return "";
+		return '';
 	}
 
 	/**
@@ -336,30 +353,44 @@ class Filter extends BaseData
 	 */
 	protected function getXmlIdByObject(array $filter)
 	{
+		$result = '';
 		$iblockId = $this->getIblockXmlIdByFilterId($filter['FILTER_ID']);
 		if($iblockId)
 		{
 			$iblockXmlId = MigratoIblock::getInstance()->getXmlId(MigratoIblock::getInstance()->createId($iblockId));
 			if ($iblockXmlId)
 			{
-				return (
-					($filter["USER_ID"] == 1 ? 'Y' : 'N') . static::XML_ID_SEPARATOR .
-					$filter["COMMON"] . static::XML_ID_SEPARATOR .
-					md5($filter["NAME"]) . static::XML_ID_SEPARATOR . $iblockXmlId);
+				$type = $this->getTypeById($filter['FILTER_ID']);
+				$result = (
+					$type . static::XML_ID_SEPARATOR .
+					($filter['USER_ID'] == 1 ? 'Y' : 'N') . static::XML_ID_SEPARATOR .
+					$filter['COMMON'] . static::XML_ID_SEPARATOR .
+					md5($filter['NAME']) . static::XML_ID_SEPARATOR . $iblockXmlId);
 			}
 		}
-		return '';
+		return $result;
+	}
+
+	protected function getTypeById($filterId)
+	{
+		$type = '';
+		foreach (static::TABLE_NAMES as $key => $tableName)
+		{
+			if(strpos($filterId, $tableName) === 0)
+				$type = $key;
+		}
+		return $type;
 	}
 
 	public function findRecord($xmlId)
 	{
-		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		$fields = $this->xmlIdToArray($xmlId);
 
 		$arFilter = array('COMMON' => $fields[1]);
-		if($fields[0] === 'Y')
+		if($fields[1] === 'Y')
 			$filter['USER_ID'] = 1;
-		$name = $fields[2];
-		$iblockXmlId = $fields[3];
+		$name = $fields[3];
+		$iblockXmlId = $fields[4];
 		if($iblockRecord =  MigratoIblock::getInstance()->findRecord($iblockXmlId))
 		{
 			$iblockId = $iblockRecord->getValue();
@@ -371,9 +402,9 @@ class Filter extends BaseData
 					$dbres = \CAdminFilter::getList([], $arFilter);
 					while ($filter = $dbres->Fetch())
 					{
-						if (strpos($filter['FILTER_ID'], static::FILTER_IBLOCK_TABLE_NAME) === 0 && md5($filter['NAME']) === $name)
+						if (strpos($filter['FILTER_ID'], $fields[0]) === 0 && md5($filter['NAME']) === $name)
 						{
-							$hash = substr($filter['FILTER_ID'], strlen(static::FILTER_IBLOCK_TABLE_NAME));
+							$hash = substr($filter['FILTER_ID'], strlen($fields[0]));
 							$hash = substr($hash, 0, strlen($hash) - 7); // strlen('_filter') == 7
 							if (md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId) === $hash)
 							{
