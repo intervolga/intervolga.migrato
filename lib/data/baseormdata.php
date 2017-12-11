@@ -10,10 +10,11 @@ use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
 abstract class BaseOrmData extends BaseData
 {
+    const XML_ID_FIELD_NAME = 'XML_ID';
+    const ORM_DATE_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\DateField';
     const ORM_ENTITY_PARENT_CLASS_NAME = '\Bitrix\Main\Entity\DataManager';
     const ORM_BOOLEAN_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\BooleanField';
     const ORM_DATETIME_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\DatetimeField';
-    const ORM_DATE_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\DateField';
 
     private $moduleName = '';
     private $ormEntityClass = '';
@@ -126,6 +127,7 @@ abstract class BaseOrmData extends BaseData
         {
             $this->processEntityClassName($this->ormEntityClass);
             $this->processEntityName($this->entityNameLoc);
+            $this->checkXmlId();
         }
         else
         {
@@ -282,5 +284,24 @@ abstract class BaseOrmData extends BaseData
             }
         }
     }
-    // TODO: Check if has xml id
+
+    private function checkXmlId()
+    {
+        $dataManager = $this->ormEntityClass;
+        $fields = $dataManager::getEntity()->getFields();
+        $fieldNames = array_keys($fields);
+
+        if(!in_array(static::XML_ID_FIELD_NAME, $fieldNames))
+        {
+            $exceptionMessage = $this->getMessageWithOrmEntity(
+                'INTERVOLGA_MIGRATO.ORM_ENTITY.NO_XML_ID',
+                $this->ormEntityClass
+
+            );
+            throw new ArgumentException($exceptionMessage);
+        }
+    }
+
+    // TODO: ExpressionField
+    // TODO: ReferenceField
 }
