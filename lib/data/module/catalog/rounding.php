@@ -17,6 +17,7 @@ Loc::loadMessages(__FILE__);
 class Rounding extends BaseData
 {
 	const PRICE_TYPE_DEPENDENCY_KEY = 'CATALOG_GROUP_ID';
+	const XML_ID_SEPARATOR = '___';
 
 	protected function configure()
 	{
@@ -60,14 +61,9 @@ class Rounding extends BaseData
 		$rounding = RoundingTable::getById($roundingId)->fetch();
 		$catalogGroup = GroupTable::getById($rounding[static::PRICE_TYPE_DEPENDENCY_KEY])->fetch();
 
-		$xmlId = md5(serialize(array(
-			$catalogGroup['XML_ID'],
-			$rounding['PRICE'],
-			$rounding['ROUND_TYPE'],
-			$rounding['ROUND_PRECISION'],
-		)));
+		$xmlId = $catalogGroup['XML_ID'] . static::XML_ID_SEPARATOR . str_replace('.', '_', $rounding['PRICE']);
 
-		return BaseXmlIdProvider::formatXmlId($xmlId);
+		return $xmlId;
 	}
 
 	protected function createInner(Record $record)
