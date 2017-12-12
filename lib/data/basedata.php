@@ -88,12 +88,15 @@ abstract class BaseData
 
 	/**
 	 * @param string $xmlId
-	 *
-	 * @throws \Exception
+	 * @param RecordId $id
 	 */
-	public function delete($xmlId)
+	public function delete($xmlId, $id)
 	{
-		$id = $this->findRecord($xmlId);
+		if (!$id)
+		{
+			$id = $this->findRecord($xmlId);
+		}
+
 		if ($id)
 		{
 			$this->deleteInner($id);

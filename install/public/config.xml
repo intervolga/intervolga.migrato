@@ -117,6 +117,9 @@
         <entity>
             <name>iblock</name>
         </entity>
+        <entity>
+            <name>rounding</name>
+        </entity>
     </module>
     <module>
         <name>sale</name>
@@ -179,6 +182,12 @@
         <name>advertising</name>
         <entity>
             <name>bannertype</name>
+        </entity>
+    </module>
+    <module>
+        <name>workflow</name>
+        <entity>
+            <name>status</name>
         </entity>
     </module>
 </config>
