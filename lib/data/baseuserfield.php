@@ -377,7 +377,7 @@ abstract class BaseUserField extends BaseData
 
 			if ($isReCreate)
 			{
-				$this->delete($record->getXmlId());
+				$this->delete($record->getXmlId(), $record->getId());
 				$this->create($record);
 			}
 			else
