@@ -15,6 +15,7 @@ abstract class BaseOrmData extends BaseData
     const ORM_ENTITY_PARENT_CLASS_NAME = '\Bitrix\Main\Entity\DataManager';
     const ORM_BOOLEAN_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\BooleanField';
     const ORM_DATETIME_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\DatetimeField';
+    const ORM_REFERENCE_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\ReferenceField';
     const ORM_EXPRESSION_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\ExpressionField';
 
     private $moduleName = '';
@@ -149,11 +150,13 @@ abstract class BaseOrmData extends BaseData
         $fieldsRaw = [];
         $dataManager = $this->ormEntityClass;
         $expressionField = static::ORM_EXPRESSION_FIELD_CLASS_NAME;
+        $referenceField = static::ORM_REFERENCE_FIELD_CLASS_NAME;
 
         $fields = $dataManager::getEntity()->getFields();
         foreach ($fields as $fieldName => $field)
         {
-            if($field instanceof $expressionField)
+            if ($field instanceof $expressionField ||
+                $field instanceof $referenceField)
             {
                 continue;
             }
@@ -309,6 +312,5 @@ abstract class BaseOrmData extends BaseData
         }
     }
 
-    // TODO: ExpressionField
-    // TODO: ReferenceField
+    // TODO: User Fields
 }
