@@ -25,16 +25,19 @@ class Code
 		);
 		foreach ($dirs as $dir)
 		{
-			foreach ($dir->getChildren() as $templateDir)
+			if ($dir->isExists())
 			{
-				if ($templateDir instanceof Directory)
+				foreach ($dir->getChildren() as $templateDir)
 				{
-					foreach ($templateDir->getChildren() as $templateFile)
+					if ($templateDir instanceof Directory)
 					{
-						$checkFiles = array('header.php', 'footer.php');
-						if (in_array($templateFile->getName(), $checkFiles))
+						foreach ($templateDir->getChildren() as $templateFile)
 						{
-							$result[] = $templateFile;
+							$checkFiles = array('header.php', 'footer.php');
+							if (in_array($templateFile->getName(), $checkFiles))
+							{
+								$result[] = $templateFile;
+							}
 						}
 					}
 				}
