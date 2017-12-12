@@ -181,4 +181,10 @@
             <name>bannertype</name>
         </entity>
     </module>
+    <module>
+        <name>workflow</name>
+        <entity>
+            <name>status</name>
+        </entity>
+    </module>
 </config>
