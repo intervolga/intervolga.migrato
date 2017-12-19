@@ -149,8 +149,8 @@ abstract class BaseOrmData extends BaseData
     {
         $fieldsRaw = [];
         $dataManager = $this->ormEntityClass;
-        $expressionField = static::ORM_EXPRESSION_FIELD_CLASS_NAME;
         $referenceField = static::ORM_REFERENCE_FIELD_CLASS_NAME;
+        $expressionField = static::ORM_EXPRESSION_FIELD_CLASS_NAME;
 
         $fields = $dataManager::getEntity()->getFields();
         foreach ($fields as $fieldName => $field)
@@ -282,7 +282,7 @@ abstract class BaseOrmData extends BaseData
             $fieldName = $field->getName();
             if($field instanceof $booleanField)
             {
-                $recordAsArray[$fieldName] = boolval($recordAsArray[$fieldName]);
+                $this->castBooleanField($field, $recordAsArray[$fieldName]);
             }
             elseif($field instanceof $dataTimeField)
             {
@@ -291,6 +291,30 @@ abstract class BaseOrmData extends BaseData
             elseif($field instanceof $dateField)
             {
                 $recordAsArray[$fieldName] = new Date($recordAsArray[$fieldName]);
+            }
+        }
+    }
+
+    private function castBooleanField($field, &$fieldValue)
+    {
+        if(is_numeric($fieldValue))
+        {
+            $fieldValue = intval($fieldValue);
+        }
+        $boolValues = $field->getValues();
+
+        if($fieldValue == $boolValues[0])
+        {
+            if(is_bool($boolValues[0]))
+            {
+                $fieldValue = boolval($fieldValue);
+            }
+        }
+        elseif($fieldValue == $boolValues[1])
+        {
+            if(is_bool($boolValues[1]))
+            {
+                $fieldValue = boolval($fieldValue);
             }
         }
     }
@@ -313,4 +337,5 @@ abstract class BaseOrmData extends BaseData
     }
 
     // TODO: User Fields
+    // TODO: Не мигрировать поле ID ????
 }
