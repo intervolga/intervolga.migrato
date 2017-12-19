@@ -13,6 +13,7 @@ abstract class BaseOrmData extends BaseData
     const XML_ID_FIELD_NAME = 'XML_ID';
     const ORM_DATE_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\DateField';
     const ORM_ENTITY_PARENT_CLASS_NAME = '\Bitrix\Main\Entity\DataManager';
+    const ORM_INTEGER_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\IntegerField';
     const ORM_BOOLEAN_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\BooleanField';
     const ORM_DATETIME_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\DatetimeField';
     const ORM_REFERENCE_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\ReferenceField';
@@ -149,14 +150,21 @@ abstract class BaseOrmData extends BaseData
     {
         $fieldsRaw = [];
         $dataManager = $this->ormEntityClass;
+        $integerField = static::ORM_INTEGER_FIELD_CLASS_NAME;
         $referenceField = static::ORM_REFERENCE_FIELD_CLASS_NAME;
         $expressionField = static::ORM_EXPRESSION_FIELD_CLASS_NAME;
 
         $fields = $dataManager::getEntity()->getFields();
         foreach ($fields as $fieldName => $field)
         {
+            // Do not migrate ExpressionField and ReferenceField
             if ($field instanceof $expressionField ||
                 $field instanceof $referenceField)
+            {
+                continue;
+            }
+            // Do not migrate integer field with name 'ID'
+            elseif($field instanceof $integerField && $field->getName() == 'ID')
             {
                 continue;
             }
@@ -335,7 +343,4 @@ abstract class BaseOrmData extends BaseData
             throw new ArgumentException($exceptionMessage);
         }
     }
-
-    // TODO: User Fields
-    // TODO: Не мигрировать поле ID ????
 }
