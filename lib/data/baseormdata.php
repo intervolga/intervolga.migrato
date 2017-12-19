@@ -8,6 +8,25 @@ use Bitrix\Main\Type\DateTime;
 use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 
+/**
+ * Class BaseOrmData - базовый класс для миграции ORM-сущностей.
+ * Реализует все необходимые методы для миграции ORM-сущности.<br><br>
+ *
+ * Ограничения и особенности:
+ * * ORM-сущность должна быть наследником \Bitrix\Main\Entity\DataManager.
+ * * ORM-сущность должна иметь строковое поле XML_ID с уникальным идентификатором.
+ * * Поля ReferenceField не мигрируются.
+ * * Поля ExpressionField не мигрируются.
+ * * Поля IntegerField с именеи ID не мигрируются.
+ * * Поля UserField не мигрируются.
+ *
+ * Использование:
+ *  1. Создать класс-наследник для мигрируемой ORM-сущности, реализовов в нем метод configureOrm().
+ *  2. Добавить сущность в config файл migrato.
+ *  3. Добавить класс-наследник в список классов migrato с помощью обработчика события OnMigratoDataBuildList.
+ *
+ * @package Intervolga\Migrato\Data
+ */
 abstract class BaseOrmData extends BaseData
 {
     const XML_ID_FIELD_NAME = 'XML_ID';
@@ -23,7 +42,9 @@ abstract class BaseOrmData extends BaseData
     private $ormEntityClass = '';
 
     /**
-     * @return string
+     * Получить абсолютное имя класса ORM-сущности.
+     *
+     * @return string абсолютное имя класса ORM-сущности.
      */
     public function getOrmEntityClass()
     {
@@ -31,7 +52,9 @@ abstract class BaseOrmData extends BaseData
     }
 
     /**
-     * @param string $ormEntityClass
+     * Установить абсолютное имя класса ORM-сущности.
+     *
+     * @param string $ormEntityClass абсолютное имя класса ORM-сущности.
      */
     public function setOrmEntityClass($ormEntityClass)
     {
@@ -39,7 +62,9 @@ abstract class BaseOrmData extends BaseData
     }
 
     /**
-     * @return string
+     * Получить название модуля ORM-сущности.
+     *
+     * @return string название модуля ORM-сущности.
      */
     public function getModule()
     {
@@ -47,7 +72,9 @@ abstract class BaseOrmData extends BaseData
     }
 
     /**
-     * @param string $moduleName
+     * Установить название модуля ORM-сущности.
+     *
+     * @param string $moduleName название модуля ORM-сущности.
      */
     public function setModule($moduleName)
     {
@@ -87,6 +114,18 @@ abstract class BaseOrmData extends BaseData
         return $ormEntityElements;
     }
 
+    /**
+     * Настраивает базовый класс для работы с ORM-сущностью.
+     * Необходимо реализовать данный метод в классе-наследнике, задав
+     * название модуля, абсолютное имя класса ORM-сущности и имя ORM-сущности
+     * на естественном языке (опционально, для логов). <br><br>
+     *
+     * Для названия модуля использовать метод - setModule().<br>
+     * Для имени класса ORM-сущности использовать метод - setOrmEntityClass(). <br>
+     * Для названия ORM-сущности на естественном языке, использовать метод - setEntityNameLoc().<br>
+     * Если имя сущности на естественном языке не задано,
+     * будет использовано имя класса.
+     */
     abstract public function configureOrm();
 
     protected function configure()
@@ -124,6 +163,18 @@ abstract class BaseOrmData extends BaseData
         }
     }
 
+    /**
+     * Проверяет корректность настройки ORM-сущности:
+     * * Корректность задания модуля
+     * * Корректность задания класса ORM-сущности
+     * * Наличие поля XML_ID в ORM-сущности.
+     * <br><br>
+     * Производит окончательную настройку для работы
+     * с ORM-сущностью.
+     *
+     * @throws ArgumentException в случае некорректной ORM-сущности.
+     * @throws \Bitrix\Main\LoaderException в случае неверно заданного модуля.
+     */
     private function processUserOrmEntity()
     {
         if(Loader::includeModule($this->moduleName))
@@ -146,6 +197,12 @@ abstract class BaseOrmData extends BaseData
         }
     }
 
+    /**
+     * Получение полей элемента для метода Record::addFieldsRaw().
+     *
+     * @param array $ormEntityElement запись элемента из БД.
+     * @return array ассоциативный массив полей элемента.
+     */
     private function getElementFields($ormEntityElement)
     {
         $fieldsRaw = [];
@@ -177,6 +234,12 @@ abstract class BaseOrmData extends BaseData
         return $fieldsRaw;
     }
 
+    /**
+     * Обработка имени класса ORM-сущности при конфигурировании.
+     *
+     * @param string $entityClassName абсолютное имя класса ORM-сущности.
+     * @throws ArgumentException в случае некорректной ORM-сущности.
+     */
     private function processEntityClassName($entityClassName)
     {
         if(empty($entityClassName))
@@ -207,15 +270,29 @@ abstract class BaseOrmData extends BaseData
         }
     }
 
+    /**
+     * Обработка названия ORM-сущности на естественном языке при конфигурировании.
+     * Если название не задано явно, название берется из абсолютного имени класса
+     * ORM-сущности.
+     *
+     * @param string $entityName название ORM-сущности на естественном языке.
+     */
     private function processEntityName($entityName)
     {
         if($entityName == '')
         {
             $this->entityNameLoc = substr(strrchr($this->ormEntityClass, '\\'), 1);
-
         }
     }
 
+    /**
+     * Проверка корректности имени класса ORM-сущности:
+     * * Проверка, что класс ORM-сущности существует.
+     * * Проверка, что класс ORM-сущности является наследником \Bitrix\Main\Entity\DataManager.
+     *
+     * @param string $entityClassName абсолютное имя класса ORM-сущности.
+     * @return object объект с флагом результата и сообщением, в случае, если проверка не пройдена.
+     */
     private function isEntityClassNameCorrect($entityClassName)
     {
         $result = null;
@@ -253,6 +330,13 @@ abstract class BaseOrmData extends BaseData
         return $result;
     }
 
+    /**
+     * Формирует объект результата.
+     *
+     * @param bool $result значение флага результата.
+     * @param string $message сообщение, поясняющее флаг результата.
+     * @return object объект результата с полями result и message.
+     */
     private function getResultObject($result, $message = 'ok')
     {
         return (object)[
@@ -261,6 +345,13 @@ abstract class BaseOrmData extends BaseData
         ];
     }
 
+    /**
+     * Возвращает языковую константу, подставляя имя класса ORM-сущности.
+     *
+     * @param string $messageCode ключ языковой константы.
+     * @param string $entityClassName имя класса ORM-сущности.
+     * @return string языковая константа с именем класса ORM-сущности.
+     */
     private function getMessageWithOrmEntity($messageCode, $entityClassName)
     {
         return Loc::getMessage(
@@ -269,6 +360,14 @@ abstract class BaseOrmData extends BaseData
         );
     }
 
+    /**
+     * Получение элмента в виде массива из объекта Record
+     * для методов createInner() и update().
+     *
+     * @param Record $record объект элемента.
+     * @return string[] массив элемента.
+     * @throws \Exception в случае ошибки привдения типов.
+     */
     private function recordToArray(Record $record)
     {
         $recordAsArray = $record->getFieldsRaw();
@@ -277,6 +376,11 @@ abstract class BaseOrmData extends BaseData
         return $recordAsArray;
     }
 
+    /**
+     * Приведение типов при импорте.
+     *
+     * @param string[] $recordAsArray элемент в виде массива.
+     */
     private function castFields(&$recordAsArray)
     {
         $dataManager = $this->ormEntityClass;
@@ -303,6 +407,12 @@ abstract class BaseOrmData extends BaseData
         }
     }
 
+    /**
+     * Приведение типа для BooleanFied полей при импорте.
+     *
+     * @param \Bitrix\Main\Entity\ScalarField $field объект поля ORM-сущности.
+     * @param string $fieldValue значение поля элемента.
+     */
     private function castBooleanField($field, &$fieldValue)
     {
         if(is_numeric($fieldValue))
@@ -327,6 +437,11 @@ abstract class BaseOrmData extends BaseData
         }
     }
 
+    /**
+     * Проверка наличия поля XML_ID в ORM-сущности.
+     *
+     * @throws ArgumentException в случае отсутствия поля XML_ID.
+     */
     private function checkXmlId()
     {
         $dataManager = $this->ormEntityClass;
