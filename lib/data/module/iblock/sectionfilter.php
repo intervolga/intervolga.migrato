@@ -133,9 +133,9 @@ class SectionFilter extends BaseData
 	protected function addUfDependencies(Record $record, $fields, $iblockId)
 	{
 		$arrFields = unserialize($fields);
-		$ufFields = array();
+		$ufEnumValues = array();
+		$ufEnumFields = array();
 		$ufFieldIds = array();
-		$ufNames = array();
 		if($iblockId)
 		{
 			foreach($arrFields as $fieldName => $arrField)
@@ -158,7 +158,8 @@ class SectionFilter extends BaseData
 									$ufFieldIds[] = Field::getInstance()->getXmlId(Field::getInstance()->createId($ufField['ID']));
 								if ($ufField['USER_TYPE_ID'] == 'enumeration')
 								{
-									$ufFields = array_merge($ufFields,$arrField['value']);
+									$ufEnumValues = array_merge($ufEnumValues,$arrField['value']);
+									$ufEnumFields[] = $fieldName;
 								}
 							}
 						}
@@ -172,13 +173,14 @@ class SectionFilter extends BaseData
 			$dependency->setValues($ufFieldIds);
 			$record->setDependency('FIELD', $dependency);
 		}
-		if($ufFields)
+		if($ufEnumValues)
 		{
-			$this->addUfEnumDependencies($record,$ufFields);
+			$this->setUfEnumDependencies($record, $ufEnumValues);
 		}
+		$this->addFieldsProperty($record, $fields, $ufEnumFields);
 	}
 
-	private function addUfEnumDependencies(Record $record, $arEnumId)
+	private function setUfEnumDependencies(Record $record, $arEnumId)
 	{
 		$enumFields = array();
 		foreach ($arEnumId as $enumId)
@@ -188,6 +190,32 @@ class SectionFilter extends BaseData
 		$dependency = $this->getDependency('FIELDENUM');
 		$dependency->setValues($enumFields);
 		$record->setDependency('FIELDENUM', $dependency);
+	}
+
+	private function addFieldsProperty(Record $record, $fields, $enumFields)
+	{
+		$arrNewFields = $arrFields = unserialize($fields);
+		if($enumFields)
+		{
+			foreach ($arrFields as $fieldName => $arrValue)
+			{
+				if (in_array($fieldName, $enumFields))
+				{
+					$arrNewFields[$fieldName]['value'] = array();
+					foreach ($arrValue['value'] as $key => $value)
+					{
+						$enumXmlId = FieldEnum::getInstance()->getXmlId(FieldEnum::getInstance()->createId($value));
+						$newKey = $key;
+						if ($key === 'sel_' . $value)
+						{
+							$newKey = 'sel_' . $enumXmlId;
+						}
+						$arrNewFields[$fieldName]['value'][$newKey] = $enumXmlId;
+					}
+				}
+			}
+		}
+		$record->setFieldRaw("FIELDS",serialize($arrNewFields));
 	}
 
 	/**
