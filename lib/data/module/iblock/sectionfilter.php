@@ -17,6 +17,7 @@ class SectionFilter extends BaseData
 	const XML_ID_SEPARATOR = '.';
 	const TABLE_NAME = 'tbl_iblock_section_';
 	const UF_PREFIX = 'find_UF_';
+	const UF_ENUM_VALUE_PREFIX = 'sel_';
 
 	public function __construct()
 	{
@@ -156,7 +157,7 @@ class SectionFilter extends BaseData
 							{
 								if($ufField['ID'])
 									$ufFieldIds[] = Field::getInstance()->getXmlId(Field::getInstance()->createId($ufField['ID']));
-								if ($ufField['USER_TYPE_ID'] == 'enumeration')
+								if ($ufField['USER_TYPE_ID'] == 'enumeration' && is_array($arrField['value']))
 								{
 									$ufEnumValues = array_merge($ufEnumValues,$arrField['value']);
 									$ufEnumFields[] = $fieldName;
@@ -201,17 +202,17 @@ class SectionFilter extends BaseData
 			{
 				if (in_array($fieldName, $enumFields))
 				{
-					$arrNewFields[$fieldName]['value'] = array();
+					$newValues = array();
 					foreach ($arrValue['value'] as $key => $value)
 					{
 						$enumXmlId = FieldEnum::getInstance()->getXmlId(FieldEnum::getInstance()->createId($value));
-						$newKey = $key;
-						if ($key === 'sel_' . $value)
-						{
-							$newKey = 'sel_' . $enumXmlId;
-						}
-						$arrNewFields[$fieldName]['value'][$newKey] = $enumXmlId;
+						if ($key === static::UF_ENUM_VALUE_PREFIX . $value)
+							$newKey = static::UF_ENUM_VALUE_PREFIX . $enumXmlId;
+						else
+							$newKey = $key;
+						$newValues[$newKey] = $enumXmlId;
 					}
+					$arrNewFields[$fieldName]['value'] = $newValues;
 				}
 			}
 		}
@@ -223,25 +224,45 @@ class SectionFilter extends BaseData
 	 * @param $fields
 	 * @return string
 	 */
-	private function convertFieldsFromXml(array $arrFields)
+	private function convertFieldsFromXml(array $arrFields, $iblockId)
 	{
 		$newArrFields = $arrFields;
-		foreach ($arrFields as $key => $arrField)
+		foreach ($arrFields as $fieldName => $arrField)
 		{
-			if(strpos($key, static::PROPERTY_FIELD_PREFIX) === 0)
+			if(strpos($fieldName, static::UF_PREFIX) === 0)
 			{
-				$xmlId = substr($key,strlen(static::PROPERTY_FIELD_PREFIX));
-				$id = Property::getInstance()->findRecord($xmlId);
-				if($id)
+				$ufName = substr($fieldName, strlen(static::UF_PREFIX));
+				if($ufName)
 				{
-					if(!is_array($arrField['value']))
+					$ufName = 'UF_'.$ufName;
+					if(Loader::includeModule('iblock'))
 					{
-						$enumId = Enum::getInstance()->findRecord($arrField['value']);
-						if($enumId)
-							$arrField['value'] = $enumId->getValue();
+						$dbRes = CUserTypeEntity::GetList(array(), array(
+							'ENTITY_ID' => 'IBLOCK_'.$iblockId.'_SECTION',
+							'FIELD_NAME' => $ufName
+						));
+						while ($ufField = $dbRes->Fetch())
+						{
+							if ($ufField['USER_TYPE_ID'] == 'enumeration' && is_array($arrField['value']))
+							{
+								//по xml_id получить id и заменить
+								$newValues = array();
+								foreach ($arrField['value'] as $key => $enumValueXmlId)
+								{
+									if($enumRecId = FieldEnum::getInstance()->findRecord($enumValueXmlId))
+									{
+										$enumValueId = $enumRecId->getValue();
+										if($key === static::UF_ENUM_VALUE_PREFIX.$enumValueXmlId)
+											$newKey = static::UF_ENUM_VALUE_PREFIX.$enumValueId;
+										else
+											$newKey = $key;
+										$newValues[$newKey] = $enumValueId;
+									}
+								}
+								$newArrFields[$fieldName]['value'] = $newValues;
+							}
+						}
 					}
-					unset($newArrFields[$key]);
-					$newArrFields[static::PROPERTY_FIELD_PREFIX.$id->getValue()] = $arrField;
 				}
 			}
 		}
@@ -253,22 +274,22 @@ class SectionFilter extends BaseData
 		$fields = $record->getFieldsRaw();
 		$xmlId = $record->getXmlId();
 		$xmlFields = explode(static::XML_ID_SEPARATOR, $xmlId);
-		if($xmlFields[1] == 'Y')
+		if($xmlFields[0] == 'Y')
 			$fields['USER_ID'] = 1;
 
 		// FILTER_ID creating
-		$iblockXmlId = $xmlFields[4];
+		$iblockXmlId = $xmlFields[3];
 		$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
 		if(Loader::includeModule('iblock'))
 		{
 			$dbres = \CIBlock::GetById($iblockId);
 			if($iblockInfo = $dbres->GetNext())
 			{
-				$fields['FILTER_ID'] = $xmlFields[0] . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
+				$fields['FILTER_ID'] = static::TABLE_NAME . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
 				$arFields = unserialize($fields['FIELDS']);
 				if($arFields)
 				{
-					$fields['FIELDS'] = $this->convertFieldsFromXml($arFields);
+					$fields['FIELDS'] = $this->convertFieldsFromXml($arFields,$iblockId);
 					$fields['SORT_FIELD'] = unserialize($fields['SORT_FIELD']);
 					//TODO add LANGUAGE_ID field
 					$id = \CAdminFilter::Add($fields);
@@ -289,22 +310,22 @@ class SectionFilter extends BaseData
 			$fields = $record->getFieldsRaw();
 			$xmlId = $record->getXmlId();
 			$xmlFields = explode(static::XML_ID_SEPARATOR, $xmlId);
-			if($xmlFields[1] == 'Y')
+			if($xmlFields[0] == 'Y')
 				$fields['USER_ID'] = 1;
 
 			// FILTER_ID creating
-			$iblockXmlId = $xmlFields[4];
+			$iblockXmlId = $xmlFields[3];
 			$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
 			if(Loader::includeModule('iblock'))
 			{
 				$dbres = \CIBlock::GetById($iblockId);
 				if($iblockInfo = $dbres->GetNext())
 				{
-					$fields['FILTER_ID'] = $xmlFields[0] . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
+					$fields['FILTER_ID'] = static::TABLE_NAME . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
 					$arFields = unserialize($fields['FIELDS']);
 					if($arFields)
 					{
-						$fields['FIELDS'] = $this->convertFieldsFromXml($arFields);
+						$fields['FIELDS'] = $this->convertFieldsFromXml($arFields, $iblockId);
 						$fields['SORT_FIELD'] = unserialize($fields['SORT_FIELD']);
 						if (\CAdminFilter::Update($filterId->getValue(), $fields))
 							return;
@@ -363,7 +384,6 @@ class SectionFilter extends BaseData
 					md5($filter['NAME']) . static::XML_ID_SEPARATOR . $iblockXmlId);
 			}
 		}
-		\Bitrix\Main\Diag\Debug::writeToFile(array($iblockId,$filter, $result),date("Y-m-d H:i:s").' '.__FILE__.':'.__LINE__,"/debug111209.txt");
 		return $result;
 	}
 
@@ -389,7 +409,7 @@ class SectionFilter extends BaseData
 					{
 						if (strpos($filter['FILTER_ID'], static::TABLE_NAME) === 0 && md5($filter['NAME']) === $name)
 						{
-							$hash = substr($filter['FILTER_ID'], strlen($fields[0]));
+							$hash = substr($filter['FILTER_ID'], strlen(static::TABLE_NAME));
 							$hash = substr($hash, 0, strlen($hash) - 7); // strlen('_filter') == 7
 							if (md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId) === $hash)
 							{
