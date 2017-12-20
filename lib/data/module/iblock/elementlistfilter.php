@@ -100,7 +100,7 @@ class ElementListFilter extends BaseData
 	public function getDependencies()
 	{
 		return array(
-			'LANGUAGE_ID' => new Link(Language::getInstance()),
+			'LANGUAGE' => new Link(Language::getInstance()),
 			'IBLOCK_ID' => new Link(MigratoIblock::getInstance()),
 			'PROPERTY_ID' => new Link(Property::getInstance()),
 			'PROPERTY_ENUM_ID' => new Link(Enum::getInstance()),
@@ -110,12 +110,11 @@ class ElementListFilter extends BaseData
 	public function setDependencies(Record $record, array $arFilter)
 	{
 		//LANGUAGE_ID
-		$languageId = $record->getFieldRaw('LANGUAGE_ID');
-		if($languageId)
+		if($arFilter['LANGUAGE_ID'])
 		{
-			$dependency = clone $this->getDependency('LANGUAGE_ID');
-			$dependency->setValue( Language::getInstance()->getXmlId( Language::getInstance()->createId($languageId) ));
-			$record->setDependency('LANGUAGE_ID', $dependency );
+			$dependency = clone $this->getDependency('LANGUAGE');
+			$dependency->setValue( Language::getInstance()->getXmlId( Language::getInstance()->createId($arFilter['LANGUAGE_ID']) ));
+			$record->setDependency('LANGUAGE', $dependency );
 		}
 		//IBLOCK_ID
 		if($arFilter['FILTER_ID'])
@@ -273,7 +272,7 @@ class ElementListFilter extends BaseData
 				{
 					$fields['FIELDS'] = $this->convertFieldsFromXml($arFields);
 					$fields['SORT_FIELD'] = unserialize($fields['SORT_FIELD']);
-					//TODO add LANGUAGE_ID field
+					$fields['LANGUAGE_ID'] = $this->getLanguageFromDependency($record);
 					$id = \CAdminFilter::Add($fields);
 					if ($id)
 						return $this->createId($id);
@@ -281,6 +280,21 @@ class ElementListFilter extends BaseData
 			}
 		}
 		throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FILTER_ADD_ERROR'));
+	}
+
+	private function getLanguageFromDependency(Record $record)
+	{
+		$link = $record->getDependency("LANGUAGE");
+		if($link)
+		{
+			$langXmlId = $link->getValue();
+			$recId = Language::getInstance()->findRecord($langXmlId);
+			if($recId)
+			{
+				return $recId->getValue();
+			}
+		}
+		return '';
 	}
 
 	public function update(Record $record)
@@ -309,6 +323,7 @@ class ElementListFilter extends BaseData
 					{
 						$fields['FIELDS'] = $this->convertFieldsFromXml($arFields);
 						$fields['SORT_FIELD'] = unserialize($fields['SORT_FIELD']);
+						$fields['LANGUAGE_ID'] = $this->getLanguageFromDependency($record);
 						if (\CAdminFilter::Update($filterId->getValue(), $fields))
 							return;
 					}
@@ -386,9 +401,9 @@ class ElementListFilter extends BaseData
 	{
 		$fields = $this->xmlIdToArray($xmlId);
 
-		$arFilter = array('COMMON' => $fields[1]);
+		$arFilter = array('COMMON' => $fields[2]);
 		if($fields[1] === 'Y')
-			$filter['USER_ID'] = 1;
+			$arFilter['USER_ID'] = 1;
 		$name = $fields[3];
 		$iblockXmlId = $fields[4];
 		if($iblockRecord =  MigratoIblock::getInstance()->findRecord($iblockXmlId))
