@@ -97,8 +97,8 @@ class SectionFilter extends BaseData
 	public function getDependencies()
 	{
 		return array(
-			'LANGUAGE_ID' => new Link(Language::getInstance()),
-			'IBLOCK_ID' => new Link(MigratoIblock::getInstance()),
+			'LANGUAGE' => new Link(Language::getInstance()),
+			'IBLOCK' => new Link(MigratoIblock::getInstance()),
 			'FIELD' => new Link(Field::getInstance()),
 			'FIELDENUM' => new Link(FieldEnum::getInstance()),
 		);
@@ -107,12 +107,11 @@ class SectionFilter extends BaseData
 	public function setDependencies(Record $record, array $arFilter)
 	{
 		//LANGUAGE_ID
-		$languageId = $record->getFieldRaw('LANGUAGE_ID');
-		if($languageId)
+		if($arFilter['LANGUAGE_ID'])
 		{
-			$dependency = clone $this->getDependency('LANGUAGE_ID');
-			$dependency->setValue( Language::getInstance()->getXmlId( Language::getInstance()->createId($languageId) ));
-			$record->setDependency('LANGUAGE_ID', $dependency );
+			$dependency = clone $this->getDependency('LANGUAGE');
+			$dependency->setValue( Language::getInstance()->getXmlId( Language::getInstance()->createId($arFilter['LANGUAGE_ID']) ));
+			$record->setDependency('LANGUAGE', $dependency );
 		}
 		//IBLOCK_ID
 		if($arFilter['FILTER_ID'])
@@ -120,9 +119,9 @@ class SectionFilter extends BaseData
 			$iblockId = $this->getIblockIdByFilterId($arFilter['FILTER_ID']);
 			if ($iblockId)
 			{
-				$dependency = clone $this->getDependency('IBLOCK_ID');
+				$dependency = clone $this->getDependency('IBLOCK');
 				$dependency->setValue(MigratoIblock::getInstance()->getXmlId(MigratoIblock::getInstance()->createId($iblockId)));
-				$record->setDependency('IBLOCK_ID', $dependency);
+				$record->setDependency('IBLOCK', $dependency);
 			}
 		}
 	}
@@ -291,7 +290,7 @@ class SectionFilter extends BaseData
 				{
 					$fields['FIELDS'] = $this->convertFieldsFromXml($arFields,$iblockId);
 					$fields['SORT_FIELD'] = unserialize($fields['SORT_FIELD']);
-					//TODO add LANGUAGE_ID field
+					$fields['LANGUAGE_ID'] = $this->getLanguageFromDependency($record);
 					$id = \CAdminFilter::Add($fields);
 					if ($id)
 						return $this->createId($id);
@@ -299,6 +298,21 @@ class SectionFilter extends BaseData
 			}
 		}
 		throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FILTER_ADD_ERROR'));
+	}
+
+	private function getLanguageFromDependency(Record $record)
+	{
+		$link = $record->getDependency("LANGUAGE");
+		if($link)
+		{
+			$langXmlId = $link->getValue();
+			$recId = Language::getInstance()->findRecord($langXmlId);
+			if($recId)
+			{
+				return $recId->getValue();
+			}
+		}
+		return '';
 	}
 
 	public function update(Record $record)
@@ -327,6 +341,7 @@ class SectionFilter extends BaseData
 					{
 						$fields['FIELDS'] = $this->convertFieldsFromXml($arFields, $iblockId);
 						$fields['SORT_FIELD'] = unserialize($fields['SORT_FIELD']);
+						$fields['LANGUAGE_ID'] = $this->getLanguageFromDependency($record);
 						if (\CAdminFilter::Update($filterId->getValue(), $fields))
 							return;
 					}
