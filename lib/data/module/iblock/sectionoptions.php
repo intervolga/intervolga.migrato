@@ -6,7 +6,6 @@ use Bitrix\Main\Localization\Loc,
 	Intervolga\Migrato\Data\Record,
 	Intervolga\Migrato\Data\Module\Iblock\Iblock as MigratoIblock,
 	Bitrix\Main\Loader;
-use CUserTypeEntity;
 
 
 Loc::loadMessages(__FILE__);
@@ -79,6 +78,7 @@ class SectionOptions extends BaseData
 	/**
 	 * @param Record $record
 	 * @param $value - VALUE field
+	 * @param $iblockId
 	 */
 	protected function addUFieldDependencies(Record $record, $value, $iblockId)
 	{
@@ -128,14 +128,13 @@ class SectionOptions extends BaseData
 	}
 
 	/**
-	 * Replace properties id to xmlId
 	 * @param $value - VALUE field
-	 * @param $propertyIds - key = column name, value = property Id
-	 * @param $propertyXmlIds - key = property Id, value = property xmlId
-	 * @return mixed - new VALUE field
+	 * @param $fieldsXmlId - array, where key - field name, value - field xml id
+	 * @return mixed
 	 */
 	private function convertValueFieldToXml($value, $fieldsXmlId)
 	{
+		$newValueField = $value;
 		$columns = explode(static::COLUMNS_DELIMITER, $value['columns']);
 		if($columns)
 		{
@@ -163,28 +162,12 @@ class SectionOptions extends BaseData
 	}
 
 	/**
-	 * @param $propsId - Iblock properties id
-	 * @return array - key = property id, value = property xmlId
-	 */
-	protected function getIblockPropertiesXmlId($propsId)
-	{
-		$properties = array();
-		foreach ($propsId as $id)
-		{
-			$idObject = Property::getInstance()->createId($id);
-			$xmlId = Property::getInstance()->getXmlId($idObject);
-			if ($xmlId)
-				$properties[$id] = $xmlId;
-		}
-		return $properties;
-	}
-
-	/**
-	 * Replace properties xmlId to Id
+	 * Replace fields xml id with field name in VALUE field.
 	 * @param $value - VALUE field
+	 * @param $iblockId
 	 * @return mixed
 	 */
-	private function convertValueFieldFromXml($value,$iblockId)
+	private function convertValueFieldFromXml($value, $iblockId)
 	{
 		if($value['columns'])
 		{
