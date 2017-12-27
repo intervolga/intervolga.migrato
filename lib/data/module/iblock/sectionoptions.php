@@ -184,41 +184,56 @@ class SectionOptions extends BaseData
 	 * @param $value - VALUE field
 	 * @return mixed
 	 */
-	private function convertValueFieldFromXml($value)
+	private function convertValueFieldFromXml($value,$iblockId)
 	{
 		if($value['columns'])
 		{
 			$columns = explode(static::COLUMNS_DELIMITER, $value['columns']);
-			$newColumns = array();
-			foreach ($columns as $column)
+			$newColumns = $columns;
+			foreach ($columns as $key => $column)
 			{
-				if(strpos($column,'PROPERTY_') === 0)
+				if(strpos($column,'UF_') === 0)
 				{
-					$propXmlId = substr($column, 9);
-					if($propXmlId)
+					$fieldXmlId = substr($column, 3); //strlen('UF_') == 3
+					if($fieldXmlId)
 					{
-						$propId = Property::getInstance()->findRecord($propXmlId);
-						if ($propId)
+
+						$fieldId = Field::getInstance()->findRecord($fieldXmlId);
+						if ($fieldId->getValue())
 						{
-							$newColumns[] = 'PROPERTY_'.$propId->getValue();
+							$dbRes = \CUserTypeEntity::GetList(array(), array(
+								'ENTITY_ID' => 'IBLOCK_'.$iblockId.'_SECTION',
+								'ID' => $fieldId->getValue()
+							));
+							if ($ufField = $dbRes->Fetch())
+							{
+								$newColumns[$key] = $ufField['FIELD_NAME'];
+							}
 						}
 					}
 				}
-				else
-					$newColumns[] = $column;
 			}
 			$value['columns'] = implode(static::COLUMNS_DELIMITER, $newColumns);
 		}
 		if($value['by'])
 		{
-			if(strpos($value['by'], 'PROPERTY_') === 0)
+			if(strpos($value['by'], 'UF_') === 0)
 			{
-				$propXmlId = substr($value['by'], 9);
-				if($propXmlId)
+				$fieldXmlId = substr($value['by'], 3); //strlen('UF_') == 3
+				if($fieldXmlId)
 				{
-					$propId = Property::getInstance()->findRecord($propXmlId);
-					if ($propId)
-						$value['by'] = 'PROPERTY_'.$propId->getValue();
+					$fieldId = Field::getInstance()->findRecord($fieldXmlId);
+					if ($fieldId)
+					{
+						$dbRes = \CUserTypeEntity::GetList(array(), array(
+							'ENTITY_ID' => 'IBLOCK_'.$iblockId.'_SECTION',
+							'ID' => $fieldId
+						));
+						if ($ufField = $dbRes->Fetch())
+						{
+							$value['by'] = $ufField['FIELD_NAME'];
+						}
+					}
 				}
 			}
 		}
@@ -328,7 +343,7 @@ class SectionOptions extends BaseData
 			{
 				$fields['NAME'] = static::NAME_PREFIX . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId );
 				if($value = unserialize($fields['VALUE']))
-					$fields['VALUE'] = $this->convertValueFieldFromXml($value);
+					$fields['VALUE'] = $this->convertValueFieldFromXml($value, $iblockId);
 				If(\CUserOptions::SetOption($fields['CATEGORY'],$fields['NAME'],$fields['VALUE'],$fields['COMMON'] === 'Y',$fields['USER_ID']))
 				{
 					$filter=array(
@@ -373,8 +388,12 @@ class SectionOptions extends BaseData
 
 		if ($fields['CATEGORY'] && $fields['NAME'])
 		{
+			$xmlId = $record->getXmlId();
+			$xmlFields = $this->xmlIdToArray($xmlId);
+			$iblockXmlId = $xmlFields['IBLOCK_XML_ID'];
+			$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
 			if($value = unserialize($fields['VALUE']));
-				$fields['VALUE'] = $this->convertValueFieldFromXml($value);
+				$fields['VALUE'] = $this->convertValueFieldFromXml($value, $iblockId);
 			$isUpdated = $options->setOption(
 				$fields['CATEGORY'],
 				$fields['NAME'],
