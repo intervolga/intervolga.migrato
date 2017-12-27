@@ -14,10 +14,11 @@ Loc::loadMessages(__FILE__);
  * Class ListOptions
  * @package Intervolga\Migrato\Data\Module\Iblock
  */
-class ListOptions extends BaseData
+class ElementListOptions extends BaseData
 {
 	const CATEGORY = 'list';
-	const NAME_PREFIX = 'tbl_iblock_element_';
+	const NAME_PREFIX = array ('L' => 'tbl_iblock_list_',
+	                           'E' => 'tbl_iblock_element_');
 	const XML_ID_SEPARATOR = '.';
 	const COLUMNS_DELIMITER = ',';
 
@@ -54,7 +55,7 @@ class ListOptions extends BaseData
 			$dbRes = \CUserOptions::getList(array(), $filter);
 			while ($uoption = $dbRes->fetch())
 			{
-				if (strpos($uoption['NAME'], static::NAME_PREFIX) === 0 && !in_array($uoption['ID'], $recordsId))
+				if ($this->getTypeByName($uoption['NAME']) && !in_array($uoption['ID'], $recordsId))
 				{
 					if ($value = unserialize($uoption['VALUE']))
 					{
@@ -72,6 +73,21 @@ class ListOptions extends BaseData
 			}
 		}
 		return $result;
+	}
+
+	/**
+	 * @param $name - NAME field
+	 * @return int|string - available types - "E"lement, "L"ist
+	 */
+	protected function getTypeByName($name)
+	{
+		$type = '';
+		foreach (static::NAME_PREFIX as $key => $tableName)
+		{
+			if(strpos($name, $tableName) === 0)
+				$type = $key;
+		}
+		return $type;
 	}
 
 	/**
@@ -230,12 +246,14 @@ class ListOptions extends BaseData
 	protected function getXmlIdByObject(array $uoption)
 	{
 		$iblockId = $this->getIblockXmlIdByName($uoption['NAME']);
+		$type = $this->getTypeByName($uoption['NAME']);
 		if($iblockId)
 		{
 			$iblockXmlId = MigratoIblock::getInstance()->getXmlId(MigratoIblock::getInstance()->createId($iblockId));
 			if ($iblockXmlId)
 			{
 				return (
+					$type . static::XML_ID_SEPARATOR .
 					($uoption["USER_ID"] == 1 ? 'Y' : 'N') . static::XML_ID_SEPARATOR .
 					$uoption["COMMON"] . static::XML_ID_SEPARATOR .
 					$iblockXmlId);
@@ -247,11 +265,12 @@ class ListOptions extends BaseData
 	protected function xmlIdToArray($xmlId)
 	{
 		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
-		if(count($fields) == 3)
+		if(count($fields) == 4)
 			return array (
-				'IS_ADMIN' => $fields[0],
-				'COMMON' => $fields[1],
-				'IBLOCK_XML_ID' => $fields[2]
+				'TYPE' => $fields[0],
+				'IS_ADMIN' => $fields[1],
+				'COMMON' => $fields[2],
+				'IBLOCK_XML_ID' => $fields[3]
 			);
 		return array();
 	}
@@ -264,12 +283,18 @@ class ListOptions extends BaseData
 	{
 		if(Loader::includeModule('iblock'))
 		{
-			$hash = substr($name, strlen(static::NAME_PREFIX));
-			$res = \CIBlock::GetList();
-			while ($iblock = $res->Fetch())
+			$type = $this->getTypeByName($name);
+			if($type)
 			{
-				if (md5($iblock['IBLOCK_TYPE_ID'] . '.' . $iblock['ID']) == $hash)
-					return $iblock['ID'];
+				$hash = substr($name, strlen(static::NAME_PREFIX[$type]));
+				$res = \CIBlock::GetList();
+				while ($iblock = $res->Fetch())
+				{
+					if (md5($iblock['IBLOCK_TYPE_ID'] . '.' . $iblock['ID']) == $hash)
+					{
+						return $iblock['ID'];
+					}
+				}
 			}
 		}
 		return '';
@@ -323,7 +348,7 @@ class ListOptions extends BaseData
 			$dbres = \CIBlock::GetById($iblockId);
 			if($iblockInfo = $dbres->GetNext())
 			{
-				$fields['NAME'] = static::NAME_PREFIX . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId );
+				$fields['NAME'] = static::NAME_PREFIX[$xmlFields['TYPE']] . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId );
 				if($value = unserialize($fields['VALUE']))
 					$fields['VALUE'] = $this->convertValueFieldFromXml($value);
 				If(\CUserOptions::SetOption($fields['CATEGORY'],$fields['NAME'],$fields['VALUE'],$fields['COMMON'] === 'Y',$fields['USER_ID']))
@@ -402,7 +427,7 @@ class ListOptions extends BaseData
 			$dbres = \CIBlock::GetById($iblockId);
 			if($iblockInfo = $dbres->GetNext())
 			{
-				$fields['NAME'] = static::NAME_PREFIX . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId );
+				$fields['NAME'] = static::NAME_PREFIX[$xmlFields['TYPE']] . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId );
 			}
 		}
 		return $fields;
@@ -428,9 +453,9 @@ class ListOptions extends BaseData
 				$dbres = \CUserOptions::getList([],$arFilter);
 				while ($uoption = $dbres->Fetch())
 				{
-					if (strpos($uoption['NAME'], static::NAME_PREFIX) === 0)
+					if ($this->getTypeByName($uoption['NAME']))
 					{
-						$hash = substr($uoption['NAME'], strlen(static::NAME_PREFIX));
+						$hash = substr($uoption['NAME'], strlen(static::NAME_PREFIX[$fields['TYPE']]));
 						if(md5($iblockInfo['IBLOCK_TYPE_ID'].'.'.$iblockId) === $hash)
 							return $this->createId($uoption['ID']);
 					}
