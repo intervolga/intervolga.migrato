@@ -101,11 +101,11 @@ class ElementListOptions extends BaseData
 		$properties = array();
 		if ($value['columns'])
 			$columns = $properties = explode(static::COLUMNS_DELIMITER, $value['columns']);
-		if($value['by'] && strpos($value['by'], 'PROPERTY_') == 0 && !in_array($value['by'],$properties))
+		if($value['by'] && strpos($value['by'], 'PROPERTY_') === 0 && !in_array($value['by'],$properties))
 			$properties[] = $value['by'];
 		if ($properties)
 			foreach ($properties as $property)
-				if (strpos($property, 'PROPERTY_') == 0)
+				if (strpos($property, 'PROPERTY_') === 0)
 				{
 					$propertyId = substr($property, 9); // strlen('PROPERTY_') == 9
 					if ($propertyId)
@@ -143,7 +143,7 @@ class ElementListOptions extends BaseData
 		{
 			foreach ($columns as $column)
 			{
-				if (strpos($column, 'PROPERTY_') == 0)
+				if (strpos($column, 'PROPERTY_') === 0)
 				{
 					if ($propertyIds[$column])
 					{
@@ -157,7 +157,7 @@ class ElementListOptions extends BaseData
 			}
 		}
 		//Convert field 'BY'
-		if($value['by'] && strpos($value['by'], 'PROPERTY_') == 0 )
+		if($value['by'] && strpos($value['by'], 'PROPERTY_') === 0 )
 		{
 			if($propertyIds[$value['by']])
 			{
