@@ -19,6 +19,11 @@ class ReIndexCommand extends BaseCommand
 	{
 		if (Loader::includeModule('search'))
 		{
+			if (!defined('BX_UTF'))
+			{
+				ini_set("mbstring.internal_encoding", "cp1251");
+			}
+
 			$count = \CSearch::ReIndexAll(true);
 			$this->logger->registerFinal(
 				Loc::getMessage(
