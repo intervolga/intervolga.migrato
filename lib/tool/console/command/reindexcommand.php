@@ -24,7 +24,32 @@ class ReIndexCommand extends BaseCommand
 				ini_set("mbstring.internal_encoding", "cp1251");
 			}
 
-			$count = \CSearch::ReIndexAll(true);
+			$result = array();
+			$startMaxExecTime = 40;
+			$maxExecTime = $startMaxExecTime;
+
+			do
+			{
+				$result = \CSearch::ReIndexAll(true, $maxExecTime, $result);
+				$maxExecTime += $startMaxExecTime;
+
+				if (is_array($result))
+				{
+					$this->logger->add(
+						Loc::getMessage(
+							'INTERVOLGA_MIGRATO.REINDEX_RESULT',
+							array(
+								'#COUNT#' => $result['CNT'],
+							)
+						),
+						Logger::LEVEL_DETAIL,
+						Logger::TYPE_INFO
+					);
+				}
+			}
+			while (is_array($result));
+			$count = $result;
+
 			$this->logger->registerFinal(
 				Loc::getMessage(
 					'INTERVOLGA_MIGRATO.REINDEX_RESULT',
