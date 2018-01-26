@@ -8,6 +8,8 @@ Loc::loadMessages(__FILE__);
 
 class ReIndexCommand extends BaseCommand
 {
+	const MAX_EXEC_TIME = 40;
+
 	protected function configure()
 	{
 		$this->setName('reindex');
@@ -25,13 +27,12 @@ class ReIndexCommand extends BaseCommand
 			}
 
 			$result = array();
-			$startMaxExecTime = 40;
-			$maxExecTime = $startMaxExecTime;
+			$maxExecTime = static::MAX_EXEC_TIME;
 
 			do
 			{
 				$result = \CSearch::ReIndexAll(true, $maxExecTime, $result);
-				$maxExecTime += $startMaxExecTime;
+				$maxExecTime += static::MAX_EXEC_TIME;
 
 				if (is_array($result))
 				{
