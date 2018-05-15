@@ -8,6 +8,8 @@ Loc::loadMessages(__FILE__);
 
 class ReIndexCommand extends BaseCommand
 {
+	const MAX_EXEC_TIME = 40;
+
 	protected function configure()
 	{
 		$this->setName('reindex');
@@ -19,7 +21,36 @@ class ReIndexCommand extends BaseCommand
 	{
 		if (Loader::includeModule('search'))
 		{
-			$count = \CSearch::ReIndexAll(true);
+			if (!defined('BX_UTF'))
+			{
+				ini_set("mbstring.internal_encoding", "cp1251");
+			}
+
+			$result = array();
+			$maxExecTime = static::MAX_EXEC_TIME;
+
+			do
+			{
+				$result = \CSearch::ReIndexAll(true, $maxExecTime, $result);
+				$maxExecTime += static::MAX_EXEC_TIME;
+
+				if (is_array($result))
+				{
+					$this->logger->add(
+						Loc::getMessage(
+							'INTERVOLGA_MIGRATO.REINDEX_RESULT',
+							array(
+								'#COUNT#' => $result['CNT'],
+							)
+						),
+						Logger::LEVEL_DETAIL,
+						Logger::TYPE_INFO
+					);
+				}
+			}
+			while (is_array($result));
+			$count = $result;
+
 			$this->logger->registerFinal(
 				Loc::getMessage(
 					'INTERVOLGA_MIGRATO.REINDEX_RESULT',
