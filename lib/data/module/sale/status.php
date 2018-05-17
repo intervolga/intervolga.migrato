@@ -16,193 +16,222 @@ use Intervolga\Migrato\Tool\ExceptionText;
 
 class Status extends BaseData
 {
-    public function getList(array $filter = array())
-    {
-        $result = array();
-        $statuses = StatusTable::getList();
+	public function getList(array $filter = array())
+	{
+		$result = array();
+		$statuses = StatusTable::getList();
 
-        while($status = $statuses->fetch())
-        {
-            $result[] = $this->arrayToRecord($status);
-        }
+		while ($status = $statuses->fetch())
+		{
+			$result[] = $this->arrayToRecord($status);
+		}
 
-        return $result;
-    }
+		return $result;
+	}
 
-    public function getXmlId($id)
-    {
-        return $id->getValue();
-    }
+	public function getXmlId($id)
+	{
+		return $id->getValue();
+	}
 
-    public function update(Record $record)
-    {
-        $recordId = $record->getId()->getValue();
-        $fields = $record->getFieldsRaw();
-        $updateFields = $this->getFieldsForCreateOrUpdate($fields);
+	public function update(Record $record)
+	{
+		$recordId = $record->getId()->getValue();
+		$fields = $record->getFieldsRaw();
+		$updateFields = $this->getFieldsForCreateOrUpdate($fields);
 
-        $updateResult = StatusTable::update($recordId, $updateFields);
-        if($updateResult->isSuccess())
-        {
-            $this->updateMessages($recordId, $fields);
-        }
-        else
-        {
-            throw new \Exception(ExceptionText::getFromResult($updateResult));
-        }
-    }
-    
-    protected function createInner(Record $record)
-    {
-        $fields = $record->getFieldsRaw();
-        $addFields = $this->getFieldsForCreateOrUpdate($fields);
+		$updateResult = StatusTable::update($recordId, $updateFields);
+		if ($updateResult->isSuccess())
+		{
+			$this->updateMessages($recordId, $fields);
+		}
+		else
+		{
+			throw new \Exception(ExceptionText::getFromResult($updateResult));
+		}
+	}
 
-        $addResult = StatusTable::add($addFields);
-        if($addResult->isSuccess())
-        {
-            $id = RecordId::createStringId($fields['ID']);
-            $this->updateMessages($id->getValue(), $fields);
-            return $id;
-        }
-        else
-        {
-            throw new \Exception(ExceptionText::getFromResult($addResult));
-        }
-    }
+	protected function createInner(Record $record)
+	{
+		$fields = $record->getFieldsRaw();
+		$addFields = $this->getFieldsForCreateOrUpdate($fields);
 
-    protected function deleteInner(RecordId $id)
-    {
-        $result = StatusTable::delete($id->getValue());
-        if($result->isSuccess())
-        {
-            $this->deleteMessages($id->getValue());
-        }
-        else
-        {
-            throw new \Exception(ExceptionText::getFromResult($result));
-        }
-    }
+		$addResult = StatusTable::add($addFields);
+		if ($addResult->isSuccess())
+		{
+			$id = RecordId::createStringId($fields['ID']);
+			$this->updateMessages($id->getValue(), $fields);
+			return $id;
+		}
+		else
+		{
+			throw new \Exception(ExceptionText::getFromResult($addResult));
+		}
+	}
 
-    protected function configure()
-    {
-        Loader::includeModule('sale');
-        $this->setEntityNameLoc(Loc::getMessage('INTERVOLGA.MIGRATO.SALE_STATUS'));
-        $this->setVirtualXmlId(true);
-        $this->setDependencies(array(
-            'LANGUAGE' => new Link(Language::getInstance()),
-        ));
-    }
+	protected function deleteInner(RecordId $id)
+	{
+		$result = StatusTable::delete($id->getValue());
+		if ($result->isSuccess())
+		{
+			$this->deleteMessages($id->getValue());
+		}
+		else
+		{
+			throw new \Exception(ExceptionText::getFromResult($result));
+		}
+	}
 
-    private function arrayToRecord($status)
-    {
-        $recordId = RecordId::createStringId($status['ID']);
-        $xmlId = $this->getXmlId($recordId);
+	protected function configure()
+	{
+		Loader::includeModule('sale');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA.MIGRATO.SALE_STATUS'));
+		$this->setVirtualXmlId(true);
+		$this->setDependencies(array(
+			'LANGUAGE' => new Link(Language::getInstance()),
+		));
+	}
 
-        $record = new Record($this);
-        $record->setId($recordId);
-        $record->setXmlId($xmlId);
-        $record->addFieldsRaw(array(
-            'ID' => $status['ID'],
-            'TYPE' => $status['TYPE'],
-            'SORT' => $status['SORT'],
-            'NOTIFY' => $status['NOTIFY']
-        ));
-        $this->addLanguageStrings($record);
+	/**
+	 * @param array $status
+	 * @return \Intervolga\Migrato\Data\Record
+	 */
+	private function arrayToRecord($status)
+	{
+		$recordId = RecordId::createStringId($status['ID']);
+		$xmlId = $this->getXmlId($recordId);
 
-        return $record;
-    }
+		$record = new Record($this);
+		$record->setId($recordId);
+		$record->setXmlId($xmlId);
+		$record->addFieldsRaw(array(
+			'ID' => $status['ID'],
+			'TYPE' => $status['TYPE'],
+			'SORT' => $status['SORT'],
+			'NOTIFY' => $status['NOTIFY'],
+		));
+		$this->addLanguageStrings($record);
 
-    private function addLanguageStrings(Record $record)
-    {
-        $strings = array();
-        $langXmlIds = array();
+		return $record;
+	}
 
-        // Build array with status language strings
-        foreach ($this->getLanguages() as $language)
-        {
-            if($statusLang = $this->getStatusLang($record->getId()->getValue(), $language))
-            {
-                foreach ($this->getLanguageFields() as $languageField)
-                {
-                    $langId = Language::getInstance()->createId($language);
-                    $langXmlIds[$language] = Language::getInstance()->getXmlId($langId);
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @throws \Exception
+	 */
+	private function addLanguageStrings(Record $record)
+	{
+		$strings = array();
+		$langXmlIds = array();
 
-                    $strings[$languageField][$language] = $statusLang[$languageField];
-                }
-            }
-        }
+		// Build array with status language strings
+		foreach ($this->getLanguages() as $language)
+		{
+			if ($statusLang = $this->getStatusLang($record->getId()->getValue(), $language))
+			{
+				foreach ($this->getLanguageFields() as $languageField)
+				{
+					$langId = Language::getInstance()->createId($language);
+					$langXmlIds[$language] = Language::getInstance()->getXmlId($langId);
 
-        // Add status language strings to record
-        foreach ($strings as $field => $langFields)
-        {
-            $statusLangs = Value::treeToList($langFields, $field);
-            $record->addFieldsRaw($statusLangs);
-        }
-    }
+					$strings[$languageField][$language] = $statusLang[$languageField];
+				}
+			}
+		}
 
-    private function getStatusLang($statusId, $langId)
-    {
-        return StatusLangTable::getList(array(
-            'filter' => array(
-                '=STATUS_ID' => $statusId,
-                '=LID' =>  $langId
-            )
-        ))->fetch();
-    }
+		// Add status language strings to record
+		foreach ($strings as $field => $langFields)
+		{
+			$statusLangs = Value::treeToList($langFields, $field);
+			$record->addFieldsRaw($statusLangs);
+		}
+	}
 
-    private function getLanguages()
-    {
-        $result = array();
-        $getList = LanguageTable::getList(array(
-            "select" => array(
-                "LID",
-            ),
-        ));
+	/**
+	 * @param string $statusId
+	 * @param string $langId
+	 * @return array|false
+	 * @throws \Bitrix\Main\ArgumentException
+	 */
+	private function getStatusLang($statusId, $langId)
+	{
+		return StatusLangTable::getList(array(
+			'filter' => array(
+				'=STATUS_ID' => $statusId,
+				'=LID' => $langId,
+			),
+		))->fetch();
+	}
 
-        while ($language = $getList->fetch())
-        {
-            $result[] = $language["LID"];
-        }
+	/**
+	 * @return string[]
+	 * @throws \Bitrix\Main\ArgumentException
+	 */
+	private function getLanguages()
+	{
+		$result = array();
+		$getList = LanguageTable::getList(array(
+			"select" => array(
+				"LID",
+			),
+		));
 
-        return $result;
-    }
+		while ($language = $getList->fetch())
+		{
+			$result[] = $language["LID"];
+		}
 
-    private function getLanguageFields()
-    {
-        return array(
-            "NAME",
-            "DESCRIPTION",
-        );
-    }
+		return $result;
+	}
 
-    public function getFieldsForCreateOrUpdate($arFields)
-    {
-        $resFields = array();
+	/**
+	 * @return string[]
+	 */
+	private function getLanguageFields()
+	{
+		return array(
+			"NAME",
+			"DESCRIPTION",
+		);
+	}
 
-        foreach ($arFields as $fieldName => $field)
-        {
-            if(!$this->isLangField($fieldName))
-            {
-                $resFields[$fieldName] = $field;
-            }
-        }
+	/**
+	 * @param array $arFields
+	 * @return array
+	 */
+	public function getFieldsForCreateOrUpdate($arFields)
+	{
+		$resFields = array();
 
-        return $resFields;
-    }
+		foreach ($arFields as $fieldName => $field)
+		{
+			if (!$this->isLangField($fieldName))
+			{
+				$resFields[$fieldName] = $field;
+			}
+		}
 
-    private function isLangField($fieldName)
-    {
-        $languages = $this->getLanguages();
-        foreach ($languages as $language)
-        {
-            $needle = '.' . $language;
-            if(mb_strpos($fieldName, $needle) !== false)
-            {
-                return true;
-            }
-        }
+		return $resFields;
+	}
 
-        return false;
-    }
+	/**
+	 * @param string $fieldName
+	 * @return bool
+	 */
+	private function isLangField($fieldName)
+	{
+		$languages = $this->getLanguages();
+		foreach ($languages as $language)
+		{
+			$needle = '.' . $language;
+			if (mb_strpos($fieldName, $needle) !== false)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
 
     private function updateMessages($statusId, $fields)
     {
@@ -252,8 +281,11 @@ class Status extends BaseData
         }
     }
 
-    private function deleteMessages($statusId)
-    {
-        StatusLangTable::deleteByStatus($statusId);
-    }
+	/**
+	 * @param string $statusId
+	 */
+	private function deleteMessages($statusId)
+	{
+		StatusLangTable::deleteByStatus($statusId);
+	}
 }

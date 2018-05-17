@@ -135,6 +135,9 @@
         <entity>
             <name>propertyvariant</name>
         </entity>
+        <entity>
+            <name>status</name>
+        </entity>
     </module>
     <module>
         <name>iblock</name>
