@@ -139,10 +139,16 @@
             <name>form</name>
         </entity>
         <entity>
-            <name>filter</name>
+            <name>elementlistfilter</name>
         </entity>
         <entity>
-            <name>listoptions</name>
+            <name>elementlistoptions</name>
+        </entity>
+        <entity>
+            <name>sectionfilter</name>
+        </entity>
+        <entity>
+            <name>sectionoptions</name>
         </entity>
     </module>
     <module>
