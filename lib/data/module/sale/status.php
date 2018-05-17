@@ -211,18 +211,43 @@ class Status extends BaseData
             $this->deleteMessages($statusId);
             foreach ($fields as $fieldFullName => $field)
             {
-                if($this->isLangField($fieldFullName))
-                {
-                    $fieldData = explode('.', $fieldFullName);
-                    $fieldName = $fieldData[0];
-                    $lid = $fieldData[1];
+                $this->updateMessage($statusId, $fieldFullName, $field);
+            }
+        }
+    }
 
-                    StatusLangTable::add(array(
+    private function updateMessage($statusId, $fieldName, $fieldValue)
+    {
+        if($this->isLangField($fieldName))
+        {
+            $fieldData = explode('.', $fieldName);
+            $fieldName = $fieldData[0];
+            $lid = $fieldData[1];
+
+            $dbResult = StatusLangTable::getByPrimary(array(
+                'STATUS_ID' => $statusId,
+                'LID' => $lid
+            ))->fetch();
+
+            if(!empty($dbResult))
+            {
+                StatusLangTable::update(
+                    array(
                         'STATUS_ID' => $statusId,
-                        'LID' => $lid,
-                        $fieldName => $field
-                    ));
-                }
+                        'LID' => $lid
+                    ),
+                    array(
+                        $fieldName => $fieldValue
+                    )
+                );
+            }
+            else
+            {
+                StatusLangTable::add(array(
+                    'STATUS_ID' => $statusId,
+                    'LID' => $lid,
+                    $fieldName => $fieldValue
+                ));
             }
         }
     }
