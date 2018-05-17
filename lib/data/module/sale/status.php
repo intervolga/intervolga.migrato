@@ -92,6 +92,10 @@ class Status extends BaseData
 		));
 	}
 
+	/**
+	 * @param array $status
+	 * @return \Intervolga\Migrato\Data\Record
+	 */
 	private function arrayToRecord($status)
 	{
 		$recordId = RecordId::createStringId($status['ID']);
@@ -111,6 +115,10 @@ class Status extends BaseData
 		return $record;
 	}
 
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @throws \Exception
+	 */
 	private function addLanguageStrings(Record $record)
 	{
 		$strings = array();
@@ -139,6 +147,12 @@ class Status extends BaseData
 		}
 	}
 
+	/**
+	 * @param string $statusId
+	 * @param string $langId
+	 * @return array|false
+	 * @throws \Bitrix\Main\ArgumentException
+	 */
 	private function getStatusLang($statusId, $langId)
 	{
 		return StatusLangTable::getList(array(
@@ -149,6 +163,10 @@ class Status extends BaseData
 		))->fetch();
 	}
 
+	/**
+	 * @return string[]
+	 * @throws \Bitrix\Main\ArgumentException
+	 */
 	private function getLanguages()
 	{
 		$result = array();
@@ -166,6 +184,9 @@ class Status extends BaseData
 		return $result;
 	}
 
+	/**
+	 * @return string[]
+	 */
 	private function getLanguageFields()
 	{
 		return array(
@@ -174,6 +195,10 @@ class Status extends BaseData
 		);
 	}
 
+	/**
+	 * @param array $arFields
+	 * @return array
+	 */
 	public function getFieldsForCreateOrUpdate($arFields)
 	{
 		$resFields = array();
@@ -189,6 +214,10 @@ class Status extends BaseData
 		return $resFields;
 	}
 
+	/**
+	 * @param string $fieldName
+	 * @return bool
+	 */
 	private function isLangField($fieldName)
 	{
 		$languages = $this->getLanguages();
@@ -204,6 +233,11 @@ class Status extends BaseData
 		return false;
 	}
 
+	/**
+	 * @param string $statusId
+	 * @param array $fields
+	 * @throws \Exception
+	 */
 	private function updateMessages($statusId, $fields)
 	{
 		if (!empty($statusId))
@@ -227,6 +261,9 @@ class Status extends BaseData
 		}
 	}
 
+	/**
+	 * @param string $statusId
+	 */
 	private function deleteMessages($statusId)
 	{
 		StatusLangTable::deleteByStatus($statusId);
