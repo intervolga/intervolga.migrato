@@ -233,6 +233,10 @@ class Status extends BaseData
 		return false;
 	}
 
+    /**
+     * @param $statusId
+     * @param $fields
+     */
     private function updateMessages($statusId, $fields)
     {
         if(!empty($statusId))
@@ -245,6 +249,11 @@ class Status extends BaseData
         }
     }
 
+    /**
+     * @param $statusId
+     * @param $fieldName
+     * @param $fieldValue
+     */
     private function updateMessage($statusId, $fieldName, $fieldValue)
     {
         if($this->isLangField($fieldName))
