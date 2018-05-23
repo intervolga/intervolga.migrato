@@ -1,0 +1,3 @@
+<?
+$MESS['INTERVOLGA_MIGRATO.FORM_ANSWER_TYPE'] = 'Ответы полей веб-форм';
+$MESS['INTERVOLGA_MIGRATO.FORM_ANSWER_UNKNOWN_ERROR'] = 'Неизвестная ошибка';
