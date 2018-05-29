@@ -84,7 +84,8 @@ class Answer extends BaseData
         } else {
             $message = 'null';
         }
-        $xmlid = $answer["FIELD_ID"] . $this::XML_DELIMITER . $message;
+        $field = \CFormField::GetByID($answer["FIELD_ID"])->Fetch();
+        $xmlid = $field["SID"] . $this::XML_DELIMITER . $message;
 
         return $xmlid;
     }
