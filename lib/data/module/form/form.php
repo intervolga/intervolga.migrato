@@ -71,6 +71,7 @@ class Form extends BaseData
         $id = $record->getId()->getValue();
         $result = \CForm::Set($data, $id);
         global $strError;
+        $strError='';
         if (!$result) {
             if ($strError) {
                 throw new \Exception($strError);
@@ -115,6 +116,7 @@ class Form extends BaseData
         $data = $this->recordToArray($record);
         $result = \CForm::Set($data, "");
         global $strError;
+        $strError='';
         if ($result) {
             return $this->createId($result);
         } else {
@@ -131,5 +133,3 @@ class Form extends BaseData
         \CForm::Delete($id->getValue());
     }
 }
-
-?>
