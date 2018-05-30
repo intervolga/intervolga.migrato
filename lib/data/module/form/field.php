@@ -94,7 +94,8 @@ class Field extends BaseData
 			if ($strError)
 			{
 				throw new \Exception($strError);
-			} else
+			}
+			else
 			{
 				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.FORM_FIELD_UNKNOWN_ERROR'));
 			}
@@ -146,12 +147,14 @@ class Field extends BaseData
 		if ($result)
 		{
 			return $this->createId($result);
-		} else
+		}
+		else
 		{
 			if ($strError)
 			{
 				throw new \Exception($strError);
-			} else
+			}
+			else
 			{
 				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.FORM_FIELD_UNKNOWN_ERROR'));
 			}

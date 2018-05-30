@@ -85,7 +85,8 @@ class Answer extends BaseData
 		if ($message != '')
 		{
 			$message = md5($message);
-		} else
+		}
+		else
 		{
 			$message = 'null';
 		}
@@ -108,7 +109,8 @@ class Answer extends BaseData
 			if ($strError)
 			{
 				throw new \Exception($strError);
-			} else
+			}
+			else
 			{
 				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.FORM_ANSWER_UNKNOWN_ERROR'));
 			}
@@ -150,12 +152,14 @@ class Answer extends BaseData
 		if ($result)
 		{
 			return $this->createId($result);
-		} else
+		}
+		else
 		{
 			if ($strError)
 			{
 				throw new \Exception($strError);
-			} else
+			}
+			else
 			{
 				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.FORM_ANSWER_UNKNOWN_ERROR'));
 			}
