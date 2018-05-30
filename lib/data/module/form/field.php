@@ -86,9 +86,9 @@ class Field extends BaseData
 	{
 		$data = $this->recordToArray($record);
 		$id = $record->getId()->getValue();
-		$result = \CFormField::Set($data, $id);
 		global $strError;
 		$strError = '';
+		$result = \CFormField::Set($data, $id);
 		if (!$result)
 		{
 			if ($strError)
@@ -140,9 +140,9 @@ class Field extends BaseData
 	protected function createInner(Record $record)
 	{
 		$data = $this->recordToArray($record);
-		$result = \CFormField::Set($data, "");
 		global $strError;
 		$strError = '';
+		$result = \CFormField::Set($data, "");
 		if ($result)
 		{
 			return $this->createId($result);

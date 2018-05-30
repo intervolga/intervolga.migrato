@@ -69,9 +69,9 @@ class Form extends BaseData
     {
         $data = $this->recordToArray($record);
         $id = $record->getId()->getValue();
-        $result = \CForm::Set($data, $id);
         global $strError;
         $strError='';
+        $result = \CForm::Set($data, $id);
         if (!$result) {
             if ($strError) {
                 throw new \Exception($strError);
@@ -114,9 +114,9 @@ class Form extends BaseData
     protected function createInner(Record $record)
     {
         $data = $this->recordToArray($record);
-        $result = \CForm::Set($data, "");
         global $strError;
         $strError='';
+        $result = \CForm::Set($data, "");
         if ($result) {
             return $this->createId($result);
         } else {

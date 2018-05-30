@@ -100,9 +100,9 @@ class Answer extends BaseData
 	{
 		$data = $this->recordToArray($record);
 		$id = $record->getId()->getValue();
-		$result = \CFormAnswer::Set($data, $id);
 		global $strError;
 		$strError = '';
+		$result = \CFormAnswer::Set($data, $id);
 		if (!$result)
 		{
 			if ($strError)
@@ -144,9 +144,9 @@ class Answer extends BaseData
 	protected function createInner(Record $record)
 	{
 		$data = $this->recordToArray($record);
-		$result = \CFormAnswer::Set($data, "");
 		global $strError;
 		$strError = '';
+		$result = \CFormAnswer::Set($data, "");
 		if ($result)
 		{
 			return $this->createId($result);
