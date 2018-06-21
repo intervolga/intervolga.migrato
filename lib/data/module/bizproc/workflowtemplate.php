@@ -40,7 +40,23 @@ class WorkflowTemplate extends BaseData
 			$record->setXmlId($this->getXmlId($id));
 			$record->setId($id);
 			$record->addFieldsRaw(array(
-				"TEMPLATE" => serialize($arTemplate)
+				"TEMPLATE" => serialize($arTemplate),
+				"MODULE_ID" => $arTemplate["MODULE_ID"],
+				"ENTITY" => $arTemplate["ENTITY"],
+				"DOCUMENT_TYPE_0" => $arTemplate["DOCUMENT_TYPE"][0],
+				"DOCUMENT_TYPE_1" => $arTemplate["DOCUMENT_TYPE"][1],
+				"DOCUMENT_TYPE_2" => $arTemplate["DOCUMENT_TYPE"][2],
+				"AUTO_EXECUTE" => $arTemplate["AUTO_EXECUTE"],
+				"NAME" => $arTemplate["NAME"],
+				"DESCRIPTION" => $arTemplate["DESCRIPTION"],
+				"TEMPLATE" => serialize($arTemplate["TEMPLATE"]),
+				"PARAMETERS" => serialize($arTemplate["PARAMETERS"]),
+				"VARIABLES" => serialize($arTemplate["VARIABLES"]),
+				"CONSTANTS" => serialize($arTemplate["CONSTANTS"]),
+				"MODIFIED" => $arTemplate["MODIFIED"],
+				"USER_ID" => $arTemplate["USER_ID"],
+				"ACTIVE" => $arTemplate["ACTIVE"],
+				"IS_MODIFIED" => $arTemplate["IS_MODIFIED"]
 			));
 			$result[] = $record;
 		}
