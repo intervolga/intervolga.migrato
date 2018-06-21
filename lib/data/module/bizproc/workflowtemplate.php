@@ -2,8 +2,10 @@
 
 namespace Intervolga\Migrato\Data\Module\BizProc;
 
+use Bitrix\Main\Loader;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
+use Intervolga\Migrato\Data\Module\Iblock\Iblock as IblockIblock;
 
 
 class WorkflowTemplate extends BaseData
@@ -23,6 +25,7 @@ class WorkflowTemplate extends BaseData
 	 */
 	public function getList(array $filter = array())
 	{
+		//Проверка
 	}
 
 }
