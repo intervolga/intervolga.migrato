@@ -120,6 +120,9 @@
         <entity>
             <name>rounding</name>
         </entity>
+        <entity>
+            <name>measure</name>
+        </entity>
     </module>
     <module>
         <name>sale</name>

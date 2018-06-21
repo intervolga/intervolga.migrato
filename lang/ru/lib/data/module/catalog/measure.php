@@ -1,0 +1,3 @@
+<?
+$MESS['INTERVOLGA_MIGRATO.CATALOG_MEASURE'] = 'Единицы измерения';
+$MESS['INTERVOLGA_MIGRATO.MEASURE_UNKNOWN_ERROR'] = 'Неизвестная ошибка';
