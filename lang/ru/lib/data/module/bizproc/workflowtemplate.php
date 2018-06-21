@@ -1,2 +1,2 @@
 <?php
-$MESS['INTERVOLGA_MIGRATO.BIXPROC_WORKFLOWTEMPLATE'] = 'Шаблоны Бизнес-процессов';
+$MESS['INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE'] = 'Шаблоны Бизнес-процессов';
