@@ -32,13 +32,12 @@ class WorkflowTemplate extends BaseData
      */
     public function getList(array $filter = array())
     {
-
         $result = array();
         $dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array());
         while ($arTemplate = $dbTemplatesList->Fetch()) {
             $record = new \Intervolga\Migrato\Data\Record($this);
             $id = $this->createId($arTemplate["ID"]);
-            $record->setXmlId($this->getXmlId($id));
+            $record->setXmlId($this->getXmlId($id, $arTemplate));
             $record->setId($id);
             $record->addFieldsRaw(array(
                 "MODULE_ID" => $arTemplate["MODULE_ID"],
@@ -66,28 +65,27 @@ class WorkflowTemplate extends BaseData
 
     /**
      * @param RecordId $id
+	 * @param mixed[]|boolean $arTemplate
      * @return string
      */
-    public function getXmlId($id)
+    public function getXmlId($id, $arTemplate = false)
     {
-
-        $dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array("ID" => $id->getValue()));
-        if ($arTemplate = $dbTemplatesList->Fetch()) {
+    	if (!$arTemplate) {
+			$dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array("ID" => $id->getValue()));
+			$arTemplate = $dbTemplatesList->Fetch();
+		}
+		if ($arTemplate) {
             $md5 = md5(serialize(array(
                 $arTemplate["MODULE_ID"],
                 $arTemplate["ENTITY"],
                 $arTemplate["NAME"],
-                $arTemplate["DESCRIPTION"],
                 $arTemplate["DOCUMENT_TYPE"][2],
             )));
-        };
+			return BaseXmlIdProvider::formatXmlId($md5);
+        } else {
+			throw new \Exception("Не могу получить шаблон-бизнес процесса с ID: $id");
+		}
 
-        return BaseXmlIdProvider::formatXmlId($md5);
-    }
-
-    public function setXmlId($id, $xmlId)
-    {
-        //        \CFormField::Set(array('SID' => $xmlId), $id->getValue());
     }
 
     /**
@@ -138,5 +136,6 @@ class WorkflowTemplate extends BaseData
         //        {
         //            throw new \Exception(ExceptionText::getFromApplication());
         //        }
+		print_r($record);
     }
 }
