@@ -9,6 +9,7 @@ use Intervolga\Migrato\Data\Module\Iblock\Iblock as IblockIblock;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -32,6 +33,7 @@ class WorkflowTemplate extends BaseData
      */
     public function getList(array $filter = array())
     {
+
         $result = array();
         $dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array());
         while ($arTemplate = $dbTemplatesList->Fetch()) {
@@ -65,27 +67,28 @@ class WorkflowTemplate extends BaseData
 
     /**
      * @param RecordId $id
-	 * @param mixed[]|boolean $arTemplate
+     * @param mixed[]|boolean $arTemplate
      * @return string
      */
     public function getXmlId($id, $arTemplate = false)
     {
-    	if (!$arTemplate) {
-			$dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array("ID" => $id->getValue()));
-			$arTemplate = $dbTemplatesList->Fetch();
-		}
-		if ($arTemplate) {
+
+        if (!$arTemplate) {
+            $dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array("ID" => $id->getValue()));
+            $arTemplate = $dbTemplatesList->Fetch();
+        }
+        if ($arTemplate) {
             $md5 = md5(serialize(array(
                 $arTemplate["MODULE_ID"],
                 $arTemplate["ENTITY"],
                 $arTemplate["NAME"],
                 $arTemplate["DOCUMENT_TYPE"][2],
             )));
-			return BaseXmlIdProvider::formatXmlId($md5);
-        } else {
-			throw new \Exception("Не могу получить шаблон-бизнес процесса с ID: $id");
-		}
 
+            return BaseXmlIdProvider::formatXmlId($md5);
+        }else {
+            throw new \Exception("Не могу получить шаблон-бизнес процесса с ID: $id");
+        }
     }
 
     /**
@@ -96,17 +99,22 @@ class WorkflowTemplate extends BaseData
     protected function createInner(Record $record)
     {
 
-        //        $fields = $this->recordToArray($record);
-        //        $result = CatalogIblockTable::add($fields);
-        //        if ($result->isSuccess())
-        //        {
-        //            $id = $this->createId($result->getData()['IBLOCK_ID']);
-        //            return $id;
-        //        }
-        //        else
-        //        {
-        //            throw new \Exception(ExceptionText::getFromApplication());
-        //        }
+        $arTemplate = $this->recordToArray($record);
+        $arTemplate['DOCUMENT_TYPE'] = array(
+            $arTemplate['DOCUMENT_TYPE_0'],
+            $arTemplate['DOCUMENT_TYPE_1'],
+            $arTemplate['DOCUMENT_TYPE_2']
+        );
+        unset($arTemplate['DOCUMENT_TYPE_0']);
+        unset($arTemplate['DOCUMENT_TYPE_1']);
+        unset($arTemplate['DOCUMENT_TYPE_2']);
+        $loader = \CBPWorkflowTemplateLoader::GetLoader();
+        $returnId = $loader->AddTemplate($arTemplate, true);
+        if (!$returnId) {
+            throw new \Exception(ExceptionText::getLastError());
+        }
+
+        return $this->createId($returnId);
     }
 
     /**
@@ -116,11 +124,8 @@ class WorkflowTemplate extends BaseData
     protected function deleteInner(RecordId $id)
     {
 
-        //        $result = CatalogIblockTable::delete($id->getValue());
-        //        if (!$result->isSuccess())
-        //        {
-        //            throw new \Exception(ExceptionText::getFromApplication());
-        //        }
+        $loader = \CBPWorkflowTemplateLoader::GetLoader();
+        $loader->DeleteTemplate($id->getValue());
     }
 
     /**
@@ -130,12 +135,24 @@ class WorkflowTemplate extends BaseData
     public function update(Record $record)
     {
 
-        //        $fields = $this->recordToArray($record);
-        //        $result = CatalogIblockTable::update($record->getId()->getValue(), $fields);
-        //        if (!$result->isSuccess())
-        //        {
-        //            throw new \Exception(ExceptionText::getFromApplication());
-        //        }
-		print_r($record);
+        $id = $record->getId()->getValue();
+        $arTemplate = $this->recordToArray($record);
+        $loader = \CBPWorkflowTemplateLoader::GetLoader();
+        $returnId = $loader->UpdateTemplate($id, $arTemplate, true);
+        if (!$returnId) {
+            throw new \Exception(ExceptionText::getLastError());
+        }
+    }
+
+    protected function recordToArray(Record $record)
+    {
+
+        $arTemplate = $record->getFieldsRaw();
+        $arTemplate["TEMPLATE"] = unserialize($arTemplate["TEMPLATE"]);
+        $arTemplate["PARAMETERS"] = unserialize($arTemplate["PARAMETERS"]);
+        $arTemplate["VARIABLES"] = unserialize($arTemplate["VARIABLES"]);
+        $arTemplate["CONSTANTS"] = unserialize($arTemplate["CONSTANTS"]);
+
+        return $arTemplate;
     }
 }
