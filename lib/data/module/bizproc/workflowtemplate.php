@@ -53,10 +53,7 @@ class WorkflowTemplate extends BaseData
                 "PARAMETERS" => serialize($arTemplate["PARAMETERS"]),
                 "VARIABLES" => serialize($arTemplate["VARIABLES"]),
                 "CONSTANTS" => serialize($arTemplate["CONSTANTS"]),
-                "MODIFIED" => $arTemplate["MODIFIED"],
-                //"USER_ID" => $arTemplate["USER_ID"],
-                "ACTIVE" => $arTemplate["ACTIVE"],
-                "IS_MODIFIED" => $arTemplate["IS_MODIFIED"]
+                "ACTIVE" => $arTemplate["ACTIVE"]
             ));
             $result[] = $record;
         }
