@@ -61,7 +61,7 @@ class WorkflowTemplate extends BaseData
             $arTemplate["TEMPLATE"] = $this->convertNode($arTemplate["TEMPLATE"], $arDependency);
             if (!empty($arDependency['GROUP'])) {
                 $dependency = clone $this->getDependency('GROUP_IDS');
-                $dependency->setValues($arDependency['GROUP']);
+                $dependency->setValues(array_unique($arDependency['GROUP']));
                 $record->setDependency('GROUP_IDS', $dependency);
             }
 
@@ -89,7 +89,7 @@ class WorkflowTemplate extends BaseData
      * @param string[][] &$arDependency
      * @return mixed[]
     */
-    private function convertNode($arNode, &$arDependency) {
+    private function convertNode($arNode, &$arDependency = array()) {
         $arResult = array();
         foreach ($arNode as $key => $value) {
             if ($key === 'Permission')
@@ -112,9 +112,18 @@ class WorkflowTemplate extends BaseData
         foreach ($arNode as $permission => $arRoles) {
             $arResult[$permission] = array();
             foreach($arRoles as $role)
-                if (is_numeric($role)) {
+                if ($id = $this->xmlIdToString($role)) {
+                    $arResult[$permission][] = (string) $id;
+                } elseif ($xmlId = $this->stringToXmlId($role)) {
+                    if (!$this->xmlIdToString('USERS_GROUP_G_' . $xmlId))
+                        throw new \Exception("Некорректные символы в  XML_ID групп пользователей: $xmlId");
+                    $arResult[$permission][] = 'USERS_GROUP_G_' . $xmlId;
+                    $arDependency['GROUP'][] = $xmlId;
+                } elseif (is_numeric($role)) {
                     $groupIdObject = RecordId::createNumericId(intval($role));
                     $xmlId = MainGroup::getInstance()->getXmlId($groupIdObject);
+                    if (!$this->xmlIdToString('USERS_GROUP_' . $xmlId))
+                        throw new \Exception("Некорректные символы в  XML_ID групп пользователей: $xmlId");
                     $arResult[$permission][] = 'USERS_GROUP_' . $xmlId;
                     $arDependency['GROUP'][] = $xmlId;
                 } else
@@ -122,7 +131,6 @@ class WorkflowTemplate extends BaseData
         }
         return $arResult;
     }
-
 
     /**
      * @param string $field
@@ -133,7 +141,7 @@ class WorkflowTemplate extends BaseData
             $iblockIdObject = RecordId::createNumericId($matches[1]);
             return IblockIblock::getInstance()->getXmlId($iblockIdObject);
         }
-        if (preg_match('/^group_(\d+)$/', $field, $matches)) {
+        if (preg_match('/^group_g(\d+)$/', $field, $matches)) {
             $groupIdObject = RecordId::createNumericId($matches[1]);
             return MainGroup::getInstance()->getXmlId($groupIdObject);
         }
@@ -147,6 +155,14 @@ class WorkflowTemplate extends BaseData
         if (preg_match('/^ibl-ibl-[-\da-f]+$/', $xmlId)) {
             $iblockLinkId = IblockIblock::getInstance()->findRecord($xmlId);
             return 'iblock_' . $iblockLinkId->getValue();
+        }
+        if (preg_match('/^USERS_GROUP_([a-zA-Z0-9\-]+)$/', $xmlId, $matches)) {
+            $groupLinkId = MainGroup::getInstance()->findRecord($matches[1]);
+            return $groupLinkId->getValue();
+        }
+        if (preg_match('/^USERS_GROUP_G_([a-zA-Z0-9\-]+)$/', $xmlId, $matches)) {
+            $groupLinkId = MainGroup::getInstance()->findRecord($matches[1]);
+            return 'group_g' . $groupLinkId->getValue();
         }
     }
 
@@ -235,6 +251,7 @@ class WorkflowTemplate extends BaseData
         unset($arTemplate['DOCUMENT_TYPE_0']);
         unset($arTemplate['DOCUMENT_TYPE_1']);
         unset($arTemplate['DOCUMENT_TYPE_2']);
+        $arTemplate["TEMPLATE"] = $this->convertNode($arTemplate["TEMPLATE"]);
         return $arTemplate;
     }
 }
