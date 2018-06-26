@@ -79,6 +79,10 @@ class WorkflowTemplate extends BaseData
             $iblockIdObject = RecordId::createNumericId($matches[1]);
             return IblockIblock::getInstance()->getXmlId($iblockIdObject);
         }
+        if (preg_match('/^group_(\d+)$/', $field, $matches)) {
+            $groupIdObject = RecordId::createNumericId($matches[1]);
+            return MainGroup::getInstance()->getXmlId($groupIdObject);
+        }
     }
 
     /**
@@ -86,7 +90,7 @@ class WorkflowTemplate extends BaseData
      * @return string
      */
     private function xmlIdToString($xmlId) {
-        if (preg_match('/^ibl-ibl-[-\da-g]+$/', $xmlId)) {
+        if (preg_match('/^ibl-ibl-[-\da-f]+$/', $xmlId)) {
             $iblockLinkId = IblockIblock::getInstance()->findRecord($xmlId);
             return 'iblock_' . $iblockLinkId->getValue();
         }
