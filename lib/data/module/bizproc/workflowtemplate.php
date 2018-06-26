@@ -105,7 +105,7 @@ class WorkflowTemplate extends BaseData
             $arTemplate["NAME"],
             $this->turnStringToXmlId($arTemplate["DOCUMENT_TYPE"][2]),
         )));
-        return BaseXmlIdProvider::formatXmlId($md5);
+        return 'bzp-wft-' . BaseXmlIdProvider::formatXmlId($md5);
     }
 
 
