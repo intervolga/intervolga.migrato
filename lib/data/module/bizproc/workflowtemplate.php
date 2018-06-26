@@ -44,20 +44,27 @@ class WorkflowTemplate extends BaseData
             $id = $this->createId($arTemplate["ID"]);
             $record->setXmlId($this->calculateXmlId($arTemplate));
             $record->setId($id);
+
+            // зависимость от iblock
             if ($documentType2XmlId = $this->stringToXmlId($arTemplate["DOCUMENT_TYPE"][2])) {
                 $dependency = clone $this->getDependency("IBLOCK_LINK");
                 $dependency->setValue($documentType2XmlId);
                 $record->setDependency("IBLOCK_LINK", $dependency);
             } else
                 throw new \Exception("{$arTemplate["DOCUMENT_TYPE"][2]} не конвертируется в XML_ID");
+
+            // зависимости от групп пользователей
             $arDependency = array(
                 "IBLOCK" => array(),
                 "GROUP" => array(),
             );
             $arTemplate["TEMPLATE"] = $this->convertNode($arTemplate["TEMPLATE"], $arDependency);
-            if (!empty($arDependency)) {
-                print_r($arDependency);
+            if (!empty($arDependency['GROUP'])) {
+                $dependency = clone $this->getDependency('GROUP_IDS');
+                $dependency->setValues($arDependency['GROUP']);
+                $record->setDependency('GROUP_IDS', $dependency);
             }
+
             $record->addFieldsRaw(array(
                 "MODULE_ID" => $arTemplate["MODULE_ID"],
                 "ENTITY" => $arTemplate["ENTITY"],
@@ -85,10 +92,10 @@ class WorkflowTemplate extends BaseData
     private function convertNode($arNode, &$arDependency) {
         $arResult = array();
         foreach ($arNode as $key => $value) {
-            if ($key == 'Children')
-                $arResult[$key] = $this->convertNode($value, $arDependency);
-            elseif ($key == 'Permission')
+            if ($key === 'Permission')
                 $arResult[$key] =  $this->convertPermissionNode($value, $arDependency);
+            elseif (is_array($value))
+                $arResult[$key] = $this->convertNode($value, $arDependency);
             else
                 $arResult[$key] = $value;
         }
@@ -108,11 +115,12 @@ class WorkflowTemplate extends BaseData
                 if (is_numeric($role)) {
                     $groupIdObject = RecordId::createNumericId(intval($role));
                     $xmlId = MainGroup::getInstance()->getXmlId($groupIdObject);
-                    $arResult[$permission][] = $xmlId;
+                    $arResult[$permission][] = 'USERS_GROUP_' . $xmlId;
                     $arDependency['GROUP'][] = $xmlId;
                 } else
                     $arResult[$permission][] = $role;
         }
+        return $arResult;
     }
 
 
