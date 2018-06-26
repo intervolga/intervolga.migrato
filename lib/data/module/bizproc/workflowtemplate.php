@@ -44,13 +44,18 @@ class WorkflowTemplate extends BaseData
             $id = $this->createId($arTemplate["ID"]);
             $record->setXmlId($this->calculateXmlId($arTemplate));
             $record->setId($id);
-            $arDocumentType2XmlId = $this->turnStringToXmlId($arTemplate["DOCUMENT_TYPE"][2]);
+            if ($documentType2XmlId = $this->stringToXmlId($arTemplate["DOCUMENT_TYPE"][2])) {
+                $dependency = clone $this->getDependency("IBLOCK_LINK");
+                $dependency->setValue($documentType2XmlId);
+                $record->setDependency("IBLOCK_LINK", $dependency);
+            } else
+                throw new \Exception("{$arTemplate["DOCUMENT_TYPE"][2]} не конвертируется в XML_ID");
             $record->addFieldsRaw(array(
                 "MODULE_ID" => $arTemplate["MODULE_ID"],
                 "ENTITY" => $arTemplate["ENTITY"],
                 "DOCUMENT_TYPE_0" => $arTemplate["DOCUMENT_TYPE"][0],
                 "DOCUMENT_TYPE_1" => $arTemplate["DOCUMENT_TYPE"][1],
-                "DOCUMENT_TYPE_2" => $arDocumentType2XmlId,
+                "DOCUMENT_TYPE_2" => $documentType2XmlId,
                 "AUTO_EXECUTE" => $arTemplate["AUTO_EXECUTE"],
                 "NAME" => $arTemplate["NAME"],
                 "DESCRIPTION" => $arTemplate["DESCRIPTION"],
@@ -60,9 +65,6 @@ class WorkflowTemplate extends BaseData
                 "CONSTANTS" => serialize($arTemplate["CONSTANTS"]),
                 "ACTIVE" => $arTemplate["ACTIVE"]
             ));
-            $dependency = clone $this->getDependency("IBLOCK_LINK");
-            $dependency->setValue($arDocumentType2XmlId);
-            $record->setDependency("IBLOCK_LINK", $dependency);
             $result[] = $record;
         }
         return $result;
@@ -70,14 +72,26 @@ class WorkflowTemplate extends BaseData
 
     /**
      * @param string $field
-     * @return string[]
+     * @return string
      */
-    private function turnStringToXmlId($field) {
+    private function stringToXmlId($field) {
         if (preg_match('/^iblock_(\d+)$/', $field, $matches)) {
             $iblockIdObject = RecordId::createNumericId($matches[1]);
             return IblockIblock::getInstance()->getXmlId($iblockIdObject);
         }
     }
+
+    /**
+     * @param string $xmlId
+     * @return string
+     */
+    private function xmlIdToString($xmlId) {
+        if (preg_match('/^ibl-ibl-[-\da-g]+$/', $xmlId)) {
+            $iblockLinkId = IblockIblock::getInstance()->findRecord($xmlId);
+            return 'iblock_' . $iblockLinkId->getValue();
+        }
+    }
+
 
     /**
      * @param RecordId $id
@@ -88,9 +102,8 @@ class WorkflowTemplate extends BaseData
         $dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array("ID" => $id->getValue()));
         if ($arTemplate = $dbTemplatesList->Fetch()) {
             return $this->calculateXmlId($arTemplate);
-        } else {
+        } else
             throw new \Exception("Не могу получить шаблон-бизнес процесса с ID: $id");
-        }
     }
 
     /**
@@ -103,11 +116,10 @@ class WorkflowTemplate extends BaseData
             $arTemplate["MODULE_ID"],
             $arTemplate["ENTITY"],
             $arTemplate["NAME"],
-            $this->turnStringToXmlId($arTemplate["DOCUMENT_TYPE"][2]),
+            $this->stringToXmlId($arTemplate["DOCUMENT_TYPE"][2]),
         )));
         return 'bzp-wft-' . BaseXmlIdProvider::formatXmlId($md5);
     }
-
 
     /**
      * @param Record $record
@@ -116,22 +128,12 @@ class WorkflowTemplate extends BaseData
      */
     protected function createInner(Record $record)
     {
-
         $arTemplate = $this->recordToArray($record);
-        $arTemplate['DOCUMENT_TYPE'] = array(
-            $arTemplate['DOCUMENT_TYPE_0'],
-            $arTemplate['DOCUMENT_TYPE_1'],
-            $arTemplate['DOCUMENT_TYPE_2']
-        );
-        unset($arTemplate['DOCUMENT_TYPE_0']);
-        unset($arTemplate['DOCUMENT_TYPE_1']);
-        unset($arTemplate['DOCUMENT_TYPE_2']);
         $loader = \CBPWorkflowTemplateLoader::GetLoader();
         $returnId = $loader->AddTemplate($arTemplate, true);
         if (!$returnId) {
             throw new \Exception(ExceptionText::getLastError());
         }
-
         return $this->createId($returnId);
     }
 
@@ -160,13 +162,21 @@ class WorkflowTemplate extends BaseData
         }
     }
 
-    protected function recordToArray(Record $record)
+    private function recordToArray(Record $record)
     {
         $arTemplate = $record->getFieldsRaw();
         $arTemplate["TEMPLATE"] = unserialize($arTemplate["TEMPLATE"]);
         $arTemplate["PARAMETERS"] = unserialize($arTemplate["PARAMETERS"]);
         $arTemplate["VARIABLES"] = unserialize($arTemplate["VARIABLES"]);
         $arTemplate["CONSTANTS"] = unserialize($arTemplate["CONSTANTS"]);
+        $arTemplate['DOCUMENT_TYPE'] = array(
+            $arTemplate['DOCUMENT_TYPE_0'],
+            $arTemplate['DOCUMENT_TYPE_1'],
+            $this->xmlIdToString($arTemplate['DOCUMENT_TYPE_2'])
+        );
+        unset($arTemplate['DOCUMENT_TYPE_0']);
+        unset($arTemplate['DOCUMENT_TYPE_1']);
+        unset($arTemplate['DOCUMENT_TYPE_2']);
         return $arTemplate;
     }
 }
