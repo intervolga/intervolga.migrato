@@ -1,4 +1,5 @@
 <?php
+
 namespace Intervolga\Migrato\Data\Module\BizProc;
 
 use Bitrix\Main\Loader;
@@ -6,6 +7,7 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Module\Iblock\Iblock as IblockIblock;
+use Intervolga\Migrato\Data\Module\Main\Group as MainGroup;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
@@ -22,7 +24,9 @@ class WorkflowTemplate extends BaseData
         Loader::includeModule('bizproc');
         $this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE'));
         $this->setDependencies(array(
-            'IBLOCK_ID' => new Link(IblockIblock::getInstance()),
+            'IBLOCK_LINK' => new Link(IblockIblock::getInstance()),
+            'IBLOCK_IDS' => new Link(IblockIblock::getInstance()),
+            'GROUP_IDS' => new Link(MainGroup::getInstance()),
         ));
         $this->setVirtualXmlId(true);
     }
@@ -40,12 +44,13 @@ class WorkflowTemplate extends BaseData
             $id = $this->createId($arTemplate["ID"]);
             $record->setXmlId($this->calculateXmlId($arTemplate));
             $record->setId($id);
+            $arDocumentType2XmlId = $this->turnStringToXmlId($arTemplate["DOCUMENT_TYPE"][2]);
             $record->addFieldsRaw(array(
                 "MODULE_ID" => $arTemplate["MODULE_ID"],
                 "ENTITY" => $arTemplate["ENTITY"],
                 "DOCUMENT_TYPE_0" => $arTemplate["DOCUMENT_TYPE"][0],
                 "DOCUMENT_TYPE_1" => $arTemplate["DOCUMENT_TYPE"][1],
-                "DOCUMENT_TYPE_2" => $arTemplate["DOCUMENT_TYPE"][2],
+                "DOCUMENT_TYPE_2" => $arDocumentType2XmlId,
                 "AUTO_EXECUTE" => $arTemplate["AUTO_EXECUTE"],
                 "NAME" => $arTemplate["NAME"],
                 "DESCRIPTION" => $arTemplate["DESCRIPTION"],
@@ -55,9 +60,23 @@ class WorkflowTemplate extends BaseData
                 "CONSTANTS" => serialize($arTemplate["CONSTANTS"]),
                 "ACTIVE" => $arTemplate["ACTIVE"]
             ));
+            $dependency = clone $this->getDependency("IBLOCK_LINK");
+            $dependency->setValue($arDocumentType2XmlId);
+            $record->setDependency("IBLOCK_LINK", $dependency);
             $result[] = $record;
         }
         return $result;
+    }
+
+    /**
+     * @param string $field
+     * @return string[]
+     */
+    private function turnStringToXmlId($field) {
+        if (preg_match('/^iblock_(\d+)$/', $field, $matches)) {
+            $iblockIdObject = RecordId::createNumericId($matches[1]);
+            return IblockIblock::getInstance()->getXmlId($iblockIdObject);
+        }
     }
 
     /**
@@ -67,10 +86,11 @@ class WorkflowTemplate extends BaseData
     public function getXmlId($id)
     {
         $dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array("ID" => $id->getValue()));
-        if ($arTemplate = $dbTemplatesList->Fetch())
+        if ($arTemplate = $dbTemplatesList->Fetch()) {
             return $this->calculateXmlId($arTemplate);
-        else
+        } else {
             throw new \Exception("Не могу получить шаблон-бизнес процесса с ID: $id");
+        }
     }
 
     /**
@@ -83,7 +103,7 @@ class WorkflowTemplate extends BaseData
             $arTemplate["MODULE_ID"],
             $arTemplate["ENTITY"],
             $arTemplate["NAME"],
-            $arTemplate["DOCUMENT_TYPE"][2],
+            $this->turnStringToXmlId($arTemplate["DOCUMENT_TYPE"][2]),
         )));
         return BaseXmlIdProvider::formatXmlId($md5);
     }
