@@ -50,6 +50,14 @@ class WorkflowTemplate extends BaseData
                 $record->setDependency("IBLOCK_LINK", $dependency);
             } else
                 throw new \Exception("{$arTemplate["DOCUMENT_TYPE"][2]} не конвертируется в XML_ID");
+            $arDependency = array(
+                "IBLOCK" => array(),
+                "GROUP" => array(),
+            );
+            $arTemplate["TEMPLATE"] = $this->convertNode($arTemplate["TEMPLATE"], $arDependency);
+            if (!empty($arDependency)) {
+                print_r($arDependency);
+            }
             $record->addFieldsRaw(array(
                 "MODULE_ID" => $arTemplate["MODULE_ID"],
                 "ENTITY" => $arTemplate["ENTITY"],
@@ -69,6 +77,44 @@ class WorkflowTemplate extends BaseData
         }
         return $result;
     }
+    /*
+     * @param mixed[] $arNode
+     * @param string[][] &$arDependency
+     * @return mixed[]
+    */
+    private function convertNode($arNode, &$arDependency) {
+        $arResult = array();
+        foreach ($arNode as $key => $value) {
+            if ($key == 'Children')
+                $arResult[$key] = $this->convertNode($value, $arDependency);
+            elseif ($key == 'Permission')
+                $arResult[$key] =  $this->convertPermissionNode($value, $arDependency);
+            else
+                $arResult[$key] = $value;
+        }
+        return $arResult;
+    }
+
+    /*
+     * @param mixed[] $arNode
+     * @param string[][] &$arDependency
+     * @return mixed[]
+    */
+    private function convertPermissionNode($arNode, &$arDependency) {
+        $arResult = array();
+        foreach ($arNode as $permission => $arRoles) {
+            $arResult[$permission] = array();
+            foreach($arRoles as $role)
+                if (is_numeric($role)) {
+                    $groupIdObject = RecordId::createNumericId(intval($role));
+                    $xmlId = MainGroup::getInstance()->getXmlId($groupIdObject);
+                    $arResult[$permission][] = $xmlId;
+                    $arDependency['GROUP'][] = $xmlId;
+                } else
+                    $arResult[$permission][] = $role;
+        }
+    }
+
 
     /**
      * @param string $field
