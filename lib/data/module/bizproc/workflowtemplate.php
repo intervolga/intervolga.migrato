@@ -33,13 +33,12 @@ class WorkflowTemplate extends BaseData
      */
     public function getList(array $filter = array())
     {
-
         $result = array();
         $dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array());
         while ($arTemplate = $dbTemplatesList->Fetch()) {
             $record = new \Intervolga\Migrato\Data\Record($this);
             $id = $this->createId($arTemplate["ID"]);
-            $record->setXmlId($this->getXmlId($id, $arTemplate));
+            $record->setXmlId($this->calculateXmlId($arTemplate));
             $record->setId($id);
             $record->addFieldsRaw(array(
                 "MODULE_ID" => $arTemplate["MODULE_ID"],
@@ -55,41 +54,43 @@ class WorkflowTemplate extends BaseData
                 "VARIABLES" => serialize($arTemplate["VARIABLES"]),
                 "CONSTANTS" => serialize($arTemplate["CONSTANTS"]),
                 "MODIFIED" => $arTemplate["MODIFIED"],
-                "USER_ID" => $arTemplate["USER_ID"],
+                //"USER_ID" => $arTemplate["USER_ID"],
                 "ACTIVE" => $arTemplate["ACTIVE"],
                 "IS_MODIFIED" => $arTemplate["IS_MODIFIED"]
             ));
             $result[] = $record;
         }
-
         return $result;
     }
 
     /**
      * @param RecordId $id
-     * @param mixed[]|boolean $arTemplate
      * @return string
      */
-    public function getXmlId($id, $arTemplate = false)
+    public function getXmlId($id)
     {
-
-        if (!$arTemplate) {
-            $dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array("ID" => $id->getValue()));
-            $arTemplate = $dbTemplatesList->Fetch();
-        }
-        if ($arTemplate) {
-            $md5 = md5(serialize(array(
-                $arTemplate["MODULE_ID"],
-                $arTemplate["ENTITY"],
-                $arTemplate["NAME"],
-                $arTemplate["DOCUMENT_TYPE"][2],
-            )));
-
-            return BaseXmlIdProvider::formatXmlId($md5);
-        }else {
+        $dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array("ID" => $id->getValue()));
+        if ($arTemplate = $dbTemplatesList->Fetch())
+            return $this->calculateXmlId($arTemplate);
+        else
             throw new \Exception("Не могу получить шаблон-бизнес процесса с ID: $id");
-        }
     }
+
+    /**
+     * @param mixed[] $arTemplate
+     * @return string
+     */
+    private function calculateXmlId($arTemplate)
+    {
+        $md5 = md5(serialize(array(
+            $arTemplate["MODULE_ID"],
+            $arTemplate["ENTITY"],
+            $arTemplate["NAME"],
+            $arTemplate["DOCUMENT_TYPE"][2],
+        )));
+        return BaseXmlIdProvider::formatXmlId($md5);
+    }
+
 
     /**
      * @param Record $record
@@ -123,7 +124,6 @@ class WorkflowTemplate extends BaseData
      */
     protected function deleteInner(RecordId $id)
     {
-
         $loader = \CBPWorkflowTemplateLoader::GetLoader();
         $loader->DeleteTemplate($id->getValue());
     }
@@ -134,7 +134,6 @@ class WorkflowTemplate extends BaseData
      */
     public function update(Record $record)
     {
-
         $id = $record->getId()->getValue();
         $arTemplate = $this->recordToArray($record);
         $loader = \CBPWorkflowTemplateLoader::GetLoader();
@@ -146,13 +145,11 @@ class WorkflowTemplate extends BaseData
 
     protected function recordToArray(Record $record)
     {
-
         $arTemplate = $record->getFieldsRaw();
         $arTemplate["TEMPLATE"] = unserialize($arTemplate["TEMPLATE"]);
         $arTemplate["PARAMETERS"] = unserialize($arTemplate["PARAMETERS"]);
         $arTemplate["VARIABLES"] = unserialize($arTemplate["VARIABLES"]);
         $arTemplate["CONSTANTS"] = unserialize($arTemplate["CONSTANTS"]);
-
         return $arTemplate;
     }
 }
