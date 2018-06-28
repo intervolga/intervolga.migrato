@@ -16,316 +16,295 @@ Loc::loadMessages(__FILE__);
 
 class WorkflowTemplate extends BaseData
 {
+	const PREFIX_WORKFLOW_TEMPLATE = 'bzp-wft-';
+	const PREFIX_IBLOCK = 'ibl-ibl-';
+	const PREFIX_USER_GROUP_NUMERUC = 'USER_GROUP_';
+	const PREFIX_USER_GROUP_LITERAL = 'USER_GROUP_G_';
+	const CRM_MODULE = 'crm';
 
-    const PREFIX_WORKFLOW_TEMPLATE = 'bzp-wft-';
+	protected function configure()
+	{
+		Loader::includeModule('bizproc');
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE'));
+		$this->setDependencies(array(
+			'IBLOCK_ID' => new Link(IblockIblock::getInstance()),
+			'GROUP_ID' => new Link(MainGroup::getInstance()),
+		));
+		$this->setVirtualXmlId(true);
+	}
 
-    const PREFIX_IBLOCK = 'ibl-ibl-';
+	/**
+	 * @param array $filter
+	 * @return array
+	 */
+	public function getList(array $filter = array())
+	{
+		$result = array();
+		$dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array());
+		while ($arTemplate = $dbTemplatesList->Fetch()) {
+			$record = new \Intervolga\Migrato\Data\Record($this);
+			$id = $this->createId($arTemplate["ID"]);
+			$record->setXmlId($this->calculateXmlId($arTemplate));
+			$record->setId($id);
+			// массив зависимостей
+			$arDependency = array(
+				"IBLOCK" => array(),
+				"GROUP" => array(),
+			);
+			// зависимость от iblock в DOCUMENT_TYPE
+			if ($documentType2XmlId = $this->stringToXmlId($arTemplate["DOCUMENT_TYPE"][2])) {
+				$arDependency["IBLOCK"][] = $documentType2XmlId;
+			}else {
+				// если шаблон не привязан к инфоблоку или к модулю CRM, то пропускаем его
+				if ($arTemplate["DOCUMENT_TYPE"][2] !== self::CRM_MODULE) {
+					continue;
+				}
+			}
+			// просматриваем содержимое шаблона в поисках зависимостей
+			$arTemplate["TEMPLATE"] = $this->convertNode($arTemplate["TEMPLATE"], $arDependency);
+			// зависимости от групп пользователей
+			if (!empty($arDependency['GROUP'])) {
+				$dependency = clone $this->getDependency('GROUP_ID');
+				$dependency->setValues(array_unique($arDependency['GROUP']));
+				$record->setDependency('GROUP_IDS', $dependency);
+			}
+			// зависимости от инфоблоков
+			if (!empty($arDependency['IBLOCK'])) {
+				$dependency = clone $this->getDependency('IBLOCK_ID');
+				$dependency->setValues(array_unique($arDependency['IBLOCK']));
+				$record->setDependency('IBLOCK_ID', $dependency);
+			}
+			$record->addFieldsRaw(array(
+				"MODULE_ID" => $arTemplate["MODULE_ID"],
+				"ENTITY" => $arTemplate["ENTITY"],
+				"DOCUMENT_TYPE_0" => $arTemplate["DOCUMENT_TYPE"][0],
+				"DOCUMENT_TYPE_1" => $arTemplate["DOCUMENT_TYPE"][1],
+				"DOCUMENT_TYPE_2" => self::PREFIX_IBLOCK . $documentType2XmlId,
+				"AUTO_EXECUTE" => $arTemplate["AUTO_EXECUTE"],
+				"NAME" => $arTemplate["NAME"],
+				"DESCRIPTION" => $arTemplate["DESCRIPTION"],
+				"TEMPLATE" => serialize($arTemplate["TEMPLATE"]),
+				"PARAMETERS" => serialize($arTemplate["PARAMETERS"]),
+				"VARIABLES" => serialize($arTemplate["VARIABLES"]),
+				"CONSTANTS" => serialize($arTemplate["CONSTANTS"]),
+				"ACTIVE" => $arTemplate["ACTIVE"]
+			));
+			$result[] = $record;
+		}
 
-    const PREFIX_USER_GROUP_NUMERUC = 'USER_GROUP_';
+		return $result;
+	}
 
-    const PREFIX_USER_GROUP_LITERAL = 'USER_GROUP_G_';
+	/**
+	 * @param RecordId $id
+	 * @return string
+	 */
+	public function getXmlId($id)
+	{
+		$dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array("ID" => $id->getValue()));
+		if ($arTemplate = $dbTemplatesList->Fetch()) {
+			return $this->calculateXmlId($arTemplate);
+		}else {
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.GXI.EX').$id);
+		}
+	}
 
-    const CRM_MODULE = 'crm';
+	/**
+	 * @param Record $record
+	 * @return RecordId
+	 * @throws \Exception
+	 */
+	protected function createInner(Record $record)
+	{
+		$arTemplate = $this->recordToArray($record);
+		$loader = \CBPWorkflowTemplateLoader::GetLoader();
+		$returnId = $loader->AddTemplate($arTemplate, true);
+		if (!$returnId) {
+			throw new \Exception(ExceptionText::getUnknown());
+		}
+		return $this->createId($returnId);
+	}
 
-    protected function configure()
-    {
+	/**
+	 * @param RecordId $id
+	 * @throws \Exception
+	 */
+	protected function deleteInner(RecordId $id)
+	{
+		$loader = \CBPWorkflowTemplateLoader::GetLoader();
+		$loader->DeleteTemplate($id->getValue());
+	}
 
-        Loader::includeModule('bizproc');
-        $this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE'));
-        $this->setDependencies(array(
-            'IBLOCK_ID' => new Link(IblockIblock::getInstance()),
-            'GROUP_ID' => new Link(MainGroup::getInstance()),
-        ));
-        $this->setVirtualXmlId(true);
-    }
+	/**
+	 * @param Record $record
+	 * @throws \Exception
+	 */
+	public function update(Record $record)
+	{
+		$id = $record->getId()->getValue();
+		$arTemplate = $this->recordToArray($record);
+		$loader = \CBPWorkflowTemplateLoader::GetLoader();
+		$returnId = $loader->UpdateTemplate($id, $arTemplate, true);
+		if (!$returnId) {
+			throw new \Exception(ExceptionText::getUnknown());
+		}
+	}
 
-    /**
-     * @param array $filter
-     * @return array
-     */
-    public function getList(array $filter = array())
-    {
+	protected function recordToArray(Record $record)
+	{
+		$arTemplate = $record->getFieldsRaw();
+		$arTemplate["TEMPLATE"] = unserialize($arTemplate["TEMPLATE"]);
+		$arTemplate["PARAMETERS"] = unserialize($arTemplate["PARAMETERS"]);
+		$arTemplate["VARIABLES"] = unserialize($arTemplate["VARIABLES"]);
+		$arTemplate["CONSTANTS"] = unserialize($arTemplate["CONSTANTS"]);
+		$arTemplate['DOCUMENT_TYPE'] = array(
+			$arTemplate['DOCUMENT_TYPE_0'],
+			$arTemplate['DOCUMENT_TYPE_1'],
+			$this->xmlIdToString($arTemplate['DOCUMENT_TYPE_2'])
+		);
+		unset($arTemplate['DOCUMENT_TYPE_0']);
+		unset($arTemplate['DOCUMENT_TYPE_1']);
+		unset($arTemplate['DOCUMENT_TYPE_2']);
+		$arTemplate["TEMPLATE"] = $this->convertNode($arTemplate["TEMPLATE"]);
+		return $arTemplate;
+	}
 
-        $result = array();
-        $dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array());
-        while ($arTemplate = $dbTemplatesList->Fetch()) {
-            $record = new \Intervolga\Migrato\Data\Record($this);
-            $id = $this->createId($arTemplate["ID"]);
-            $record->setXmlId($this->calculateXmlId($arTemplate));
-            $record->setId($id);
-            $arDependency = array(
-                "IBLOCK" => array(),
-                "GROUP" => array(),
-            );
-            // зависимость от iblock
-            if ($documentType2XmlId = $this->stringToXmlId($arTemplate["DOCUMENT_TYPE"][2])) {
-                $arDependency["IBLOCK"][] = $documentType2XmlId;
-            }else {
-                // если шаблон не привязан к инфоблоку или к модулю CRM, то пропускаем его
-                if ($arTemplate["DOCUMENT_TYPE"][2] !== self::CRM_MODULE) {
-                    continue;
-                }
-            }
-            // просматриваем содержимое шаблона
-            $arTemplate["TEMPLATE"] = $this->convertNode($arTemplate["TEMPLATE"], $arDependency);
-            // зависимости от групп пользователей
-            if (!empty($arDependency['GROUP'])) {
-                $dependency = clone $this->getDependency('GROUP_ID');
-                $dependency->setValues(array_unique($arDependency['GROUP']));
-                $record->setDependency('GROUP_IDS', $dependency);
-            }
-            // зависимости от инфоблоков
-            if (!empty($arDependency['IBLOCK'])) {
-                $dependency = clone $this->getDependency('IBLOCK_ID');
-                $dependency->setValues(array_unique($arDependency['IBLOCK']));
-                $record->setDependency('IBLOCK_ID', $dependency);
-            }
-            $record->addFieldsRaw(array(
-                "MODULE_ID" => $arTemplate["MODULE_ID"],
-                "ENTITY" => $arTemplate["ENTITY"],
-                "DOCUMENT_TYPE_0" => $arTemplate["DOCUMENT_TYPE"][0],
-                "DOCUMENT_TYPE_1" => $arTemplate["DOCUMENT_TYPE"][1],
-                "DOCUMENT_TYPE_2" => self::PREFIX_IBLOCK . $documentType2XmlId,
-                "AUTO_EXECUTE" => $arTemplate["AUTO_EXECUTE"],
-                "NAME" => $arTemplate["NAME"],
-                "DESCRIPTION" => $arTemplate["DESCRIPTION"],
-                "TEMPLATE" => serialize($arTemplate["TEMPLATE"]),
-                "PARAMETERS" => serialize($arTemplate["PARAMETERS"]),
-                "VARIABLES" => serialize($arTemplate["VARIABLES"]),
-                "CONSTANTS" => serialize($arTemplate["CONSTANTS"]),
-                "ACTIVE" => $arTemplate["ACTIVE"]
-            ));
-            $result[] = $record;
-        }
+	/**
+	 * @param mixed[] $arTemplate
+	 * @return string
+	 */
+	protected function calculateXmlId($arTemplate)
+	{
+		$md5 = md5(serialize(array(
+			$arTemplate["MODULE_ID"],
+			$arTemplate["ENTITY"],
+			$arTemplate["NAME"],
+			$this->stringToXmlId($arTemplate["DOCUMENT_TYPE"][2]),
+		)));
+		return self::PREFIX_WORKFLOW_TEMPLATE . BaseXmlIdProvider::formatXmlId($md5);
+	}
 
-        return $result;
-    }
+	/*
+	 * @param mixed[] $arNode
+	 * @param string[][] &$arDependency
+	 * @return mixed[]
+	*/
+	protected function convertNode($arNode, &$arDependency = array())
+	{
 
-    /**
-     * @param RecordId $id
-     * @return string
-     */
-    public function getXmlId($id)
-    {
+		$arResult = array();
+		foreach ($arNode as $key => $value) {
+			if ($key === 'Permission') {
+				$arResult[$key] = $this->convertPermissionNode($value, $arDependency);
+			}elseif ($key === 'DocumentType') {
+				$arResult[$key] = $this->convertDocumentTypeNode($value, $arDependency);
+			}elseif (is_array($value)) {
+				$arResult[$key] = $this->convertNode($value, $arDependency);
+			}else {
+				$arResult[$key] = $value;
+			}
+		}
+		return $arResult;
+	}
 
-        $dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array("ID" => $id->getValue()));
-        if ($arTemplate = $dbTemplatesList->Fetch()) {
-            return $this->calculateXmlId($arTemplate);
-        }else {
-            throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.GXI.EX').$id);
-        }
-    }
+	/*
+	 * @param mixed[] $arNode
+	 * @param string[][] &$arDependency
+	 * @return mixed[]
+	*/
+	protected function convertPermissionNode($arNode, &$arDependency)
+	{
+		$arResult = array();
+		foreach ($arNode as $permission => $arRoles) {
+			$arResult[$permission] = array();
+			foreach ($arRoles as $role) {
+				if ($id = $this->xmlIdToString($role)) {
+					$arResult[$permission][] = (string)$id;
+				}elseif ($xmlId = $this->stringToXmlId($role)) {
+					if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_LITERAL . $xmlId)) {
+						throw new \Exception(
+							Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX').$xmlId
+						);
+					}
+					$arResult[$permission][] = self::PREFIX_USER_GROUP_LITERAL . $xmlId;
+					$arDependency['GROUP'][] = $xmlId;
+				}elseif (is_numeric($role)) {
+					$groupIdObject = RecordId::createNumericId(intval($role));
+					$xmlId = MainGroup::getInstance()->getXmlId($groupIdObject);
+					if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_NUMERIC . $xmlId)) {
+						throw new \Exception(
+							Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX2').$xmlId
+						);
+					}
+					$arResult[$permission][] = self::PREFIX_USER_GROUP_NUMERIC . $xmlId;
+					$arDependency['GROUP'][] = $xmlId;
+				}else {
+					$arResult[$permission][] = $role;
+				}
+			}
+		}
+		return $arResult;
+	}
 
-    /**
-     * @param Record $record
-     * @return RecordId
-     * @throws \Exception
-     */
-    protected function createInner(Record $record)
-    {
+	/*
+	 * @param mixed[] $arNode
+	 * @param string[][] &$arDependency
+	 * @return mixed[]
+	*/
+	protected function convertDocumentTypeNode($arNode, &$arDependency)
+	{
+		$arResult = array();
+		foreach ($arNode as $value) {
+			if ($id = $this->xmlIdToString($value)) {
+				$arResult[] = (string)$id;
+			}elseif ($xmlId = $this->stringToXmlId($value)) {
+				if (!$this->xmlIdToString(self::PREFIX_IBLOCK . $xmlId)) {
+					throw new \Exception(
+						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPTN.EX').$xmlId
+					);
+				}
+				$arResult[] = self::PREFIX_IBLOCK . $xmlId;
+				$arDependency['IBLOCK'][] = $xmlId;
+			}else {
+				$arResult[] = $value;
+			}
+		}
+		return $arResult;
+	}
 
-        $arTemplate = $this->recordToArray($record);
-        $loader = \CBPWorkflowTemplateLoader::GetLoader();
-        $returnId = $loader->AddTemplate($arTemplate, true);
-        if (!$returnId) {
-            throw new \Exception(ExceptionText::getUnknown());
-        }
+	/**
+	 * @param string $field
+	 * @return string
+	 */
+	protected function stringToXmlId($field)
+	{
+		if (preg_match("/^iblock_(?'id'\d+)$/", $field, $matches)) {
+			$iblockIdObject = RecordId::createNumericId($matches['id']);
+			return IblockIblock::getInstance()->getXmlId($iblockIdObject);
+		}
+		if (preg_match("/^group_g(?'id'\d+)$/", $field, $matches)) {
+			$groupIdObject = RecordId::createNumericId($matches['id']);
+			return MainGroup::getInstance()->getXmlId($groupIdObject);
+		}
+	}
 
-        return $this->createId($returnId);
-    }
-
-    /**
-     * @param RecordId $id
-     * @throws \Exception
-     */
-    protected function deleteInner(RecordId $id)
-    {
-
-        $loader = \CBPWorkflowTemplateLoader::GetLoader();
-        $loader->DeleteTemplate($id->getValue());
-    }
-
-    /**
-     * @param Record $record
-     * @throws \Exception
-     */
-    public function update(Record $record)
-    {
-
-        $id = $record->getId()->getValue();
-        $arTemplate = $this->recordToArray($record);
-        $loader = \CBPWorkflowTemplateLoader::GetLoader();
-        $returnId = $loader->UpdateTemplate($id, $arTemplate, true);
-        if (!$returnId) {
-            throw new \Exception(ExceptionText::getUnknown());
-        }
-    }
-
-    protected function recordToArray(Record $record)
-    {
-
-        $arTemplate = $record->getFieldsRaw();
-        $arTemplate["TEMPLATE"] = unserialize($arTemplate["TEMPLATE"]);
-        $arTemplate["PARAMETERS"] = unserialize($arTemplate["PARAMETERS"]);
-        $arTemplate["VARIABLES"] = unserialize($arTemplate["VARIABLES"]);
-        $arTemplate["CONSTANTS"] = unserialize($arTemplate["CONSTANTS"]);
-        $arTemplate['DOCUMENT_TYPE'] = array(
-            $arTemplate['DOCUMENT_TYPE_0'],
-            $arTemplate['DOCUMENT_TYPE_1'],
-            $this->xmlIdToString($arTemplate['DOCUMENT_TYPE_2'])
-        );
-        unset($arTemplate['DOCUMENT_TYPE_0']);
-        unset($arTemplate['DOCUMENT_TYPE_1']);
-        unset($arTemplate['DOCUMENT_TYPE_2']);
-        $arTemplate["TEMPLATE"] = $this->convertNode($arTemplate["TEMPLATE"]);
-
-        return $arTemplate;
-    }
-
-    /**
-     * @param mixed[] $arTemplate
-     * @return string
-     */
-    protected function calculateXmlId($arTemplate)
-    {
-
-        $md5 = md5(serialize(array(
-            $arTemplate["MODULE_ID"],
-            $arTemplate["ENTITY"],
-            $arTemplate["NAME"],
-            $this->stringToXmlId($arTemplate["DOCUMENT_TYPE"][2]),
-        )));
-
-        return self::PREFIX_WORKFLOW_TEMPLATE . BaseXmlIdProvider::formatXmlId($md5);
-    }
-
-    /*
-     * @param mixed[] $arNode
-     * @param string[][] &$arDependency
-     * @return mixed[]
-    */
-    protected function convertNode($arNode, &$arDependency = array())
-    {
-
-        $arResult = array();
-        foreach ($arNode as $key => $value) {
-            if ($key === 'Permission') {
-                $arResult[$key] = $this->convertPermissionNode($value, $arDependency);
-            }elseif ($key === 'DocumentType') {
-                $arResult[$key] = $this->convertDocumentTypeNode($value, $arDependency);
-            }elseif (is_array($value)) {
-                $arResult[$key] = $this->convertNode($value, $arDependency);
-            }else {
-                $arResult[$key] = $value;
-            }
-        }
-
-        return $arResult;
-    }
-
-    /*
-     * @param mixed[] $arNode
-     * @param string[][] &$arDependency
-     * @return mixed[]
-    */
-    protected function convertPermissionNode($arNode, &$arDependency)
-    {
-
-        $arResult = array();
-        foreach ($arNode as $permission => $arRoles) {
-            $arResult[$permission] = array();
-            foreach ($arRoles as $role) {
-                if ($id = $this->xmlIdToString($role)) {
-                    $arResult[$permission][] = (string)$id;
-                }elseif ($xmlId = $this->stringToXmlId($role)) {
-                    if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_LITERAL . $xmlId)) {
-                        throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX').$xmlId);
-                    }
-                    $arResult[$permission][] = self::PREFIX_USER_GROUP_LITERAL . $xmlId;
-                    $arDependency['GROUP'][] = $xmlId;
-                }elseif (is_numeric($role)) {
-                    $groupIdObject = RecordId::createNumericId(intval($role));
-                    $xmlId = MainGroup::getInstance()->getXmlId($groupIdObject);
-                    if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_NUMERIC . $xmlId)) {
-                        throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX2').$xmlId);
-                    }
-                    $arResult[$permission][] = self::PREFIX_USER_GROUP_NUMERIC . $xmlId;
-                    $arDependency['GROUP'][] = $xmlId;
-                }else {
-                    $arResult[$permission][] = $role;
-                }
-            }
-        }
-
-        return $arResult;
-    }
-
-    /*
-     * @param mixed[] $arNode
-     * @param string[][] &$arDependency
-     * @return mixed[]
-    */
-    protected function convertDocumentTypeNode($arNode, &$arDependency)
-    {
-
-        $arResult = array();
-        foreach ($arNode as $value) {
-            if ($id = $this->xmlIdToString($value)) {
-                $arResult[] = (string)$id;
-            }elseif ($xmlId = $this->stringToXmlId($value)) {
-                if (!$this->xmlIdToString(self::PREFIX_IBLOCK . $xmlId)) {
-                    throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPTN.EX').$xmlId);
-                }
-                $arResult[] = self::PREFIX_IBLOCK . $xmlId;
-                $arDependency['IBLOCK'][] = $xmlId;
-            }else {
-                $arResult[] = $value;
-            }
-        }
-
-        return $arResult;
-    }
-
-    /**
-     * @param string $field
-     * @return string
-     */
-    protected function stringToXmlId($field)
-    {
-
-        if (preg_match('/^iblock_(\d+)$/', $field, $matches)) {
-            $iblockIdObject = RecordId::createNumericId($matches[1]);
-
-            return IblockIblock::getInstance()->getXmlId($iblockIdObject);
-        }
-        if (preg_match('/^group_g(\d+)$/', $field, $matches)) {
-            $groupIdObject = RecordId::createNumericId($matches[1]);
-
-            return MainGroup::getInstance()->getXmlId($groupIdObject);
-        }
-    }
-
-    /**
-     * @param string $xmlId
-     * @return string
-     */
-    protected function xmlIdToString($xmlId)
-    {
-
-        if (preg_match("/^" . self::PREFIX_IBLOCK . "(?'xmlId'[_a-zA-Z0-9\-]+)/", $xmlId, $matches)) {
-            $iblockLinkId = IblockIblock::getInstance()->findRecord($matches['xmlId']);
-
-            return 'iblock_' . $iblockLinkId->getValue();
-        }
-        if (preg_match("/^" . self::PREFIX_USER_GROUP_NUMERUC . "(?'xmlId'[_a-zA-Z0-9\-]+)/", $xmlId, $matches)) {
-            $groupLinkId = MainGroup::getInstance()->findRecord($matches['xmlId']);
-
-            return $groupLinkId->getValue();
-        }
-        if (preg_match("/^" . self::PREFIX_USER_GROUP_LITERAL . "(?'xmlId'[_a-zA-Z0-9\-]+)/", $xmlId, $matches)) {
-            $groupLinkId = MainGroup::getInstance()->findRecord($matches['xmlId']);
-
-            return $groupLinkId->getValue();
-        }
-    }
+	/**
+	 * @param string $xmlId
+	 * @return string
+	 */
+	protected function xmlIdToString($xmlId)
+	{
+		if (preg_match("/^" . self::PREFIX_IBLOCK . "(?'xmlId'[_a-zA-Z0-9\-]+)/", $xmlId, $matches)) {
+			$iblockLinkId = IblockIblock::getInstance()->findRecord($matches['xmlId']);
+			return 'iblock_' . $iblockLinkId->getValue();
+		}
+		if (preg_match("/^" . self::PREFIX_USER_GROUP_NUMERUC . "(?'xmlId'[_a-zA-Z0-9\-]+)/", $xmlId, $matches)) {
+			$groupLinkId = MainGroup::getInstance()->findRecord($matches['xmlId']);
+			return $groupLinkId->getValue();
+		}
+		if (preg_match("/^" . self::PREFIX_USER_GROUP_LITERAL . "(?'xmlId'[_a-zA-Z0-9\-]+)/", $xmlId, $matches)) {
+			$groupLinkId = MainGroup::getInstance()->findRecord($matches['xmlId']);
+			return $groupLinkId->getValue();
+		}
+	}
 }
