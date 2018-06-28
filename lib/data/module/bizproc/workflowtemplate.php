@@ -131,6 +131,20 @@ class WorkflowTemplate extends BaseData
 	 */
 	protected function deleteInner(RecordId $id)
 	{
+		$dbWorkflowList = \CBPAllTaskService::GetList(
+			array("ID" => "DESC"),
+			Array("WORKFLOW_TEMPLATE_TEMPLATE_ID" => $id->getValue()),
+			false,
+			false,
+			array("ID", "WORKFLOW_ID", "WORKFLOW_TEMPLATE_TEMPLATE_ID")
+		);
+		while($arWorkflow = $dbWorkflowList->Fetch()) {
+			$terminate = true;
+			$err = \CBPDocument::killWorkflow($arWorkflow["WORKFLOW_ID"], $terminate);
+			if ($err) {
+				throw new \Exception($err["message"]);
+			}
+		}
 		$loader = \CBPWorkflowTemplateLoader::GetLoader();
 		$loader->DeleteTemplate($id->getValue());
 	}
