@@ -18,7 +18,7 @@ class WorkflowTemplate extends BaseData
 {
 	const PREFIX_WORKFLOW_TEMPLATE = 'bzp-wft-';
 	const PREFIX_IBLOCK = 'ibl-ibl-';
-	const PREFIX_USER_GROUP_NUMERUC = 'USER_GROUP_';
+	const PREFIX_USER_GROUP_NUMERIC = 'USER_GROUP_N_';
 	const PREFIX_USER_GROUP_LITERAL = 'USER_GROUP_G_';
 	const CRM_MODULE = 'crm';
 
@@ -321,15 +321,15 @@ class WorkflowTemplate extends BaseData
 	 */
 	protected function xmlIdToString($xmlId)
 	{
-		if (preg_match("/^" . self::PREFIX_IBLOCK . "(?'xmlId'[_a-zA-Z0-9\-]+)/", $xmlId, $matches)) {
+		if (preg_match("/^" . self::PREFIX_IBLOCK . "(?'xmlId'[_a-zA-Z0-9\-]+)$/", $xmlId, $matches)) {
 			$iblockLinkId = IblockIblock::getInstance()->findRecord($matches['xmlId']);
 			return 'iblock_' . $iblockLinkId->getValue();
 		}
-		if (preg_match("/^" . self::PREFIX_USER_GROUP_NUMERUC . "(?'xmlId'[_a-zA-Z0-9\-]+)/", $xmlId, $matches)) {
+		if (preg_match("/^" . self::PREFIX_USER_GROUP_NUMERIC . "(?'xmlId'[_a-zA-Z0-9\-]+)$/", $xmlId, $matches)) {
 			$groupLinkId = MainGroup::getInstance()->findRecord($matches['xmlId']);
 			return $groupLinkId->getValue();
 		}
-		if (preg_match("/^" . self::PREFIX_USER_GROUP_LITERAL . "(?'xmlId'[_a-zA-Z0-9\-]+)/", $xmlId, $matches)) {
+		if (preg_match("/^" . self::PREFIX_USER_GROUP_LITERAL . "(?'xmlId'[_a-zA-Z0-9\-]+)$/", $xmlId, $matches)) {
 			$groupLinkId = MainGroup::getInstance()->findRecord($matches['xmlId']);
 			return $groupLinkId->getValue();
 		}
