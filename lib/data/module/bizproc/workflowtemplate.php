@@ -212,6 +212,8 @@ class WorkflowTemplate extends BaseData
 				$arResult[$key] = $this->convertPermissionNode($value, $arDependency);
 			}elseif ($key === 'DocumentType') {
 				$arResult[$key] = $this->convertDocumentTypeNode($value, $arDependency);
+			}elseif ($key === 'Users') {
+				$arResult[$key] = $this->convertUsersNode($value, $arDependency);
 			}elseif (is_array($value)) {
 				$arResult[$key] = $this->convertNode($value, $arDependency);
 			}else {
@@ -230,31 +232,42 @@ class WorkflowTemplate extends BaseData
 	{
 		$arResult = array();
 		foreach ($arNode as $permission => $arRoles) {
-			$arResult[$permission] = array();
-			foreach ($arRoles as $role) {
-				if ($id = $this->xmlIdToString($role)) {
-					$arResult[$permission][] = (string)$id;
-				}elseif ($xmlId = $this->stringToXmlId($role)) {
-					if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_LITERAL . $xmlId)) {
-						throw new \Exception(
-							Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX').$xmlId
-						);
-					}
-					$arResult[$permission][] = self::PREFIX_USER_GROUP_LITERAL . $xmlId;
-					$arDependency['GROUP'][] = $xmlId;
-				}elseif (is_numeric($role)) {
-					$groupIdObject = RecordId::createNumericId(intval($role));
-					$xmlId = MainGroup::getInstance()->getXmlId($groupIdObject);
-					if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_NUMERIC . $xmlId)) {
-						throw new \Exception(
-							Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX2').$xmlId
-						);
-					}
-					$arResult[$permission][] = self::PREFIX_USER_GROUP_NUMERIC . $xmlId;
-					$arDependency['GROUP'][] = $xmlId;
-				}else {
-					$arResult[$permission][] = $role;
+			$arResult[$permission] = $this->convertUsersNode($arRoles, $arDependency);
+		}
+		return $arResult;
+	}
+
+	/*
+	 * @param mixed[] $arNode
+	 * @param string[][] &$arDependency
+	 * @return mixed[]
+	*/
+	protected function convertUsersNode($arNode, &$arDependency)
+	{
+		$arResult = array();
+		foreach ($arNode as $role) {
+			if ($id = $this->xmlIdToString($role)) {
+				$arResult[] = (string)$id;
+			} elseif ($xmlId = $this->stringToXmlId($role)) {
+				if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_LITERAL . $xmlId)) {
+					throw new \Exception(
+						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX').$xmlId
+					);
 				}
+				$arResult[] = self::PREFIX_USER_GROUP_LITERAL . $xmlId;
+				$arDependency['GROUP'][] = $xmlId;
+			} elseif (is_numeric($role)) {
+				$groupIdObject = RecordId::createNumericId(intval($role));
+				$xmlId = MainGroup::getInstance()->getXmlId($groupIdObject);
+				if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_NUMERIC . $xmlId)) {
+					throw new \Exception(
+						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX2').$xmlId
+					);
+				}
+				$arResult[] = self::PREFIX_USER_GROUP_NUMERIC . $xmlId;
+				$arDependency['GROUP'][] = $xmlId;
+			} else {
+				$arResult[] = $role;
 			}
 		}
 		return $arResult;
