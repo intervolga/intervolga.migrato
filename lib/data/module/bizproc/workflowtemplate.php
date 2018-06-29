@@ -331,7 +331,7 @@ class WorkflowTemplate extends BaseData
 		}
 		if (preg_match("/^" . self::PREFIX_USER_GROUP_LITERAL . "(?'xmlId'[_a-zA-Z0-9\-]+)$/", $xmlId, $matches)) {
 			$groupLinkId = MainGroup::getInstance()->findRecord($matches['xmlId']);
-			return $groupLinkId->getValue();
+			return 'group_g' . $groupLinkId->getValue();
 		}
 	}
 }
