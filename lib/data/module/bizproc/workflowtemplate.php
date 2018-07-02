@@ -62,6 +62,9 @@ class WorkflowTemplate extends BaseData
 			}
 			// просматриваем содержимое шаблона в поисках зависимостей
 			$arTemplate["TEMPLATE"] = $this->convertNode($arTemplate["TEMPLATE"], $arDependency);
+			$arTemplate["PARAMETERS"] = $this->convertVariables($arTemplate["PARAMETERS"], $arDependency);
+			$arTemplate["VARIABLES"] = $this->convertVariables($arTemplate["VARIABLES"], $arDependency);
+			$arTemplate["CONSTANTS"] = $this->convertVariables($arTemplate["CONSTANTS"], $arDependency);
 			// зависимости от групп пользователей
 			if (!empty($arDependency['GROUP'])) {
 				$dependency = clone $this->getDependency('GROUP_ID');
@@ -180,6 +183,9 @@ class WorkflowTemplate extends BaseData
 		unset($arTemplate['DOCUMENT_TYPE_1']);
 		unset($arTemplate['DOCUMENT_TYPE_2']);
 		$arTemplate["TEMPLATE"] = $this->convertNode($arTemplate["TEMPLATE"]);
+		$arTemplate["PARAMETERS"] = $this->convertVariables($arTemplate["PARAMETERS"]);
+		$arTemplate["VARIABLES"] = $this->convertVariables($arTemplate["VARIABLES"]);
+		$arTemplate["CONSTANTS"] = $this->convertVariables($arTemplate["CONSTANTS"]);
 		return $arTemplate;
 	}
 
@@ -205,20 +211,45 @@ class WorkflowTemplate extends BaseData
 	*/
 	protected function convertNode($arNode, &$arDependency = array())
 	{
-
 		$arResult = array();
 		foreach ($arNode as $key => $value) {
 			if ($key === 'Permission') {
 				$arResult[$key] = $this->convertPermissionNode($value, $arDependency);
-			}elseif ($key === 'DocumentType') {
+			} elseif ($key === 'DocumentType') {
 				$arResult[$key] = $this->convertDocumentTypeNode($value, $arDependency);
-			}elseif ($key === 'Users') {
+			} elseif (
+				in_array ($key, array(
+				'Users', 'UserParameter', 'ReserveUserParameter', 'MessageUserFrom', 'MessageUserTo',
+				'MailUserFromArray', 'MailUserToArray', 'CalendarUser', 'OwnerId', 'UsersTo', 'AbsenceUser'
+				), true)
+			) {
 				$arResult[$key] = $this->convertUsersNode($value, $arDependency);
-			}elseif (is_array($value)) {
+			} elseif ($key === 'RESPONSIBLE_ID' && !is_array($value)) {
+				$arResult[$key] = $this->convertRole($value);
+			} elseif ($key === 'Properties' && !is_array($value)
+				&& $value['EntityType'] === 'user' && is_array($value['EntityId'])
+			) {
+				$value['EntityId'] = $this->convertUsersNode($value['EntityId']);
+				$arResult[$key] = $value;
+			} elseif (is_array($value)) {
 				$arResult[$key] = $this->convertNode($value, $arDependency);
-			}else {
+			} else {
 				$arResult[$key] = $value;
 			}
+		}
+		return $arResult;
+	}
+	
+	/*
+	 * @param mixed[] $arNode
+	 * @param string[][] &$arDependency
+	 * @return mixed[]
+	*/
+	protected function convertVariables($arVariables, &$arDependency = array())
+	{
+		$arResult = array();
+		foreach ($arVariables as $key => $arVariable) {
+			$arResult[$key] = $this->convertVariableNode($arVariable, $arDependency);
 		}
 		return $arResult;
 	}
@@ -230,11 +261,17 @@ class WorkflowTemplate extends BaseData
 	*/
 	protected function convertPermissionNode($arNode, &$arDependency)
 	{
-		$arResult = array();
-		foreach ($arNode as $permission => $arRoles) {
-			$arResult[$permission] = $this->convertUsersNode($arRoles, $arDependency);
+		if (array_key_exists(0, $arNode) && !is_array($arNode[0])) {
+			// это однорувневый узел Permission
+			return $this->convertUsersNode($arNode, $arDependency);
+		} else {
+			// это узел Permission у которого на первом уровне находятся права доступа
+			$arResult = array();
+			foreach ($arNode as $permission => $arRoles) {
+				$arResult[$permission] = $this->convertUsersNode($arRoles, $arDependency);
+			}
+			return $arResult;
 		}
-		return $arResult;
 	}
 
 	/*
@@ -246,33 +283,54 @@ class WorkflowTemplate extends BaseData
 	{
 		$arResult = array();
 		foreach ($arNode as $role) {
-			if ($id = $this->xmlIdToString($role)) {
-				$arResult[] = (string)$id;
-			} elseif ($xmlId = $this->stringToXmlId($role)) {
-				if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_LITERAL . $xmlId)) {
-					throw new \Exception(
-						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX').$xmlId
-					);
-				}
-				$arResult[] = self::PREFIX_USER_GROUP_LITERAL . $xmlId;
-				$arDependency['GROUP'][] = $xmlId;
-			} elseif (is_numeric($role)) {
-				$groupIdObject = RecordId::createNumericId(intval($role));
-				$xmlId = MainGroup::getInstance()->getXmlId($groupIdObject);
-				if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_NUMERIC . $xmlId)) {
-					throw new \Exception(
-						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX2').$xmlId
-					);
-				}
-				$arResult[] = self::PREFIX_USER_GROUP_NUMERIC . $xmlId;
-				$arDependency['GROUP'][] = $xmlId;
-			} else {
-				$arResult[] = $role;
-			}
+			$arResult[] = $this->convertRole($role);
 		}
 		return $arResult;
 	}
-
+	
+	/*
+	 * @param mixed[] $arNode
+	 * @param string[][] &$arDependency
+	 * @return mixed[]
+	*/
+	protected function convertVariableNode($arNode, &$arDependency)
+	{
+		if (is_array($arNode) && array_key_exists('Type', $arNode) && $arNode['Type'] === 'user') {
+			$arNode['Default'] = $this->convertRole($arNode['Default'], $arDependency);
+		}
+		return $arNode;
+	}
+	
+	/*
+	 * @param string $role
+	 * @param string[][] &$arDependency
+	 * @return string
+	*/
+	protected function convertRole($role, &$arDependency) {
+		if ($id = $this->xmlIdToString($role)) {
+			$role = (string)$id;
+		} elseif ($xmlId = $this->stringToXmlId($role)) {
+			if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_LITERAL . $xmlId)) {
+				throw new \Exception(
+					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX').$xmlId
+				);
+			}
+			$role = self::PREFIX_USER_GROUP_LITERAL . $xmlId;
+			$arDependency['GROUP'][] = $xmlId;
+		} elseif (is_numeric($role)) {
+			$groupIdObject = RecordId::createNumericId(intval($role));
+			$xmlId = MainGroup::getInstance()->getXmlId($groupIdObject);
+			if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_NUMERIC . $xmlId)) {
+				throw new \Exception(
+					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX2').$xmlId
+				);
+			}
+			$role = self::PREFIX_USER_GROUP_NUMERIC . $xmlId;
+			$arDependency['GROUP'][] = $xmlId;
+		}
+		return $role;
+	}
+	
 	/*
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
