@@ -121,7 +121,7 @@ class WorkflowTemplate extends BaseData
 	{
 		$arTemplate = $this->recordToArray($record);
 		$loader = \CBPWorkflowTemplateLoader::GetLoader();
-		$returnId = $loader->AddTemplate($arTemplate, true);
+		$returnId = $loader->Add($arTemplate, true);
 		if (!$returnId) {
 			throw new \Exception(ExceptionText::getUnknown());
 		}
@@ -161,7 +161,7 @@ class WorkflowTemplate extends BaseData
 		$id = $record->getId()->getValue();
 		$arTemplate = $this->recordToArray($record);
 		$loader = \CBPWorkflowTemplateLoader::GetLoader();
-		$returnId = $loader->UpdateTemplate($id, $arTemplate, true);
+		$returnId = $loader->Update($id, $arTemplate, true);
 		if (!$returnId) {
 			throw new \Exception(ExceptionText::getUnknown());
 		}
@@ -220,17 +220,14 @@ class WorkflowTemplate extends BaseData
 			} elseif (
 				in_array ($key, array(
 				'Users', 'UserParameter', 'ReserveUserParameter', 'MessageUserFrom', 'MessageUserTo',
-				'MailUserFromArray', 'MailUserToArray', 'CalendarUser', 'OwnerId', 'UsersTo', 'AbsenceUser'
+				'MailUserFromArray', 'MailUserToArray', 'CalendarUser', 'OwnerId', 'UsersTo', 'AbsenceUser',
+				'CreatedBy','DeletedBy','Operator','EntityId'
 				), true)
+				&& is_array($value)
 			) {
 				$arResult[$key] = $this->convertUsersNode($value, $arDependency);
 			} elseif ($key === 'RESPONSIBLE_ID' && !is_array($value)) {
 				$arResult[$key] = $this->convertRole($value);
-			} elseif ($key === 'Properties' && !is_array($value)
-				&& $value['EntityType'] === 'user' && is_array($value['EntityId'])
-			) {
-				$value['EntityId'] = $this->convertUsersNode($value['EntityId']);
-				$arResult[$key] = $value;
 			} elseif (is_array($value)) {
 				$arResult[$key] = $this->convertNode($value, $arDependency);
 			} else {
