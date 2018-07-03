@@ -121,7 +121,7 @@ class WorkflowTemplate extends BaseData
 	{
 		$arTemplate = $this->recordToArray($record);
 		$loader = \CBPWorkflowTemplateLoader::GetLoader();
-		$returnId = $loader->Add($arTemplate, true);
+		$returnId = $loader->AddTemplate($arTemplate, true);
 		if (!$returnId) {
 			throw new \Exception(ExceptionText::getUnknown());
 		}
@@ -161,7 +161,7 @@ class WorkflowTemplate extends BaseData
 		$id = $record->getId()->getValue();
 		$arTemplate = $this->recordToArray($record);
 		$loader = \CBPWorkflowTemplateLoader::GetLoader();
-		$returnId = $loader->Update($id, $arTemplate, true);
+		$returnId = $loader->UpdateTemplate($id, $arTemplate, true);
 		if (!$returnId) {
 			throw new \Exception(ExceptionText::getUnknown());
 		}
