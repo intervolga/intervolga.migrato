@@ -205,4 +205,13 @@
             <name>answer</name>
         </entity>
     </module>
+    <module>
+        <name>landing</name>
+        <entity>
+            <name>landing</name>
+        </entity>
+        <entity>
+            <name>block</name>
+        </entity>
+    </module>
 </config>
