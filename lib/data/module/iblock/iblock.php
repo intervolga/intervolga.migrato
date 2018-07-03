@@ -64,8 +64,6 @@ class Iblock extends BaseData
 				"RSS_FILE_DAYS" => intval($iblock["RSS_FILE_DAYS"]),
 				"RSS_YANDEX_ACTIVE" => $iblock["RSS_YANDEX_ACTIVE"],
 				"INDEX_ELEMENT" => $iblock["INDEX_ELEMENT"],
-				"BIZPROC" => $iblock["BIZPROC"],
-				"WORKFLOW" => $iblock["WORKFLOW"],
 				"INDEX_SECTION" => $iblock["INDEX_SECTION"],
 				"SECTION_CHOOSER" => $iblock["SECTION_CHOOSER"],
 				"LIST_MODE" => $iblock["LIST_MODE"],
