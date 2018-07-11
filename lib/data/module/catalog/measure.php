@@ -71,7 +71,8 @@ class Measure extends BaseData
 			if ($strError)
 			{
 				throw new \Exception($strError);
-			} else
+			}
+			else
 			{
 				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MEASURE_UNKNOWN_ERROR'));
 			}
@@ -106,12 +107,14 @@ class Measure extends BaseData
 		if ($result)
 		{
 			return $this->createId($result);
-		} else
+		}
+		else
 		{
 			if ($strError)
 			{
 				throw new \Exception($strError);
-			} else
+			}
+			else
 			{
 				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MEASURE_UNKNOWN_ERROR'));
 			}
