@@ -134,7 +134,7 @@ class Answer extends BaseData
 			'C_SORT' => $record->getFieldRaw('C_SORT'),
 			'ACTIVE' => $record->getFieldRaw('ACTIVE'),
 			'ANSWER_TEXT' => $record->getFieldRaw('ANSWER_TEXT'),
-			);
+		);
 		if ($field = $record->getDependency("FIELD"))
 		{
 			if ($field->getId())
