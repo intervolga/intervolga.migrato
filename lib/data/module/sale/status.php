@@ -233,62 +233,62 @@ class Status extends BaseData
 		return false;
 	}
 
-    /**
-     * @param $statusId
-     * @param $fields
-     */
-    private function updateMessages($statusId, $fields)
-    {
-        if(!empty($statusId))
-        {
-            $this->deleteMessages($statusId);
-            foreach ($fields as $fieldFullName => $field)
-            {
-                $this->updateMessage($statusId, $fieldFullName, $field);
-            }
-        }
-    }
+	/**
+	 * @param $statusId
+	 * @param $fields
+	 */
+	private function updateMessages($statusId, $fields)
+	{
+		if (!empty($statusId))
+		{
+			$this->deleteMessages($statusId);
+			foreach ($fields as $fieldFullName => $field)
+			{
+				$this->updateMessage($statusId, $fieldFullName, $field);
+			}
+		}
+	}
 
-    /**
-     * @param $statusId
-     * @param $fieldName
-     * @param $fieldValue
-     */
-    private function updateMessage($statusId, $fieldName, $fieldValue)
-    {
-        if($this->isLangField($fieldName))
-        {
-            $fieldData = explode('.', $fieldName);
-            $fieldName = $fieldData[0];
-            $lid = $fieldData[1];
+	/**
+	 * @param $statusId
+	 * @param $fieldName
+	 * @param $fieldValue
+	 */
+	private function updateMessage($statusId, $fieldName, $fieldValue)
+	{
+		if ($this->isLangField($fieldName))
+		{
+			$fieldData = explode('.', $fieldName);
+			$fieldName = $fieldData[0];
+			$lid = $fieldData[1];
 
-            $dbResult = StatusLangTable::getByPrimary(array(
-                'STATUS_ID' => $statusId,
-                'LID' => $lid
-            ))->fetch();
+			$dbResult = StatusLangTable::getByPrimary(array(
+				'STATUS_ID' => $statusId,
+				'LID' => $lid,
+			))->fetch();
 
-            if(!empty($dbResult))
-            {
-                StatusLangTable::update(
-                    array(
-                        'STATUS_ID' => $statusId,
-                        'LID' => $lid
-                    ),
-                    array(
-                        $fieldName => $fieldValue
-                    )
-                );
-            }
-            else
-            {
-                StatusLangTable::add(array(
-                    'STATUS_ID' => $statusId,
-                    'LID' => $lid,
-                    $fieldName => $fieldValue
-                ));
-            }
-        }
-    }
+			if (!empty($dbResult))
+			{
+				StatusLangTable::update(
+					array(
+						'STATUS_ID' => $statusId,
+						'LID' => $lid,
+					),
+					array(
+						$fieldName => $fieldValue,
+					)
+				);
+			}
+			else
+			{
+				StatusLangTable::add(array(
+					'STATUS_ID' => $statusId,
+					'LID' => $lid,
+					$fieldName => $fieldValue,
+				));
+			}
+		}
+	}
 
 	/**
 	 * @param string $statusId
