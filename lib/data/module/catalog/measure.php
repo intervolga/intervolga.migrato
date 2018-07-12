@@ -6,6 +6,7 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -48,7 +49,7 @@ class Measure extends BaseData
 		$getList = \CCatalogMeasure::getList(array(), array("ID" => $id));
 		if ($measure = $getList->Fetch())
 		{
-			return 'measure_'.$measure["CODE"];
+			return 'measure_' . $measure["CODE"];
 		}
 
 	}
@@ -67,8 +68,7 @@ class Measure extends BaseData
 		if (!$result)
 		{
 			{
-				global $APPLICATION;
-				$APPLICATION->ThrowException('INTERVOLGA_MIGRATO.MEASURE_UNKNOWN_ERROR');
+				throw new \Exception(ExceptionText::getFromApplication());
 			}
 		}
 	}
@@ -98,10 +98,10 @@ class Measure extends BaseData
 		if ($result)
 		{
 			return $this->createId($result);
-		} else
+		}
+		else
 		{
-			global $APPLICATION;
-			$APPLICATION->ThrowException('INTERVOLGA_MIGRATO.MEASURE_UNKNOWN_ERROR');
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
