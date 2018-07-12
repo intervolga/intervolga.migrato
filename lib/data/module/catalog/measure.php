@@ -67,9 +67,7 @@ class Measure extends BaseData
 		$result = \CCatalogMeasure::update($id, $data);
 		if (!$result)
 		{
-			{
-				throw new \Exception(ExceptionText::getFromApplication());
-			}
+			throw new \Exception(ExceptionText::getFromApplication());
 		}
 	}
 
