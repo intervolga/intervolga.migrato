@@ -48,14 +48,14 @@ class Measure extends BaseData
 		$getList = \CCatalogMeasure::getList(array(), array("ID" => $id));
 		if ($measure = $getList->Fetch())
 		{
-			return $measure["SID"];
+			return 'measure_'.$measure["CODE"];
 		}
 
 	}
 
 	public function setXmlId($id, $xmlId)
 	{
-		\CCatalogMeasure::update($id->getValue(), array('SID' => $xmlId));
+		\CCatalogMeasure::update($id->getValue(), array('CODE' => $xmlId));
 
 	}
 
@@ -63,16 +63,9 @@ class Measure extends BaseData
 	{
 		$data = $this->recordToArray($record);
 		$id = $record->getId()->getValue();
-		global $strError;
-		$strError = '';
 		$result = \CCatalogMeasure::update($id, $data);
 		if (!$result)
 		{
-			if ($strError)
-			{
-				throw new \Exception($strError);
-			}
-			else
 			{
 				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MEASURE_UNKNOWN_ERROR'));
 			}
@@ -86,7 +79,6 @@ class Measure extends BaseData
 	protected function recordToArray(Record $record)
 	{
 		$array = array(
-			'SID' => $record->getXmlId(),
 			'CODE' => $record->getFieldRaw('CODE'),
 			'MEASURE_TITLE' => $record->getFieldRaw('MEASURE_TITLE'),
 			'SYMBOL_RUS' => $record->getFieldRaw('SYMBOL_RUS'),
@@ -101,23 +93,13 @@ class Measure extends BaseData
 	protected function createInner(Record $record)
 	{
 		$data = $this->recordToArray($record);
-		global $strError;
-		$strError = '';
 		$result = \CCatalogMeasure::add($data);
 		if ($result)
 		{
 			return $this->createId($result);
-		}
-		else
+		} else
 		{
-			if ($strError)
-			{
-				throw new \Exception($strError);
-			}
-			else
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MEASURE_UNKNOWN_ERROR'));
-			}
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.MEASURE_UNKNOWN_ERROR'));
 		}
 	}
 
