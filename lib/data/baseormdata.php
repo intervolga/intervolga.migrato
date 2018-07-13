@@ -29,8 +29,6 @@ use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
  */
 abstract class BaseOrmData extends BaseData
 {
-	const XML_ID_FIELD_NAME = 'XML_ID';
-
 	protected $moduleName = '';
 	/**
 	 * @var string|\Bitrix\Main\Entity\DataManager
@@ -445,7 +443,7 @@ abstract class BaseOrmData extends BaseData
 		$fields = $dataManager::getEntity()->getFields();
 		$fieldNames = array_keys($fields);
 
-		if (!in_array(static::XML_ID_FIELD_NAME, $fieldNames))
+		if (!in_array('XML_ID', $fieldNames))
 		{
 			$exceptionMessage = $this->getMessageWithOrmEntity(
 				'INTERVOLGA_MIGRATO.ORM_ENTITY.NO_XML_ID',
