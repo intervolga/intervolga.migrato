@@ -38,11 +38,11 @@ abstract class BaseOrmData extends BaseData
     const ORM_REFERENCE_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\ReferenceField';
     const ORM_EXPRESSION_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\ExpressionField';
 
-    private $moduleName = '';
+    protected $moduleName = '';
     /**
      * @var string|\Bitrix\Main\Entity\DataManager
      */
-    private $ormEntityClass = '';
+    protected $ormEntityClass = '';
 
     /**
      * Получить абсолютное имя класса ORM-сущности.
@@ -178,7 +178,7 @@ abstract class BaseOrmData extends BaseData
      * @throws ArgumentException в случае некорректной ORM-сущности.
      * @throws \Bitrix\Main\LoaderException в случае неверно заданного модуля.
      */
-    private function processUserOrmEntity()
+    protected function processUserOrmEntity()
     {
         if(Loader::includeModule($this->moduleName))
         {
@@ -206,7 +206,7 @@ abstract class BaseOrmData extends BaseData
      * @param array $ormEntityElement запись элемента из БД.
      * @return array ассоциативный массив полей элемента.
      */
-    private function getElementFields($ormEntityElement)
+    protected function getElementFields($ormEntityElement)
     {
         $fieldsRaw = [];
         $dataManager = $this->ormEntityClass;
@@ -243,7 +243,7 @@ abstract class BaseOrmData extends BaseData
      * @param string|\Bitrix\Main\Entity\DataManager $entityClassName абсолютное имя класса ORM-сущности.
      * @throws ArgumentException в случае некорректной ORM-сущности.
      */
-    private function processEntityClassName($entityClassName)
+    protected function processEntityClassName($entityClassName)
     {
         if(empty($entityClassName))
         {
@@ -280,7 +280,7 @@ abstract class BaseOrmData extends BaseData
      *
      * @param string $entityName название ORM-сущности на естественном языке.
      */
-    private function processEntityName($entityName)
+    protected function processEntityName($entityName)
     {
         if($entityName == '')
         {
@@ -296,7 +296,7 @@ abstract class BaseOrmData extends BaseData
      * @param string|\Bitrix\Main\Entity\DataManager $entityClassName абсолютное имя класса ORM-сущности.
      * @return object объект с флагом результата и сообщением, в случае, если проверка не пройдена.
      */
-    private function isEntityClassNameCorrect($entityClassName)
+    protected function isEntityClassNameCorrect($entityClassName)
     {
         $result = null;
 
@@ -340,7 +340,7 @@ abstract class BaseOrmData extends BaseData
      * @param string $message сообщение, поясняющее флаг результата.
      * @return object объект результата с полями result и message.
      */
-    private function getResultObject($result, $message = 'ok')
+    protected function getResultObject($result, $message = 'ok')
     {
         return (object)[
             'result' => $result,
@@ -355,7 +355,7 @@ abstract class BaseOrmData extends BaseData
      * @param string|\Bitrix\Main\Entity\DataManager $entityClassName имя класса ORM-сущности.
      * @return string языковая константа с именем класса ORM-сущности.
      */
-    private function getMessageWithOrmEntity($messageCode, $entityClassName)
+    protected function getMessageWithOrmEntity($messageCode, $entityClassName)
     {
         return Loc::getMessage(
             $messageCode,
@@ -371,10 +371,10 @@ abstract class BaseOrmData extends BaseData
      * @return string[] массив элемента.
      * @throws \Exception в случае ошибки привдения типов.
      */
-    private function recordToArray(Record $record)
+    protected function recordToArray(Record $record)
     {
         $recordAsArray = $record->getFieldsRaw();
-        $this->castFields($recordAsArray);
+        $recordAsArray = $this->castFields($recordAsArray);
 
         return $recordAsArray;
     }
@@ -383,8 +383,9 @@ abstract class BaseOrmData extends BaseData
      * Приведение типов при импорте.
      *
      * @param string[] $recordAsArray элемент в виде массива.
+     * @return string[]
      */
-    private function castFields(&$recordAsArray)
+    protected function castFields($recordAsArray)
     {
         $dataManager = $this->ormEntityClass;
         $booleanField = static::ORM_BOOLEAN_FIELD_CLASS_NAME;
@@ -397,7 +398,7 @@ abstract class BaseOrmData extends BaseData
             $fieldName = $field->getName();
             if($field instanceof $booleanField)
             {
-                $this->castBooleanField($field, $recordAsArray[$fieldName]);
+                $recordAsArray[$fieldName] = $this->castBooleanField($field, $recordAsArray[$fieldName]);
             }
             elseif($field instanceof $dataTimeField)
             {
@@ -408,6 +409,8 @@ abstract class BaseOrmData extends BaseData
                 $recordAsArray[$fieldName] = new Date($recordAsArray[$fieldName]);
             }
         }
+
+        return $recordAsArray;
     }
 
     /**
@@ -415,8 +418,9 @@ abstract class BaseOrmData extends BaseData
      *
      * @param \Bitrix\Main\Entity\ScalarField $field объект поля ORM-сущности.
      * @param string $fieldValue значение поля элемента.
+     * @return bool
      */
-    private function castBooleanField($field, &$fieldValue)
+    protected function castBooleanField($field, $fieldValue)
     {
         if(is_numeric($fieldValue))
         {
@@ -438,6 +442,8 @@ abstract class BaseOrmData extends BaseData
                 $fieldValue = boolval($fieldValue);
             }
         }
+
+        return $fieldValue;
     }
 
     /**
@@ -445,7 +451,7 @@ abstract class BaseOrmData extends BaseData
      *
      * @throws ArgumentException в случае отсутствия поля XML_ID.
      */
-    private function checkXmlId()
+    protected function checkXmlId()
     {
         $dataManager = $this->ormEntityClass;
         $fields = $dataManager::getEntity()->getFields();
