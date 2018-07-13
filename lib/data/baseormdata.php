@@ -30,13 +30,6 @@ use Intervolga\Migrato\Tool\XmlIdProvider\OrmXmlIdProvider;
 abstract class BaseOrmData extends BaseData
 {
     const XML_ID_FIELD_NAME = 'XML_ID';
-    const ORM_DATE_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\DateField';
-    const ORM_ENTITY_PARENT_CLASS_NAME = '\Bitrix\Main\Entity\DataManager';
-    const ORM_INTEGER_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\IntegerField';
-    const ORM_BOOLEAN_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\BooleanField';
-    const ORM_DATETIME_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\DatetimeField';
-    const ORM_REFERENCE_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\ReferenceField';
-    const ORM_EXPRESSION_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\ExpressionField';
 
     protected $moduleName = '';
     /**
@@ -210,21 +203,18 @@ abstract class BaseOrmData extends BaseData
     {
         $fieldsRaw = [];
         $dataManager = $this->ormEntityClass;
-        $integerField = static::ORM_INTEGER_FIELD_CLASS_NAME;
-        $referenceField = static::ORM_REFERENCE_FIELD_CLASS_NAME;
-        $expressionField = static::ORM_EXPRESSION_FIELD_CLASS_NAME;
 
         $fields = $dataManager::getEntity()->getFields();
         foreach ($fields as $fieldName => $field)
         {
             // Do not migrate ExpressionField and ReferenceField
-            if ($field instanceof $expressionField ||
-                $field instanceof $referenceField)
+            if ($field instanceof \Bitrix\Main\Entity\ExpressionField ||
+                $field instanceof \Bitrix\Main\Entity\ReferenceField)
             {
                 continue;
             }
             // Do not migrate integer field with name 'ID'
-            elseif($field instanceof $integerField && $field->getName() == 'ID')
+            elseif($field instanceof \Bitrix\Main\Entity\IntegerField && $field->getName() == 'ID')
             {
                 continue;
             }
@@ -304,7 +294,7 @@ abstract class BaseOrmData extends BaseData
         {
             $entityReflectionClass = new \ReflectionClass($entityClassName);
 
-            if(!$entityReflectionClass->isSubclassOf(static::ORM_ENTITY_PARENT_CLASS_NAME))
+            if(!$entityReflectionClass->isSubclassOf('\Bitrix\Main\Entity\DataManager'))
             {
                 $result = $this->getResultObject(
                     false,
@@ -388,23 +378,20 @@ abstract class BaseOrmData extends BaseData
     protected function castFields($recordAsArray)
     {
         $dataManager = $this->ormEntityClass;
-        $booleanField = static::ORM_BOOLEAN_FIELD_CLASS_NAME;
-        $dataTimeField = static::ORM_DATETIME_FIELD_CLASS_NAME;
-        $dateField = static::ORM_DATE_FIELD_CLASS_NAME;
 
         $fields = $dataManager::getEntity()->getFields();
         foreach ($fields as $field)
         {
             $fieldName = $field->getName();
-            if($field instanceof $booleanField)
+            if($field instanceof \Bitrix\Main\Entity\BooleanField)
             {
                 $recordAsArray[$fieldName] = $this->castBooleanField($field, $recordAsArray[$fieldName]);
             }
-            elseif($field instanceof $dataTimeField)
+            elseif($field instanceof \Bitrix\Main\Entity\DatetimeField)
             {
                 $recordAsArray[$fieldName] = new DateTime($recordAsArray[$fieldName]);
             }
-            elseif($field instanceof $dateField)
+            elseif($field instanceof \Bitrix\Main\Entity\DateField)
             {
                 $recordAsArray[$fieldName] = new Date($recordAsArray[$fieldName]);
             }
@@ -416,7 +403,7 @@ abstract class BaseOrmData extends BaseData
     /**
      * Приведение типа для BooleanFied полей при импорте.
      *
-     * @param \Bitrix\Main\Entity\ScalarField $field объект поля ORM-сущности.
+     * @param \Bitrix\Main\Entity\BooleanField $field объект поля ORM-сущности.
      * @param string $fieldValue значение поля элемента.
      * @return bool
      */
