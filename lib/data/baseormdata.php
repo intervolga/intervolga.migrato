@@ -39,12 +39,15 @@ abstract class BaseOrmData extends BaseData
     const ORM_EXPRESSION_FIELD_CLASS_NAME = '\Bitrix\Main\Entity\ExpressionField';
 
     private $moduleName = '';
+    /**
+     * @var string|\Bitrix\Main\Entity\DataManager
+     */
     private $ormEntityClass = '';
 
     /**
      * Получить абсолютное имя класса ORM-сущности.
      *
-     * @return string абсолютное имя класса ORM-сущности.
+     * @return string|\Bitrix\Main\Entity\DataManager абсолютное имя класса ORM-сущности.
      */
     public function getOrmEntityClass()
     {
@@ -54,7 +57,7 @@ abstract class BaseOrmData extends BaseData
     /**
      * Установить абсолютное имя класса ORM-сущности.
      *
-     * @param string $ormEntityClass абсолютное имя класса ORM-сущности.
+     * @param string|\Bitrix\Main\Entity\DataManager $ormEntityClass абсолютное имя класса ORM-сущности.
      */
     public function setOrmEntityClass($ormEntityClass)
     {
@@ -237,7 +240,7 @@ abstract class BaseOrmData extends BaseData
     /**
      * Обработка имени класса ORM-сущности при конфигурировании.
      *
-     * @param string $entityClassName абсолютное имя класса ORM-сущности.
+     * @param string|\Bitrix\Main\Entity\DataManager $entityClassName абсолютное имя класса ORM-сущности.
      * @throws ArgumentException в случае некорректной ORM-сущности.
      */
     private function processEntityClassName($entityClassName)
@@ -290,7 +293,7 @@ abstract class BaseOrmData extends BaseData
      * * Проверка, что класс ORM-сущности существует.
      * * Проверка, что класс ORM-сущности является наследником \Bitrix\Main\Entity\DataManager.
      *
-     * @param string $entityClassName абсолютное имя класса ORM-сущности.
+     * @param string|\Bitrix\Main\Entity\DataManager $entityClassName абсолютное имя класса ORM-сущности.
      * @return object объект с флагом результата и сообщением, в случае, если проверка не пройдена.
      */
     private function isEntityClassNameCorrect($entityClassName)
@@ -349,7 +352,7 @@ abstract class BaseOrmData extends BaseData
      * Возвращает языковую константу, подставляя имя класса ORM-сущности.
      *
      * @param string $messageCode ключ языковой константы.
-     * @param string $entityClassName имя класса ORM-сущности.
+     * @param string|\Bitrix\Main\Entity\DataManager $entityClassName имя класса ORM-сущности.
      * @return string языковая константа с именем класса ORM-сущности.
      */
     private function getMessageWithOrmEntity($messageCode, $entityClassName)
