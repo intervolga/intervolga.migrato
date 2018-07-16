@@ -4,8 +4,12 @@ namespace Intervolga\Migrato\Data\Module\form;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\Module\Main\Site;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Data\Module\Main\Language;
+use Intervolga\Migrato\Data\Link;
+use Intervolga\Migrato\Data\Value;
 
 Loc::loadMessages(__FILE__);
 
@@ -15,6 +19,10 @@ class Form extends BaseData
 	{
 		Loader::includeModule("form");
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.FORM_FORM_TYPE'));
+		$this->setDependencies(array(
+			'LANGUAGE' => new Link(Language::getInstance()),
+			'SITE' => new Link(Site::getInstance())
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -50,9 +58,52 @@ class Form extends BaseData
 				"RESTRICT_STATUS" => $form["RESTRICT_STATUS"],
 				"USE_RESTRICTIONS" => $form["USE_RESTRICTIONS"],
 			));
+
+			$getMenuList = \CForm::GetMenuList(array("FORM_ID"=>$record->getId()->getValue()), "N");
+			$addItems = array();
+			while ($formMenu = $getMenuList->Fetch()) {
+				$addItems['MENU.' . $formMenu['LID']] = $formMenu['MENU'];
+			}
+			
+			$getSiteArray = \CForm::GetSiteArray($record->getId()->getValue());
+			foreach ($getSiteArray as $formSite) {
+				$addItems['SITE.' . $formSite] = $formSite;
+			}
+			$getTemplateList = \CForm::GetTemplateList("MAIL","xxx",$record->getId()->getValue());
+			if ($getTemplateList['reference_id']) {
+				$record->addFieldsRaw(array(
+					"SEND_EMAIL" => "Y",
+				));
+			}
+			$record->addFieldsRaw($addItems);
+			$this->addDependencies($record, $form);
 			$result[] = $record;
 		}
 		return $result;
+	}
+
+	protected function addDependencies(Record $record, array $form)
+	{
+		$dependency = clone $this->getDependency('LANGUAGE');
+		$languages = array();
+		$languagesGetList = \CForm::GetMenuList(array("FORM_ID"=>$record->getId()->getValue()), "N");
+		while ($language = $languagesGetList->Fetch())
+		{
+			$languages[] = Language::getInstance()->getXmlId(
+				Language::getInstance()->createId($language['LID'])
+			);
+		}
+		$dependency->setValues($languages);
+		$record->setDependency('LANGUAGE', $dependency);
+
+		$dependency = clone $this->getDependency('SITE');
+		$sites = array();
+		$sitesGetArray = \CForm::GetSiteArray($record->getId()->getValue());
+		foreach ($sitesGetArray as $site) {
+			$sites[] = Site::getInstance()->getXmlId(Site::getInstance()->createId($site));
+		}
+		$dependency->setValues($sites);
+		$record->setDependency('SITE', $dependency);
 	}
 
 	public function getXmlId($id)
@@ -69,10 +120,29 @@ class Form extends BaseData
 	public function update(Record $record)
 	{
 		$data = $this->recordToArray($record);
+		$value = Value::listToTree($record->getFieldsRaw());
+		$data["arMENU"] = $value["MENU"];
+
+		foreach ($value["SITE"] as $site)
+		{
+			$data["arSITE"][] = $site;
+		}
 		$id = $record->getId()->getValue();
 		global $strError;
 		$strError = '';
 		$result = \CForm::Set($data, $id);
+		if ($data["SEND_EMAIL"])
+		{
+			\CForm::SetMailTemplate($id, "Y");
+		}
+		else
+		{
+			$arr = \CForm::GetTemplateList("MAIL", "xxx", $id);
+			while (list($num, $tmp_id) = each($arr['reference_id']))
+			{
+				\CEventMessage::Delete($tmp_id);
+			}
+		}
 		if (!$result)
 		{
 			if ($strError)
@@ -112,18 +182,35 @@ class Form extends BaseData
 			'RESTRICT_TIME' => $record->getFieldRaw('RESTRICT_TIME'),
 			'RESTRICT_STATUS' => $record->getFieldRaw('RESTRICT_STATUS'),
 			'USE_RESTRICTIONS' => $record->getFieldRaw('USE_RESTRICTIONS'),
+			'SEND_EMAIL' => $record->getFieldRaw('SEND_EMAIL')
 		);
+		$link = $record->getDependency('LANGUAGE');
+		if ($link && $link->getValues())
+		{
+			foreach ($link->findIds() as $LangIdObject)
+			{
+				$array['LID'][] = $LangIdObject->getValue();
+			}
+		}
 		return $array;
 	}
 
 	protected function createInner(Record $record)
 	{
 		$data = $this->recordToArray($record);
+		$value = Value::listToTree($record->getFieldsRaw());
+		$data["arMENU"] = $value["MENU"];
+		foreach ($value["SITE"] as $site) {
+			$data["arSITE"][] = $site;
+		}
 		global $strError;
 		$strError = '';
 		$result = \CForm::Set($data, "");
 		if ($result)
 		{
+			if ($data["SEND_EMAIL"]) {
+				\CForm::SetMailTemplate($result, "Y");
+			}
 			return $this->createId($result);
 		}
 		else
