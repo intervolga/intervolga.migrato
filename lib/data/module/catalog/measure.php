@@ -23,7 +23,7 @@ class Measure extends BaseData
 	{
 		$getList = \CCatalogMeasure::getList();
 		$result = Array();
-		while ($measure = $getList->Fetch())
+		while ($measure = $getList->fetch())
 		{
 			$record = new Record($this);
 			$id = $this->createId($measure['ID']);
@@ -47,11 +47,8 @@ class Measure extends BaseData
 	public function getXmlId($id)
 	{
 		$getList = \CCatalogMeasure::getList(array(), array("ID" => $id));
-		if ($measure = $getList->Fetch())
-		{
-			return 'measure_' . $measure["CODE"];
-		}
-
+		$measure = $getList->fetch();
+		return 'measure_' . $measure["CODE"];
 	}
 
 	public function setXmlId($id, $xmlId)
