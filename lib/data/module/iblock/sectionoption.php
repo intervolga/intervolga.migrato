@@ -12,7 +12,8 @@ use Bitrix\Main\Localization\Loc,
 Loc::loadMessages(__FILE__);
 
 /**
- * Class ListOptions
+ * Class SectionOption - настройки показа списка разделов инфоблока в административной части.
+ *
  * @package Intervolga\Migrato\Data\Module\Iblock
  */
 class SectionOption extends BaseData

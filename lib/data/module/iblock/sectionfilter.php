@@ -12,6 +12,11 @@ use \Intervolga\Migrato\Data\BaseData,
 
 Loc::loadMessages(__FILE__);
 
+/**
+ * Class SectionFilter - настройки фильтра для списка разделов инфоблока в административной части.
+ *
+ * @package Intervolga\Migrato\Data\Module\Iblock
+ */
 class SectionFilter extends BaseData
 {
 	const XML_ID_SEPARATOR = '.';
