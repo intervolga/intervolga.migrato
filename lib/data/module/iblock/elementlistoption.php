@@ -15,7 +15,7 @@ Loc::loadMessages(__FILE__);
  * Class ListOptions
  * @package Intervolga\Migrato\Data\Module\Iblock
  */
-class ElementListOptions extends BaseData
+class ElementListOption extends BaseData
 {
 	const CATEGORY = 'list';
 	const NAME_PREFIX = array ('L' => 'tbl_iblock_list_',

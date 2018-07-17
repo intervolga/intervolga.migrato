@@ -15,7 +15,7 @@ Loc::loadMessages(__FILE__);
  * Class ListOptions
  * @package Intervolga\Migrato\Data\Module\Iblock
  */
-class SectionOptions extends BaseData
+class SectionOption extends BaseData
 {
 	const CATEGORY = 'list';
 	const NAME_PREFIX = 'tbl_iblock_section_';
