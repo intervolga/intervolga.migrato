@@ -24,14 +24,13 @@ class ElementListFilter extends BaseData
 								'E' => 'tbl_iblock_element_');
 	const PROPERTY_FIELD_PREFIX = 'find_el_property_';
 
-	public function __construct()
+	protected function configure()
 	{
 		Loader::includeModule('iblock');
-	}
-
-	public function getFilesSubdir()
-	{
-		return '/';
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FILTER_ENTITY_NAME'));
+		$this->setVirtualXmlId(true);
+		$this->setFilesSubdir('/');
+		$this->setDependencies($this->getDependenciesArray());
 	}
 
 	/**
@@ -67,7 +66,7 @@ class ElementListFilter extends BaseData
 					$record->setFieldRaw('SORT_FIELD', $arFilter['SORT_FIELD']);
 					$record->setFieldRaw('IS_ADMIN', $arFilter['USER_ID'] == 1 ? 'Y' : 'N');
 					$this->addPropsDependencies($record, $arFilter['FIELDS']);
-					$this->setDependencies($record, $arFilter);
+					$this->setRecordDependencies($record, $arFilter);
 					$result[] = $record;
 				}
 			}
@@ -103,7 +102,7 @@ class ElementListFilter extends BaseData
 		return $result;
 	}
 
-	public function getDependencies()
+	public function getDependenciesArray()
 	{
 		return array(
 			'LANGUAGE' => new Link(Language::getInstance()),
@@ -113,7 +112,7 @@ class ElementListFilter extends BaseData
 		);
 	}
 
-	public function setDependencies(Record $record, array $arFilter)
+	public function setRecordDependencies(Record $record, array $arFilter)
 	{
 		//LANGUAGE_ID
 		if($arFilter['LANGUAGE_ID'])
