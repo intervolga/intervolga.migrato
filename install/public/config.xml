@@ -169,13 +169,13 @@
             <name>elementlistfilter</name>
         </entity>
         <entity>
-            <name>elementlistoptions</name>
+            <name>elementlistoption</name>
         </entity>
         <entity>
             <name>sectionfilter</name>
         </entity>
         <entity>
-            <name>sectionoptions</name>
+            <name>sectionoption</name>
         </entity>
     </module>
     <module>
