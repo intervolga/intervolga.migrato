@@ -1,4 +1,5 @@
-<? namespace Intervolga\Migrato\Data\Module\Iblock;
+<?php
+namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Main\Localization\Loc,
 	Intervolga\Migrato\Data\BaseData,
@@ -316,7 +317,7 @@ class SectionOptions extends BaseData
 		else
 			$fields['USER_ID'] = false;
 
-		//создаем NAME записи
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ NAME пїЅпїЅпїЅпїЅпїЅпїЅ
 		$iblockXmlId = $xmlFields['IBLOCK_XML_ID'];
 		$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
 		if(Loader::includeModule('iblock'))
@@ -399,7 +400,7 @@ class SectionOptions extends BaseData
 		$xmlFields = $this->xmlIdToArray($xmlId);
 		if($xmlFields['IS_ADMIN'] == 'Y')
 			$fields['USER_ID'] = 1;
-		//создаем NAME записи
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ NAME пїЅпїЅпїЅпїЅпїЅпїЅ
 		$iblockXmlId = $xmlFields['IBLOCK_XML_ID'];
 		$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
 		if(Loader::includeModule('iblock'))
