@@ -13,7 +13,8 @@ use \Intervolga\Migrato\Data\BaseData,
 Loc::loadMessages(__FILE__);
 
 /**
- * Class SectionFilter - настройки фильтра для списка разделов инфоблока в административной части.
+ * Class SectionFilter - настройки фильтра для списка разделов инфоблока в административной части
+ * (раздельный режим просмотра).
  *
  * @package Intervolga\Migrato\Data\Module\Iblock
  */
