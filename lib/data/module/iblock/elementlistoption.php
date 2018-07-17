@@ -25,17 +25,16 @@ class ElementListOption extends BaseData
 	const XML_ID_SEPARATOR = '.';
 	const COLUMNS_DELIMITER = ',';
 
-	public function __construct()
+	protected function configure()
 	{
 		Loader::includeModule("iblock");
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_LIST_OPTIONS_ENTITY_NAME'));
+		$this->setVirtualXmlId(true);
+		$this->setFilesSubdir('/');
+		$this->setDependencies($this->getDependenciesArray());
 	}
 
-	public function getFilesSubdir()
-	{
-		return '/';
-	}
-
-	public function getDependencies()
+	public function getDependenciesArray()
 	{
 		return array(
 			'IBLOCK_ID' => new Link(MigratoIblock::getInstance()),
@@ -68,7 +67,7 @@ class ElementListOption extends BaseData
 						$record->setXmlId($this->getXmlIdByObject($uoption));
 						$record->setFieldRaw('COMMON', $uoption['COMMON']);
 						$record->setFieldRaw('CATEGORY', $uoption['CATEGORY']);
-						$this->setDependencies($record, $uoption);
+						$this->setRecordDependencies($record, $uoption);
 						$this->addPropsDependencies($record, $value);
 						$result[] = $record;
 					}
@@ -303,7 +302,7 @@ class ElementListOption extends BaseData
 		return '';
 	}
 
-	public function setDependencies(Record $record, array $uoption)
+	public function setRecordDependencies(Record $record, array $uoption)
 	{
 		if($uoption['NAME'])
 		{
