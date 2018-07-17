@@ -27,7 +27,7 @@ class ElementListFilter extends BaseData
 	protected function configure()
 	{
 		Loader::includeModule('iblock');
-		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FILTER_ENTITY_NAME'));
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.ENTITY_NAME'));
 		$this->setVirtualXmlId(true);
 		$this->setFilesSubdir('/');
 		$this->setDependencies($this->getDependenciesArray());
@@ -284,7 +284,7 @@ class ElementListFilter extends BaseData
 				}
 			}
 		}
-		throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FILTER_ADD_ERROR'));
+		throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.ADD_ERROR'));
 	}
 
 	private function getLanguageFromDependency(Record $record)
@@ -335,7 +335,7 @@ class ElementListFilter extends BaseData
 				}
 			}
 		}
-		throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FILTER_UPDATE_ERROR'));
+		throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.UPDATE_ERROR'));
 	}
 
 	protected function deleteInner($xmlId)
@@ -347,7 +347,7 @@ class ElementListFilter extends BaseData
 			$res = \CAdminFilter::Delete($id);
 			if (!$res)
 			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FILTER_DELETE_ERROR'));
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.DELETE_ERROR'));
 			}
 		}
 	}

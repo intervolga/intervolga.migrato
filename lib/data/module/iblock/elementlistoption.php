@@ -28,7 +28,7 @@ class ElementListOption extends BaseData
 	protected function configure()
 	{
 		Loader::includeModule("iblock");
-		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_LIST_OPTIONS_ENTITY_NAME'));
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_LIST_OPTIONS.ENTITY_NAME'));
 		$this->setVirtualXmlId(true);
 		$this->setFilesSubdir('/');
 		$this->setDependencies($this->getDependenciesArray());
@@ -367,7 +367,7 @@ class ElementListOption extends BaseData
 				}
 			}
 		}
-		throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_LIST_OPTIONS_ADD_ERROR'));
+		throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_LIST_OPTIONS.ADD_ERROR'));
 	}
 
 	protected function deleteInner($xmlId)
@@ -382,7 +382,7 @@ class ElementListOption extends BaseData
 				$res = \CUserOptions::DeleteOptionsByName($uoption['CATEGORY'],$uoption['NAME']);
 				if (!$res)
 				{
-					throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_LIST_OPTIONS_DELETE_ERROR'));
+					throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_LIST_OPTIONS.DELETE_ERROR'));
 				}
 			}
 		}
@@ -410,7 +410,7 @@ class ElementListOption extends BaseData
 
 		if (!$isUpdated)
 		{
-			throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_LIST_OPTIONS_NOT_UPDATED');
+			throw new \Exception('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_LIST_OPTIONS.NOT_UPDATED');
 		}
 	}
 
