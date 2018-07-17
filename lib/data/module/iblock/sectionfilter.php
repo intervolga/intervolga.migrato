@@ -25,14 +25,13 @@ class SectionFilter extends BaseData
 	const UF_PREFIX = 'find_UF_';
 	const UF_ENUM_VALUE_PREFIX = 'sel_';
 
-	public function __construct()
+	protected function configure()
 	{
 		Loader::includeModule('iblock');
-	}
-
-	public function getFilesSubdir()
-	{
-		return '/';
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_FILTER_ENTITY_NAME'));
+		$this->setVirtualXmlId(true);
+		$this->setFilesSubdir('/');
+		$this->setDependencies($this->getDependenciesArray());
 	}
 
 	/**
@@ -69,7 +68,7 @@ class SectionFilter extends BaseData
 					$record->setFieldRaw('SORT_FIELD', $arFilter['SORT_FIELD']);
 					$record->setFieldRaw('IS_ADMIN', $arFilter['USER_ID'] == 1 ? 'Y' : 'N');
 					$this->addUfDependencies($record, $arFilter['FIELDS'],$iblockId);
-					$this->setDependencies($record, $arFilter);
+					$this->setRecordDependencies($record, $arFilter);
 					$result[] = $record;
 				}
 			}
@@ -100,7 +99,10 @@ class SectionFilter extends BaseData
 		return $result;
 	}
 
-	public function getDependencies()
+	/**
+	 * @return array
+	 */
+	public function getDependenciesArray()
 	{
 		return array(
 			'LANGUAGE' => new Link(Language::getInstance()),
@@ -110,7 +112,7 @@ class SectionFilter extends BaseData
 		);
 	}
 
-	public function setDependencies(Record $record, array $arFilter)
+	public function setRecordDependencies(Record $record, array $arFilter)
 	{
 		//LANGUAGE_ID
 		if($arFilter['LANGUAGE_ID'])
