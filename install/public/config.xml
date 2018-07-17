@@ -165,6 +165,18 @@
         <entity>
             <name>form</name>
         </entity>
+        <entity>
+            <name>elementlistfilter</name>
+        </entity>
+        <entity>
+            <name>elementlistoptions</name>
+        </entity>
+        <entity>
+            <name>sectionfilter</name>
+        </entity>
+        <entity>
+            <name>sectionoptions</name>
+        </entity>
     </module>
     <module>
         <name>highloadblock</name>
