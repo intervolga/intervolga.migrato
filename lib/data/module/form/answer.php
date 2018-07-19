@@ -1,5 +1,5 @@
 <?php
-namespace Intervolga\Migrato\Data\Module\form;
+namespace Intervolga\Migrato\Data\Module\Form;
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
