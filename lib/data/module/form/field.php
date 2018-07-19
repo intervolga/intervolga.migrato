@@ -12,9 +12,12 @@ Loc::loadMessages(__FILE__);
 
 class Field extends BaseData
 {
+	const XML_ID_SEPARATOR = '.';
+
 	protected function configure()
 	{
 		Loader::includeModule("form");
+		$this->setVirtualXmlId(true);
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.FORM_FIELD_TYPE'));
 		$this->setDependencies(array(
 			'FORM' => new Link(Form::getInstance()),
@@ -43,7 +46,7 @@ class Field extends BaseData
 				$record = new Record($this);
 				$id = $this->createId($field['ID']);
 				$record->setId($id);
-				$record->setXmlId($field['SID']);
+				$record->setXmlId($this->getXmlId($id));
 				$record->addFieldsRaw(array(
 					"ACTIVE" => $field["ACTIVE"],
 					"TITLE" => $field["TITLE"],
@@ -74,12 +77,10 @@ class Field extends BaseData
 	public function getXmlId($id)
 	{
 		$field = \CFormField::GetByID($id->getValue())->Fetch();
-		return $field['SID'];
-	}
+		$form = \CForm::GetByID($field['FORM_ID'])->fetch();
+		$formXmlId = Form::getInstance()->getXmlId(Form::getInstance()->createId($form['ID']));
 
-	public function setXmlId($id, $xmlId)
-	{
-		\CFormField::Set(array('SID' => $xmlId), $id->getValue());
+		return $formXmlId . static::XML_ID_SEPARATOR . $field['SID'];
 	}
 
 	public function update(Record $record)
