@@ -5,7 +5,6 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
-use Intervolga\Migrato\Data\RecordId;
 
 Loc::loadMessages(__FILE__);
 
@@ -21,8 +20,8 @@ class Index extends BaseData
 	public function getList(array $filter = array())
 	{
 		$result = array();
-		$getList = \CPerfomanceIndexComplete::GetList($filter);
-		while ($index = $getList->Fetch())
+		$getList = \CPerfomanceIndexComplete::getList($filter);
+		while ($index = $getList->fetch())
 		{
 			$record = new Record($this);
 			$id = $this->createId($index['ID']);
@@ -41,9 +40,9 @@ class Index extends BaseData
 
 	public function getXmlId($id)
 	{
-		$arFilter = Array("ID" => $id);
-		$getList = \CPerfomanceIndexComplete::GetList($arFilter);
-		if ($index = $getList->Fetch())
+		$arFilter = array("ID" => $id);
+		$getList = \CPerfomanceIndexComplete::getList($arFilter);
+		if ($index = $getList->fetch())
 		{
 			return $index['INDEX_NAME'];
 		}
@@ -67,7 +66,7 @@ class Index extends BaseData
 			'INDEX_NAME' => $record->getXmlId(),
 			'TABLE_NAME' => $record->getFieldRaw('TABLE_NAME'),
 			'COLUMN_NAMES' => $record->getFieldRaw('COLUMN_NAMES'),
-			'BANNED' => $record->getFieldRaw('BANNED')
+			'BANNED' => $record->getFieldRaw('BANNED'),
 		);
 		return $array;
 	}
@@ -78,17 +77,19 @@ class Index extends BaseData
 		$data = $this->recordToArray($record);
 		global $strError;
 		$strError = '';
-		$dbfields = $DB->Query('CREATE INDEX ' . $data["INDEX_NAME"] . ' ON ' . $data["TABLE_NAME"] . ' (' . $data["COLUMN_NAMES"] . ') ');
-		$result = \CPerfomanceIndexComplete::Add($data);
+		$dbfields = $DB->query('CREATE INDEX ' . $data["INDEX_NAME"] . ' ON ' . $data["TABLE_NAME"] . ' (' . $data["COLUMN_NAMES"] . ') ');
+		$result = \CPerfomanceIndexComplete::add($data);
 		if (($dbfields) && ($result))
 		{
 			return $this->createId($result);
-		} else
+		}
+		else
 		{
 			if ($strError)
 			{
 				throw new \Exception($strError);
-			} else
+			}
+			else
 			{
 				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.PERFMON_INDEX_UNKNOWN_ERROR'));
 			}
@@ -99,12 +100,12 @@ class Index extends BaseData
 	{
 		global $DB;
 		$data = $this->recordToArray($record);
-		$DB->Query('ALTER TABLE ' . $data['TABLE_NAME'] . ' DROP INDEX ' . $data["INDEX_NAME"]);
-		$arFilter = Array("INDEX_NAME" => $data["INDEX_NAME"]);
-		$getList = \CPerfomanceIndexComplete::GetList($arFilter);
-		if ($index = $getList->Fetch())
+		$DB->query('ALTER TABLE ' . $data['TABLE_NAME'] . ' DROP INDEX ' . $data["INDEX_NAME"]);
+		$arFilter = array("INDEX_NAME" => $data["INDEX_NAME"]);
+		$getList = \CPerfomanceIndexComplete::getList($arFilter);
+		if ($index = $getList->fetch())
 		{
-			\CPerfomanceIndexComplete::Delete($index['ID']);
+			\CPerfomanceIndexComplete::delete($index['ID']);
 		}
 	}
 }
