@@ -5,12 +5,15 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
 class Index extends BaseData
 {
+	const XML_ID_SEPARATOR = '.';
+
 	protected function configure()
 	{
 		$this->setVirtualXmlId(true);
@@ -27,7 +30,7 @@ class Index extends BaseData
 			$record = new Record($this);
 			$id = $this->createId($index['ID']);
 			$record->setId($id);
-			$record->setXmlId($index['INDEX_NAME']);
+			$record->setXmlId($this->getXmlId($id));
 			$record->addFieldsRaw(array(
 				"INDEX_NAME" => $index["INDEX_NAME"],
 				"TABLE_NAME" => $index["TABLE_NAME"],
@@ -41,11 +44,13 @@ class Index extends BaseData
 
 	public function getXmlId($id)
 	{
-		$arFilter = array("ID" => $id);
+		$arFilter = array("ID" => $id->getValue());
 		$getList = \CPerfomanceIndexComplete::getList($arFilter);
 		if ($index = $getList->fetch())
 		{
-			return $index['INDEX_NAME'];
+			$table = str_replace('`', '', $index['TABLE_NAME']);
+			$columns = str_replace('`', '', $index['COLUMN_NAMES']);
+			return $table . static::XML_ID_SEPARATOR . md5($columns . $index['BANNED']);
 		}
 		return '';
 	}
@@ -54,7 +59,7 @@ class Index extends BaseData
 	{
 		if (!$this->isEqual($record, $record->getId()->getValue()))
 		{
-			$this->deleteInner($record);
+			$this->deleteInner($record->getId());
 			$this->createInner($record);
 		}
 	}
@@ -82,7 +87,7 @@ class Index extends BaseData
 	protected function recordToArray(Record $record)
 	{
 		$array = array(
-			'INDEX_NAME' => $record->getXmlId(),
+			'INDEX_NAME' => $record->getFieldRaw('INDEX_NAME'),
 			'TABLE_NAME' => $record->getFieldRaw('TABLE_NAME'),
 			'COLUMN_NAMES' => $record->getFieldRaw('COLUMN_NAMES'),
 			'BANNED' => $record->getFieldRaw('BANNED'),
@@ -94,31 +99,52 @@ class Index extends BaseData
 	{
 		global $DB;
 		$data = $this->recordToArray($record);
-		$table = new \CPerfomanceTable();
-		$query = $table->getCreateIndexDDL($data["TABLE_NAME"], $data["INDEX_NAME"], [$data["COLUMN_NAMES"]]);
+
 		$DB->db_Error = '';
-		$indexCreateResult = $DB->query($query);
-		if ($indexCreateResult)
+		$id = \CPerfomanceIndexComplete::add($data);
+		if ($id)
 		{
-			$result = \CPerfomanceIndexComplete::add($data);
-			if ($result)
+			if ($data['BANNED'] == 'Y')
 			{
-				return $this->createId($result);
+				return $this->createId($id);
+			}
+			else
+			{
+				$table = new \CPerfomanceTable();
+				$query = $table->getCreateIndexDDL($data["TABLE_NAME"], $data["INDEX_NAME"], [$data["COLUMN_NAMES"]]);
+				$indexCreateResult = $DB->query($query);
+				if ($indexCreateResult)
+				{
+					return $this->createId($id);
+				}
+				else
+				{
+					\CPerfomanceIndexComplete::delete($id);
+				}
 			}
 		}
 		throw new \Exception(ExceptionText::getFromString($DB->db_Error));
 	}
 
-	protected function deleteInner(Record $record)
+	protected function deleteInner(RecordId $id)
 	{
-		global $DB;
-		$data = $this->recordToArray($record);
-		$DB->query('ALTER TABLE ' . $data['TABLE_NAME'] . ' DROP INDEX ' . $data["INDEX_NAME"]);
-		$arFilter = array("INDEX_NAME" => $data["INDEX_NAME"]);
-		$getList = \CPerfomanceIndexComplete::getList($arFilter);
-		if ($index = $getList->fetch())
+		$data = \CPerfomanceIndexComplete::getList(['ID' => $id->getValue()])->fetch();
+		if ($data["INDEX_NAME"])
 		{
-			\CPerfomanceIndexComplete::delete($index['ID']);
+			$table = new \CPerfomanceTable();
+			$indexes = $table->getIndexes($data['TABLE_NAME']);
+			if ($indexes[$data["INDEX_NAME"]])
+			{
+				global $DB;
+				$query = 'ALTER TABLE ' . $data['TABLE_NAME'] . ' DROP INDEX ' . $data["INDEX_NAME"];
+				$result = $DB->query($query, true);
+				if (!$result)
+				{
+					throw new \Exception($query . PHP_EOL . ExceptionText::getFromString($DB->db_Error));
+				}
+			}
 		}
+
+		\CPerfomanceIndexComplete::delete($data['ID']);
 	}
 }
