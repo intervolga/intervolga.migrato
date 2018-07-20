@@ -48,6 +48,7 @@ class Field extends BaseData
 				$record->setId($id);
 				$record->setXmlId($this->getXmlId($id));
 				$record->addFieldsRaw(array(
+					"SID" => $field["SID"],
 					"ACTIVE" => $field["ACTIVE"],
 					"TITLE" => $field["TITLE"],
 					"TITLE_TYPE" => $field["TITLE_TYPE"],
@@ -110,7 +111,7 @@ class Field extends BaseData
 	protected function recordToArray(Record $record)
 	{
 		$array = array(
-			'SID' => $record->getXmlId(),
+			'SID' => $record->getFieldRaw('SID'),
 			'ACTIVE' => $record->getFieldRaw('ACTIVE'),
 			'TITLE' => $record->getFieldRaw('TITLE'),
 			'TITLE_TYPE' => $record->getFieldRaw('TITLE_TYPE'),
