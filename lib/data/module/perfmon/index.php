@@ -5,6 +5,7 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -46,14 +47,32 @@ class Index extends BaseData
 		{
 			return $index['INDEX_NAME'];
 		}
-		return 'Error';
+		return '';
 	}
-
 
 	public function update(Record $record)
 	{
-		$this->deleteInner($record);
-		$this->createInner($record);
+		if (!$this->isEqual($record, $record->getId()->getValue()))
+		{
+			$this->deleteInner($record);
+			$this->createInner($record);
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @param int $id
+	 */
+	protected function isEqual(Record $record, $id)
+	{
+		$currentFields = \CPerfomanceIndexComplete::getList(['ID' => $id])->fetch();
+		$fields = $record->getFieldsRaw();
+
+		return $fields['BANNED'] == $currentFields['BANNED']
+			&& $fields['INDEX_NAME'] == $currentFields['INDEX_NAME']
+			&& $fields['TABLE_NAME'] == $currentFields['TABLE_NAME']
+			&& $fields['COLUMN_NAMES'] == $currentFields['COLUMN_NAMES']
+			;
 	}
 
 	/**
@@ -75,25 +94,19 @@ class Index extends BaseData
 	{
 		global $DB;
 		$data = $this->recordToArray($record);
-		global $strError;
-		$strError = '';
-		$dbfields = $DB->query('CREATE INDEX ' . $data["INDEX_NAME"] . ' ON ' . $data["TABLE_NAME"] . ' (' . $data["COLUMN_NAMES"] . ') ');
-		$result = \CPerfomanceIndexComplete::add($data);
-		if (($dbfields) && ($result))
+		$table = new \CPerfomanceTable();
+		$query = $table->getCreateIndexDDL($data["TABLE_NAME"], $data["INDEX_NAME"], [$data["COLUMN_NAMES"]]);
+		$DB->db_Error = '';
+		$indexCreateResult = $DB->query($query);
+		if ($indexCreateResult)
 		{
-			return $this->createId($result);
-		}
-		else
-		{
-			if ($strError)
+			$result = \CPerfomanceIndexComplete::add($data);
+			if ($result)
 			{
-				throw new \Exception($strError);
-			}
-			else
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.PERFMON_INDEX_UNKNOWN_ERROR'));
+				return $this->createId($result);
 			}
 		}
+		throw new \Exception(ExceptionText::getFromString($DB->db_Error));
 	}
 
 	protected function deleteInner(Record $record)
