@@ -32,9 +32,11 @@ class Answer extends BaseData
 		$order = 'ASC';
 		$isFiltered = false;
 		$getList = \CForm::GetList($by, $order, array(), $isFiltered);
+		$formAnswer = new \CFormAnswer();
+		$formField = new \CFormField();
 		while ($form = $getList->Fetch())
 		{
-			$rsQuestions = \CFormField::GetList(
+			$rsQuestions = $formField->getList(
 				$form['ID'],
 				"ALL",
 				$by,
@@ -44,7 +46,7 @@ class Answer extends BaseData
 			);
 			while ($field = $rsQuestions->Fetch())
 			{
-				$rsAnswers = \CFormAnswer::GetList(
+				$rsAnswers = $formAnswer->getList(
 					$field["ID"],
 					$by,
 					$order,
@@ -83,7 +85,8 @@ class Answer extends BaseData
 
 	public function getXmlId($id)
 	{
-		$answer = \CFormAnswer::GetByID($id->getValue())->Fetch();
+		$formAnswer = new \CFormAnswer();
+		$answer = $formAnswer->getByID($id->getValue())->Fetch();
 		$message = $answer["MESSAGE"];
 		if ($message != '')
 		{
@@ -93,7 +96,8 @@ class Answer extends BaseData
 		{
 			$message = 'null';
 		}
-		$field = \CFormField::GetByID($answer["FIELD_ID"])->Fetch();
+		$formField = new \CFormField();
+		$field = $formField->getByID($answer["FIELD_ID"])->Fetch();
 		$fieldXmlId = Field::getInstance()->getXmlId(Field::getInstance()->createId($field['ID']));
 
 		$xmlid = $fieldXmlId . static::XML_DELIMITER . $message;
@@ -108,7 +112,8 @@ class Answer extends BaseData
 		$id = $record->getId()->getValue();
 		global $strError;
 		$strError = '';
-		$result = \CFormAnswer::Set($data, $id);
+		$formAnswer = new \CFormAnswer();
+		$result = $formAnswer->set($data, $id);
 		if (!$result)
 		{
 			throw new \Exception(ExceptionText::getFromString($strError));
@@ -146,7 +151,8 @@ class Answer extends BaseData
 		$data = $this->recordToArray($record);
 		global $strError;
 		$strError = '';
-		$result = \CFormAnswer::Set($data, "");
+		$formAnswer = new \CFormAnswer();
+		$result = $formAnswer->set($data, "");
 		if ($result)
 		{
 			return $this->createId($result);
@@ -159,7 +165,8 @@ class Answer extends BaseData
 
 	protected function deleteInner(RecordId $id)
 	{
-		\CFormAnswer::Delete($id->getValue());
+		$formAnswer = new \CFormAnswer();
+		$formAnswer->delete($id->getValue());
 	}
 
 	/**
