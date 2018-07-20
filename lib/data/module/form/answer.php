@@ -68,7 +68,6 @@ class Answer extends BaseData
 						"FIELD_PARAM" => $answer["FIELD_PARAM"],
 						"C_SORT" => $answer["C_SORT"],
 						"ACTIVE" => $answer["ACTIVE"],
-						"ANSWER_TEXT" => $answer["ANSWER_TEXT"],
 					));
 
 					$dependency = clone $this->getDependency("FIELD");
@@ -131,8 +130,11 @@ class Answer extends BaseData
 			'FIELD_PARAM' => $record->getFieldRaw('FIELD_PARAM'),
 			'C_SORT' => $record->getFieldRaw('C_SORT'),
 			'ACTIVE' => $record->getFieldRaw('ACTIVE'),
-			'ANSWER_TEXT' => $record->getFieldRaw('ANSWER_TEXT'),
 		);
+		if (!strlen($array['MESSAGE']))
+		{
+			$array['MESSAGE'] = ' ';
+		}
 		if ($field = $record->getDependency("FIELD"))
 		{
 			if ($field->getId())
