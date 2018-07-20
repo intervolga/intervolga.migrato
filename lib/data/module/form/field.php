@@ -7,6 +7,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -93,14 +94,7 @@ class Field extends BaseData
 		$result = \CFormField::Set($data, $id);
 		if (!$result)
 		{
-			if ($strError)
-			{
-				throw new \Exception($strError);
-			}
-			else
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.FORM_FIELD_UNKNOWN_ERROR'));
-			}
+			throw new \Exception(ExceptionText::getFromString($strError));
 		}
 	}
 
@@ -152,14 +146,7 @@ class Field extends BaseData
 		}
 		else
 		{
-			if ($strError)
-			{
-				throw new \Exception($strError);
-			}
-			else
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.FORM_FIELD_UNKNOWN_ERROR'));
-			}
+			throw new \Exception(ExceptionText::getFromString($strError));
 		}
 	}
 

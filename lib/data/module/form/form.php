@@ -10,6 +10,7 @@ use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Module\Main\Language;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Value;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -145,14 +146,7 @@ class Form extends BaseData
 		}
 		if (!$result)
 		{
-			if ($strError)
-			{
-				throw new \Exception($strError);
-			}
-			else
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.FORM_UNKNOWN_ERROR'));
-			}
+			throw new \Exception(ExceptionText::getFromString($strError));
 		}
 	}
 
@@ -215,14 +209,7 @@ class Form extends BaseData
 		}
 		else
 		{
-			if ($strError)
-			{
-				throw new \Exception($strError);
-			}
-			else
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.FORM_UNKNOWN_ERROR'));
-			}
+			throw new \Exception(ExceptionText::getFromString($strError));
 		}
 	}
 

@@ -7,6 +7,7 @@ use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -111,14 +112,7 @@ class Answer extends BaseData
 		$result = \CFormAnswer::Set($data, $id);
 		if (!$result)
 		{
-			if ($strError)
-			{
-				throw new \Exception($strError);
-			}
-			else
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.FORM_ANSWER_UNKNOWN_ERROR'));
-			}
+			throw new \Exception(ExceptionText::getFromString($strError));
 		}
 	}
 
@@ -161,14 +155,7 @@ class Answer extends BaseData
 		}
 		else
 		{
-			if ($strError)
-			{
-				throw new \Exception($strError);
-			}
-			else
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.FORM_ANSWER_UNKNOWN_ERROR'));
-			}
+			throw new \Exception(ExceptionText::getFromString($strError));
 		}
 	}
 
