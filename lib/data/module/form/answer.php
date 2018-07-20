@@ -60,7 +60,7 @@ class Answer extends BaseData
 						$this->getXmlId($id)
 					);
 					$record->addFieldsRaw(array(
-						"MESSAGE" => $answer["MESSAGE"],
+						"MESSAGE_ENC" => static::encodeMessage($answer["MESSAGE"]),
 						"VALUE" => $answer["VALUE"],
 						"FIELD_TYPE" => $answer["FIELD_TYPE"],
 						"FIELD_WIDTH" => $answer["FIELD_WIDTH"],
@@ -122,7 +122,7 @@ class Answer extends BaseData
 	protected function recordToArray(Record $record)
 	{
 		$array = array(
-			'MESSAGE' => $record->getFieldRaw('MESSAGE'),
+			'MESSAGE' => static::decodeMessage($record->getFieldRaw('MESSAGE_ENC')),
 			'VALUE' => $record->getFieldRaw('VALUE'),
 			'FIELD_TYPE' => $record->getFieldRaw('FIELD_TYPE'),
 			'FIELD_WIDTH' => $record->getFieldRaw('FIELD_WIDTH'),
@@ -131,10 +131,6 @@ class Answer extends BaseData
 			'C_SORT' => $record->getFieldRaw('C_SORT'),
 			'ACTIVE' => $record->getFieldRaw('ACTIVE'),
 		);
-		if (!strlen($array['MESSAGE']))
-		{
-			$array['MESSAGE'] = ' ';
-		}
 		if ($field = $record->getDependency("FIELD"))
 		{
 			if ($field->getId())
@@ -164,5 +160,23 @@ class Answer extends BaseData
 	protected function deleteInner(RecordId $id)
 	{
 		\CFormAnswer::Delete($id->getValue());
+	}
+
+	/**
+	 * @param string $message
+	 * @return string
+	 */
+	protected static function encodeMessage($message)
+	{
+		return str_replace(' ', '&nbsp;', $message);
+	}
+
+	/**
+	 * @param string $message
+	 * @return string
+	 */
+	protected static function decodeMessage($encodedMessage)
+	{
+		return str_replace('&nbsp;', ' ', $encodedMessage);
 	}
 }
