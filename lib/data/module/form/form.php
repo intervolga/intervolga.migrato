@@ -4,6 +4,7 @@ namespace Intervolga\Migrato\Data\Module\Form;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
+use Intervolga\Migrato\Data\Module\Main\Event;
 use Intervolga\Migrato\Data\Module\Main\Site;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
@@ -22,7 +23,8 @@ class Form extends BaseData
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.FORM_FORM_TYPE'));
 		$this->setDependencies(array(
 			'LANGUAGE' => new Link(Language::getInstance()),
-			'SITE' => new Link(Site::getInstance())
+			'SITE' => new Link(Site::getInstance()),
+			'MAIL_EVENT' => new Link(Event::getInstance()),
 		));
 	}
 
@@ -65,17 +67,6 @@ class Form extends BaseData
 			while ($formMenu = $getMenuList->Fetch()) {
 				$addItems['MENU.' . $formMenu['LID']] = $formMenu['MENU'];
 			}
-			
-			$getSiteArray = \CForm::GetSiteArray($record->getId()->getValue());
-			foreach ($getSiteArray as $formSite) {
-				$addItems['SITE.' . $formSite] = $formSite;
-			}
-			$getTemplateList = \CForm::GetTemplateList("MAIL","xxx",$record->getId()->getValue());
-			if ($getTemplateList['reference_id']) {
-				$record->addFieldsRaw(array(
-					"SEND_EMAIL" => "Y",
-				));
-			}
 			$record->addFieldsRaw($addItems);
 			$this->addDependencies($record, $form);
 			$result[] = $record;
@@ -105,6 +96,16 @@ class Form extends BaseData
 		}
 		$dependency->setValues($sites);
 		$record->setDependency('SITE', $dependency);
+
+		$dependency = clone $this->getDependency('MAIL_EVENT');
+		$events = [];
+		$mailTemplates = \CAllForm::GetMailTemplateArray($form['ID']);
+		foreach ($mailTemplates as $mailTemplate)
+		{
+			$events[] = Event::getInstance()->getXmlId(Event::getInstance()->createId($mailTemplate));
+		}
+		$dependency->setValues($events);
+		$record->setDependency('MAIL_EVENT', $dependency);
 	}
 
 	public function getXmlId($id)
@@ -121,29 +122,11 @@ class Form extends BaseData
 	public function update(Record $record)
 	{
 		$data = $this->recordToArray($record);
-		$value = Value::listToTree($record->getFieldsRaw());
-		$data["arMENU"] = $value["MENU"];
 
-		foreach ($value["SITE"] as $site)
-		{
-			$data["arSITE"][] = $site;
-		}
 		$id = $record->getId()->getValue();
 		global $strError;
 		$strError = '';
 		$result = \CForm::Set($data, $id);
-		if ($data["SEND_EMAIL"])
-		{
-			\CForm::SetMailTemplate($id, "Y");
-		}
-		else
-		{
-			$arr = \CForm::GetTemplateList("MAIL", "xxx", $id);
-			while (list($num, $tmp_id) = each($arr['reference_id']))
-			{
-				\CEventMessage::Delete($tmp_id);
-			}
-		}
 		if (!$result)
 		{
 			throw new \Exception(ExceptionText::getFromString($strError));
@@ -178,33 +161,48 @@ class Form extends BaseData
 			'USE_RESTRICTIONS' => $record->getFieldRaw('USE_RESTRICTIONS'),
 			'SEND_EMAIL' => $record->getFieldRaw('SEND_EMAIL')
 		);
+
 		$link = $record->getDependency('LANGUAGE');
 		if ($link && $link->getValues())
 		{
-			foreach ($link->findIds() as $LangIdObject)
+			foreach ($link->findIds() as $language)
 			{
-				$array['LID'][] = $LangIdObject->getValue();
+				$array['LID'][] = $language->getValue();
 			}
 		}
+
+		$link = $record->getDependency('SITE');
+		if ($link && $link->getValues())
+		{
+			foreach ($link->findIds() as $site)
+			{
+				$array['arSITE'][] = $site->getValue();
+			}
+		}
+
+		$link = $record->getDependency('MAIL_EVENT');
+		if ($link && $link->getValues())
+		{
+			foreach ($link->findIds() as $event)
+			{
+				$array['arMAIL_TEMPLATE'][] = $event->getValue();
+			}
+		}
+
+		$value = Value::listToTree($record->getFieldsRaw());
+		$array["arMENU"] = $value["MENU"];
 		return $array;
 	}
 
 	protected function createInner(Record $record)
 	{
 		$data = $this->recordToArray($record);
-		$value = Value::listToTree($record->getFieldsRaw());
-		$data["arMENU"] = $value["MENU"];
-		foreach ($value["SITE"] as $site) {
-			$data["arSITE"][] = $site;
-		}
+
 		global $strError;
 		$strError = '';
 		$result = \CForm::Set($data, "");
 		if ($result)
 		{
-			if ($data["SEND_EMAIL"]) {
-				\CForm::SetMailTemplate($result, "Y");
-			}
 			return $this->createId($result);
 		}
 		else
