@@ -32,9 +32,10 @@ class Field extends BaseData
 		$order = 'ASC';
 		$isFiltered = false;
 		$getList = \CForm::GetList($by, $order, array(), $isFiltered);
+		$formField = new \CFormField();
 		while ($form = $getList->Fetch())
 		{
-			$rsFields = \CFormField::GetList(
+			$rsFields = $formField->getList(
 				$form['ID'],
 				"ALL",
 				$by,
@@ -78,7 +79,8 @@ class Field extends BaseData
 
 	public function getXmlId($id)
 	{
-		$field = \CFormField::GetByID($id->getValue())->Fetch();
+		$formField = new \CFormField();
+		$field = $formField->getByID($id->getValue())->Fetch();
 		$form = \CForm::GetByID($field['FORM_ID'])->fetch();
 		$formXmlId = Form::getInstance()->getXmlId(Form::getInstance()->createId($form['ID']));
 
@@ -91,7 +93,8 @@ class Field extends BaseData
 		$id = $record->getId()->getValue();
 		global $strError;
 		$strError = '';
-		$result = \CFormField::Set($data, $id);
+		$formField = new \CFormField();
+		$result = $formField->set($data, $id);
 		if (!$result)
 		{
 			throw new \Exception(ExceptionText::getFromString($strError));
@@ -139,7 +142,8 @@ class Field extends BaseData
 		$data = $this->recordToArray($record);
 		global $strError;
 		$strError = '';
-		$result = \CFormField::Set($data, "");
+		$formField = new \CFormField();
+		$result = $formField->set($data, "");
 		if ($result)
 		{
 			return $this->createId($result);
@@ -152,6 +156,7 @@ class Field extends BaseData
 
 	protected function deleteInner(RecordId $id)
 	{
-		\CFormField::Delete($id->getValue());
+		$formField = new \CFormField();
+		$formField->delete($id->getValue());
 	}
 }
