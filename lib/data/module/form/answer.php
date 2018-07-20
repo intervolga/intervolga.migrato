@@ -69,8 +69,10 @@ class Answer extends BaseData
 						"ACTIVE" => $answer["ACTIVE"],
 						"ANSWER_TEXT" => $answer["ANSWER_TEXT"],
 					));
+
 					$dependency = clone $this->getDependency("FIELD");
-					$dependency->setValue($field['SID']);
+					$fieldXmlId = Field::getInstance()->getXmlId(Field::getInstance()->createId($field['ID']));
+					$dependency->setValue($fieldXmlId);
 					$record->setDependency("FIELD", $dependency);
 					$result[] = $record;
 				}
