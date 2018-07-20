@@ -17,7 +17,7 @@ class Index extends BaseData
 	protected function configure()
 	{
 		$this->setVirtualXmlId(true);
-		Loader::includeModule("perfmon");
+		Loader::includeModule('perfmon');
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.PERFMON_INDEX'));
 	}
 
@@ -32,10 +32,10 @@ class Index extends BaseData
 			$record->setId($id);
 			$record->setXmlId($this->getXmlId($id));
 			$record->addFieldsRaw(array(
-				"INDEX_NAME" => $index["INDEX_NAME"],
-				"TABLE_NAME" => $index["TABLE_NAME"],
-				"COLUMN_NAMES" => $index["COLUMN_NAMES"],
-				"BANNED" => $index["BANNED"],
+				'INDEX_NAME' => $index['INDEX_NAME'],
+				'TABLE_NAME' => $index['TABLE_NAME'],
+				'COLUMN_NAMES' => $index['COLUMN_NAMES'],
+				'BANNED' => $index['BANNED'],
 			));
 			$result[] = $record;
 		}
@@ -44,7 +44,7 @@ class Index extends BaseData
 
 	public function getXmlId($id)
 	{
-		$arFilter = array("ID" => $id->getValue());
+		$arFilter = array('ID' => $id->getValue());
 		$getList = \CPerfomanceIndexComplete::getList($arFilter);
 		if ($index = $getList->fetch())
 		{
@@ -67,6 +67,7 @@ class Index extends BaseData
 	/**
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @param int $id
+	 * @return bool
 	 */
 	protected function isEqual(Record $record, $id)
 	{
@@ -74,10 +75,9 @@ class Index extends BaseData
 		$fields = $record->getFieldsRaw();
 
 		return $fields['BANNED'] == $currentFields['BANNED']
-			&& $fields['INDEX_NAME'] == $currentFields['INDEX_NAME']
-			&& $fields['TABLE_NAME'] == $currentFields['TABLE_NAME']
-			&& $fields['COLUMN_NAMES'] == $currentFields['COLUMN_NAMES']
-			;
+		&& $fields['INDEX_NAME'] == $currentFields['INDEX_NAME']
+		&& $fields['TABLE_NAME'] == $currentFields['TABLE_NAME']
+		&& $fields['COLUMN_NAMES'] == $currentFields['COLUMN_NAMES'];
 	}
 
 	/**
@@ -111,7 +111,7 @@ class Index extends BaseData
 			else
 			{
 				$table = new \CPerfomanceTable();
-				$query = $table->getCreateIndexDDL($data["TABLE_NAME"], $data["INDEX_NAME"], [$data["COLUMN_NAMES"]]);
+				$query = $table->getCreateIndexDDL($data['TABLE_NAME'], $data['INDEX_NAME'], [$data['COLUMN_NAMES']]);
 				$indexCreateResult = $DB->query($query);
 				if ($indexCreateResult)
 				{
@@ -129,14 +129,14 @@ class Index extends BaseData
 	protected function deleteInner(RecordId $id)
 	{
 		$data = \CPerfomanceIndexComplete::getList(['ID' => $id->getValue()])->fetch();
-		if ($data["INDEX_NAME"])
+		if ($data['INDEX_NAME'])
 		{
 			$table = new \CPerfomanceTable();
 			$indexes = $table->getIndexes($data['TABLE_NAME']);
-			if ($indexes[$data["INDEX_NAME"]])
+			if ($indexes[$data['INDEX_NAME']])
 			{
 				global $DB;
-				$query = 'ALTER TABLE ' . $data['TABLE_NAME'] . ' DROP INDEX ' . $data["INDEX_NAME"];
+				$query = 'ALTER TABLE ' . $data['TABLE_NAME'] . ' DROP INDEX ' . $data['INDEX_NAME'];
 				$result = $DB->query($query, true);
 				if (!$result)
 				{
