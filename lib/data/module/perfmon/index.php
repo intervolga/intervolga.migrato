@@ -111,15 +111,23 @@ class Index extends BaseData
 			else
 			{
 				$table = new \CPerfomanceTable();
-				$query = $table->getCreateIndexDDL($data['TABLE_NAME'], $data['INDEX_NAME'], [$data['COLUMN_NAMES']]);
-				$indexCreateResult = $DB->query($query);
-				if ($indexCreateResult)
+				if ($table->isExists($data['TABLE_NAME']))
 				{
-					return $this->createId($id);
+					$query = $table->getCreateIndexDDL($data['TABLE_NAME'], $data['INDEX_NAME'], [$data['COLUMN_NAMES']]);
+					$indexCreateResult = $DB->query($query);
+					if ($indexCreateResult)
+					{
+						return $this->createId($id);
+					}
+					else
+					{
+						\CPerfomanceIndexComplete::delete($id);
+					}
 				}
 				else
 				{
 					\CPerfomanceIndexComplete::delete($id);
+					throw new \Exception(ExceptionText::getFromString(Loc::getMessage('INTERVOLGA_MIGRATO.TABLE_DOESNT_EXIST', ['#TABLE#' => $data['TABLE_NAME']])));
 				}
 			}
 		}
@@ -132,15 +140,18 @@ class Index extends BaseData
 		if ($data['INDEX_NAME'])
 		{
 			$table = new \CPerfomanceTable();
-			$indexes = $table->getIndexes($data['TABLE_NAME']);
-			if ($indexes[$data['INDEX_NAME']])
+			if ($table->isExists($data['TABLE_NAME']))
 			{
-				global $DB;
-				$query = 'ALTER TABLE ' . $data['TABLE_NAME'] . ' DROP INDEX ' . $data['INDEX_NAME'];
-				$result = $DB->query($query, true);
-				if (!$result)
+				$indexes = $table->getIndexes($data['TABLE_NAME']);
+				if ($indexes[$data['INDEX_NAME']])
 				{
-					throw new \Exception($query . PHP_EOL . ExceptionText::getFromString($DB->db_Error));
+					global $DB;
+					$query = 'ALTER TABLE ' . $data['TABLE_NAME'] . ' DROP INDEX ' . $data['INDEX_NAME'];
+					$result = $DB->query($query, true);
+					if (!$result)
+					{
+						throw new \Exception($query . PHP_EOL . ExceptionText::getFromString($DB->db_Error));
+					}
 				}
 			}
 		}
