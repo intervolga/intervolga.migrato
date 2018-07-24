@@ -9,6 +9,21 @@ Loc::loadMessages(__FILE__);
 class ExceptionText
 {
 	/**
+	 * @param $string
+	 * @return string
+	 */
+	public static function getFromString($string)
+	{
+		$text = static::prepareText($string);
+		if (!strlen($text))
+		{
+			$text = static::getUnknown();
+		}
+
+		return $text;
+	}
+
+	/**
 	 * @return string
 	 */
 	public static function getFromApplication()

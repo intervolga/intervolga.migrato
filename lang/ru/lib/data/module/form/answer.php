@@ -1,0 +1,2 @@
+<?
+$MESS['INTERVOLGA_MIGRATO.FORM_ANSWER_TYPE'] = 'Ответы';

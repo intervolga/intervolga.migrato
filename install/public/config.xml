@@ -120,6 +120,9 @@
         <entity>
             <name>rounding</name>
         </entity>
+        <entity>
+            <name>measure</name>
+        </entity>
     </module>
     <module>
         <name>sale</name>
@@ -188,6 +191,24 @@
         <name>workflow</name>
         <entity>
             <name>status</name>
+        </entity>
+    </module>
+    <module>
+        <name>form</name>
+        <entity>
+            <name>form</name>
+        </entity>
+        <entity>
+            <name>field</name>
+        </entity>
+        <entity>
+            <name>answer</name>
+        </entity>
+    </module>
+    <module>
+        <name>perfmon</name>
+        <entity>
+            <name>index</name>
         </entity>
     </module>
 </config>

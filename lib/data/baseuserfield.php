@@ -250,29 +250,32 @@ abstract class BaseUserField extends BaseData
 		$links = array();
 		foreach ($settings as $name => $setting)
 		{
-			if ($name == "IBLOCK_ID")
+			if ($setting)
 			{
-				$iblockIdObject = RecordId::createNumericId($setting);
-				$xmlId = Iblock::getInstance()->getXmlId($iblockIdObject);
-				$link = clone $this->getReference("SETTINGS.$name");
-				$link->setValue($xmlId);
-				$links["SETTINGS.$name"] = $link;
-			}
-			if ($name == "HLBLOCK_ID")
-			{
-				$hlBlockIdObject = RecordId::createNumericId($setting);
-				$xmlId = HighloadBlock::getInstance()->getXmlId($hlBlockIdObject);
-				$link = clone $this->getReference("SETTINGS.$name");
-				$link->setValue($xmlId);
-				$links["SETTINGS.$name"] = $link;
-			}
-			if ($name == "HLFIELD_ID")
-			{
-				$userFieldIdObject = RecordId::createNumericId($setting);
-				$xmlId = Field::getInstance()->getXmlId($userFieldIdObject);
-				$link = clone $this->getReference("SETTINGS.$name");
-				$link->setValue($xmlId);
-				$links["SETTINGS.$name"] = $link;
+				if ($name == "IBLOCK_ID")
+				{
+					$iblockIdObject = RecordId::createNumericId($setting);
+					$xmlId = Iblock::getInstance()->getXmlId($iblockIdObject);
+					$link = clone $this->getReference("SETTINGS.$name");
+					$link->setValue($xmlId);
+					$links["SETTINGS.$name"] = $link;
+				}
+				if ($name == "HLBLOCK_ID")
+				{
+					$hlBlockIdObject = RecordId::createNumericId($setting);
+					$xmlId = HighloadBlock::getInstance()->getXmlId($hlBlockIdObject);
+					$link = clone $this->getReference("SETTINGS.$name");
+					$link->setValue($xmlId);
+					$links["SETTINGS.$name"] = $link;
+				}
+				if ($name == "HLFIELD_ID")
+				{
+					$userFieldIdObject = RecordId::createNumericId($setting);
+					$xmlId = Field::getInstance()->getXmlId($userFieldIdObject);
+					$link = clone $this->getReference("SETTINGS.$name");
+					$link->setValue($xmlId);
+					$links["SETTINGS.$name"] = $link;
+				}
 			}
 		}
 
@@ -393,22 +396,31 @@ abstract class BaseUserField extends BaseData
 
 	protected function createInner(Record $record)
 	{
+		global $USER_FIELD_MANAGER;
 		$fields = $record->getFieldsRaw();
-		$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
-		foreach ($this->getLangFieldsNames() as $lang)
-		{
-			$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
-		}
 
-		$fieldObject = new \CUserTypeEntity();
-		$fieldId = $fieldObject->add($fields);
-		if ($fieldId)
+		if ($USER_FIELD_MANAGER->getUserType($fields["USER_TYPE_ID"]))
 		{
-			return $this->createId($fieldId);
+			$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
+			foreach ($this->getLangFieldsNames() as $lang)
+			{
+				$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
+			}
+
+			$fieldObject = new \CUserTypeEntity();
+			$fieldId = $fieldObject->add($fields);
+			if ($fieldId)
+			{
+				return $this->createId($fieldId);
+			}
+			else
+			{
+				throw new \Exception(ExceptionText::getFromApplication());
+			}
 		}
 		else
 		{
-			throw new \Exception(ExceptionText::getFromApplication());
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD_UNKNOWN', array('#TYPE#' => $fields["USER_TYPE_ID"])));
 		}
 	}
 
