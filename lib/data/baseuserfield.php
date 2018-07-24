@@ -250,29 +250,32 @@ abstract class BaseUserField extends BaseData
 		$links = array();
 		foreach ($settings as $name => $setting)
 		{
-			if ($name == "IBLOCK_ID")
+			if ($setting)
 			{
-				$iblockIdObject = RecordId::createNumericId($setting);
-				$xmlId = Iblock::getInstance()->getXmlId($iblockIdObject);
-				$link = clone $this->getReference("SETTINGS.$name");
-				$link->setValue($xmlId);
-				$links["SETTINGS.$name"] = $link;
-			}
-			if ($name == "HLBLOCK_ID")
-			{
-				$hlBlockIdObject = RecordId::createNumericId($setting);
-				$xmlId = HighloadBlock::getInstance()->getXmlId($hlBlockIdObject);
-				$link = clone $this->getReference("SETTINGS.$name");
-				$link->setValue($xmlId);
-				$links["SETTINGS.$name"] = $link;
-			}
-			if ($name == "HLFIELD_ID")
-			{
-				$userFieldIdObject = RecordId::createNumericId($setting);
-				$xmlId = Field::getInstance()->getXmlId($userFieldIdObject);
-				$link = clone $this->getReference("SETTINGS.$name");
-				$link->setValue($xmlId);
-				$links["SETTINGS.$name"] = $link;
+				if ($name == "IBLOCK_ID")
+				{
+					$iblockIdObject = RecordId::createNumericId($setting);
+					$xmlId = Iblock::getInstance()->getXmlId($iblockIdObject);
+					$link = clone $this->getReference("SETTINGS.$name");
+					$link->setValue($xmlId);
+					$links["SETTINGS.$name"] = $link;
+				}
+				if ($name == "HLBLOCK_ID")
+				{
+					$hlBlockIdObject = RecordId::createNumericId($setting);
+					$xmlId = HighloadBlock::getInstance()->getXmlId($hlBlockIdObject);
+					$link = clone $this->getReference("SETTINGS.$name");
+					$link->setValue($xmlId);
+					$links["SETTINGS.$name"] = $link;
+				}
+				if ($name == "HLFIELD_ID")
+				{
+					$userFieldIdObject = RecordId::createNumericId($setting);
+					$xmlId = Field::getInstance()->getXmlId($userFieldIdObject);
+					$link = clone $this->getReference("SETTINGS.$name");
+					$link->setValue($xmlId);
+					$links["SETTINGS.$name"] = $link;
+				}
 			}
 		}
 
