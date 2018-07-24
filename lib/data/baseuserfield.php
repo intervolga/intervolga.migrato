@@ -396,22 +396,31 @@ abstract class BaseUserField extends BaseData
 
 	protected function createInner(Record $record)
 	{
+		global $USER_FIELD_MANAGER;
 		$fields = $record->getFieldsRaw();
-		$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
-		foreach ($this->getLangFieldsNames() as $lang)
-		{
-			$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
-		}
 
-		$fieldObject = new \CUserTypeEntity();
-		$fieldId = $fieldObject->add($fields);
-		if ($fieldId)
+		if ($USER_FIELD_MANAGER->getUserType($fields["USER_TYPE_ID"]))
 		{
-			return $this->createId($fieldId);
+			$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
+			foreach ($this->getLangFieldsNames() as $lang)
+			{
+				$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
+			}
+
+			$fieldObject = new \CUserTypeEntity();
+			$fieldId = $fieldObject->add($fields);
+			if ($fieldId)
+			{
+				return $this->createId($fieldId);
+			}
+			else
+			{
+				throw new \Exception(ExceptionText::getFromApplication());
+			}
 		}
 		else
 		{
-			throw new \Exception(ExceptionText::getFromApplication());
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD_UNKNOWN', array('#TYPE#' => $fields["USER_TYPE_ID"])));
 		}
 	}
 
