@@ -6,7 +6,7 @@ use \Intervolga\Migrato\Data\BaseData,
 	\Intervolga\Migrato\Data\Link,
 	\Intervolga\Migrato\Data\Module\Main\Language,
 	Intervolga\Migrato\Data\Module\Iblock\Iblock as MigratoIblock,
-    \Bitrix\Main\Localization\Loc,
+	\Bitrix\Main\Localization\Loc,
 	\Bitrix\Main\Loader;
 
 Loc::loadMessages(__FILE__);
@@ -20,8 +20,10 @@ Loc::loadMessages(__FILE__);
 class ElementListFilter extends BaseData
 {
 	const XML_ID_SEPARATOR = '.';
-	const TABLE_NAMES = array ('L' => 'tbl_iblock_list_',
-								'E' => 'tbl_iblock_element_');
+	const TABLE_NAMES = array(
+		'L' => 'tbl_iblock_list_',
+		'E' => 'tbl_iblock_element_',
+	);
 	const PROPERTY_FIELD_PREFIX = 'find_el_property_';
 
 	protected function configure()
@@ -43,7 +45,7 @@ class ElementListFilter extends BaseData
 		$result = array();
 		$filterParams = [
 			0 => ['USER_ID' => '1'],
-			1 => ['COMMON' => 'Y']
+			1 => ['COMMON' => 'Y'],
 		];
 		$filtersId = array();
 		foreach ($filterParams as $filterParam)
@@ -81,11 +83,11 @@ class ElementListFilter extends BaseData
 	private function getIblockXmlIdByFilterId($filterId)
 	{
 		$result = '';
-		if(Loader::includeModule('iblock'))
+		if (Loader::includeModule('iblock'))
 		{
 			$type = $this->getTypeById($filterId);
 			$prefix = static::TABLE_NAMES[$type];
-			if($prefix)
+			if ($prefix)
 			{
 				$hash = substr($filterId, strlen($prefix));
 				$hash = substr($hash, 0, strlen($hash) - 7); // strlen('_filter') == 7
@@ -115,14 +117,14 @@ class ElementListFilter extends BaseData
 	public function setRecordDependencies(Record $record, array $arFilter)
 	{
 		//LANGUAGE_ID
-		if($arFilter['LANGUAGE_ID'])
+		if ($arFilter['LANGUAGE_ID'])
 		{
 			$dependency = clone $this->getDependency('LANGUAGE');
-			$dependency->setValue( Language::getInstance()->getXmlId( Language::getInstance()->createId($arFilter['LANGUAGE_ID']) ));
-			$record->setDependency('LANGUAGE', $dependency );
+			$dependency->setValue(Language::getInstance()->getXmlId(Language::getInstance()->createId($arFilter['LANGUAGE_ID'])));
+			$record->setDependency('LANGUAGE', $dependency);
 		}
 		//IBLOCK_ID
-		if($arFilter['FILTER_ID'])
+		if ($arFilter['FILTER_ID'])
 		{
 			$iblockId = $this->getIblockXmlIdByFilterId($arFilter['FILTER_ID']);
 			if ($iblockId)
@@ -145,10 +147,10 @@ class ElementListFilter extends BaseData
 		$propertyXmlIds = array();
 		foreach ($arrFields as $fieldName => $arrField)
 		{
-			if(strpos($fieldName, static::PROPERTY_FIELD_PREFIX) === 0)
+			if (strpos($fieldName, static::PROPERTY_FIELD_PREFIX) === 0)
 			{
 				$propId = substr($fieldName, strlen(static::PROPERTY_FIELD_PREFIX));
-				if($propId)
+				if ($propId)
 				{
 					$propsId[] = $propId;
 					$idObject = Property::getInstance()->createId($propId);
@@ -156,16 +158,16 @@ class ElementListFilter extends BaseData
 					$propertyXmlIds[] = $propertyXmlId;
 					//convert field name using propery xmlId
 					unset($newArrFields[$fieldName]);
-					$newArrFields[static::PROPERTY_FIELD_PREFIX.$propertyXmlId] = $arrField;
+					$newArrFields[static::PROPERTY_FIELD_PREFIX . $propertyXmlId] = $arrField;
 				}
 			}
 		}
 		//add property enum dependency
-		$newArrFields = $this->addPropsEnumDependencies($record,$newArrFields,$propsId);
+		$newArrFields = $this->addPropsEnumDependencies($record, $newArrFields, $propsId);
 		//add field
 		$record->setFieldRaw('FIELDS', serialize($newArrFields));
 		//add property dependency
-		if($propertyXmlIds)
+		if ($propertyXmlIds)
 		{
 			$dependency = clone $this->getDependency('PROPERTY_ID');
 			$dependency->setValues($propertyXmlIds);
@@ -181,18 +183,18 @@ class ElementListFilter extends BaseData
 	 */
 	private function addPropsEnumDependencies(Record $record, $fields, array $propertyIds)
 	{
-		if(Loader::includeModule('iblock'))
+		if (Loader::includeModule('iblock'))
 		{
 			$dbRes = \CIBlockProperty::GetList(
 				array(),
 				array(
-					'PROPERTY_TYPE' => 'L'
+					'PROPERTY_TYPE' => 'L',
 				)
 			);
 			$enumXmlIds = array();
 			while ($el = $dbRes->Fetch())
 			{
-				if(in_array($el['ID'],$propertyIds))
+				if (in_array($el['ID'], $propertyIds))
 				{
 					$propertyId = Property::getInstance()->createId($el['ID']);
 					$propertyXmlId = Property::getInstance()->getXmlId($propertyId);
@@ -208,7 +210,7 @@ class ElementListFilter extends BaseData
 					}
 				}
 			}
-			if($enumXmlIds)
+			if ($enumXmlIds)
 			{
 				$dependency = clone $this->getDependency('PROPERTY_ENUM_ID');
 				$dependency->setValues($enumXmlIds);
@@ -228,20 +230,22 @@ class ElementListFilter extends BaseData
 		$newArrFields = $arrFields;
 		foreach ($arrFields as $key => $arrField)
 		{
-			if(strpos($key, static::PROPERTY_FIELD_PREFIX) === 0)
+			if (strpos($key, static::PROPERTY_FIELD_PREFIX) === 0)
 			{
-				$xmlId = substr($key,strlen(static::PROPERTY_FIELD_PREFIX));
+				$xmlId = substr($key, strlen(static::PROPERTY_FIELD_PREFIX));
 				$id = Property::getInstance()->findRecord($xmlId);
-				if($id)
+				if ($id)
 				{
-					if(!is_array($arrField['value']))
+					if (!is_array($arrField['value']))
 					{
 						$enumId = Enum::getInstance()->findRecord($arrField['value']);
-						if($enumId)
+						if ($enumId)
+						{
 							$arrField['value'] = $enumId->getValue();
+						}
 					}
 					unset($newArrFields[$key]);
-					$newArrFields[static::PROPERTY_FIELD_PREFIX.$id->getValue()] = $arrField;
+					$newArrFields[static::PROPERTY_FIELD_PREFIX . $id->getValue()] = $arrField;
 				}
 			}
 		}
@@ -260,27 +264,31 @@ class ElementListFilter extends BaseData
 		$fields = $record->getFieldsRaw();
 		$xmlId = $record->getXmlId();
 		$xmlFields = $this->xmlIdToArray($xmlId);
-		if($xmlFields[1] == 'Y')
+		if ($xmlFields[1] == 'Y')
+		{
 			$fields['USER_ID'] = 1;
+		}
 
 		// FILTER_ID creating
 		$iblockXmlId = $xmlFields[4];
 		$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
-		if(Loader::includeModule('iblock'))
+		if (Loader::includeModule('iblock'))
 		{
 			$dbres = \CIBlock::GetById($iblockId);
-			if($iblockInfo = $dbres->GetNext())
+			if ($iblockInfo = $dbres->GetNext())
 			{
-				$fields['FILTER_ID'] = $xmlFields[0] . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
+				$fields['FILTER_ID'] = $xmlFields[0] . md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId) . '_filter';
 				$arFields = unserialize($fields['FIELDS']);
-				if($arFields)
+				if ($arFields)
 				{
 					$fields['FIELDS'] = $this->convertFieldsFromXml($arFields);
 					$fields['SORT_FIELD'] = unserialize($fields['SORT_FIELD']);
 					$fields['LANGUAGE_ID'] = $this->getLanguageFromDependency($record);
 					$id = \CAdminFilter::Add($fields);
 					if ($id)
+					{
 						return $this->createId($id);
+					}
 				}
 			}
 		}
@@ -290,11 +298,11 @@ class ElementListFilter extends BaseData
 	private function getLanguageFromDependency(Record $record)
 	{
 		$link = $record->getDependency("LANGUAGE");
-		if($link)
+		if ($link)
 		{
 			$langXmlId = $link->getValue();
 			$recId = Language::getInstance()->findRecord($langXmlId);
-			if($recId)
+			if ($recId)
 			{
 				return $recId->getValue();
 			}
@@ -306,31 +314,35 @@ class ElementListFilter extends BaseData
 	{
 		$xmlId = $record->getXmlId();
 		$filterId = $this->findRecord($xmlId);
-		if($filterId)
+		if ($filterId)
 		{
 			$fields = $record->getFieldsRaw();
 			$xmlId = $record->getXmlId();
 			$xmlFields = $this->xmlIdToArray($xmlId);
-			if($xmlFields[1] == 'Y')
+			if ($xmlFields[1] == 'Y')
+			{
 				$fields['USER_ID'] = 1;
+			}
 
 			// FILTER_ID creating
 			$iblockXmlId = $xmlFields[4];
 			$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
-			if(Loader::includeModule('iblock'))
+			if (Loader::includeModule('iblock'))
 			{
 				$dbres = \CIBlock::GetById($iblockId);
-				if($iblockInfo = $dbres->GetNext())
+				if ($iblockInfo = $dbres->GetNext())
 				{
-					$fields['FILTER_ID'] = $xmlFields[0] . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
+					$fields['FILTER_ID'] = $xmlFields[0] . md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId) . '_filter';
 					$arFields = unserialize($fields['FIELDS']);
-					if($arFields)
+					if ($arFields)
 					{
 						$fields['FIELDS'] = $this->convertFieldsFromXml($arFields);
 						$fields['SORT_FIELD'] = unserialize($fields['SORT_FIELD']);
 						$fields['LANGUAGE_ID'] = $this->getLanguageFromDependency($record);
 						if (\CAdminFilter::Update($filterId->getValue(), $fields))
+						{
 							return;
+						}
 					}
 				}
 			}
@@ -341,7 +353,7 @@ class ElementListFilter extends BaseData
 	protected function deleteInner($xmlId)
 	{
 		$RecordId = $this->findRecord($xmlId);
-		if($RecordId)
+		if ($RecordId)
 		{
 			$id = $RecordId->getValue();
 			$res = \CAdminFilter::Delete($id);
@@ -357,7 +369,7 @@ class ElementListFilter extends BaseData
 		$dbRes = \CAdminFilter::GetList(
 			array(),
 			array(
-				'ID' => $id
+				'ID' => $id,
 			)
 		);
 		if ($filter = $dbRes->Fetch())
@@ -375,7 +387,7 @@ class ElementListFilter extends BaseData
 	{
 		$result = '';
 		$iblockId = $this->getIblockXmlIdByFilterId($filter['FILTER_ID']);
-		if($iblockId)
+		if ($iblockId)
 		{
 			$iblockXmlId = MigratoIblock::getInstance()->getXmlId(MigratoIblock::getInstance()->createId($iblockId));
 			if ($iblockXmlId)
@@ -396,8 +408,10 @@ class ElementListFilter extends BaseData
 		$type = '';
 		foreach (static::TABLE_NAMES as $key => $tableName)
 		{
-			if(strpos($filterId, $tableName) === 0)
+			if (strpos($filterId, $tableName) === 0)
+			{
 				$type = $key;
+			}
 		}
 		return $type;
 	}
@@ -407,11 +421,13 @@ class ElementListFilter extends BaseData
 		$fields = $this->xmlIdToArray($xmlId);
 
 		$arFilter = array('COMMON' => $fields[2]);
-		if($fields[1] === 'Y')
+		if ($fields[1] === 'Y')
+		{
 			$arFilter['USER_ID'] = 1;
+		}
 		$name = $fields[3];
 		$iblockXmlId = $fields[4];
-		if($iblockRecord =  MigratoIblock::getInstance()->findRecord($iblockXmlId))
+		if ($iblockRecord = MigratoIblock::getInstance()->findRecord($iblockXmlId))
 		{
 			$iblockId = $iblockRecord->getValue();
 			if (Loader::includeModule('iblock') && $iblockId)

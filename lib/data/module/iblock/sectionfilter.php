@@ -7,7 +7,7 @@ use \Intervolga\Migrato\Data\BaseData,
 	\Intervolga\Migrato\Data\Link,
 	\Intervolga\Migrato\Data\Module\Main\Language,
 	Intervolga\Migrato\Data\Module\Iblock\Iblock as MigratoIblock,
-    \Bitrix\Main\Localization\Loc,
+	\Bitrix\Main\Localization\Loc,
 	\Bitrix\Main\Loader;
 
 Loc::loadMessages(__FILE__);
@@ -44,7 +44,7 @@ class SectionFilter extends BaseData
 		$result = array();
 		$filterParams = [
 			0 => ['USER_ID' => '1'],
-			1 => ['COMMON' => 'Y']
+			1 => ['COMMON' => 'Y'],
 		];
 		$filtersId = array();
 		foreach ($filterParams as $filterParam)
@@ -53,7 +53,7 @@ class SectionFilter extends BaseData
 			$dbRes = \CAdminFilter::GetList(array(), $newFilter);
 			while ($arFilter = $dbRes->Fetch())
 			{
-				if (strpos($arFilter['FILTER_ID'], static::TABLE_NAME)===0 && !in_array($arFilter['ID'], $filtersId))
+				if (strpos($arFilter['FILTER_ID'], static::TABLE_NAME) === 0 && !in_array($arFilter['ID'], $filtersId))
 				{
 					$iblockId = $this->getIblockIdByFilterId($arFilter['FILTER_ID']);
 					$filtersId[] = $arFilter['ID'];
@@ -67,7 +67,7 @@ class SectionFilter extends BaseData
 					$record->setFieldRaw('SORT', $arFilter['SORT']);
 					$record->setFieldRaw('SORT_FIELD', $arFilter['SORT_FIELD']);
 					$record->setFieldRaw('IS_ADMIN', $arFilter['USER_ID'] == 1 ? 'Y' : 'N');
-					$this->addUfDependencies($record, $arFilter['FIELDS'],$iblockId);
+					$this->addUfDependencies($record, $arFilter['FIELDS'], $iblockId);
 					$this->setRecordDependencies($record, $arFilter);
 					$result[] = $record;
 				}
@@ -83,7 +83,7 @@ class SectionFilter extends BaseData
 	private function getIblockIdByFilterId($filterId)
 	{
 		$result = '';
-		if(Loader::includeModule('iblock'))
+		if (Loader::includeModule('iblock'))
 		{
 			$hash = substr($filterId, strlen(static::TABLE_NAME));
 			$hash = substr($hash, 0, strlen($hash) - 7); // strlen('_filter') == 7
@@ -115,14 +115,14 @@ class SectionFilter extends BaseData
 	public function setRecordDependencies(Record $record, array $arFilter)
 	{
 		//LANGUAGE_ID
-		if($arFilter['LANGUAGE_ID'])
+		if ($arFilter['LANGUAGE_ID'])
 		{
 			$dependency = clone $this->getDependency('LANGUAGE');
-			$dependency->setValue( Language::getInstance()->getXmlId( Language::getInstance()->createId($arFilter['LANGUAGE_ID']) ));
-			$record->setDependency('LANGUAGE', $dependency );
+			$dependency->setValue(Language::getInstance()->getXmlId(Language::getInstance()->createId($arFilter['LANGUAGE_ID'])));
+			$record->setDependency('LANGUAGE', $dependency);
 		}
 		//IBLOCK_ID
-		if($arFilter['FILTER_ID'])
+		if ($arFilter['FILTER_ID'])
 		{
 			$iblockId = $this->getIblockIdByFilterId($arFilter['FILTER_ID']);
 			if ($iblockId)
@@ -144,29 +144,31 @@ class SectionFilter extends BaseData
 		$ufEnumValues = array();
 		$ufEnumFields = array();
 		$ufFieldIds = array();
-		if($iblockId)
+		if ($iblockId)
 		{
-			foreach($arrFields as $fieldName => $arrField)
+			foreach ($arrFields as $fieldName => $arrField)
 			{
-				if(strpos($fieldName, static::UF_PREFIX) === 0)
+				if (strpos($fieldName, static::UF_PREFIX) === 0)
 				{
 					$ufName = substr($fieldName, strlen(static::UF_PREFIX));
-					if($ufName)
+					if ($ufName)
 					{
-						$ufName = 'UF_'.$ufName;
-						if(Loader::includeModule('iblock'))
+						$ufName = 'UF_' . $ufName;
+						if (Loader::includeModule('iblock'))
 						{
 							$dbRes = CUserTypeEntity::GetList(array(), array(
-								'ENTITY_ID' => 'IBLOCK_'.$iblockId.'_SECTION',
-								'FIELD_NAME' => $ufName
+								'ENTITY_ID' => 'IBLOCK_' . $iblockId . '_SECTION',
+								'FIELD_NAME' => $ufName,
 							));
 							while ($ufField = $dbRes->Fetch())
 							{
-								if($ufField['ID'])
+								if ($ufField['ID'])
+								{
 									$ufFieldIds[] = Field::getInstance()->getXmlId(Field::getInstance()->createId($ufField['ID']));
+								}
 								if ($ufField['USER_TYPE_ID'] == 'enumeration' && is_array($arrField['value']))
 								{
-									$ufEnumValues = array_merge($ufEnumValues,$arrField['value']);
+									$ufEnumValues = array_merge($ufEnumValues, $arrField['value']);
 									$ufEnumFields[] = $fieldName;
 								}
 							}
@@ -175,13 +177,13 @@ class SectionFilter extends BaseData
 				}
 			}
 		}
-		if($ufFieldIds)
+		if ($ufFieldIds)
 		{
 			$dependency = clone $this->getDependency('FIELD');
 			$dependency->setValues($ufFieldIds);
 			$record->setDependency('FIELD', $dependency);
 		}
-		if($ufEnumValues)
+		if ($ufEnumValues)
 		{
 			$this->setUfEnumDependencies($record, $ufEnumValues);
 		}
@@ -203,7 +205,7 @@ class SectionFilter extends BaseData
 	private function addFieldsProperty(Record $record, $fields, $enumFields)
 	{
 		$arrNewFields = $arrFields = unserialize($fields);
-		if($enumFields)
+		if ($enumFields)
 		{
 			foreach ($arrFields as $fieldName => $arrValue)
 			{
@@ -214,16 +216,20 @@ class SectionFilter extends BaseData
 					{
 						$enumXmlId = FieldEnum::getInstance()->getXmlId(FieldEnum::getInstance()->createId($value));
 						if ($key === static::UF_ENUM_VALUE_PREFIX . $value)
+						{
 							$newKey = static::UF_ENUM_VALUE_PREFIX . $enumXmlId;
+						}
 						else
+						{
 							$newKey = $key;
+						}
 						$newValues[$newKey] = $enumXmlId;
 					}
 					$arrNewFields[$fieldName]['value'] = $newValues;
 				}
 			}
 		}
-		$record->setFieldRaw("FIELDS",serialize($arrNewFields));
+		$record->setFieldRaw("FIELDS", serialize($arrNewFields));
 	}
 
 	/**
@@ -236,17 +242,17 @@ class SectionFilter extends BaseData
 		$newArrFields = $arrFields;
 		foreach ($arrFields as $fieldName => $arrField)
 		{
-			if(strpos($fieldName, static::UF_PREFIX) === 0)
+			if (strpos($fieldName, static::UF_PREFIX) === 0)
 			{
 				$ufName = substr($fieldName, strlen(static::UF_PREFIX));
-				if($ufName)
+				if ($ufName)
 				{
-					$ufName = 'UF_'.$ufName;
-					if(Loader::includeModule('iblock'))
+					$ufName = 'UF_' . $ufName;
+					if (Loader::includeModule('iblock'))
 					{
 						$dbRes = CUserTypeEntity::GetList(array(), array(
-							'ENTITY_ID' => 'IBLOCK_'.$iblockId.'_SECTION',
-							'FIELD_NAME' => $ufName
+							'ENTITY_ID' => 'IBLOCK_' . $iblockId . '_SECTION',
+							'FIELD_NAME' => $ufName,
 						));
 						while ($ufField = $dbRes->Fetch())
 						{
@@ -256,13 +262,17 @@ class SectionFilter extends BaseData
 								$newValues = array();
 								foreach ($arrField['value'] as $key => $enumValueXmlId)
 								{
-									if($enumRecId = FieldEnum::getInstance()->findRecord($enumValueXmlId))
+									if ($enumRecId = FieldEnum::getInstance()->findRecord($enumValueXmlId))
 									{
 										$enumValueId = $enumRecId->getValue();
-										if($key === static::UF_ENUM_VALUE_PREFIX.$enumValueXmlId)
-											$newKey = static::UF_ENUM_VALUE_PREFIX.$enumValueId;
+										if ($key === static::UF_ENUM_VALUE_PREFIX . $enumValueXmlId)
+										{
+											$newKey = static::UF_ENUM_VALUE_PREFIX . $enumValueId;
+										}
 										else
+										{
 											$newKey = $key;
+										}
 										$newValues[$newKey] = $enumValueId;
 									}
 								}
@@ -281,27 +291,31 @@ class SectionFilter extends BaseData
 		$fields = $record->getFieldsRaw();
 		$xmlId = $record->getXmlId();
 		$xmlFields = explode(static::XML_ID_SEPARATOR, $xmlId);
-		if($xmlFields[0] == 'Y')
+		if ($xmlFields[0] == 'Y')
+		{
 			$fields['USER_ID'] = 1;
+		}
 
 		// FILTER_ID creating
 		$iblockXmlId = $xmlFields[3];
 		$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
-		if(Loader::includeModule('iblock'))
+		if (Loader::includeModule('iblock'))
 		{
 			$dbres = \CIBlock::GetById($iblockId);
-			if($iblockInfo = $dbres->GetNext())
+			if ($iblockInfo = $dbres->GetNext())
 			{
-				$fields['FILTER_ID'] = static::TABLE_NAME . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
+				$fields['FILTER_ID'] = static::TABLE_NAME . md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId) . '_filter';
 				$arFields = unserialize($fields['FIELDS']);
-				if($arFields)
+				if ($arFields)
 				{
-					$fields['FIELDS'] = $this->convertFieldsFromXml($arFields,$iblockId);
+					$fields['FIELDS'] = $this->convertFieldsFromXml($arFields, $iblockId);
 					$fields['SORT_FIELD'] = unserialize($fields['SORT_FIELD']);
 					$fields['LANGUAGE_ID'] = $this->getLanguageFromDependency($record);
 					$id = \CAdminFilter::Add($fields);
 					if ($id)
+					{
 						return $this->createId($id);
+					}
 				}
 			}
 		}
@@ -311,11 +325,11 @@ class SectionFilter extends BaseData
 	private function getLanguageFromDependency(Record $record)
 	{
 		$link = $record->getDependency("LANGUAGE");
-		if($link)
+		if ($link)
 		{
 			$langXmlId = $link->getValue();
 			$recId = Language::getInstance()->findRecord($langXmlId);
-			if($recId)
+			if ($recId)
 			{
 				return $recId->getValue();
 			}
@@ -327,31 +341,35 @@ class SectionFilter extends BaseData
 	{
 		$xmlId = $record->getXmlId();
 		$filterId = $this->findRecord($xmlId);
-		if($filterId)
+		if ($filterId)
 		{
 			$fields = $record->getFieldsRaw();
 			$xmlId = $record->getXmlId();
 			$xmlFields = explode(static::XML_ID_SEPARATOR, $xmlId);
-			if($xmlFields[0] == 'Y')
+			if ($xmlFields[0] == 'Y')
+			{
 				$fields['USER_ID'] = 1;
+			}
 
 			// FILTER_ID creating
 			$iblockXmlId = $xmlFields[3];
 			$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
-			if(Loader::includeModule('iblock'))
+			if (Loader::includeModule('iblock'))
 			{
 				$dbres = \CIBlock::GetById($iblockId);
-				if($iblockInfo = $dbres->GetNext())
+				if ($iblockInfo = $dbres->GetNext())
 				{
-					$fields['FILTER_ID'] = static::TABLE_NAME . md5( $iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId ) . '_filter';
+					$fields['FILTER_ID'] = static::TABLE_NAME . md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId) . '_filter';
 					$arFields = unserialize($fields['FIELDS']);
-					if($arFields)
+					if ($arFields)
 					{
 						$fields['FIELDS'] = $this->convertFieldsFromXml($arFields, $iblockId);
 						$fields['SORT_FIELD'] = unserialize($fields['SORT_FIELD']);
 						$fields['LANGUAGE_ID'] = $this->getLanguageFromDependency($record);
 						if (\CAdminFilter::Update($filterId->getValue(), $fields))
+						{
 							return;
+						}
 					}
 				}
 			}
@@ -362,7 +380,7 @@ class SectionFilter extends BaseData
 	protected function deleteInner($xmlId)
 	{
 		$RecordId = $this->findRecord($xmlId);
-		if($RecordId)
+		if ($RecordId)
 		{
 			$id = $RecordId->getValue();
 			$res = \CAdminFilter::Delete($id);
@@ -378,7 +396,7 @@ class SectionFilter extends BaseData
 		$dbRes = \CAdminFilter::GetList(
 			array(),
 			array(
-				'ID' => $id
+				'ID' => $id,
 			)
 		);
 		if ($filter = $dbRes->Fetch())
@@ -396,7 +414,7 @@ class SectionFilter extends BaseData
 	{
 		$result = '';
 		$iblockId = $this->getIblockIdByFilterId($filter['FILTER_ID']);
-		if($iblockId)
+		if ($iblockId)
 		{
 			$iblockXmlId = MigratoIblock::getInstance()->getXmlId(MigratoIblock::getInstance()->createId($iblockId));
 			if ($iblockXmlId)
@@ -415,11 +433,13 @@ class SectionFilter extends BaseData
 		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
 
 		$arFilter = array('COMMON' => $fields[1]);
-		if($fields[0] === 'Y')
+		if ($fields[0] === 'Y')
+		{
 			$filter['USER_ID'] = 1;
+		}
 		$name = $fields[2];
 		$iblockXmlId = $fields[3];
-		if($iblockRecord =  MigratoIblock::getInstance()->findRecord($iblockXmlId))
+		if ($iblockRecord = MigratoIblock::getInstance()->findRecord($iblockXmlId))
 		{
 			$iblockId = $iblockRecord->getValue();
 			if (Loader::includeModule('iblock') && $iblockId)
