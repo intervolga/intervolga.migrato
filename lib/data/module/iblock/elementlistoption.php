@@ -56,7 +56,7 @@ class ElementListOption extends BaseData
 		foreach ($filterParams as $filterParam)
 		{
 			$newFilter = array_merge($filter, $filterParam);
-			$dbRes = \CUserOptions::getList(array(), $filter);
+			$dbRes = \CUserOptions::getList(array(), $newFilter);
 			while ($uoption = $dbRes->fetch())
 			{
 				if ($this->getTypeByName($uoption['NAME']) && !in_array($uoption['ID'], $recordsId))
@@ -107,7 +107,7 @@ class ElementListOption extends BaseData
 		$properties = array();
 		if ($value['columns'])
 		{
-			$columns = $properties = explode(static::COLUMNS_DELIMITER, $value['columns']);
+			$properties = explode(static::COLUMNS_DELIMITER, $value['columns']);
 		}
 		if ($value['by'] && strpos($value['by'], 'PROPERTY_') === 0 && !in_array($value['by'], $properties))
 		{
@@ -127,7 +127,9 @@ class ElementListOption extends BaseData
 				}
 			}
 		}
+
 		//Set dependencies
+		$propertyXmlIds = array();
 		if ($propertyIds)
 		{
 			$propertyXmlIds = $this->getIblockPropertiesXmlId($propertyIds);
@@ -176,7 +178,9 @@ class ElementListOption extends BaseData
 				}
 			}
 		}
+
 		//Convert field 'BY'
+		$newfieldBy = '';
 		if ($value['by'] && strpos($value['by'], 'PROPERTY_') === 0)
 		{
 			if ($propertyIds[$value['by']])
