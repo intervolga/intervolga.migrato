@@ -30,7 +30,7 @@ class ElementListOption extends BaseData
 		Loader::includeModule("iblock");
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_LIST_OPTIONS.ENTITY_NAME'));
 		$this->setVirtualXmlId(true);
-		$this->setFilesSubdir('/');
+		$this->setFilesSubdir('/type/iblock/admin/');
 		$this->setDependencies($this->getDependenciesArray());
 	}
 

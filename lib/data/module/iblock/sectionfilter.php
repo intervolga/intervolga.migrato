@@ -30,7 +30,7 @@ class SectionFilter extends BaseData
 		Loader::includeModule('iblock');
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_SECTION_FILTER.ENTITY_NAME'));
 		$this->setVirtualXmlId(true);
-		$this->setFilesSubdir('/');
+		$this->setFilesSubdir('/type/iblock/admin/');
 		$this->setDependencies($this->getDependenciesArray());
 	}
 
