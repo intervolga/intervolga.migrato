@@ -204,6 +204,9 @@
         <entity>
             <name>answer</name>
         </entity>
+        <entity>
+            <name>status</name>
+        </entity>
     </module>
     <module>
         <name>perfmon</name>
