@@ -470,15 +470,6 @@ class ElementListFilter extends BaseData
 	}
 
 	/**
-	 * @param int $id
-	 * @return static
-	 */
-	public function createId($id)
-	{
-		return \Intervolga\Migrato\Data\RecordId::createNumericId($id);
-	}
-
-	/**
 	 * @param \Intervolga\Migrato\Data\RecordId $id
 	 * @param string $xmlId
 	 */
