@@ -12,12 +12,12 @@ use Bitrix\Main\Localization\Loc,
 Loc::loadMessages(__FILE__);
 
 /**
- * Class SectionOption - настройки показа списка разделов инфоблока в административной части
+ * Class SectionList - настройки показа списка разделов инфоблока в административной части
  * (раздельный режим просмотра).
  *
  * @package Intervolga\Migrato\Data\Module\Iblock
  */
-class SectionOption extends BaseData
+class SectionList extends BaseData
 {
 	const CATEGORY = 'list';
 	const NAME_PREFIX = 'tbl_iblock_section_';

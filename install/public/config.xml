@@ -166,16 +166,16 @@
             <name>form</name>
         </entity>
         <entity>
-            <name>elementlistfilter</name>
+            <name>elementfilter</name>
         </entity>
         <entity>
-            <name>elementlistoption</name>
+            <name>elementlist</name>
         </entity>
         <entity>
             <name>sectionfilter</name>
         </entity>
         <entity>
-            <name>sectionoption</name>
+            <name>sectionlist</name>
         </entity>
     </module>
     <module>

@@ -12,12 +12,12 @@ use Bitrix\Main\Localization\Loc,
 Loc::loadMessages(__FILE__);
 
 /**
- * Class ElementListOption - настройки показа списка элементов инфоблока в административной части
+ * Class ElementList - настройки показа списка элементов инфоблока в административной части
  * (совместный и раздельный режимы просмотра).
  *
  * @package Intervolga\Migrato\Data\Module\Iblock
  */
-class ElementListOption extends BaseData
+class ElementList extends BaseData
 {
 	const CATEGORY = 'list';
 	const NAME_PREFIX = array(

@@ -12,12 +12,12 @@ use \Intervolga\Migrato\Data\BaseData,
 Loc::loadMessages(__FILE__);
 
 /**
- * Class ElementListFilter - настройки фильтра для списка элементов инфоблока в административной части
+ * Class ElementFilter - настройки фильтра для списка элементов инфоблока в административной части
  * (совместный и раздельный режимы просмотра).
  *
  * @package Intervolga\Migrato\Data\Module\Iblock
  */
-class ElementListFilter extends BaseData
+class ElementFilter extends BaseData
 {
 	const XML_ID_SEPARATOR = '.';
 	const TABLE_NAMES = array(
