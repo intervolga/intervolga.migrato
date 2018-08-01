@@ -47,7 +47,6 @@ class SectionOption extends BaseData
 		$recordsId = array();
 		foreach ($filterParams as $filterParam)
 		{
-			$newFilter = array_merge($filter, $filterParam);
 			$dbRes = \CUserOptions::getList(array(), $filter);
 			while ($uoption = $dbRes->fetch())
 			{
@@ -85,7 +84,7 @@ class SectionOption extends BaseData
 		$fieldsForConvert = array();
 		if ($value['columns'])
 		{
-			$columns = $fields = explode(static::COLUMNS_DELIMITER, $value['columns']);
+			$fields = explode(static::COLUMNS_DELIMITER, $value['columns']);
 		}
 		if ($value['by'] && strpos($value['by'], 'UF_') == 0 && !in_array($value['by'], $fields))
 		{

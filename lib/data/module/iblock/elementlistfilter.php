@@ -429,7 +429,7 @@ class ElementListFilter extends BaseData
 
 	/**
 	 * @param string $xmlId
-	 * @return \Intervolga\Migrato\Data\RecordId|null|static
+	 * @return \Intervolga\Migrato\Data\RecordId|null
 	 */
 	public function findRecord($xmlId)
 	{
