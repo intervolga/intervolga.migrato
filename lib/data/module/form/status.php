@@ -43,7 +43,7 @@ class Status extends BaseData
 				$record = new Record($this);
 				$id = $this->createId($status['ID']);
 				$record->setId($id);
-				$record->setXmlId(md5($status["DEFAULT_VALUE"] . $status['TITLE'] . $status['DESCRIPTION']));
+				$record->setXmlId($form["SID"] . '_' . \CUtil::translit($status['TITLE'], 'ru'));
 				\CFormStatus::GetPermissionList($status["ID"], $status["arPERMISSION_VIEW"], $status["arPERMISSION_MOVE"], $status["arPERMISSION_EDIT"], $status["arPERMISSION_DELETE"]);
 				$record->addFieldsRaw(array(
 					"CSS" => $status["CSS"],
@@ -60,18 +60,7 @@ class Status extends BaseData
 					"arPERMISSION_EDIT" => $status["arPERMISSION_EDIT"],
 					"arPERMISSION_DELETE" => $status["arPERMISSION_DELETE"],
 				));
-				$getTemplateList = \CFormStatus::GetTemplateList($record->getId()->getValue());
-				if ($getTemplateList['reference_id'])
-				{
-					$record->addFieldsRaw(array(
-						"SEND_EMAIL" => "Y",
-					));
-				}
-				$dependency = clone $this->getDependency("FORM");
-				$dependency->setValue(
-					Form::getInstance()->getXmlId(RecordId::createNumericId($status['FORM_ID']))
-				);
-				$record->setDependency("FORM", $dependency);
+				$this->addDependencies($record, $status);
 				$result[] = $record;
 			}
 		}
@@ -79,10 +68,21 @@ class Status extends BaseData
 		return $result;
 	}
 
+	protected function addDependencies(Record $record, array $status)
+	{
+		$dependency = clone $this->getDependency("FORM");
+		$dependency->setValue(
+			Form::getInstance()->getXmlId(RecordId::createNumericId($status['FORM_ID']))
+		);
+		$record->setDependency("FORM", $dependency);
+	}
+
 	public function getXmlId($id)
 	{
 		$status = \CFormStatus::GetByID($id->getValue())->Fetch();
-		return md5($status['DEFAULT_VALUE'] . $status['TITLE'] . $status['DESCRIPTION']);
+		return Form::getInstance()->getXmlId(
+			RecordId::createNumericId($status['FORM_ID'])) . '_' . \CUtil::translit($status['TITLE'], 'ru'
+		);
 	}
 
 	public function update(Record $record)
@@ -159,10 +159,6 @@ class Status extends BaseData
 		$result = \CFormStatus::Set($data);
 		if ($result)
 		{
-			if ($data["SEND_EMAIL"])
-			{
-				\CFormStatus::SetMailTemplate($data["FORM_ID"], $result, "Y", '', true);
-			}
 			return $this->createId($result);
 		}
 		else
