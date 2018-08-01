@@ -75,7 +75,7 @@ class ElementListOption extends BaseData
 	}
 
 	/**
-	 * @param $name - NAME field
+	 * @param string $name - NAME field
 	 * @return int|string - available types - "E"lement, "L"ist
 	 */
 	protected function getTypeByName($name)
@@ -93,7 +93,7 @@ class ElementListOption extends BaseData
 
 	/**
 	 * @param Record $record
-	 * @param $value - VALUE field
+	 * @param array $value - VALUE field
 	 */
 	protected function addPropsDependencies(Record $record, $value)
 	{
@@ -142,10 +142,10 @@ class ElementListOption extends BaseData
 
 	/**
 	 * Replace properties id to xmlId
-	 * @param $value - VALUE field
-	 * @param $propertyIds - key = column name, value = property Id
-	 * @param $propertyXmlIds - key = property Id, value = property xmlId
-	 * @return mixed - new VALUE field
+	 * @param array $value - VALUE field
+	 * @param array $propertyIds - key = column name, value = property Id
+	 * @param array $propertyXmlIds - key = property Id, value = property xmlId
+	 * @return array - new VALUE field
 	 */
 	private function convertValueFieldToXml($value, $propertyIds, $propertyXmlIds)
 	{
@@ -197,7 +197,7 @@ class ElementListOption extends BaseData
 	}
 
 	/**
-	 * @param $propsId - Iblock properties id
+	 * @param array $propsId - Iblock properties id
 	 * @return array - key = property id, value = property xmlId
 	 */
 	protected function getIblockPropertiesXmlId($propsId)
@@ -217,8 +217,8 @@ class ElementListOption extends BaseData
 
 	/**
 	 * Replace properties xmlId to Id
-	 * @param $value - VALUE field
-	 * @return mixed
+	 * @param array $value - VALUE field
+	 * @return array
 	 */
 	private function convertValueFieldFromXml($value)
 	{
@@ -289,6 +289,10 @@ class ElementListOption extends BaseData
 		return '';
 	}
 
+	/**
+	 * @param string $xmlId
+	 * @return array
+	 */
 	protected function xmlIdToArray($xmlId)
 	{
 		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
@@ -305,7 +309,7 @@ class ElementListOption extends BaseData
 	}
 
 	/**
-	 * @param $name - NAME field
+	 * @param string $name - NAME field
 	 * @return string
 	 */
 	private function getIblockXmlIdByName($name)
@@ -329,6 +333,10 @@ class ElementListOption extends BaseData
 		return '';
 	}
 
+	/**
+	 * @param Record $record
+	 * @param array $uoption
+	 */
 	public function setRecordDependencies(Record $record, array $uoption)
 	{
 		if ($uoption['NAME'])
@@ -452,6 +460,10 @@ class ElementListOption extends BaseData
 		}
 	}
 
+	/**
+	 * @param Record $record
+	 * @return \string[]
+	 */
 	protected function recordToArray(Record $record)
 	{
 		$fields = $record->getFieldsRaw();

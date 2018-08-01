@@ -74,8 +74,8 @@ class SectionOption extends BaseData
 
 	/**
 	 * @param Record $record
-	 * @param $value - VALUE field
-	 * @param $iblockId
+	 * @param array $value - VALUE field
+	 * @param int $iblockId
 	 */
 	protected function addUFieldDependencies(Record $record, $value, $iblockId)
 	{
@@ -129,9 +129,9 @@ class SectionOption extends BaseData
 	}
 
 	/**
-	 * @param $value - VALUE field
-	 * @param $fieldsXmlId - array, where key - field name, value - field xml id
-	 * @return mixed
+	 * @param array $value - VALUE field
+	 * @param array $fieldsXmlId - array, where key - field name, value - field xml id
+	 * @return array
 	 */
 	private function convertValueFieldToXml($value, $fieldsXmlId)
 	{
@@ -164,9 +164,9 @@ class SectionOption extends BaseData
 
 	/**
 	 * Replace fields xml id with field name in VALUE field.
-	 * @param $value - VALUE field
-	 * @param $iblockId
-	 * @return mixed
+	 * @param array $value - VALUE field
+	 * @param int $iblockId
+	 * @return array
 	 */
 	private function convertValueFieldFromXml($value, $iblockId)
 	{
@@ -246,6 +246,10 @@ class SectionOption extends BaseData
 		return '';
 	}
 
+	/**
+	 * @param string $xmlId
+	 * @return array
+	 */
 	protected function xmlIdToArray($xmlId)
 	{
 		$fields = explode(static::XML_ID_SEPARATOR, $xmlId);
@@ -261,7 +265,7 @@ class SectionOption extends BaseData
 	}
 
 	/**
-	 * @param $name - NAME field
+	 * @param string $name - NAME field
 	 * @return string
 	 */
 	private function getIblockIdByName($name)
@@ -281,6 +285,10 @@ class SectionOption extends BaseData
 		return '';
 	}
 
+	/**
+	 * @param Record $record
+	 * @param array $uoption
+	 */
 	public function setRecordDependencies(Record $record, array $uoption)
 	{
 		if ($uoption['NAME'])
@@ -408,6 +416,10 @@ class SectionOption extends BaseData
 		}
 	}
 
+	/**
+	 * @param Record $record
+	 * @return \string[]
+	 */
 	protected function recordToArray(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
