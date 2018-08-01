@@ -8,7 +8,8 @@ use \Intervolga\Migrato\Data\BaseData,
 	\Intervolga\Migrato\Data\Module\Main\Language,
 	Intervolga\Migrato\Data\Module\Iblock\Iblock as MigratoIblock,
 	\Bitrix\Main\Localization\Loc,
-	\Bitrix\Main\Loader;
+	\Bitrix\Main\Loader,
+	Intervolga\Migrato\Data\RecordId;
 
 Loc::loadMessages(__FILE__);
 
@@ -388,17 +389,12 @@ class SectionFilter extends BaseData
 		throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_SECTION_FILTER.UPDATE_ERROR'));
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$RecordId = $this->findRecord($xmlId);
-		if ($RecordId)
+		$res = \CAdminFilter::Delete($id->getValue());
+		if (!$res)
 		{
-			$id = $RecordId->getValue();
-			$res = \CAdminFilter::Delete($id);
-			if (!$res)
-			{
-				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_SECTION_FILTER.DELETE_ERROR'));
-			}
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_SECTION_FILTER.DELETE_ERROR'));
 		}
 	}
 

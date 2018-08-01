@@ -6,8 +6,8 @@ use Bitrix\Main\Localization\Loc,
 	Intervolga\Migrato\Data\Link,
 	Intervolga\Migrato\Data\Record,
 	Intervolga\Migrato\Data\Module\Iblock\Iblock as MigratoIblock,
-	Bitrix\Main\Loader;
-
+	Bitrix\Main\Loader,
+	Intervolga\Migrato\Data\RecordId;
 
 Loc::loadMessages(__FILE__);
 
@@ -412,20 +412,15 @@ class ElementList extends BaseData
 		throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_LIST_OPTIONS.ADD_ERROR'));
 	}
 
-	protected function deleteInner($xmlId)
+	protected function deleteInner(RecordId $id)
 	{
-		$RecordId = $this->findRecord($xmlId);
-		if ($RecordId)
+		$dbres = \CUserOptions::GetList(array(), array('ID' => $id->getValue()));
+		if ($uoption = $dbres->fetch())
 		{
-			$id = $RecordId->getValue();
-			$dbres = \CUserOptions::GetList(array(), array('ID' => $id));
-			if ($uoption = $dbres->fetch())
+			$res = \CUserOptions::DeleteOptionsByName($uoption['CATEGORY'], $uoption['NAME']);
+			if (!$res)
 			{
-				$res = \CUserOptions::DeleteOptionsByName($uoption['CATEGORY'], $uoption['NAME']);
-				if (!$res)
-				{
-					throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_LIST_OPTIONS.DELETE_ERROR'));
-				}
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_LIST_OPTIONS.DELETE_ERROR'));
 			}
 		}
 	}
