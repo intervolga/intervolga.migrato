@@ -31,7 +31,12 @@ class SectionFilter extends BaseData
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_SECTION_FILTER.ENTITY_NAME'));
 		$this->setVirtualXmlId(true);
 		$this->setFilesSubdir('/type/iblock/admin/');
-		$this->setDependencies($this->getDependenciesArray());
+		$this->setDependencies(array(
+			'LANGUAGE' => new Link(Language::getInstance()),
+			'IBLOCK' => new Link(MigratoIblock::getInstance()),
+			'FIELD' => new Link(Field::getInstance()),
+			'FIELDENUM' => new Link(FieldEnum::getInstance()),
+		));
 	}
 
 	/**
@@ -97,19 +102,6 @@ class SectionFilter extends BaseData
 			}
 		}
 		return $result;
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getDependenciesArray()
-	{
-		return array(
-			'LANGUAGE' => new Link(Language::getInstance()),
-			'IBLOCK' => new Link(MigratoIblock::getInstance()),
-			'FIELD' => new Link(Field::getInstance()),
-			'FIELDENUM' => new Link(FieldEnum::getInstance()),
-		);
 	}
 
 	public function setRecordDependencies(Record $record, array $arFilter)

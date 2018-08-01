@@ -30,15 +30,10 @@ class SectionOption extends BaseData
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_SECTION_LIST_OPTIONS.ENTITY_NAME'));
 		$this->setVirtualXmlId(true);
 		$this->setFilesSubdir('/type/iblock/admin/');
-		$this->setDependencies($this->getDependenciesArray());
-	}
-
-	public function getDependenciesArray()
-	{
-		return array(
+		$this->setDependencies(array(
 			'IBLOCK_ID' => new Link(MigratoIblock::getInstance()),
 			'FIELD' => new Link(Field::getInstance()),
-		);
+		));
 	}
 
 	public function getList(array $filter = array())

@@ -32,7 +32,12 @@ class ElementListFilter extends BaseData
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.ENTITY_NAME'));
 		$this->setVirtualXmlId(true);
 		$this->setFilesSubdir('/type/iblock/admin/');
-		$this->setDependencies($this->getDependenciesArray());
+		$this->setDependencies(array(
+			'LANGUAGE' => new Link(Language::getInstance()),
+			'IBLOCK_ID' => new Link(MigratoIblock::getInstance()),
+			'PROPERTY_ID' => new Link(Property::getInstance()),
+			'PROPERTY_ENUM_ID' => new Link(Enum::getInstance()),
+		));
 	}
 
 	/**
@@ -102,16 +107,6 @@ class ElementListFilter extends BaseData
 			}
 		}
 		return $result;
-	}
-
-	public function getDependenciesArray()
-	{
-		return array(
-			'LANGUAGE' => new Link(Language::getInstance()),
-			'IBLOCK_ID' => new Link(MigratoIblock::getInstance()),
-			'PROPERTY_ID' => new Link(Property::getInstance()),
-			'PROPERTY_ENUM_ID' => new Link(Enum::getInstance()),
-		);
 	}
 
 	public function setRecordDependencies(Record $record, array $arFilter)
