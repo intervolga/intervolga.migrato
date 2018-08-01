@@ -265,7 +265,7 @@ class SectionFilter extends BaseData
 						{
 							if ($ufField['USER_TYPE_ID'] == 'enumeration' && is_array($arrField['value']))
 							{
-								//по xml_id получить id и заменить
+								// get id by xml_id and replace it
 								$newValues = array();
 								foreach ($arrField['value'] as $key => $enumValueXmlId)
 								{

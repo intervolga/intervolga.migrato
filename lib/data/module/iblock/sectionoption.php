@@ -333,7 +333,6 @@ class SectionOption extends BaseData
 			$fields['USER_ID'] = false;
 		}
 
-		//������� NAME ������
 		$iblockXmlId = $xmlFields['IBLOCK_XML_ID'];
 		$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
 		if (Loader::includeModule('iblock'))
@@ -429,7 +428,7 @@ class SectionOption extends BaseData
 		{
 			$fields['USER_ID'] = 1;
 		}
-		//������� NAME ������
+
 		$iblockXmlId = $xmlFields['IBLOCK_XML_ID'];
 		$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
 		if (Loader::includeModule('iblock'))
