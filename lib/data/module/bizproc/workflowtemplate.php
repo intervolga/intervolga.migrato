@@ -323,7 +323,12 @@ class WorkflowTemplate extends BaseData
 		} elseif (is_numeric($role)) {
 			$groupIdObject = RecordId::createNumericId(intval($role));
 			$xmlId = MainGroup::getInstance()->getXmlId($groupIdObject);
-			if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_NUMERIC . $xmlId)) {
+			if (!strlen($xmlId)) {
+				$record->registerValidateError(
+					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX3')."($role)"
+				);
+			}
+			elseif (!$this->xmlIdToString(self::PREFIX_USER_GROUP_NUMERIC . $xmlId)) {
 				$record->registerValidateError(
 					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX2')."($xmlId)"
 				);
