@@ -316,4 +316,12 @@ class Record extends BaseDataObject
 	{
 		return $this->isReferenceUpdate;
 	}
+
+	/**
+	 * @param string $error
+	 */
+	public function registerValidateError($error)
+	{
+		// todo
+	}
 }
