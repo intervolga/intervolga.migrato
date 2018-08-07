@@ -108,7 +108,7 @@ class WorkflowTemplate extends BaseData
 		if ($arTemplate = $dbTemplatesList->Fetch()) {
 			return $this->calculateXmlId($arTemplate);
 		}else {
-			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.GXI.EX').$id);
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.GXI.EX')."($id)");
 		}
 	}
 
@@ -210,7 +210,7 @@ class WorkflowTemplate extends BaseData
 	 * @param Record $record
 	 * @return mixed[]
 	*/
-	protected function convertNode($arNode, &$arDependency, $record)
+	protected function convertNode($arNode, &$arDependency=array(), $record=NULL)
 	{
 		$arResult = array();
 		foreach ($arNode as $key => $value) {
@@ -228,7 +228,7 @@ class WorkflowTemplate extends BaseData
 			) {
 				$arResult[$key] = $this->convertUsersNode($value, $arDependency, $record);
 			} elseif ($key === 'RESPONSIBLE_ID' && !is_array($value)) {
-				$arResult[$key] = $this->convertRole($value, $record);
+				$arResult[$key] = $this->convertRole($value, $arDependency, $record);
 			} elseif (is_array($value)) {
 				$arResult[$key] = $this->convertNode($value, $arDependency, $record);
 			} else {
@@ -244,7 +244,7 @@ class WorkflowTemplate extends BaseData
 	 * @param Record $record
 	 * @return mixed[]
 	*/
-	protected function convertVariables($arVariables, &$arDependency, $record)
+	protected function convertVariables($arVariables, &$arDependency = array(), $record = NULL)
 	{
 		$arResult = array();
 		foreach ($arVariables as $key => $arVariable) {
@@ -284,7 +284,7 @@ class WorkflowTemplate extends BaseData
 	{
 		$arResult = array();
 		foreach ($arNode as $role) {
-			$arResult[] = $this->convertRole($role);
+			$arResult[] = $this->convertRole($role, $arDependency, $record);
 		}
 		return $arResult;
 	}
