@@ -62,9 +62,10 @@ class Form extends BaseData
 				"USE_RESTRICTIONS" => $form["USE_RESTRICTIONS"],
 			));
 
-			$getMenuList = \CForm::GetMenuList(array("FORM_ID"=>$record->getId()->getValue()), "N");
+			$getMenuList = \CForm::GetMenuList(array("FORM_ID" => $record->getId()->getValue()), "N");
 			$addItems = array();
-			while ($formMenu = $getMenuList->Fetch()) {
+			while ($formMenu = $getMenuList->Fetch())
+			{
 				$addItems['MENU.' . $formMenu['LID']] = $formMenu['MENU'];
 			}
 			$record->addFieldsRaw($addItems);
@@ -78,24 +79,31 @@ class Form extends BaseData
 	{
 		$dependency = clone $this->getDependency('LANGUAGE');
 		$languages = array();
-		$languagesGetList = \CForm::GetMenuList(array("FORM_ID"=>$record->getId()->getValue()), "N");
+		$languagesGetList = \CForm::GetMenuList(array("FORM_ID" => $record->getId()->getValue()), "N");
 		while ($language = $languagesGetList->Fetch())
 		{
 			$languages[] = Language::getInstance()->getXmlId(
 				Language::getInstance()->createId($language['LID'])
 			);
 		}
-		$dependency->setValues($languages);
-		$record->setDependency('LANGUAGE', $dependency);
+		if ($languages)
+		{
+			$dependency->setValues($languages);
+			$record->setDependency('LANGUAGE', $dependency);
+		}
 
 		$dependency = clone $this->getDependency('SITE');
 		$sites = array();
 		$sitesGetArray = \CForm::GetSiteArray($record->getId()->getValue());
-		foreach ($sitesGetArray as $site) {
+		foreach ($sitesGetArray as $site)
+		{
 			$sites[] = Site::getInstance()->getXmlId(Site::getInstance()->createId($site));
 		}
-		$dependency->setValues($sites);
-		$record->setDependency('SITE', $dependency);
+		if ($sites)
+		{
+			$dependency->setValues($sites);
+			$record->setDependency('SITE', $dependency);
+		}
 
 		$dependency = clone $this->getDependency('MAIL_EVENT');
 		$events = [];
@@ -104,8 +112,11 @@ class Form extends BaseData
 		{
 			$events[] = Event::getInstance()->getXmlId(Event::getInstance()->createId($mailTemplate));
 		}
-		$dependency->setValues($events);
-		$record->setDependency('MAIL_EVENT', $dependency);
+		if ($events)
+		{
+			$dependency->setValues($events);
+			$record->setDependency('MAIL_EVENT', $dependency);
+		}
 	}
 
 	public function getXmlId($id)
@@ -159,7 +170,6 @@ class Form extends BaseData
 			'RESTRICT_TIME' => $record->getFieldRaw('RESTRICT_TIME'),
 			'RESTRICT_STATUS' => $record->getFieldRaw('RESTRICT_STATUS'),
 			'USE_RESTRICTIONS' => $record->getFieldRaw('USE_RESTRICTIONS'),
-			'SEND_EMAIL' => $record->getFieldRaw('SEND_EMAIL')
 		);
 
 		$link = $record->getDependency('LANGUAGE');
