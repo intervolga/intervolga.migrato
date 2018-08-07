@@ -86,8 +86,11 @@ class Form extends BaseData
 				Language::getInstance()->createId($language['LID'])
 			);
 		}
-		$dependency->setValues($languages);
-		$record->setDependency('LANGUAGE', $dependency);
+		if ($languages)
+		{
+			$dependency->setValues($languages);
+			$record->setDependency('LANGUAGE', $dependency);
+		}
 
 		$dependency = clone $this->getDependency('SITE');
 		$sites = array();
@@ -101,6 +104,7 @@ class Form extends BaseData
 			$dependency->setValues($sites);
 			$record->setDependency('SITE', $dependency);
 		}
+
 		$dependency = clone $this->getDependency('MAIL_EVENT');
 		$events = [];
 		$mailTemplates = \CAllForm::GetMailTemplateArray($form['ID']);
