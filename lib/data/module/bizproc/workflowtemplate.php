@@ -41,7 +41,8 @@ class WorkflowTemplate extends BaseData
 	{
 		$result = array();
 		$dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array());
-		while ($arTemplate = $dbTemplatesList->Fetch()) {
+		while ($arTemplate = $dbTemplatesList->Fetch())
+		{
 			$record = new \Intervolga\Migrato\Data\Record($this);
 			$id = $this->createId($arTemplate["ID"]);
 			$record->setXmlId($this->calculateXmlId($arTemplate));
@@ -52,11 +53,15 @@ class WorkflowTemplate extends BaseData
 				"GROUP" => array(),
 			);
 			// зависимость от iblock в DOCUMENT_TYPE
-			if ($documentType2XmlId = $this->stringToXmlId($arTemplate["DOCUMENT_TYPE"][2])) {
+			if ($documentType2XmlId = $this->stringToXmlId($arTemplate["DOCUMENT_TYPE"][2]))
+			{
 				$arDependency["IBLOCK"][] = $documentType2XmlId;
-			}else {
+			}
+			else
+			{
 				// если шаблон не привязан к инфоблоку или к модулю CRM, то пропускаем его
-				if ($arTemplate["DOCUMENT_TYPE"][2] !== self::CRM_MODULE) {
+				if ($arTemplate["DOCUMENT_TYPE"][2] !== self::CRM_MODULE)
+				{
 					continue;
 				}
 			}
@@ -66,13 +71,15 @@ class WorkflowTemplate extends BaseData
 			$arTemplate["VARIABLES"] = $this->convertVariables($arTemplate["VARIABLES"], $arDependency, $record);
 			$arTemplate["CONSTANTS"] = $this->convertVariables($arTemplate["CONSTANTS"], $arDependency, $record);
 			// зависимости от групп пользователей
-			if (!empty($arDependency['GROUP'])) {
+			if (!empty($arDependency['GROUP']))
+			{
 				$dependency = clone $this->getDependency('GROUP_ID');
 				$dependency->setValues(array_unique($arDependency['GROUP']));
 				$record->setDependency('GROUP_IDS', $dependency);
 			}
 			// зависимости от инфоблоков
-			if (!empty($arDependency['IBLOCK'])) {
+			if (!empty($arDependency['IBLOCK']))
+			{
 				$dependency = clone $this->getDependency('IBLOCK_ID');
 				$dependency->setValues(array_unique($arDependency['IBLOCK']));
 				$record->setDependency('IBLOCK_ID', $dependency);
@@ -90,7 +97,7 @@ class WorkflowTemplate extends BaseData
 				"PARAMETERS" => serialize($arTemplate["PARAMETERS"]),
 				"VARIABLES" => serialize($arTemplate["VARIABLES"]),
 				"CONSTANTS" => serialize($arTemplate["CONSTANTS"]),
-				"ACTIVE" => $arTemplate["ACTIVE"]
+				"ACTIVE" => $arTemplate["ACTIVE"],
 			));
 			$result[] = $record;
 		}
@@ -105,10 +112,13 @@ class WorkflowTemplate extends BaseData
 	public function getXmlId($id)
 	{
 		$dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array("ID" => $id->getValue()));
-		if ($arTemplate = $dbTemplatesList->Fetch()) {
+		if ($arTemplate = $dbTemplatesList->Fetch())
+		{
 			return $this->calculateXmlId($arTemplate);
-		}else {
-			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.GXI.EX')."($id)");
+		}
+		else
+		{
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.GXI.EX') . "($id)");
 		}
 	}
 
@@ -122,7 +132,8 @@ class WorkflowTemplate extends BaseData
 		$arTemplate = $this->recordToArray($record);
 		$loader = \CBPWorkflowTemplateLoader::GetLoader();
 		$returnId = $loader->AddTemplate($arTemplate, true);
-		if (!$returnId) {
+		if (!$returnId)
+		{
 			throw new \Exception(ExceptionText::getUnknown());
 		}
 		return $this->createId($returnId);
@@ -141,10 +152,12 @@ class WorkflowTemplate extends BaseData
 			false,
 			array("ID", "WORKFLOW_ID", "WORKFLOW_TEMPLATE_TEMPLATE_ID")
 		);
-		while($arWorkflow = $dbWorkflowList->Fetch()) {
+		while ($arWorkflow = $dbWorkflowList->Fetch())
+		{
 			$terminate = true;
 			$err = \CBPDocument::killWorkflow($arWorkflow["WORKFLOW_ID"], $terminate);
-			if ($err) {
+			if ($err)
+			{
 				throw new \Exception($err["message"]);
 			}
 		}
@@ -162,7 +175,8 @@ class WorkflowTemplate extends BaseData
 		$arTemplate = $this->recordToArray($record);
 		$loader = \CBPWorkflowTemplateLoader::GetLoader();
 		$returnId = $loader->UpdateTemplate($id, $arTemplate, true);
-		if (!$returnId) {
+		if (!$returnId)
+		{
 			throw new \Exception(ExceptionText::getUnknown());
 		}
 	}
@@ -181,7 +195,7 @@ class WorkflowTemplate extends BaseData
 		$arTemplate['DOCUMENT_TYPE'] = array(
 			$arTemplate['DOCUMENT_TYPE_0'],
 			$arTemplate['DOCUMENT_TYPE_1'],
-			$this->xmlIdToString($arTemplate['DOCUMENT_TYPE_2'])
+			$this->xmlIdToString($arTemplate['DOCUMENT_TYPE_2']),
 		);
 		unset($arTemplate['DOCUMENT_TYPE_0']);
 		unset($arTemplate['DOCUMENT_TYPE_1']);
@@ -213,45 +227,58 @@ class WorkflowTemplate extends BaseData
 	 * @param string[][] &$arDependency
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return mixed[]
-	*/
-	protected function convertNode($arNode, &$arDependency=array(), $record=NULL)
+	 */
+	protected function convertNode($arNode, &$arDependency = array(), $record = null)
 	{
 		$arResult = array();
-		foreach ($arNode as $key => $value) {
-			if ($key === 'Permission') {
+		foreach ($arNode as $key => $value)
+		{
+			if ($key === 'Permission')
+			{
 				$arResult[$key] = $this->convertPermissionNode($value, $arDependency, $record);
-			} elseif ($key === 'DocumentType') {
+			}
+			elseif ($key === 'DocumentType')
+			{
 				$arResult[$key] = $this->convertDocumentTypeNode($value, $arDependency, $record);
-			} elseif (
-				in_array ($key, array(
-				'Users', 'UserParameter', 'ReserveUserParameter', 'MessageUserFrom', 'MessageUserTo',
-				'MailUserFromArray', 'MailUserToArray', 'CalendarUser', 'OwnerId', 'UsersTo', 'AbsenceUser',
-				'CreatedBy','DeletedBy','Operator','EntityId'
+			}
+			elseif (
+				in_array($key, array(
+					'Users', 'UserParameter', 'ReserveUserParameter', 'MessageUserFrom', 'MessageUserTo',
+					'MailUserFromArray', 'MailUserToArray', 'CalendarUser', 'OwnerId', 'UsersTo', 'AbsenceUser',
+					'CreatedBy', 'DeletedBy', 'Operator', 'EntityId',
 				), true)
 				&& is_array($value)
-			) {
+			)
+			{
 				$arResult[$key] = $this->convertUsersNode($value, $arDependency, $record);
-			} elseif ($key === 'RESPONSIBLE_ID' && !is_array($value)) {
+			}
+			elseif ($key === 'RESPONSIBLE_ID' && !is_array($value))
+			{
 				$arResult[$key] = $this->convertRole($value, $arDependency, $record);
-			} elseif (is_array($value)) {
+			}
+			elseif (is_array($value))
+			{
 				$arResult[$key] = $this->convertNode($value, $arDependency, $record);
-			} else {
+			}
+			else
+			{
 				$arResult[$key] = $value;
 			}
 		}
 		return $arResult;
 	}
-	
+
 	/**
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return mixed[]
-	*/
-	protected function convertVariables($arVariables, &$arDependency = array(), $record = NULL)
+	 */
+	protected function convertVariables($arVariables, &$arDependency = array(), $record = null)
 	{
 		$arResult = array();
-		foreach ($arVariables as $key => $arVariable) {
+		foreach ($arVariables as $key => $arVariable)
+		{
 			$arResult[$key] = $this->convertVariableNode($arVariable, $arDependency, $record);
 		}
 		return $arResult;
@@ -262,16 +289,20 @@ class WorkflowTemplate extends BaseData
 	 * @param string[][] &$arDependency
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return mixed[]
-	*/
+	 */
 	protected function convertPermissionNode($arNode, &$arDependency, $record)
 	{
-		if (array_key_exists(0, $arNode) && !is_array($arNode[0])) {
+		if (array_key_exists(0, $arNode) && !is_array($arNode[0]))
+		{
 			// это однорувневый узел Permission
 			return $this->convertUsersNode($arNode, $arDependency, $record);
-		} else {
+		}
+		else
+		{
 			// это узел Permission у которого на первом уровне находятся права доступа
 			$arResult = array();
-			foreach ($arNode as $permission => $arRoles) {
+			foreach ($arNode as $permission => $arRoles)
+			{
 				$arResult[$permission] = $this->convertUsersNode($arRoles, $arDependency, $record);
 			}
 			return $arResult;
@@ -287,21 +318,23 @@ class WorkflowTemplate extends BaseData
 	protected function convertUsersNode($arNode, &$arDependency, $record)
 	{
 		$arResult = array();
-		foreach ($arNode as $role) {
+		foreach ($arNode as $role)
+		{
 			$arResult[] = $this->convertRole($role, $arDependency, $record);
 		}
 		return $arResult;
 	}
-	
+
 	/**
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return mixed[]
-	*/
+	 */
 	protected function convertVariableNode($arNode, &$arDependency, $record)
 	{
-		if (is_array($arNode) && array_key_exists('Type', $arNode) && $arNode['Type'] === 'user') {
+		if (is_array($arNode) && array_key_exists('Type', $arNode) && $arNode['Type'] === 'user')
+		{
 			$arNode['Default'] = $this->convertRole($arNode['Default'], $arDependency, $record);
 		}
 		return $arNode;
@@ -312,29 +345,38 @@ class WorkflowTemplate extends BaseData
 	 * @param string[][] &$arDependency
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return string
-	*/
-	protected function convertRole($role, &$arDependency, $record) {
-		if ($id = $this->xmlIdToString($role)) {
-			$role = (string)$id;
-		} elseif ($xmlId = $this->stringToXmlId($role)) {
-			if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_LITERAL . $xmlId)) {
+	 */
+	protected function convertRole($role, &$arDependency, $record)
+	{
+		if ($id = $this->xmlIdToString($role))
+		{
+			$role = (string) $id;
+		}
+		elseif ($xmlId = $this->stringToXmlId($role))
+		{
+			if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_LITERAL . $xmlId))
+			{
 				$record->registerValidateError(
-					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX') ."($role)($xmlId)"
+					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX') . "($role)($xmlId)"
 				);
 			}
 			$role = self::PREFIX_USER_GROUP_LITERAL . $xmlId;
 			$arDependency['GROUP'][] = $xmlId;
-		} elseif (is_numeric($role)) {
+		}
+		elseif (is_numeric($role))
+		{
 			$groupIdObject = RecordId::createNumericId(intval($role));
 			$xmlId = MainGroup::getInstance()->getXmlId($groupIdObject);
-			if (!strlen($xmlId)) {
+			if (!strlen($xmlId))
+			{
 				$record->registerValidateError(
-					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX3')."($role)"
+					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX3') . "($role)"
 				);
 			}
-			elseif (!$this->xmlIdToString(self::PREFIX_USER_GROUP_NUMERIC . $xmlId)) {
+			elseif (!$this->xmlIdToString(self::PREFIX_USER_GROUP_NUMERIC . $xmlId))
+			{
 				$record->registerValidateError(
-					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX2')."($role)($xmlId)"
+					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX2') . "($role)($xmlId)"
 				);
 			}
 			$role = self::PREFIX_USER_GROUP_NUMERIC . $xmlId;
@@ -342,28 +384,35 @@ class WorkflowTemplate extends BaseData
 		}
 		return $role;
 	}
-	
+
 	/**
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return mixed[]
-	*/
+	 */
 	protected function convertDocumentTypeNode($arNode, &$arDependency, $record)
 	{
 		$arResult = array();
-		foreach ($arNode as $value) {
-			if ($id = $this->xmlIdToString($value)) {
-				$arResult[] = (string)$id;
-			}elseif ($xmlId = $this->stringToXmlId($value)) {
-				if (!$this->xmlIdToString(self::PREFIX_IBLOCK . $xmlId)) {
+		foreach ($arNode as $value)
+		{
+			if ($id = $this->xmlIdToString($value))
+			{
+				$arResult[] = (string) $id;
+			}
+			elseif ($xmlId = $this->stringToXmlId($value))
+			{
+				if (!$this->xmlIdToString(self::PREFIX_IBLOCK . $xmlId))
+				{
 					$record->registerValidateError(
-						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPTN.EX')."($value)($xmlId)"
+						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPTN.EX') . "($value)($xmlId)"
 					);
 				}
 				$arResult[] = self::PREFIX_IBLOCK . $xmlId;
 				$arDependency['IBLOCK'][] = $xmlId;
-			}else {
+			}
+			else
+			{
 				$arResult[] = $value;
 			}
 		}
@@ -376,11 +425,13 @@ class WorkflowTemplate extends BaseData
 	 */
 	protected function stringToXmlId($field)
 	{
-		if (preg_match("/^iblock_(?'id'\d+)$/", $field, $matches)) {
+		if (preg_match("/^iblock_(?'id'\d+)$/", $field, $matches))
+		{
 			$iblockIdObject = RecordId::createNumericId($matches['id']);
 			return IblockIblock::getInstance()->getXmlId($iblockIdObject);
 		}
-		if (preg_match("/^group_g(?'id'\d+)$/", $field, $matches)) {
+		if (preg_match("/^group_g(?'id'\d+)$/", $field, $matches))
+		{
 			$groupIdObject = RecordId::createNumericId($matches['id']);
 			return MainGroup::getInstance()->getXmlId($groupIdObject);
 		}
@@ -392,15 +443,18 @@ class WorkflowTemplate extends BaseData
 	 */
 	protected function xmlIdToString($xmlId)
 	{
-		if (preg_match("/^" . self::PREFIX_IBLOCK . "(?'xmlId'[_a-zA-Z0-9\-]+)$/", $xmlId, $matches)) {
+		if (preg_match("/^" . self::PREFIX_IBLOCK . "(?'xmlId'[_a-zA-Z0-9\-]+)$/", $xmlId, $matches))
+		{
 			$iblockLinkId = IblockIblock::getInstance()->findRecord($matches['xmlId']);
 			return 'iblock_' . $iblockLinkId->getValue();
 		}
-		if (preg_match("/^" . self::PREFIX_USER_GROUP_NUMERIC . "(?'xmlId'[_a-zA-Z0-9\-]+)$/", $xmlId, $matches)) {
+		if (preg_match("/^" . self::PREFIX_USER_GROUP_NUMERIC . "(?'xmlId'[_a-zA-Z0-9\-]+)$/", $xmlId, $matches))
+		{
 			$groupLinkId = MainGroup::getInstance()->findRecord($matches['xmlId']);
 			return $groupLinkId->getValue();
 		}
-		if (preg_match("/^" . self::PREFIX_USER_GROUP_LITERAL . "(?'xmlId'[_a-zA-Z0-9\-]+)$/", $xmlId, $matches)) {
+		if (preg_match("/^" . self::PREFIX_USER_GROUP_LITERAL . "(?'xmlId'[_a-zA-Z0-9\-]+)$/", $xmlId, $matches))
+		{
 			$groupLinkId = MainGroup::getInstance()->findRecord($matches['xmlId']);
 			return 'group_g' . $groupLinkId->getValue();
 		}
