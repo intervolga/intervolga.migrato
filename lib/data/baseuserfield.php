@@ -231,9 +231,14 @@ abstract class BaseUserField extends BaseData
 		$fields = array();
 		foreach (static::getLangFieldsNames() as $langField)
 		{
-			foreach ($userField[$langField] as $lang => $message)
+			if (array_key_exists($langField, $userField))
 			{
-				$fields[$langField . "." . $lang] = $message;
+				{
+					foreach ($userField[$langField] as $lang => $message)
+					{
+						$fields[$langField . "." . $lang] = $message;
+					}
+				}
 			}
 		}
 
