@@ -19,6 +19,10 @@ class Record extends BaseDataObject
 	 * @var bool
 	 */
 	protected $isReferenceUpdate = false;
+	/**
+	 * @var string[]
+	 */
+	protected $validateCustomErrors = array();
 
 	/**
 	 * @param string $xmlId
@@ -322,6 +326,6 @@ class Record extends BaseDataObject
 	 */
 	public function registerValidateError($error)
 	{
-		// todo
+		$this->validateCustomErrors[] = $error;
 	}
 }
