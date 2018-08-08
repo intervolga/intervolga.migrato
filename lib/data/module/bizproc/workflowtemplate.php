@@ -208,7 +208,7 @@ class WorkflowTemplate extends BaseData
 		return self::PREFIX_WORKFLOW_TEMPLATE . BaseXmlIdProvider::formatXmlId($md5);
 	}
 
-	/*
+	/**
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
 	 * @param \Intervolga\Migrato\Data\Record $record
@@ -242,7 +242,7 @@ class WorkflowTemplate extends BaseData
 		return $arResult;
 	}
 	
-	/*
+	/**
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
 	 * @param \Intervolga\Migrato\Data\Record $record
@@ -257,7 +257,7 @@ class WorkflowTemplate extends BaseData
 		return $arResult;
 	}
 
-	/*
+	/**
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
 	 * @param \Intervolga\Migrato\Data\Record $record
@@ -293,7 +293,7 @@ class WorkflowTemplate extends BaseData
 		return $arResult;
 	}
 	
-	/*
+	/**
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
 	 * @param \Intervolga\Migrato\Data\Record $record
@@ -306,8 +306,8 @@ class WorkflowTemplate extends BaseData
 		}
 		return $arNode;
 	}
-	
-	/*
+
+	/**
 	 * @param string $role
 	 * @param string[][] &$arDependency
 	 * @param \Intervolga\Migrato\Data\Record $record
@@ -343,7 +343,7 @@ class WorkflowTemplate extends BaseData
 		return $role;
 	}
 	
-	/*
+	/**
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
 	 * @param \Intervolga\Migrato\Data\Record $record
