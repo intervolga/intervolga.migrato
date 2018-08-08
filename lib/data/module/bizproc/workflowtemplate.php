@@ -118,7 +118,7 @@ class WorkflowTemplate extends BaseData
 		}
 		else
 		{
-			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.GXI.EX') . "($id)");
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.GXI.EX') . "(" . $id->getValue() . ")");
 		}
 	}
 
@@ -435,6 +435,8 @@ class WorkflowTemplate extends BaseData
 			$groupIdObject = RecordId::createNumericId($matches['id']);
 			return MainGroup::getInstance()->getXmlId($groupIdObject);
 		}
+
+		return '';
 	}
 
 	/**
@@ -458,5 +460,7 @@ class WorkflowTemplate extends BaseData
 			$groupLinkId = MainGroup::getInstance()->findRecord($matches['xmlId']);
 			return 'group_g' . $groupLinkId->getValue();
 		}
+
+		return '';
 	}
 }
