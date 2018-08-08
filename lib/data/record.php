@@ -328,4 +328,12 @@ class Record extends BaseDataObject
 	{
 		$this->validateCustomErrors[] = $error;
 	}
+
+	/**
+	 * @return string[]
+	 */
+	public function getValidateErrors()
+	{
+		return $this->validateCustomErrors;
+	}
 }
