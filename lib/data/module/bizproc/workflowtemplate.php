@@ -113,7 +113,7 @@ class WorkflowTemplate extends BaseData
 	}
 
 	/**
-	 * @param Record $record
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return RecordId
 	 * @throws \Exception
 	 */
@@ -153,7 +153,7 @@ class WorkflowTemplate extends BaseData
 	}
 
 	/**
-	 * @param Record $record
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @throws \Exception
 	 */
 	public function update(Record $record)
@@ -167,6 +167,10 @@ class WorkflowTemplate extends BaseData
 		}
 	}
 
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @return array
+	 */
 	protected function recordToArray(Record $record)
 	{
 		$arTemplate = $record->getFieldsRaw();
@@ -207,7 +211,7 @@ class WorkflowTemplate extends BaseData
 	/*
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
-	 * @param Record $record
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return mixed[]
 	*/
 	protected function convertNode($arNode, &$arDependency=array(), $record=NULL)
@@ -241,7 +245,7 @@ class WorkflowTemplate extends BaseData
 	/*
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
-	 * @param Record $record
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return mixed[]
 	*/
 	protected function convertVariables($arVariables, &$arDependency = array(), $record = NULL)
@@ -256,7 +260,7 @@ class WorkflowTemplate extends BaseData
 	/*
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
-	 * @param Record $record
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return mixed[]
 	*/
 	protected function convertPermissionNode($arNode, &$arDependency, $record)
@@ -277,7 +281,7 @@ class WorkflowTemplate extends BaseData
 	/*
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
-	 * @param Record $record
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return mixed[]
 	*/
 	protected function convertUsersNode($arNode, &$arDependency, $record)
@@ -292,7 +296,7 @@ class WorkflowTemplate extends BaseData
 	/*
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
-	 * @param Record $record
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return mixed[]
 	*/
 	protected function convertVariableNode($arNode, &$arDependency, $record)
@@ -306,7 +310,7 @@ class WorkflowTemplate extends BaseData
 	/*
 	 * @param string $role
 	 * @param string[][] &$arDependency
-	 * @param Record $record
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return string
 	*/
 	protected function convertRole($role, &$arDependency, $record) {
@@ -342,7 +346,7 @@ class WorkflowTemplate extends BaseData
 	/*
 	 * @param mixed[] $arNode
 	 * @param string[][] &$arDependency
-	 * @param Record $record
+	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @return mixed[]
 	*/
 	protected function convertDocumentTypeNode($arNode, &$arDependency, $record)
