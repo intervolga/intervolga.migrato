@@ -357,7 +357,7 @@ class WorkflowTemplate extends BaseData
 			if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_LITERAL . $xmlId))
 			{
 				$record->registerValidateError(
-					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX') . "($role)($xmlId)"
+					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.INVALID_MAIN_GROUP_XML_ID', array('#ID#' => $role))
 				);
 			}
 			$role = self::PREFIX_USER_GROUP_LITERAL . $xmlId;
@@ -370,13 +370,13 @@ class WorkflowTemplate extends BaseData
 			if (!strlen($xmlId))
 			{
 				$record->registerValidateError(
-					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX3') . "($role)"
+					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.EMPTY_MAIN_GROUP_XML_ID', array('#ID#' => $role))
 				);
 			}
 			elseif (!$this->xmlIdToString(self::PREFIX_USER_GROUP_NUMERIC . $xmlId))
 			{
 				$record->registerValidateError(
-					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPN.EX2') . "($role)($xmlId)"
+					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.INVALID_MAIN_GROUP_XML_ID', array('#ID#' => $role))
 				);
 			}
 			$role = self::PREFIX_USER_GROUP_NUMERIC . $xmlId;
@@ -405,7 +405,7 @@ class WorkflowTemplate extends BaseData
 				if (!$this->xmlIdToString(self::PREFIX_IBLOCK . $xmlId))
 				{
 					$record->registerValidateError(
-						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.CPTN.EX') . "($value)($xmlId)"
+						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.INVALID_IBLOCK_XML_ID', array('#ID#' => $value))
 					);
 				}
 				$arResult[] = self::PREFIX_IBLOCK . $xmlId;
