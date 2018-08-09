@@ -88,7 +88,11 @@ class AutofixCommand extends BaseCommand
 		$result = 0;
 		try
 		{
-			if ($error->getDataClass()->isVirtualXmlId())
+			if ($error->getType() == XmlIdValidateError::TYPE_CUSTOM)
+			{
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.AUTOFIX_CUSTOM_ERROR'));
+			}
+			elseif ($error->getDataClass()->isVirtualXmlId())
 			{
 				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.AUTOFIX_ERROR_NOT_SET'));
 			}
