@@ -13,6 +13,7 @@ class XmlIdValidateError
 	const TYPE_INVALID = 3;
 	const TYPE_SIMPLE = 4;
 	const TYPE_INVALID_EXT = 5;
+	const TYPE_CUSTOM = 10;
 
 	protected $dataClass;
 	protected $type;
