@@ -33,24 +33,27 @@ class EventType extends BaseData
 		);
 		while ($type = $getList->fetch())
 		{
-			$record = new Record($this);
-			$id = $this->createId($type["ID"]);
-			$record->setXmlId($this->getXmlId($id));
-			$record->setId($id);
-			$record->addFieldsRaw(array(
-				"EVENT_NAME" => $type["EVENT_NAME"],
-				"NAME" => $type["NAME"],
-				"DESCRIPTION" => $type["DESCRIPTION"],
-				"SORT" => $type["SORT"],
-			));
+			if (!substr_count($type["EVENT_NAME"], "FORM_STATUS_CHANGE_"))
+			{
+				$record = new Record($this);
+				$id = $this->createId($type["ID"]);
+				$record->setXmlId($this->getXmlId($id));
+				$record->setId($id);
+				$record->addFieldsRaw(array(
+					"EVENT_NAME" => $type["EVENT_NAME"],
+					"NAME" => $type["NAME"],
+					"DESCRIPTION" => $type["DESCRIPTION"],
+					"SORT" => $type["SORT"],
+				));
 
-			$dependency = clone $this->getDependency('LANGUAGE');
-			$dependency->setValue(Language::getInstance()->getXmlId(
-				Language::getInstance()->createId($type['LID'])
-			));
-			$record->setDependency('LANGUAGE', $dependency);
+				$dependency = clone $this->getDependency('LANGUAGE');
+				$dependency->setValue(Language::getInstance()->getXmlId(
+					Language::getInstance()->createId($type['LID'])
+				));
+				$record->setDependency('LANGUAGE', $dependency);
 
-			$result[] = $record;
+				$result[] = $record;
+			}
 		}
 		return $result;
 	}

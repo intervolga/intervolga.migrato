@@ -37,56 +37,59 @@ class Event extends BaseData
 		$getList = \CEventMessage::getList($by, $order);
 		while ($message = $getList->fetch())
 		{
-			$record = new Record($this);
-			$id = $this->createId($message["ID"]);
-			$record->setXmlId($this->getXmlId($id));
-			$record->setId($id);
-
-			$record->addFieldsRaw(array(
-				"ACTIVE" => $message["ACTIVE"],
-				"EMAIL_FROM" => $message["EMAIL_FROM"],
-				"EMAIL_TO" => $message["EMAIL_TO"],
-				"SUBJECT" => $message["SUBJECT"],
-				"MESSAGE" => $message["MESSAGE"],
-				"BODY_TYPE" => $message["BODY_TYPE"],
-				"BCC" => $message["BCC"],
-				"CC" => $message["CC"],
-				"REPLY_TO" => $message["REPLY_TO"],
-				"IN_REPLY_TO" => $message["IN_REPLY_TO"],
-				"PRIORITY" => $message["PRIORITY"],
-				"ADDITIONAL_FIELD" => serialize($message["ADDITIONAL_FIELD"]),
-				"SITE_TEMPLATE_ID" => $message["SITE_TEMPLATE_ID"],
-			));
-
-			$dependency = clone $this->getDependency('EVENT_NAME');
-			$dependency->setValue($this->getEventTypeXmlId($message["EVENT_NAME"]));
-			if (!$dependency->getValue())
+			if (!substr_count($message["EVENT_NAME"], "FORM_STATUS_CHANGE_"))
 			{
-				throw new \Exception(
-					Loc::getMessage(
-						'INTERVOLGA_MIGRATO.EVENT_TYPE_NOT_FOUND',
-						array(
-							'#ID#' => $message["ID"],
-							'#NAME#' => $message['EVENT_NAME'],
+				$record = new Record($this);
+				$id = $this->createId($message["ID"]);
+				$record->setXmlId($this->getXmlId($id));
+				$record->setId($id);
+
+				$record->addFieldsRaw(array(
+					"ACTIVE" => $message["ACTIVE"],
+					"EMAIL_FROM" => $message["EMAIL_FROM"],
+					"EMAIL_TO" => $message["EMAIL_TO"],
+					"SUBJECT" => $message["SUBJECT"],
+					"MESSAGE" => $message["MESSAGE"],
+					"BODY_TYPE" => $message["BODY_TYPE"],
+					"BCC" => $message["BCC"],
+					"CC" => $message["CC"],
+					"REPLY_TO" => $message["REPLY_TO"],
+					"IN_REPLY_TO" => $message["IN_REPLY_TO"],
+					"PRIORITY" => $message["PRIORITY"],
+					"ADDITIONAL_FIELD" => serialize($message["ADDITIONAL_FIELD"]),
+					"SITE_TEMPLATE_ID" => $message["SITE_TEMPLATE_ID"],
+				));
+
+				$dependency = clone $this->getDependency('EVENT_NAME');
+				$dependency->setValue($this->getEventTypeXmlId($message["EVENT_NAME"]));
+				if (!$dependency->getValue())
+				{
+					throw new \Exception(
+						Loc::getMessage(
+							'INTERVOLGA_MIGRATO.EVENT_TYPE_NOT_FOUND',
+							array(
+								'#ID#' => $message["ID"],
+								'#NAME#' => $message['EVENT_NAME'],
+							)
 						)
-					)
-				);
-			}
-			$record->setDependency('EVENT_NAME', $dependency);
+					);
+				}
+				$record->setDependency('EVENT_NAME', $dependency);
 
-			$dependency = clone $this->getDependency('SITE');
-			$sites = array();
-			$sitesGetList = \CEventMessage::getSite($message['ID']);
-			while ($site = $sitesGetList->fetch())
-			{
-				$sites[] = Site::getInstance()->getXmlId(Site::getInstance()->createId($site['SITE_ID']));
-			}
-			$dependency->setValues($sites);
-			$record->setDependency('SITE', $dependency);
+				$dependency = clone $this->getDependency('SITE');
+				$sites = array();
+				$sitesGetList = \CEventMessage::getSite($message['ID']);
+				while ($site = $sitesGetList->fetch())
+				{
+					$sites[] = Site::getInstance()->getXmlId(Site::getInstance()->createId($site['SITE_ID']));
+				}
+				$dependency->setValues($sites);
+				$record->setDependency('SITE', $dependency);
 
-			if ($record->getDependencies())
-			{
-				$result[$message["ID"]] = $record;
+				if ($record->getDependencies())
+				{
+					$result[$message["ID"]] = $record;
+				}
 			}
 		}
 
