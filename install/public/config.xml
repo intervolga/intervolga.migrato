@@ -12,6 +12,10 @@
         <exclude module="intervolga\.common">log_1c_period</exclude>
         <exclude module="intervolga\.common">redirect_emails</exclude>
         <exclude module="intervolga\.common">catch_all_emails</exclude>
+        <exclude module="intervolga\.common">catch_form_crm</exclude>
+        <exclude module="intervolga\.common">is_prod</exclude>
+        <exclude module="intervolga\.recaptcha">recaptchaPublicKey</exclude>
+        <exclude module="intervolga\.recaptcha">recaptchaSecretKey</exclude>
         <exclude module="mail">.*</exclude>
         <exclude module="main">signer_default_key</exclude>
         <exclude module="main">server_uniq_id</exclude>
@@ -39,6 +43,8 @@
         <exclude module="main">site_stopped</exclude>
         <exclude module="main">last_backup_end_time</exclude>
         <exclude module="main">last_backup_start_time</exclude>
+        <exclude module="main">update_devsrv</exclude>
+        <exclude module="main">rcm_component_usage</exclude>
         <exclude module="perfmon">.*</exclude>
         <exclude module="sale">order_email</exclude>
         <exclude module="sale">location</exclude>
