@@ -45,6 +45,8 @@
         <exclude module="main">last_backup_start_time</exclude>
         <exclude module="main">update_devsrv</exclude>
         <exclude module="main">rcm_component_usage</exclude>
+        <exclude module="main">rating_assign_authority_group</exclude>
+        <exclude module="main">rating_assign_rating_group</exclude>
         <exclude module="perfmon">.*</exclude>
         <exclude module="sale">order_email</exclude>
         <exclude module="sale">location</exclude>
