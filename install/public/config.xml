@@ -214,4 +214,13 @@
             <name>index</name>
         </entity>
     </module>
+    <module>
+        <name>blog</name>
+        <entity>
+            <name>blog</name>
+        </entity>
+        <entity>
+            <name>group</name>
+        </entity>
+    </module>
 </config>
