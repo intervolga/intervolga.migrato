@@ -71,6 +71,11 @@
         <exclude module="subscribe">default_to</exclude>
         <exclude module="catalog">1CE_IBLOCK_ID</exclude>
         <exclude module="landing">blocks_attrs_update\d+</exclude>
+        <exclude module="calendar">rm_iblock_id</exclude>
+        <exclude module="crm">crm_uf_history</exclude>
+        <exclude module="crm">default_product_catalog_id</exclude>
+        <exclude module="crm">selected_catalog_group_id</exclude>
+        <exclude module="faceid">portal_url</exclude>
     </options>
     <module>
         <name>main</name>
