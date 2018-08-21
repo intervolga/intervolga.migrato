@@ -3,6 +3,7 @@
     <options>
         <exclude>^~</exclude>
         <exclude>^wizard_</exclude>
+        <exclude>GROUP_DEFAULT_TASK</exclude>
         <exclude module="conversion">START_DATE_TIME</exclude>
         <exclude module="currency">installed_currencies</exclude>
         <exclude module="eshop">.*</exclude>
@@ -68,6 +69,8 @@
         <exclude module="storeassist">num_orders</exclude>
         <exclude module="subscribe">default_from</exclude>
         <exclude module="subscribe">default_to</exclude>
+        <exclude module="catalog">1CE_IBLOCK_ID</exclude>
+        <exclude module="landing">blocks_attrs_update\d+</exclude>
     </options>
     <module>
         <name>main</name>
