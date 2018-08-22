@@ -74,7 +74,15 @@ abstract class BaseUserFieldEnum extends BaseData
 			$isUpdated = $enumObject->setEnumValues($fieldId->getValue(), array("n" => $fields));
 			if ($isUpdated)
 			{
-				return $this->createId($this->findRecord($record->getXmlId())->getValue());
+				$recordId = $this->findRecord($record->getXmlId());
+				if ($recordId)
+				{
+					return $this->createId($recordId->getValue());
+				}
+				else
+				{
+					throw new \Exception(ExceptionText::getUnknown());
+				}
 			}
 			else
 			{
