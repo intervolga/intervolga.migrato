@@ -43,6 +43,10 @@ class WorkflowTemplate extends BaseData
 		$dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array());
 		while ($arTemplate = $dbTemplatesList->Fetch())
 		{
+			if ($arTemplate['MODULE_ID'] != 'iblock')
+			{
+				continue;
+			}
 			$record = new \Intervolga\Migrato\Data\Record($this);
 			$id = $this->createId($arTemplate["ID"]);
 			$record->setXmlId($this->calculateXmlId($arTemplate));
