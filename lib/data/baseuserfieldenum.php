@@ -74,7 +74,7 @@ abstract class BaseUserFieldEnum extends BaseData
 			$isUpdated = $enumObject->setEnumValues($fieldId->getValue(), array("n" => $fields));
 			if ($isUpdated)
 			{
-				$recordId = $this->findRecord($record->getXmlId());
+				$recordId = $this->findRecordForField($fieldId->getValue(), $record->getXmlId());
 				if ($recordId)
 				{
 					return $this->createId($recordId->getValue());
@@ -113,6 +113,7 @@ abstract class BaseUserFieldEnum extends BaseData
 				array(
 					$arEnum['ID'] => array(
 						'XML_ID' => $xmlId,
+						'VALUE' => $arEnum['VALUE'],
 					),
 				)
 			);
@@ -132,5 +133,31 @@ abstract class BaseUserFieldEnum extends BaseData
 			}
 		}
 		return $xmlId;
+	}
+
+	/**
+	 * @param int $fieldId
+	 * @param string $xmlId
+	 * @return \Intervolga\Migrato\Data\RecordId|null
+	 */
+	public function findRecordForField($fieldId, $xmlId)
+	{
+		$enum = new \CUserFieldEnum();
+		$result = $enum->getList(
+			array(),
+			array(
+				"USER_FIELD_ID" => $fieldId,
+				"XML_ID" => $xmlId,
+			)
+		)->fetch();
+
+		if ($result['ID'])
+		{
+			return static::createId($result['ID']);
+		}
+		else
+		{
+			return null;
+		}
 	}
 }
