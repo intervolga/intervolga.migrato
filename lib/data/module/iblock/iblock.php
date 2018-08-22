@@ -174,7 +174,10 @@ class Iblock extends BaseData
 		{
 			foreach ($templates as $k => $template)
 			{
-				$templates[$k] = $template["TEMPLATE"];
+				if (array_key_exists('TEMPLATE', $template))
+				{
+					$templates[$k] = $template["TEMPLATE"];
+				}
 			}
 			$fieldsValues = Value::treeToList($templates, "SEO");
 			$record->addFieldsRaw($fieldsValues);
