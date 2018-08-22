@@ -408,7 +408,12 @@ abstract class BaseUserField extends BaseData
 		}
 		else
 		{
-			throw new \Exception(ExceptionText::getFromApplication());
+			$error = ExceptionText::getFromApplication();
+			if ($error == Loc::getMessage('USER_TYPE_USER_TYPE_ID_INVALID'))
+			{
+				$error = Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD_UNKNOWN_TYPE', array('#TYPE#' => $fields['USER_TYPE_ID']));
+			}
+			throw new \Exception($error);
 		}
 	}
 
