@@ -369,6 +369,11 @@ class WorkflowTemplate extends BaseData
 						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.INVALID_MAIN_GROUP_XML_ID', array('#ID#' => $groupId))
 					);
 				}
+				else
+				{
+					$role = self::PREFIX_USER_GROUP_NUMERIC . $xmlId;
+					$arDependency['GROUP'][] = $xmlId;
+				}
 			}
 			elseif (is_numeric($role))
 			{
