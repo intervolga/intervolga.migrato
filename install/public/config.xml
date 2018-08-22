@@ -3,6 +3,7 @@
     <options>
         <exclude>^~</exclude>
         <exclude>^wizard_</exclude>
+        <exclude>GROUP_DEFAULT_TASK</exclude>
         <exclude module="conversion">START_DATE_TIME</exclude>
         <exclude module="currency">installed_currencies</exclude>
         <exclude module="eshop">.*</exclude>
@@ -12,6 +13,10 @@
         <exclude module="intervolga\.common">log_1c_period</exclude>
         <exclude module="intervolga\.common">redirect_emails</exclude>
         <exclude module="intervolga\.common">catch_all_emails</exclude>
+        <exclude module="intervolga\.common">catch_form_crm</exclude>
+        <exclude module="intervolga\.common">is_prod</exclude>
+        <exclude module="intervolga\.recaptcha">recaptchaPublicKey</exclude>
+        <exclude module="intervolga\.recaptcha">recaptchaSecretKey</exclude>
         <exclude module="mail">.*</exclude>
         <exclude module="main">signer_default_key</exclude>
         <exclude module="main">server_uniq_id</exclude>
@@ -39,6 +44,10 @@
         <exclude module="main">site_stopped</exclude>
         <exclude module="main">last_backup_end_time</exclude>
         <exclude module="main">last_backup_start_time</exclude>
+        <exclude module="main">update_devsrv</exclude>
+        <exclude module="main">rcm_component_usage</exclude>
+        <exclude module="main">rating_assign_authority_group</exclude>
+        <exclude module="main">rating_assign_rating_group</exclude>
         <exclude module="perfmon">.*</exclude>
         <exclude module="sale">order_email</exclude>
         <exclude module="sale">location</exclude>
@@ -60,6 +69,13 @@
         <exclude module="storeassist">num_orders</exclude>
         <exclude module="subscribe">default_from</exclude>
         <exclude module="subscribe">default_to</exclude>
+        <exclude module="catalog">1CE_IBLOCK_ID</exclude>
+        <exclude module="landing">blocks_attrs_update\d+</exclude>
+        <exclude module="calendar">rm_iblock_id</exclude>
+        <exclude module="crm">crm_uf_history</exclude>
+        <exclude module="crm">default_product_catalog_id</exclude>
+        <exclude module="crm">selected_catalog_group_id</exclude>
+        <exclude module="faceid">portal_url</exclude>
     </options>
     <module>
         <name>main</name>
