@@ -60,19 +60,20 @@ class Event extends BaseData
 
 			$dependency = clone $this->getDependency('EVENT_NAME');
 			$dependency->setValue($this->getEventTypeXmlId($message["EVENT_NAME"]));
-			if (!$dependency->getValue())
+			if ($dependency->getValue())
 			{
-				throw new \Exception(
-					Loc::getMessage(
-						'INTERVOLGA_MIGRATO.EVENT_TYPE_NOT_FOUND',
-						array(
-							'#ID#' => $message["ID"],
-							'#NAME#' => $message['EVENT_NAME'],
-						)
-					)
-				);
+				$record->setDependency('EVENT_NAME', $dependency);
 			}
-			$record->setDependency('EVENT_NAME', $dependency);
+			else
+			{
+				$record->registerValidateError(Loc::getMessage(
+					'INTERVOLGA_MIGRATO.EVENT_TYPE_NOT_FOUND',
+					array(
+						'#ID#' => $message["ID"],
+						'#NAME#' => $message['EVENT_NAME'],
+					)
+				));
+			}
 
 			$dependency = clone $this->getDependency('SITE');
 			$sites = array();

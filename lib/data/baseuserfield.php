@@ -401,31 +401,27 @@ abstract class BaseUserField extends BaseData
 
 	protected function createInner(Record $record)
 	{
-		global $USER_FIELD_MANAGER;
 		$fields = $record->getFieldsRaw();
-
-		if ($USER_FIELD_MANAGER->getUserType($fields["USER_TYPE_ID"]))
+		$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
+		foreach ($this->getLangFieldsNames() as $lang)
 		{
-			$fields["SETTINGS"] = $this->fieldsToArray($fields, "SETTINGS", true);
-			foreach ($this->getLangFieldsNames() as $lang)
-			{
-				$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
-			}
+			$fields[$lang] = $this->fieldsToArray($fields, $lang, true);
+		}
 
-			$fieldObject = new \CUserTypeEntity();
-			$fieldId = $fieldObject->add($fields);
-			if ($fieldId)
-			{
-				return $this->createId($fieldId);
-			}
-			else
-			{
-				throw new \Exception(ExceptionText::getFromApplication());
-			}
+		$fieldObject = new \CUserTypeEntity();
+		$fieldId = $fieldObject->add($fields);
+		if ($fieldId)
+		{
+			return $this->createId($fieldId);
 		}
 		else
 		{
-			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD_UNKNOWN', array('#TYPE#' => $fields["USER_TYPE_ID"])));
+			$error = ExceptionText::getFromApplication();
+			if ($error == Loc::getMessage('USER_TYPE_USER_TYPE_ID_INVALID'))
+			{
+				$error = Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD_UNKNOWN_TYPE', array('#TYPE#' => $fields['USER_TYPE_ID']));
+			}
+			throw new \Exception($error);
 		}
 	}
 

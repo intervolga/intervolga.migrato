@@ -141,6 +141,12 @@
         </entity>
     </module>
     <module>
+        <name>bizproc</name>
+        <entity>
+            <name>workflowtemplate</name>
+        </entity>
+    </module>
+    <module>
         <name>sale</name>
         <entity>
             <name>persontype</name>

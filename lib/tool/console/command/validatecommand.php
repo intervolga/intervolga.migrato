@@ -97,11 +97,42 @@ class ValidateCommand extends BaseCommand
 	 *
 	 * @return \Intervolga\Migrato\Tool\XmlIdValidateError[]|null
 	 */
+	protected function getRecordCustomErrors(Record $record)
+	{
+		$errors = array();
+		if ($extErrors = $record->getValidateErrors())
+		{
+			foreach ($extErrors as $extError)
+			{
+				$errors[] = new XmlIdValidateError($record->getData(), XmlIdValidateError::TYPE_CUSTOM, $record->getId(), $record->getXmlId(), $extError);
+				$this->logger->addDb(
+					array(
+						'RECORD' => $record,
+						'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_VALIDATE'),
+						'COMMENT' => $extError,
+					),
+					Logger::TYPE_FAIL
+				);
+			}
+		}
+
+		return $errors;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return \Intervolga\Migrato\Tool\XmlIdValidateError[]|null
+	 */
 	protected function getRecordXmlIdErrors(Record $record)
 	{
 		$errors = array();
 		try
 		{
+			if ($extErrors = $record->getValidateErrors())
+			{
+				$errors = $this->getRecordCustomErrors($record);
+			}
 			if ($errorType = $this->getErrorType($record))
 			{
 				$errors[] = new XmlIdValidateError($record->getData(), $errorType, $record->getId(), $record->getXmlId());
@@ -114,7 +145,7 @@ class ValidateCommand extends BaseCommand
 					Logger::TYPE_FAIL
 				);
 			}
-			else
+			if (!$errors)
 			{
 				$this->logger->addDb(
 					array(

@@ -81,7 +81,7 @@ abstract class BaseUserFieldEnum extends BaseData
 				}
 				else
 				{
-					throw new \Exception(ExceptionText::getFromString(''));
+					throw new \Exception(ExceptionText::getUnknown());
 				}
 			}
 			else
