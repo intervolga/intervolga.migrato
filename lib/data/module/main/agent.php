@@ -54,6 +54,10 @@ class Agent extends BaseData
 	 */
 	protected function arrayToRecord(array $agent)
 	{
+		if ($this->isBusinessProcessAgent($agent))
+		{
+			return null;
+		}
 		if (!$agent['USER_ID'] || $agent['USER_ID'] == static::ADMIN_USER_ID)
 		{
 			$record = new Record($this);
@@ -81,6 +85,18 @@ class Agent extends BaseData
 		{
 			return null;
 		}
+	}
+
+	/**
+	 * @param array $agent
+	 * @return bool
+	 */
+	protected function isBusinessProcessAgent(array $agent)
+	{
+		$isBpModule = ($agent['MODULE_ID'] == 'bizproc');
+		$isBpFunction = (substr_count($agent['NAME'], 'CBPSchedulerService::OnAgent') > 0);
+
+		return $isBpModule && $isBpFunction;
 	}
 
 	public function getXmlId($id)

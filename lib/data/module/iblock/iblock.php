@@ -45,6 +45,16 @@ class Iblock extends BaseData
 			$record = new Record($this);
 			$record->setXmlId($iblock["XML_ID"]);
 			$record->setId(RecordId::createNumericId($iblock["ID"]));
+
+			$wfMode = '';
+			if ($iblock['BIZPROC'] == 'Y')
+			{
+				$wfMode = 'BP';
+			}
+			elseif ($iblock['WORKFLOW'] == 'Y')
+			{
+				$wfMode = 'WF';
+			}
 			$record->addFieldsRaw(array(
 				"CODE" => $iblock["CODE"],
 				"NAME" => $iblock["NAME"],
@@ -70,6 +80,7 @@ class Iblock extends BaseData
 				"EDIT_FILE_BEFORE" => $iblock["EDIT_FILE_BEFORE"],
 				"EDIT_FILE_AFTER" => $iblock["EDIT_FILE_AFTER"],
 				"SECTION_PROPERTY" => $iblock["SECTION_PROPERTY"],
+				"WF_TYPE" => $wfMode,
 			));
 			$this->addLanguageStrings($record);
 			$this->addFieldsSettings($record);
@@ -174,7 +185,10 @@ class Iblock extends BaseData
 		{
 			foreach ($templates as $k => $template)
 			{
-				$templates[$k] = $template["TEMPLATE"];
+				if (array_key_exists('TEMPLATE', $template))
+				{
+					$templates[$k] = $template["TEMPLATE"];
+				}
 			}
 			$fieldsValues = Value::treeToList($templates, "SEO");
 			$record->addFieldsRaw($fieldsValues);
@@ -237,14 +251,13 @@ class Iblock extends BaseData
 
 	public function update(Record $record)
 	{
-		$fields = $record->getFieldsRaw(array("SEO", "FIELDS", "MESSAGES"));
+		$fields = $this->recordToArray($record);
 		$seo = $fields["SEO"];
 		$fieldsSettings = $fields["FIELDS"];
 		$messages = $fields["MESSAGES"];
 		unset($fields["SEO"]);
 		unset($fields["FIELDS"]);
 		unset($fields["MESSAGES"]);
-		$fields = $this->restoreDependencies($record, $fields);
 
 		$iblockObject = new \CIBlock();
 		$isUpdated = $iblockObject->update($record->getId()->getValue(), $fields);
@@ -315,14 +328,13 @@ class Iblock extends BaseData
 
 	protected function createInner(Record $record)
 	{
-		$fields = $record->getFieldsRaw(array("SEO", "FIELDS", "MESSAGES"));
+		$fields = $this->recordToArray($record);
 		$seo = $fields["SEO"];
 		$fieldsSettings = $fields["FIELDS"];
 		$messages = $fields["MESSAGES"];
 		unset($fields["SEO"]);
 		unset($fields["FIELDS"]);
 		unset($fields["MESSAGES"]);
-		$fields = $this->restoreDependencies($record, $fields);
 
 		if ($fields["IBLOCK_TYPE_ID"])
 		{
@@ -345,6 +357,29 @@ class Iblock extends BaseData
 		{
 			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_TYPE_NOT_SET'));
 		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 * @return array|\string[]
+	 */
+	protected function recordToArray(Record $record)
+	{
+		$fields = $record->getFieldsRaw(array("SEO", "FIELDS", "MESSAGES"));
+		$fields = $this->restoreDependencies($record, $fields);
+
+		$fields['BIZPROC'] = 'N';
+		$fields['WORKFLOW'] = 'N';
+		if ($fields['WF_TYPE'] == 'BP')
+		{
+			$fields['BIZPROC'] = 'Y';
+		}
+		elseif ($fields['WF_TYPE'] == 'WF')
+		{
+			$fields['WORKFLOW'] = 'Y';
+		}
+
+		return $fields;
 	}
 
 	/**
