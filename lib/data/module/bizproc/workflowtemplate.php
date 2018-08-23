@@ -356,35 +356,44 @@ class WorkflowTemplate extends BaseData
 		{
 			$role = (string) $id;
 		}
-		elseif ($xmlId = $this->stringToXmlId($role))
+		else
 		{
-			if (!$this->xmlIdToString(self::PREFIX_USER_GROUP_LITERAL . $xmlId))
+			$groupId = $this->parseGroupId($role);
+			if ($groupId)
 			{
-				$record->registerValidateError(
-					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.INVALID_MAIN_GROUP_XML_ID', array('#ID#' => $role))
-				);
+				$groupIdObject = MainGroup::getInstance()->createId($groupId);
+				$xmlId = MainGroup::getInstance()->getXmlId($groupIdObject);
+				if (!strlen($xmlId))
+				{
+					$record->registerValidateError(
+						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.INVALID_MAIN_GROUP_XML_ID', array('#ID#' => $groupId))
+					);
+				}
+				else
+				{
+					$role = self::PREFIX_USER_GROUP_NUMERIC . $xmlId;
+					$arDependency['GROUP'][] = $xmlId;
+				}
 			}
-			$role = self::PREFIX_USER_GROUP_LITERAL . $xmlId;
-			$arDependency['GROUP'][] = $xmlId;
-		}
-		elseif (is_numeric($role))
-		{
-			$groupIdObject = RecordId::createNumericId(intval($role));
-			$xmlId = MainGroup::getInstance()->getXmlId($groupIdObject);
-			if (!strlen($xmlId))
+			elseif (is_numeric($role))
 			{
-				$record->registerValidateError(
-					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.EMPTY_MAIN_GROUP_XML_ID', array('#ID#' => $role))
-				);
+				$groupIdObject = RecordId::createNumericId(intval($role));
+				$xmlId = MainGroup::getInstance()->getXmlId($groupIdObject);
+				if (!strlen($xmlId))
+				{
+					$record->registerValidateError(
+						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.EMPTY_MAIN_GROUP_XML_ID', array('#ID#' => $role))
+					);
+				}
+				elseif (!$this->xmlIdToString(self::PREFIX_USER_GROUP_NUMERIC . $xmlId))
+				{
+					$record->registerValidateError(
+						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.INVALID_MAIN_GROUP_XML_ID', array('#ID#' => $role))
+					);
+				}
+				$role = self::PREFIX_USER_GROUP_NUMERIC . $xmlId;
+				$arDependency['GROUP'][] = $xmlId;
 			}
-			elseif (!$this->xmlIdToString(self::PREFIX_USER_GROUP_NUMERIC . $xmlId))
-			{
-				$record->registerValidateError(
-					Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.INVALID_MAIN_GROUP_XML_ID', array('#ID#' => $role))
-				);
-			}
-			$role = self::PREFIX_USER_GROUP_NUMERIC . $xmlId;
-			$arDependency['GROUP'][] = $xmlId;
 		}
 		return $role;
 	}
@@ -429,18 +438,44 @@ class WorkflowTemplate extends BaseData
 	 */
 	protected function stringToXmlId($field)
 	{
-		if (preg_match("/^iblock_(?'id'\d+)$/", $field, $matches))
+		if ($iblockId = $this->parseIblockId($field))
 		{
-			$iblockIdObject = RecordId::createNumericId($matches['id']);
+			$iblockIdObject = RecordId::createNumericId($iblockId);
 			return IblockIblock::getInstance()->getXmlId($iblockIdObject);
 		}
-		if (preg_match("/^group_g(?'id'\d+)$/", $field, $matches))
+		if ($groupId = $this->parseGroupId($field))
 		{
-			$groupIdObject = RecordId::createNumericId($matches['id']);
+			$groupIdObject = RecordId::createNumericId($groupId);
 			return MainGroup::getInstance()->getXmlId($groupIdObject);
 		}
 
 		return '';
+	}
+
+	/**
+	 * @param string $field
+	 * @return int
+	 */
+	protected function parseIblockId($field)
+	{
+		if (preg_match("/^iblock_(?'id'\d+)$/", $field, $matches))
+		{
+			return $matches['id'];
+		}
+		return 0;
+	}
+
+	/**
+	 * @param string $field
+	 * @return int
+	 */
+	protected function parseGroupId($field)
+	{
+		if (preg_match("/^group_g(?'id'\d+)$/", $field, $matches))
+		{
+			return $matches['id'];
+		}
+		return 0;
 	}
 
 	/**
