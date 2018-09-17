@@ -4,3 +4,4 @@ $MESS['INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.GXI.EX'] = 'Не могу п�
 $MESS['INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.INVALID_MAIN_GROUP_XML_ID'] = 'Некорректый XML_ID связанной группы пользователей <#ID#>';
 $MESS['INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.EMPTY_MAIN_GROUP_XML_ID'] = 'Пустой XML_ID связанной группы пользователей <#ID#>';
 $MESS['INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.INVALID_IBLOCK_XML_ID'] = 'Некорректый XML_ID связанного инфоблока <#ID#>';
+$MESS['INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.INVALID_MODULE_XML_ID'] = 'Некорректый XML_ID связанного модуля <#ID#>';
