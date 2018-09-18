@@ -82,7 +82,7 @@ class WorkflowTemplate extends BaseData
 			else
 			{
 				// если шаблон не привязан к инфоблоку или к модулю CRM, то пропускаем его
-				if ($arTemplate["DOCUMENT_TYPE"][2] !== self::CRM_MODULE)
+				if ($arTemplate["MODULE_ID"] !== self::CRM_MODULE)
 				{
 					continue;
 				}
