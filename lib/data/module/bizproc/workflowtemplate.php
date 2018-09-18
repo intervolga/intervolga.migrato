@@ -433,12 +433,7 @@ class WorkflowTemplate extends BaseData
 			}
 			elseif ($xmlId = $this->stringToXmlId($value))
 			{
-				if (!$moduleId = $record->getFieldRaw('MODULE_ID')) {
-					$record->registerValidateError(
-						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.INVALID_MODULE_XML_ID', array('#ID#' => $value))
-					);
-				}
-				$xmlIdWithPrefix = $this->getXmlIdWithPrefix($xmlId, $moduleId);
+				$xmlIdWithPrefix = $this->getXmlIdWithPrefix($xmlId, self::IBLOCK_MODULE);
 				if (!$this->xmlIdToString($xmlIdWithPrefix))
 				{
 					$record->registerValidateError(
