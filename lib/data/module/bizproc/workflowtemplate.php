@@ -111,7 +111,7 @@ class WorkflowTemplate extends BaseData
 				"ENTITY" => $arTemplate["ENTITY"],
 				"DOCUMENT_TYPE_0" => $arTemplate["DOCUMENT_TYPE"][0],
 				"DOCUMENT_TYPE_1" => $arTemplate["DOCUMENT_TYPE"][1],
-				"DOCUMENT_TYPE_2" => $this->getXmlIdWithPrefix($documentType2XmlId, $arTemplate["MODULE_ID"]),
+				"DOCUMENT_TYPE_2" => $this->getXmlIdWithPrefix($documentType2XmlId ?: $arTemplate["DOCUMENT_TYPE"][2] , $arTemplate["MODULE_ID"]),
 				"AUTO_EXECUTE" => $arTemplate["AUTO_EXECUTE"],
 				"NAME" => $arTemplate["NAME"],
 				"DESCRIPTION" => $arTemplate["DESCRIPTION"],
@@ -217,7 +217,7 @@ class WorkflowTemplate extends BaseData
 		$arTemplate['DOCUMENT_TYPE'] = array(
 			$arTemplate['DOCUMENT_TYPE_0'],
 			$arTemplate['DOCUMENT_TYPE_1'],
-			$this->xmlIdToString($arTemplate['DOCUMENT_TYPE_2']),
+			$arTemplate['MODULE_ID'] == self::CRM_MODULE ? $arTemplate['DOCUMENT_TYPE_2'] : $this->xmlIdToString($arTemplate['DOCUMENT_TYPE_2']),
 		);
 		unset($arTemplate['DOCUMENT_TYPE_0']);
 		unset($arTemplate['DOCUMENT_TYPE_1']);
