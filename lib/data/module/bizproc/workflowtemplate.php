@@ -18,9 +18,20 @@ class WorkflowTemplate extends BaseData
 {
 	const PREFIX_WORKFLOW_TEMPLATE = 'bzp-wft-';
 	const PREFIX_IBLOCK = 'ibl-ibl-';
+	const PREFIX_TYPE = 'type-ibl-';
 	const PREFIX_USER_GROUP_NUMERIC = 'USER_GROUP_N_';
 	const PREFIX_USER_GROUP_LITERAL = 'USER_GROUP_G_';
 	const CRM_MODULE = 'crm';
+	const IBLOCK_MODULE = 'iblock';
+	const LISTS_MODULE = 'lists';
+	const WEBDAV_MODULE = 'webdav';
+	const BIZPROC_MODULE = 'bizproc';
+	const DISK_MODULE = 'disk';
+
+	/**
+	 * @var array
+	 */
+	protected $arIbModules = array(self::IBLOCK_MODULE, self::LISTS_MODULE, self::WEBDAV_MODULE, self::BIZPROC_MODULE);
 
 	protected function configure()
 	{
@@ -43,10 +54,6 @@ class WorkflowTemplate extends BaseData
 		$dbTemplatesList = \CBPWorkflowTemplateLoader::GetList(array(), array());
 		while ($arTemplate = $dbTemplatesList->Fetch())
 		{
-			if ($arTemplate['MODULE_ID'] != 'iblock')
-			{
-				continue;
-			}
 			$record = new \Intervolga\Migrato\Data\Record($this);
 			$id = $this->createId($arTemplate["ID"]);
 			$record->setXmlId($this->calculateXmlId($arTemplate));
@@ -59,12 +66,23 @@ class WorkflowTemplate extends BaseData
 			// зависимость от iblock в DOCUMENT_TYPE
 			if ($documentType2XmlId = $this->stringToXmlId($arTemplate["DOCUMENT_TYPE"][2]))
 			{
-				$arDependency["IBLOCK"][] = $documentType2XmlId;
+				if (in_array($arTemplate['MODULE_ID'], $this->arIbModules))
+				{
+					$arDependency["IBLOCK"][] = $documentType2XmlId;
+				}
+				elseif ($arTemplate['MODULE_ID'] == self::DISK_MODULE)
+				{
+					continue;
+				}
+				else
+				{
+					continue;
+				}
 			}
 			else
 			{
 				// если шаблон не привязан к инфоблоку или к модулю CRM, то пропускаем его
-				if ($arTemplate["DOCUMENT_TYPE"][2] !== self::CRM_MODULE)
+				if ($arTemplate["MODULE_ID"] !== self::CRM_MODULE)
 				{
 					continue;
 				}
@@ -93,7 +111,7 @@ class WorkflowTemplate extends BaseData
 				"ENTITY" => $arTemplate["ENTITY"],
 				"DOCUMENT_TYPE_0" => $arTemplate["DOCUMENT_TYPE"][0],
 				"DOCUMENT_TYPE_1" => $arTemplate["DOCUMENT_TYPE"][1],
-				"DOCUMENT_TYPE_2" => self::PREFIX_IBLOCK . $documentType2XmlId,
+				"DOCUMENT_TYPE_2" => $this->getXmlIdWithPrefix($documentType2XmlId ?: $arTemplate["DOCUMENT_TYPE"][2], $arTemplate["MODULE_ID"]),
 				"AUTO_EXECUTE" => $arTemplate["AUTO_EXECUTE"],
 				"NAME" => $arTemplate["NAME"],
 				"DESCRIPTION" => $arTemplate["DESCRIPTION"],
@@ -199,12 +217,12 @@ class WorkflowTemplate extends BaseData
 		$arTemplate['DOCUMENT_TYPE'] = array(
 			$arTemplate['DOCUMENT_TYPE_0'],
 			$arTemplate['DOCUMENT_TYPE_1'],
-			$this->xmlIdToString($arTemplate['DOCUMENT_TYPE_2']),
+			$arTemplate['MODULE_ID'] == self::CRM_MODULE ? $arTemplate['DOCUMENT_TYPE_2'] : $this->xmlIdToString($arTemplate['DOCUMENT_TYPE_2']),
 		);
 		unset($arTemplate['DOCUMENT_TYPE_0']);
 		unset($arTemplate['DOCUMENT_TYPE_1']);
 		unset($arTemplate['DOCUMENT_TYPE_2']);
-		$arTemplate["TEMPLATE"] = $this->convertNode($arTemplate["TEMPLATE"]);
+		$arTemplate["TEMPLATE"] = $this->convertNode($arTemplate["TEMPLATE"], $arDependencies, $record);
 		$arTemplate["PARAMETERS"] = $this->convertVariables($arTemplate["PARAMETERS"]);
 		$arTemplate["VARIABLES"] = $this->convertVariables($arTemplate["VARIABLES"]);
 		$arTemplate["CONSTANTS"] = $this->convertVariables($arTemplate["CONSTANTS"]);
@@ -415,13 +433,14 @@ class WorkflowTemplate extends BaseData
 			}
 			elseif ($xmlId = $this->stringToXmlId($value))
 			{
-				if (!$this->xmlIdToString(self::PREFIX_IBLOCK . $xmlId))
+				$xmlIdWithPrefix = $this->getXmlIdWithPrefix($xmlId, self::IBLOCK_MODULE);
+				if (!$this->xmlIdToString($xmlIdWithPrefix))
 				{
 					$record->registerValidateError(
 						Loc::getMessage('INTERVOLGA_MIGRATO.BIZPROC_WORKFLOWTEMPLATE.INVALID_IBLOCK_XML_ID', array('#ID#' => $value))
 					);
 				}
-				$arResult[] = self::PREFIX_IBLOCK . $xmlId;
+				$arResult[] = $xmlIdWithPrefix;
 				$arDependency['IBLOCK'][] = $xmlId;
 			}
 			else
@@ -448,6 +467,12 @@ class WorkflowTemplate extends BaseData
 			$groupIdObject = RecordId::createNumericId($groupId);
 			return MainGroup::getInstance()->getXmlId($groupIdObject);
 		}
+		if ($storageId = $this->parseStorageId($field))
+		{
+			$storageIdObject = RecordId::createNumericId($storageId);
+			// Нет сущности для таблицы b_disk_storage
+			return '';
+		}
 
 		return '';
 	}
@@ -458,7 +483,7 @@ class WorkflowTemplate extends BaseData
 	 */
 	protected function parseIblockId($field)
 	{
-		if (preg_match("/^iblock_(?'id'\d+)$/", $field, $matches))
+		if (preg_match("/^((iblock)|(type))_(?'id'\d+)$/", $field, $matches))
 		{
 			return $matches['id'];
 		}
@@ -479,6 +504,19 @@ class WorkflowTemplate extends BaseData
 	}
 
 	/**
+	 * @param string $field
+	 * @return int
+	 */
+	protected function parseStorageId($field)
+	{
+		if (preg_match("/^STORAGE_(?'id'\d+)$/", $field, $matches))
+		{
+			return $matches['id'];
+		}
+		return 0;
+	}
+
+	/**
 	 * @param string $xmlId
 	 * @return string
 	 */
@@ -488,6 +526,11 @@ class WorkflowTemplate extends BaseData
 		{
 			$iblockLinkId = IblockIblock::getInstance()->findRecord($matches['xmlId']);
 			return 'iblock_' . $iblockLinkId->getValue();
+		}
+		if (preg_match("/^" . self::PREFIX_TYPE . "(?'xmlId'[_a-zA-Z0-9\-]+)$/", $xmlId, $matches))
+		{
+			$iblockLinkId = IblockIblock::getInstance()->findRecord($matches['xmlId']);
+			return 'type_' . $iblockLinkId->getValue();
 		}
 		if (preg_match("/^" . self::PREFIX_USER_GROUP_NUMERIC . "(?'xmlId'[_a-zA-Z0-9\-]+)$/", $xmlId, $matches))
 		{
@@ -501,5 +544,19 @@ class WorkflowTemplate extends BaseData
 		}
 
 		return '';
+	}
+
+	protected function getXmlIdWithPrefix($xmlId, $moduleId)
+	{
+		if ($moduleId == self::BIZPROC_MODULE)
+		{
+			$xmlId = self::PREFIX_TYPE . $xmlId;
+		}
+		elseif (in_array($moduleId, $this->arIbModules))
+		{
+			$xmlId = self::PREFIX_IBLOCK . $xmlId;
+		}
+
+		return $xmlId;
 	}
 }

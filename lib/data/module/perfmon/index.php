@@ -1,5 +1,5 @@
 <?php
-namespace Intervolga\Migrato\Data\Module\perfmon;
+namespace Intervolga\Migrato\Data\Module\Perfmon;
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
