@@ -147,6 +147,12 @@
         </entity>
     </module>
     <module>
+        <name>lists</name>
+        <entity>
+            <name>url</name>
+        </entity>
+    </module>
+    <module>
         <name>sale</name>
         <entity>
             <name>persontype</name>
