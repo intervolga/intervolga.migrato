@@ -1,0 +1,2 @@
+<?
+$MESS['INTERVOLGA_MIGRATO.LISTS_URL'] = 'Настройки URL';
