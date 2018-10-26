@@ -41,12 +41,12 @@ class Url extends BaseData
 			);
 			$record->setDependency('IBLOCK_ID', $dependency);
 			$record->addFieldsRaw(array(
-				'URL' => str_replace($process['IBLOCK_ID'], '#IBLOCK_ID#' ,$process['URL']),
+				'URL' => str_replace($process['IBLOCK_ID'], '#IBLOCK_ID#', $process['URL']),
 				'LIVE_FEED' => $process['LIVE_FEED'],
 			));
 			$result[] = $record;
 		}
-		
+
 		return $result;
 	}
 
@@ -118,7 +118,7 @@ class Url extends BaseData
 			&& $iblockId = $record->getDependency('IBLOCK_ID')->findId()
 		)
 		{
-			$array['URL'] = str_replace('#IBLOCK_ID#', $iblockId->getValue() ,$array['URL']);
+			$array['URL'] = str_replace('#IBLOCK_ID#', $iblockId->getValue(), $array['URL']);
 			$array['IBLOCK_ID'] = $iblockId->getValue();
 		}
 

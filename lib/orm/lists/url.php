@@ -3,6 +3,7 @@ namespace Intervolga\Migrato\Orm\Lists;
 
 use Bitrix\Main,
 	Bitrix\Main\Localization\Loc;
+
 Loc::loadMessages(__FILE__);
 
 /**
@@ -18,7 +19,6 @@ Loc::loadMessages(__FILE__);
  *
  * @package Intervolga\Migrato\Orm\Lists
  **/
-
 class UrlTable extends Main\Entity\DataManager
 {
 	/**
@@ -59,6 +59,7 @@ class UrlTable extends Main\Entity\DataManager
 			),
 		);
 	}
+
 	/**
 	 * Returns validators for URL field.
 	 *

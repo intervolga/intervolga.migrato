@@ -31,7 +31,7 @@ class WorkflowTemplate extends BaseData
 	/**
 	 * @var array
 	 */
-	protected $arIbModules = array(self::IBLOCK_MODULE , self::LISTS_MODULE, self::WEBDAV_MODULE, self::BIZPROC_MODULE);
+	protected $arIbModules = array(self::IBLOCK_MODULE, self::LISTS_MODULE, self::WEBDAV_MODULE, self::BIZPROC_MODULE);
 
 	protected function configure()
 	{
@@ -111,7 +111,7 @@ class WorkflowTemplate extends BaseData
 				"ENTITY" => $arTemplate["ENTITY"],
 				"DOCUMENT_TYPE_0" => $arTemplate["DOCUMENT_TYPE"][0],
 				"DOCUMENT_TYPE_1" => $arTemplate["DOCUMENT_TYPE"][1],
-				"DOCUMENT_TYPE_2" => $this->getXmlIdWithPrefix($documentType2XmlId ?: $arTemplate["DOCUMENT_TYPE"][2] , $arTemplate["MODULE_ID"]),
+				"DOCUMENT_TYPE_2" => $this->getXmlIdWithPrefix($documentType2XmlId ?: $arTemplate["DOCUMENT_TYPE"][2], $arTemplate["MODULE_ID"]),
 				"AUTO_EXECUTE" => $arTemplate["AUTO_EXECUTE"],
 				"NAME" => $arTemplate["NAME"],
 				"DESCRIPTION" => $arTemplate["DESCRIPTION"],
