@@ -27,6 +27,7 @@ class ImportCommand extends BaseCommand
 	{
 		$this->wasClosedAtStart = $this->isSiteClosed();
 		$this->closeSite();
+		$this->checkBackup();
 		try
 		{
 			ReIndexFacetCommand::saveActiveFacet();
@@ -88,5 +89,23 @@ class ImportCommand extends BaseCommand
 	protected function isSiteClosed()
 	{
 		return (Option::get("main", "site_stopped") == 'Y');
+	}
+
+	/**
+	 * return bool /home/bitrix/ext_www/gurjev.ivdev.ru/bitrix/backup
+	 */
+	protected function checkBackup()
+	{
+		$dir = $_SERVER['DOCUMENT_ROOT'] . '/bitrix/backup';
+		$files = scandir($dir);
+
+		$this->logger->separate();
+		$this->logger->add(
+			'ПРОВЕРЯЮ БЕКАП',
+			0,
+			Logger::TYPE_INFO
+		);
+
+
 	}
 }
