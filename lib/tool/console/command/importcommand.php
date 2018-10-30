@@ -92,20 +92,36 @@ class ImportCommand extends BaseCommand
 	}
 
 	/**
-	 * return bool /home/bitrix/ext_www/gurjev.ivdev.ru/bitrix/backup
+	 * return bool
 	 */
 	protected function checkBackup()
 	{
 		$dir = $_SERVER['DOCUMENT_ROOT'] . '/bitrix/backup';
 		$files = scandir($dir);
 
-		$this->logger->separate();
-		$this->logger->add(
-			'ПРОВЕРЯЮ БЕКАП',
-			0,
-			Logger::TYPE_INFO
-		);
+		$newArchives = array();
+		foreach ($files as $file)
+		{
+			if(stristr($file, '.tar.gz') && stristr($file, '_full_') && time() - filemtime($dir . "/" . $file) <= '7200')
+			{
+				$newArchives[] = $file;
+			}
+		}
 
+
+		// Если флаг игнора делаем, иначе проверяем на пустые $newArchives и кидаем ошибку если что
+
+		if(empty($newArchives))
+		{
+			$this->logger->separate();
+			$this->logger->add(
+				'<fail>Нету полных бекапов за последние 2 часа</fail>',
+				0,
+				Logger::TYPE_FAIL
+			);
+
+			//Option::set("main", "site_stopped", "Y"); вроде не эта команда
+		}
 
 	}
 }
