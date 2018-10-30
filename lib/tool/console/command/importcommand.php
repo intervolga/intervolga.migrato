@@ -21,36 +21,45 @@ class ImportCommand extends BaseCommand
 			InputOption::VALUE_NONE,
 			Loc::getMessage('INTERVOLGA_MIGRATO.NO_AFTER_CLEAR_DESCRIPTION')
 		);
+		$this->addOption(
+			'force',
+			null,
+			InputOption::VALUE_NONE,
+			Loc::getMessage('INTERVOLGA_MIGRATO.IGNORE_NEW_BACKUPS')
+		);
 	}
 
 	public function executeInner()
 	{
 		$this->wasClosedAtStart = $this->isSiteClosed();
 		$this->closeSite();
-		$this->checkBackup();
-		try
+		if($this->checkBackup())
 		{
-			ReIndexFacetCommand::saveActiveFacet();
-			$this->runSubcommand('importdata');
-			$this->runSubcommand('importoptions');
-			if (!$this->input->getOption('quick'))
+			try
 			{
-				$this->runSubcommand('clearcache');
-				$this->runSubcommand('urlrewrite');
-				$this->runSubcommand('reindex');
-				$this->runSubcommand('reindexfacet');
+				ReIndexFacetCommand::saveActiveFacet();
+				$this->runSubcommand('importdata');
+				$this->runSubcommand('importoptions');
+				if (!$this->input->getOption('quick'))
+				{
+					$this->runSubcommand('clearcache');
+					$this->runSubcommand('urlrewrite');
+					$this->runSubcommand('reindex');
+					$this->runSubcommand('reindexfacet');
+				}
+			}
+			catch (\Throwable $throwable)
+			{
+				$this->openSite();
+				throw $throwable;
+			}
+			catch (\Exception $exception)
+			{
+				$this->openSite();
+				throw $exception;
 			}
 		}
-		catch (\Throwable $throwable)
-		{
-			$this->openSite();
-			throw $throwable;
-		}
-		catch (\Exception $exception)
-		{
-			$this->openSite();
-			throw $exception;
-		}
+
 		$this->openSite();
 	}
 
@@ -96,32 +105,33 @@ class ImportCommand extends BaseCommand
 	 */
 	protected function checkBackup()
 	{
+		if ($this->input->getOption('force'))
+		{
+			return true;
+		}
+
 		$dir = $_SERVER['DOCUMENT_ROOT'] . '/bitrix/backup';
 		$files = scandir($dir);
 
-		$newArchives = array();
+		$newFullArchives = array();
 		foreach ($files as $file)
 		{
-			if(stristr($file, '.tar.gz') && stristr($file, '_full_') && time() - filemtime($dir . "/" . $file) <= '1200')
+			if (stristr($file, '.tar.gz') && stristr($file, '_full_') && time() - filemtime($dir . "/" . $file) <= '7200')
 			{
-				$newArchives[] = $file;
+				$newFullArchives[] = $file;
 			}
 		}
 
-
-		// Если флаг игнора делаем, иначе проверяем на пустые $newArchives и кидаем ошибку если что
-
-		if(empty($newArchives))
+		if (empty($newFullArchives))
 		{
 			$this->logger->separate();
-			$this->logger->add(
-				Loc::getMessage('INTERVOLGA_MIGRATO.EMPTY_NEW_BACKUPS'),
+			$this->logger->add(Loc::getMessage('INTERVOLGA_MIGRATO.EMPTY_NEW_BACKUPS'),
 				0,
 				Logger::TYPE_FAIL
 			);
-
-			exit; // через это делать???
+			return false;
 		}
-
+		return true;
 	}
+
 }
