@@ -102,7 +102,7 @@ class ImportCommand extends BaseCommand
 		$newArchives = array();
 		foreach ($files as $file)
 		{
-			if(stristr($file, '.tar.gz') && stristr($file, '_full_') && time() - filemtime($dir . "/" . $file) <= '7200')
+			if(stristr($file, '.tar.gz') && stristr($file, '_full_') && time() - filemtime($dir . "/" . $file) <= '1200')
 			{
 				$newArchives[] = $file;
 			}
@@ -115,12 +115,12 @@ class ImportCommand extends BaseCommand
 		{
 			$this->logger->separate();
 			$this->logger->add(
-				'<fail>Нету полных бекапов за последние 2 часа</fail>',
+				Loc::getMessage('INTERVOLGA_MIGRATO.EMPTY_NEW_BACKUPS'),
 				0,
 				Logger::TYPE_FAIL
 			);
 
-			//Option::set("main", "site_stopped", "Y"); вроде не эта команда
+			exit; // через это делать???
 		}
 
 	}
