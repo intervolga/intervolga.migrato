@@ -10,6 +10,7 @@ Loc::loadMessages(__FILE__);
 class ImportCommand extends BaseCommand
 {
 	protected $wasClosedAtStart = false;
+	const TIME = 7200;
 
 	protected function configure()
 	{
@@ -32,9 +33,11 @@ class ImportCommand extends BaseCommand
 	public function executeInner()
 	{
 		$this->wasClosedAtStart = $this->isSiteClosed();
-		$this->closeSite();
+
 		if($this->checkBackup())
 		{
+			$this->closeSite();
+
 			try
 			{
 				ReIndexFacetCommand::saveActiveFacet();
@@ -58,9 +61,9 @@ class ImportCommand extends BaseCommand
 				$this->openSite();
 				throw $exception;
 			}
-		}
 
-		$this->openSite();
+			$this->openSite();
+		}
 	}
 
 	protected function closeSite()
@@ -105,6 +108,7 @@ class ImportCommand extends BaseCommand
 	 */
 	protected function checkBackup()
 	{
+		// если установлен флаг игнорирования актуальной резервной копии сайта
 		if ($this->input->getOption('force'))
 		{
 			return true;
@@ -112,25 +116,46 @@ class ImportCommand extends BaseCommand
 
 		$dir = $_SERVER['DOCUMENT_ROOT'] . '/bitrix/backup';
 		$files = scandir($dir);
-
 		$newFullArchives = array();
+		$datesFullArchives = array();
+
 		foreach ($files as $file)
 		{
-			if (stristr($file, '.tar.gz') && stristr($file, '_full_') && time() - filemtime($dir . "/" . $file) <= '7200')
+			if(stristr($file, '.tar.gz') && stristr($file, '_full_'))
 			{
-				$newFullArchives[] = $file;
+				$datesFullArchives[] = filemtime($dir . "/" . $file);
+
+				if (time() - filemtime($dir . "/" . $file) <= self::TIME)
+				{
+					$newFullArchives[] = $file;
+				}
 			}
 		}
 
 		if (empty($newFullArchives))
 		{
 			$this->logger->separate();
-			$this->logger->add(Loc::getMessage('INTERVOLGA_MIGRATO.EMPTY_NEW_BACKUPS'),
+			$this->logger->add(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.EMPTY_NEW_BACKUPS',
+					array(
+						'#DATE_LAST_BACKUP#' => date("Y-m-d H:i:s", max($datesFullArchives))
+					)
+				),
 				0,
 				Logger::TYPE_FAIL
 			);
 			return false;
 		}
+
+		// eсли бекап обнаружен и импорту ничего не препятствует
+		$this->logger->separate();
+		$this->logger->add(
+			Loc::getMessage('INTERVOLGA_MIGRATO.FOUND_ACTUAL_BACKUP'),
+			0,
+			Logger::TYPE_INFO
+		);
+
 		return true;
 	}
 
