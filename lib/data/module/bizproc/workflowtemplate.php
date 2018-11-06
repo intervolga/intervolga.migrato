@@ -27,6 +27,9 @@ class WorkflowTemplate extends BaseData
 	const WEBDAV_MODULE = 'webdav';
 	const BIZPROC_MODULE = 'bizproc';
 	const DISK_MODULE = 'disk';
+	const SHARED_STORAGE_FILE_PATH = '../../../../docs/shared/index.php';
+	const SHARED_STORAGE_ID_REGEX = '/[",\']STORAGE_ID[",\']\s*=>\s*[",\']([0-9]+)[",\']/';
+	protected static $sharedStorageId;
 
 	/**
 	 * @var array
@@ -62,6 +65,7 @@ class WorkflowTemplate extends BaseData
 			$arDependency = array(
 				"IBLOCK" => array(),
 				"GROUP" => array(),
+				"DISK" => array()
 			);
 			// зависимость от iblock в DOCUMENT_TYPE
 			if ($documentType2XmlId = $this->stringToXmlId($arTemplate["DOCUMENT_TYPE"][2]))
@@ -72,7 +76,7 @@ class WorkflowTemplate extends BaseData
 				}
 				elseif ($arTemplate['MODULE_ID'] == self::DISK_MODULE)
 				{
-					continue;
+					$arDependency["DISK"] = $documentType2XmlId;
 				}
 				else
 				{
@@ -106,7 +110,8 @@ class WorkflowTemplate extends BaseData
 				$dependency->setValues(array_unique($arDependency['IBLOCK']));
 				$record->setDependency('IBLOCK_ID', $dependency);
 			}
-			$record->addFieldsRaw(array(
+
+			$arFields = array(
 				"MODULE_ID" => $arTemplate["MODULE_ID"],
 				"ENTITY" => $arTemplate["ENTITY"],
 				"DOCUMENT_TYPE_0" => $arTemplate["DOCUMENT_TYPE"][0],
@@ -120,7 +125,14 @@ class WorkflowTemplate extends BaseData
 				"VARIABLES" => serialize($arTemplate["VARIABLES"]),
 				"CONSTANTS" => serialize($arTemplate["CONSTANTS"]),
 				"ACTIVE" => $arTemplate["ACTIVE"],
-			));
+			);
+
+			if ($arDependency['DISK'])
+			{
+				$arFields['DISK'] = $arDependency['DISK'];
+			}
+
+			$record->addFieldsRaw($arFields);
 			$result[] = $record;
 		}
 
@@ -469,11 +481,11 @@ class WorkflowTemplate extends BaseData
 		}
 		if ($storageId = $this->parseStorageId($field))
 		{
-			$storageIdObject = RecordId::createNumericId($storageId);
-			// Нет сущности для таблицы b_disk_storage
-			return '';
+			if ($storageId == static::getSharedStorageId())
+			{
+				return static::getSharedStorageXmlId();
+			}
 		}
-
 		return '';
 	}
 
@@ -542,6 +554,9 @@ class WorkflowTemplate extends BaseData
 			$groupLinkId = MainGroup::getInstance()->findRecord($matches['xmlId']);
 			return 'group_g' . $groupLinkId->getValue();
 		}
+		if(static::getSharedStorageXmlId() == $xmlId && static::getSharedStorageId()) {
+			return 'STORAGE_' . static::getSharedStorageId();
+		}
 
 		return '';
 	}
@@ -558,5 +573,38 @@ class WorkflowTemplate extends BaseData
 		}
 
 		return $xmlId;
+	}
+
+	/**
+	 * @return null|false|int
+	 */
+	protected static function getSharedStorageId()
+	{
+		if (static::$sharedStorageId === null)
+		{
+			if (file_exists(static::SHARED_STORAGE_FILE_PATH))
+			{
+				$content = file_get_contents(static::SHARED_STORAGE_FILE_PATH);
+				if ($content)
+				{
+					preg_match(static::SHARED_STORAGE_ID_REGEX, $content, $matches);
+					if ($matches [1])
+					{
+						return $matches [1];
+					}
+				}
+			}
+			else
+			{
+				static::$sharedStorageId = false;
+			}
+		}
+
+		return static::$sharedStorageId;
+	}
+
+	protected static function getSharedStorageXmlId()
+	{
+		return preg_replace('/[\/.]/', '' , static::SHARED_STORAGE_FILE_PATH);
 	}
 }
