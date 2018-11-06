@@ -603,6 +603,9 @@ class WorkflowTemplate extends BaseData
 		return static::$sharedStorageId;
 	}
 
+	/**
+	 * @return string
+	 */
 	protected static function getSharedStorageXmlId()
 	{
 		return preg_replace('/[\/.]/', '' , static::SHARED_STORAGE_FILE_PATH);
