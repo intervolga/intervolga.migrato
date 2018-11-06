@@ -561,6 +561,11 @@ class WorkflowTemplate extends BaseData
 		return '';
 	}
 
+	/**
+	 * @param string $xmlId
+	 * @param string $moduleId
+	 * @return string
+	 */
 	protected function getXmlIdWithPrefix($xmlId, $moduleId)
 	{
 		if ($moduleId == self::BIZPROC_MODULE)
