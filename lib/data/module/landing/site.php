@@ -30,7 +30,7 @@ class Site extends BaseData
 			$record = new Record($this);
 			$id = $this->createId($site['ID']);
 			$record->setId($id);
-			$record->setXmlId($site['CODE'] . $site['ID']);
+			$record->setXmlId($site['CODE']);
 			$record->addFieldsRaw(array(
 				"CODE" => $site["CODE"],
 				"ACTIVE" => $site["ACTIVE"],
