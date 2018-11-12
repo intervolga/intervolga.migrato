@@ -40,7 +40,6 @@ class Landing extends BaseData
 				"FOLDER" => $landing["FOLDER"],
 				"XML_ID" => $landing["XML_ID"],
 				"SITE_ID" => $landing["SITE_ID"],
-				"ID" => $landing["ID"],
 			));
 			$result[] = $record;
 		}
