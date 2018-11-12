@@ -105,7 +105,6 @@ class Landing extends BaseData
 			"FOLDER_ID" => $record->getFieldRaw("FOLDER_ID"),
 			'XML_ID' => $record->getFieldRaw('XML_ID'),
 			'SITE_ID' => $record->getFieldRaw('SITE_ID'),
-			'ID' => $record->getFieldRaw('ID'),
 		);
 
 		return $array;
