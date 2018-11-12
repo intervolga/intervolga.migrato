@@ -38,6 +38,7 @@ class Landing extends BaseData
 				"DESCRIPTION" => $landing["DESCRIPTION"],
 				"SITEMAP" => $landing["SITEMAP"],
 				"FOLDER" => $landing["FOLDER"],
+				"FOLDER_ID" => $landing["FOLDER_ID"],
 				"XML_ID" => $landing["XML_ID"],
 				"SITE_ID" => $landing["SITE_ID"],
 			));
@@ -101,6 +102,7 @@ class Landing extends BaseData
 			'DESCRIPTION' => $record->getFieldRaw('DESCRIPTION'),
 			'SITEMAP' => $record->getFieldRaw('SITEMAP'),
 			'FOLDER' => $record->getFieldRaw('FOLDER'),
+			"FOLDER_ID" => $record->getFieldRaw("FOLDER_ID"),
 			'XML_ID' => $record->getFieldRaw('XML_ID'),
 			'SITE_ID' => $record->getFieldRaw('SITE_ID'),
 			'ID' => $record->getFieldRaw('ID'),
