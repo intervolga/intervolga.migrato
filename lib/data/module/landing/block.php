@@ -97,7 +97,6 @@ class Block extends BaseData
 			'DELETED' => $record->getFieldRaw('DELETED'),
 			'ACCESS' => $record->getFieldRaw('ACCESS'),
 			'CONTENT' => $record->getFieldRaw('CONTENT'),
-			'LID' => $record->getFieldRaw('LID'),
 		);
 
 		return $array;
