@@ -66,7 +66,6 @@ class ElementFilter extends BaseData
 		$this->setVirtualXmlId(true);
 		$this->setFilesSubdir('/type/iblock/admin/');
 		$this->setDependencies(array(
-			'LANGUAGE' => new Link(Language::getInstance()),
 			'IBLOCK_ID' => new Link(MigratoIblock::getInstance()),
 			'PROPERTY_ID' => new Link(Property::getInstance()),
 			'PROPERTY_ENUM_ID' => new Link(Enum::getInstance()),
@@ -99,24 +98,20 @@ class ElementFilter extends BaseData
 			$dbRes = CUserOptions::GetList(array(), $optionsFilter);
 			while ($option = $dbRes->Fetch())
 			{
-				if (static::isFilter($option) /*&& !in_array($filter['NAME'], $filtersName)*/)
+				if (static::isFilter($option))
 				{
 					$filtersName[] = $option;
 					$record = new Record($this);
 					$record->setId($this->createId($option['ID']));
 					$record->setXmlId($this->getXmlIdByObject($option));
-
-					// TODO: Мигрировать ли поле NAME ?
-					//$record->setFieldRaw('NAME', $filter['NAME']);
-
 					$record->setFieldRaw('COMMON', $option['COMMON']);
 					$record->setFieldRaw('CATEGORY', $option['CATEGORY']);
 
+					// TODO: Нужно ли это поле ?
 					//$record->setFieldRaw('IS_ADMIN', $arFilter['USER_ID'] == 1 ? 'Y' : 'N');
 
 					$this->addPropertiesDependencies($record, $option['VALUE']);
-
-//					$this->setRecordDependencies($record, $arFilter);
+					$this->setRecordDependencies($record, $option);
 					$result[] = $record;
 				}
 			}
@@ -127,11 +122,12 @@ class ElementFilter extends BaseData
 
 	protected function addPropertiesDependencies(Record $record, $fields)
 	{
+		// TODO: Рефакторинг метода (разбить на методы)
+
+		$properties = array();
+		$propXmlIds = array();
+		$enumPropXmlIds = array();
 		$arFields = unserialize($fields);
-
-		$propsId = array();
-		$propertyXmlIds = array();
-
 
 		// Соберем id всех, используемых в фильтрах свойств
 		$propertyIds = array();
@@ -142,61 +138,133 @@ class ElementFilter extends BaseData
 			{
 				if (static::isIbPropertyFilterRow($filterRow))
 				{
-					$propertyId = static::getIbPropertyIdByFilterRow($filterRow);
-					if ($propertyId)
-					{
-						$propertyIds[] = $propertyId;
-					}
+					$propertyIds[] = static::getIbPropertyIdByFilterRow($filterRow);
 				}
 			}
 		}
 		$propertyIds = array_unique($propertyIds);
 
+		// Даннные свойств из БД
+		$dbRes = \CIBlockProperty::GetList();
+		while ($prop = $dbRes->Fetch())
+		{
+			$propertyId = $prop['ID'];
+			if (in_array($propertyId, $propertyIds))
+			{
+				$properties[$propertyId]['DATA'] = $prop;
+			}
+		}
+
 		// Получаем xml_id свойств
-		$properties = array();
 		foreach ($propertyIds as $propertyId)
 		{
 			$propertyIdObj = Property::getInstance()->createId($propertyId);
-			$properties[$propertyId] = array(
-				'PROPERTY_OBJECT' => $propertyIdObj,
-				'PROPERTY_XML_ID' => Property::getInstance()->getXmlId($propertyIdObj)
-			);
+			$propertyXmlId = Property::getInstance()->getXmlId($propertyIdObj);
+
+			$properties[$propertyId]['PROPERTY_OBJECT'] = $propertyIdObj;
+			$properties[$propertyId]['PROPERTY_XML_ID'] = $propertyXmlId;
 		}
 
 		// Заменяем id свойств на xml_id в исходных фильтрах
-		foreach ($arFields['filters'] as $filter)
+		foreach ($arFields['filters'] as &$filter)
 		{
+			// Заменяем свойства в filter_rows (используемые поля фильтра)
+			$arFilterRows = explode(',', $filter['filter_rows']);
+			foreach	($arFilterRows as &$filterRow)
+			{
+				if (static::isIbPropertyFilterRow($filterRow))
+				{
+					$propertyId = static::getIbPropertyIdByFilterRow($filterRow);
+					$propertyXmlId = $properties[$propertyId]['PROPERTY_XML_ID'];
+					$filterRow = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
+				}
+			}
+			unset($filterRow);
+			$filter['filter_rows'] = implode(',', $arFilterRows);
 
+			// Заменяем свойства в fields (значения полей фильтра)
+			$newFields = array();
+			foreach	($filter['fields'] as $fieldName => $fieldVal)
+			{
+				$newFieldName = $fieldName;
+				if (static::isIbPropertyFilterRow($fieldName))
+				{
+					$propertyId = static::getIbPropertyIdByFilterRow($fieldName);
+					$propertyData = $properties[$propertyId]['DATA'];
+					$propertyXmlId = $properties[$propertyId]['PROPERTY_XML_ID'];
+					$propXmlIds[] = $propertyXmlId;
+
+					// Новое название свойства
+					$newFieldName = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
+
+					// Новое значение для списочного свойства (заменить id значений на xml_id)
+					if ($propertyData['PROPERTY_TYPE'] === 'L')
+					{
+						if ($propertyData['MULTIPLE'] === 'Y')
+						{
+							foreach ($fieldVal as &$fieldValId)
+							{
+								$enumPropId = Enum::getInstance()->createId($fieldValId);
+								$enumPropXmlId = Enum::getInstance()->getXmlId($enumPropId);
+								if ($enumPropXmlId)
+								{
+									$fieldValId = $enumPropXmlId;
+									$enumPropXmlIds[] = $enumPropXmlId;
+								}
+							}
+						}
+						else
+						{
+							$enumPropId = Enum::getInstance()->createId($fieldVal);
+							$enumPropXmlId = Enum::getInstance()->getXmlId($enumPropId);
+							if ($enumPropXmlId)
+							{
+								$fieldVal = $enumPropXmlId;
+								$enumPropXmlIds[] = $enumPropXmlId;
+							}
+						}
+					}
+				}
+
+				$newFields[$newFieldName] = $fieldVal;
+			}
+			$filter['fields'] = $newFields;
+		}
+		$record->setFieldRaw('FIELDS', serialize($arFields));
+
+		if ($enumPropXmlIds)
+		{
+			$enumPropXmlIds = array_unique($enumPropXmlIds);
+			$dependency = clone $this->getDependency('PROPERTY_ENUM_ID');
+			$dependency->setValues($enumPropXmlIds);
+			$record->setDependency('PROPERTY_ENUM_ID', $dependency);
 		}
 
-//		foreach ($arrFields as $fieldName => $arrField)
-//		{
-//			if (strpos($fieldName, static::PROPERTY_FIELD_PREFIX) === 0)
-//			{
-//				$propId = substr($fieldName, strlen(static::PROPERTY_FIELD_PREFIX));
-//				if ($propId)
-//				{
-//					$propsId[] = $propId;
-//					$idObject = Property::getInstance()->createId($propId);
-//					$propertyXmlId = Property::getInstance()->getXmlId($idObject);
-//					$propertyXmlIds[] = $propertyXmlId;
-//					//convert field name using propery xmlId
-//					unset($newArrFields[$fieldName]);
-//					$newArrFields[static::PROPERTY_FIELD_PREFIX . $propertyXmlId] = $arrField;
-//				}
-//			}
-//		}
-//		//add property enum dependency
-//		$newArrFields = $this->addPropsEnumDependencies($record, $newArrFields, $propsId);
-//		//add field
-//		$record->setFieldRaw('FIELDS', serialize($newArrFields));
-//		//add property dependency
-//		if ($propertyXmlIds)
-//		{
-//			$dependency = clone $this->getDependency('PROPERTY_ID');
-//			$dependency->setValues($propertyXmlIds);
-//			$record->setDependency('PROPERTY_ID', $dependency);
-//		}
+		if ($propXmlIds)
+		{
+			$propXmlIds = array_unique($propXmlIds);
+			$dependency = clone $this->getDependency('PROPERTY_ID');
+			$dependency->setValues($propXmlIds);
+			$record->setDependency('PROPERTY_ID', $dependency);
+		}
+	}
+
+	public function setRecordDependencies(Record $record, array $filter)
+	{
+		//IBLOCK_ID
+		if ($filter['NAME'])
+		{
+			$iblockId = $this->getIblockIdByFilterName($filter['NAME']);
+			if ($iblockId)
+			{
+				$iblockIdObj = MigratoIblock::getInstance()->createId($iblockId);
+				$iblockXmlId = MigratoIblock::getInstance()->getXmlId($iblockIdObj);
+
+				$dependency = clone $this->getDependency('IBLOCK_ID');
+				$dependency->setValue($iblockXmlId);
+				$record->setDependency('IBLOCK_ID', $dependency);
+			}
+		}
 	}
 
 	/**
