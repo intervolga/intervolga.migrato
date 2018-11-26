@@ -104,7 +104,7 @@ class ElementFilter extends BaseData
 					$filtersName[] = $option;
 					$record = new Record($this);
 					$record->setId($this->createId($option['ID']));
-					$record->setXmlId($this->getXmlIdByObject($option));
+					$record->setXmlId($this->getXmlIdFromArray($option));
 					$record->setFieldRaw('COMMON', $option['COMMON']);
 					$record->setFieldRaw('CATEGORY', $option['CATEGORY']);
 
@@ -119,6 +119,73 @@ class ElementFilter extends BaseData
 		}
 
 		return $result;
+	}
+
+	public function update(Record $record)
+	{
+		$xmlId = $record->getXmlId();
+		$filterId = $this->findRecord($xmlId);
+	}
+
+	/**
+	 * @param string $xmlId
+	 *
+	 * @return RecordId|null
+	 */
+	public function findRecord($xmlId)
+	{
+		// Получаем необходимые данные из xmlId
+		$xmlFields = $this->getArrayFromXmlId($xmlId);
+		$xmlFilterPrefix = $xmlFields[0];
+		$xmlIsUserAdmin = $xmlFields[1];
+		$xmlIsFilterCommon = $xmlFields[2];
+		$xmlFilterCategory = $xmlFields[3];
+		$xmlFilterName = $xmlFields[4];
+		$xmlIblockXmlId = $xmlFields[5];
+
+		// Данные ифнблока
+		$iblockInfo = array();
+		$iblockRecord = MigratoIblock::getInstance()->findRecord($xmlIblockXmlId);
+		if ($iblockRecord)
+		{
+			$iblockId = $iblockRecord->getValue();
+			if ($iblockId && Loader::includeModule('iblock'))
+			{
+				$iblockInfo = \CIBlock::GetById($iblockId)->Fetch();
+			}
+		}
+
+		// Формируем фильтр для запроса
+		$arFilter = array(
+			'COMMON' => $xmlIsFilterCommon,
+			'CATEGORY' => $xmlFilterCategory,
+		);
+
+		if ($xmlIsUserAdmin === 'Y')
+		{
+			$arFilter['USER_ID'] = 1;
+		}
+
+		if ($iblockInfo)
+		{
+			$dbRes = CUserOptions::GetList(array(), $arFilter);
+			while ($filter = $dbRes->Fetch())
+			{
+				$filterName = $filter['NAME'];
+				if (strpos($filterName, $xmlFilterPrefix) === 0
+					&& md5($filterName) === $xmlFilterName
+				)
+				{
+					$hash = substr($filterName, strlen($xmlFilterPrefix));
+					if (md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockInfo['ID']) === $hash)
+					{
+						return $this->createId($filter['ID']);
+					}
+				}
+			}
+		}
+
+		return null;
 	}
 
 	protected function deleteInner(RecordId $id)
@@ -347,7 +414,7 @@ class ElementFilter extends BaseData
 	 * @param array $filter - filter fields
 	 * @return string
 	 */
-	protected function getXmlIdByObject(array $filter)
+	protected function getXmlIdFromArray(array $filter)
 	{
 		$result = '';
 		$iblockId = $this->getIblockIdByFilterName($filter['NAME']);
@@ -363,6 +430,8 @@ class ElementFilter extends BaseData
 					($filter['USER_ID'] == 1 ? 'Y' : 'N')
 					. static::XML_ID_SEPARATOR .
 					$filter['COMMON']
+					. static::XML_ID_SEPARATOR .
+					str_replace('.', '_', $filter['CATEGORY'])
 					. static::XML_ID_SEPARATOR .
 					md5($filter['NAME'])
 					. static::XML_ID_SEPARATOR
@@ -383,9 +452,24 @@ class ElementFilter extends BaseData
 		$dbRes = CUserOptions::GetList(array(), array('ID' => $id->getValue()));
 		if ($filter = $dbRes->Fetch())
 		{
-			return $this->getXmlIdByObject($filter);
+			return $this->getXmlIdFromArray($filter);
 		}
 		return '';
+	}
+
+	/**
+	 * @param string $xmlId
+	 * @return array
+	 */
+	protected function getArrayFromXmlId($xmlId)
+	{
+		$filterCategoryIndex = 3;
+		$filterPrefixIndex = 0;
+
+		$xmlFields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		$xmlFields[$filterPrefixIndex] = static::FILTER_NAME_PREFIXES[$xmlFields[$filterPrefixIndex]];
+		$xmlFields[$filterCategoryIndex] = str_replace('_', '.', $xmlFields[$filterCategoryIndex]);
+		return $xmlFields;
 	}
 
 	/**
