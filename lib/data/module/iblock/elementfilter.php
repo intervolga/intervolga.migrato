@@ -6,9 +6,10 @@ use Intervolga\Migrato\Data\BaseData;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Module\Iblock\Iblock as MigratoIblock;
-use Intervolga\Migrato\Data\Module\Main\Language;
 use CUserOptions;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
 
@@ -118,6 +119,25 @@ class ElementFilter extends BaseData
 		}
 
 		return $result;
+	}
+
+	protected function deleteInner(RecordId $id)
+	{
+		$result = false;
+
+		$dbRes = CUserOptions::GetList(array(), array('ID' => $id->getValue()));
+		if ($filter = $dbRes->Fetch())
+		{
+			$result = CUserOptions::DeleteOptionsByName($filter['CATEGORY'], $filter['NAME']);
+		}
+
+		if (!$result)
+		{
+			$exceptionMessage = ExceptionText::getFromString(
+				Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.DELETE_ERROR')
+			);
+			throw new \Exception($exceptionMessage);
+		}
 	}
 
 	protected function addPropertiesDependencies(Record $record, $fields)
@@ -351,6 +371,21 @@ class ElementFilter extends BaseData
 			}
 		}
 		return $result;
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $id
+	 *
+	 * @return string
+	 */
+	public function getXmlId($id)
+	{
+		$dbRes = CUserOptions::GetList(array(), array('ID' => $id->getValue()));
+		if ($filter = $dbRes->Fetch())
+		{
+			return $this->getXmlIdByObject($filter);
+		}
+		return '';
 	}
 
 	/**
