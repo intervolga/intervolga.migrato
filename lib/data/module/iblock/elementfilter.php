@@ -123,8 +123,58 @@ class ElementFilter extends BaseData
 
 	public function update(Record $record)
 	{
+		$success = false;
 		$xmlId = $record->getXmlId();
 		$filterId = $this->findRecord($xmlId);
+		if ($filterId)
+		{
+			$fields = $record->getFieldsRaw();
+			$xmlFields = $this->getArrayFromXmlId($xmlId);
+
+			// Данные ИБ
+			$iblockInfo = array();
+			$iblockXmlId = $xmlFields[5];
+			$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
+			if (Loader::includeModule('iblock'))
+			{
+				$iblockInfo = \CIBlock::GetByID($iblockId)->GetNext();
+			}
+
+			// Поле USER_ID
+			$fields['USER_ID'] = ($xmlFields[1] === 'Y') ? 1 : 0;
+
+			// Поле COMMON
+			$fields['COMMON'] = $fields['COMMON'] === 'Y';
+
+			// Поле NAME
+			if ($iblockInfo)
+			{
+				$fields['NAME'] = $xmlFields[0] . md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId);
+			}
+
+			// Поле VALUE
+			$fields['FIELDS'] = $this->convertFieldsFromXml($fields['FIELDS']);
+
+			if ($fields['CATEGORY'] && $fields['NAME'] && $fields['FIELDS'])
+			{
+				CUserOptions::SetOption(
+					$fields['CATEGORY'],
+					$fields['NAME'],
+					$fields['FIELDS'],
+					$fields['COMMON'],
+					$fields['USER_ID']
+				);
+				$success = true;
+			}
+		}
+
+		if (!$success)
+		{
+			$exceptionMessage = ExceptionText::getFromString(
+				Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.UPDATE_ERROR')
+			);
+			throw new \Exception($exceptionMessage);
+		}
 	}
 
 	/**
@@ -190,15 +240,15 @@ class ElementFilter extends BaseData
 
 	protected function deleteInner(RecordId $id)
 	{
-		$result = false;
+		$success = false;
 
 		$dbRes = CUserOptions::GetList(array(), array('ID' => $id->getValue()));
 		if ($filter = $dbRes->Fetch())
 		{
-			$result = CUserOptions::DeleteOptionsByName($filter['CATEGORY'], $filter['NAME']);
+			$success = CUserOptions::DeleteOptionsByName($filter['CATEGORY'], $filter['NAME']);
 		}
 
-		if (!$result)
+		if (!$success)
 		{
 			$exceptionMessage = ExceptionText::getFromString(
 				Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.DELETE_ERROR')
@@ -567,6 +617,101 @@ class ElementFilter extends BaseData
 	 */
 	protected function getIbPropertyIdByFilterRow($filterRowName)
 	{
-		return substr($filterRowName, strlen(static::PROPERTY_FIELD_PREFIX)) ?: '';
+		$ibPropertyId = '';
+
+		if ($this->isIbPropertyFilterRow($filterRowName))
+		{
+			$ibPropertyId = substr($filterRowName, strlen(static::PROPERTY_FIELD_PREFIX)) ?: '';
+		}
+
+		return $ibPropertyId;
+	}
+
+	protected function convertFieldsToXml($serializedFields)
+	{
+	}
+
+	protected function convertFieldsFromXml($serializedFields)
+	{
+		$fields = unserialize($serializedFields);
+
+		// Даннные свойств из БД
+		$dbProperties = array();
+		$dbRes = \CIBlockProperty::GetList();
+		while ($prop = $dbRes->Fetch())
+		{
+			$dbProperties[$prop['ID']] = $prop;
+		}
+
+		// Конвертируем данные фильтров
+		$filterIbProperties = array();
+		foreach ($fields['filters'] as &$filter)
+		{
+			/**
+			 * Конвертируем названия свойств в подмассиве filter_rows
+			 * из PROPERTY_<property_xml_id> в PROPERTY_<property_id>
+			 */
+			$filterRows = explode(',', $filter['filter_rows']);
+			foreach	($filterRows as &$filterRowName)
+			{
+				$propXmlId = $this->getIbPropertyIdByFilterRow($filterRowName);
+				if ($propXmlId)
+				{
+					$propId = $filterIbProperties[$propXmlId] ?:
+						Property::getInstance()->findRecord($propXmlId);
+
+					if ($propId)
+					{
+						$filterIbProperties[$propXmlId] = $propId;
+						$filterRowName = static::PROPERTY_FIELD_PREFIX . $propId->getValue();
+					}
+				}
+			}
+			$filter['filter_rows'] = implode(',', $filterRows);
+
+			/**
+			 * Конвертируем названия свойств в подмассиве fields
+			 * из PROPERTY_<property_xml_id> в PROPERTY_<property_id>, а также
+			 * значения списочных свойств из <enum_property_xml_id> в <enum_property_id>
+			 */
+			$newFilterFields = array();
+			foreach	($filter['fields'] as $filterRowName => $filterRowValue)
+			{
+				$newFilterRowName = $filterRowName;
+				$newFilterRowValue = $filterRowValue;
+
+				$propXmlId = $this->getIbPropertyIdByFilterRow($newFilterRowName);
+				if ($propXmlId)
+				{
+					$propId = $filterIbProperties[$propXmlId] ?:
+						Property::getInstance()->findRecord($propXmlId);
+
+					// Название
+					$newFilterRowName = static::PROPERTY_FIELD_PREFIX . $propId->getValue();
+
+					// Значение списочных свойств
+					$propertyData = $dbProperties[$propId->getValue()];
+					if ($propertyData['PROPERTY_TYPE'] === 'L')
+					{
+						if ($propertyData['MULTIPLE'] === 'Y')
+						{
+							foreach ($newFilterRowValue as &$filterRowValueId)
+							{
+								$filterRowValueId = Enum::getInstance()->findRecord($filterRowValueId)->getValue();
+							}
+						}
+						else
+						{
+							$newFilterRowValue = Enum::getInstance()->findRecord($newFilterRowValue)->getValue();
+						}
+					}
+				}
+
+				$newFilterFields[$newFilterRowName] = $newFilterRowValue;
+			}
+			$filter['fields'] = $newFilterFields;
+		}
+
+		return serialize($fields);
 	}
 }
