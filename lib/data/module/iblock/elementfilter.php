@@ -32,6 +32,9 @@ Loc::loadMessages(__FILE__);
  */
 class ElementFilter extends BaseData
 {
+	/**
+	 * Символ-разделитель логических блоков в строке с xmlId.
+	 */
 	const XML_ID_SEPARATOR = '.';
 
 	/**
@@ -107,10 +110,6 @@ class ElementFilter extends BaseData
 					$record->setXmlId($this->getXmlIdFromArray($option));
 					$record->setFieldRaw('COMMON', $option['COMMON']);
 					$record->setFieldRaw('CATEGORY', $option['CATEGORY']);
-
-					// TODO: Нужно ли это поле ?
-					//$record->setFieldRaw('IS_ADMIN', $arFilter['USER_ID'] == 1 ? 'Y' : 'N');
-
 					$this->addPropertiesDependencies($record, $option['VALUE']);
 					$this->setRecordDependencies($record, $option);
 					$result[] = $record;
@@ -123,55 +122,49 @@ class ElementFilter extends BaseData
 
 	public function update(Record $record)
 	{
-		$success = false;
-		$xmlId = $record->getXmlId();
-		$filterId = $this->findRecord($xmlId);
+		$filterId = 0;
+		if ($record->getId())
+		{
+			$filterId = $this->saveFilterFromRecord($record);
+		}
+
+		if (!$filterId)
+		{
+			$exceptionMessage = ExceptionText::getFromString(
+				Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.UPDATE_ERROR')
+			);
+			throw new \Exception($exceptionMessage);
+		}
+	}
+
+	protected function createInner(Record $record)
+	{
+		$filterId = $this->saveFilterFromRecord($record);
 		if ($filterId)
 		{
-			$fields = $record->getFieldsRaw();
-			$xmlFields = $this->getArrayFromXmlId($xmlId);
+			return $this->createId($filterId);
+		}
 
-			// Данные ИБ
-			$iblockInfo = array();
-			$iblockXmlId = $xmlFields[5];
-			$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
-			if (Loader::includeModule('iblock'))
-			{
-				$iblockInfo = \CIBlock::GetByID($iblockId)->GetNext();
-			}
+		$exceptionMessage = ExceptionText::getFromString(
+			Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.ADD_ERROR')
+		);
+		throw new \Exception($exceptionMessage);
+	}
 
-			// Поле USER_ID
-			$fields['USER_ID'] = ($xmlFields[1] === 'Y') ? 1 : 0;
+	protected function deleteInner(RecordId $id)
+	{
+		$success = false;
 
-			// Поле COMMON
-			$fields['COMMON'] = $fields['COMMON'] === 'Y';
-
-			// Поле NAME
-			if ($iblockInfo)
-			{
-				$fields['NAME'] = $xmlFields[0] . md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockId);
-			}
-
-			// Поле VALUE
-			$fields['FIELDS'] = $this->convertFieldsFromXml($fields['FIELDS']);
-
-			if ($fields['CATEGORY'] && $fields['NAME'] && $fields['FIELDS'])
-			{
-				CUserOptions::SetOption(
-					$fields['CATEGORY'],
-					$fields['NAME'],
-					$fields['FIELDS'],
-					$fields['COMMON'],
-					$fields['USER_ID']
-				);
-				$success = true;
-			}
+		$dbRes = CUserOptions::GetList(array(), array('ID' => $id->getValue()));
+		if ($filter = $dbRes->Fetch())
+		{
+			$success = CUserOptions::DeleteOptionsByName($filter['CATEGORY'], $filter['NAME']);
 		}
 
 		if (!$success)
 		{
 			$exceptionMessage = ExceptionText::getFromString(
-				Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.UPDATE_ERROR')
+				Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.DELETE_ERROR')
 			);
 			throw new \Exception($exceptionMessage);
 		}
@@ -193,7 +186,7 @@ class ElementFilter extends BaseData
 		$xmlFilterName = $xmlFields[4];
 		$xmlIblockXmlId = $xmlFields[5];
 
-		// Данные ифнблока
+		// Данные инфблока
 		$iblockInfo = array();
 		$iblockRecord = MigratoIblock::getInstance()->findRecord($xmlIblockXmlId);
 		if ($iblockRecord)
@@ -236,25 +229,6 @@ class ElementFilter extends BaseData
 		}
 
 		return null;
-	}
-
-	protected function deleteInner(RecordId $id)
-	{
-		$success = false;
-
-		$dbRes = CUserOptions::GetList(array(), array('ID' => $id->getValue()));
-		if ($filter = $dbRes->Fetch())
-		{
-			$success = CUserOptions::DeleteOptionsByName($filter['CATEGORY'], $filter['NAME']);
-		}
-
-		if (!$success)
-		{
-			$exceptionMessage = ExceptionText::getFromString(
-				Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.DELETE_ERROR')
-			);
-			throw new \Exception($exceptionMessage);
-		}
 	}
 
 	protected function addPropertiesDependencies(Record $record, $fields)
@@ -405,6 +379,59 @@ class ElementFilter extends BaseData
 	}
 
 	/**
+	 * Формирует настройку фильтра из $record и сохраняет ее в БД.
+	 *
+	 * @param Record $record запись миграции, получаемая на входе методов update(), createInner().
+	 *
+	 * @return int id сохраненной настройки фильтра или 0.
+	 */
+	protected function saveFilterFromRecord(Record $record)
+	{
+		$rawFields = $record->getFieldsRaw();
+		$xmlIdFields = $this->getArrayFromXmlId($record->getXmlId());
+		$iblockInfo = $this->getIblockByXmlId($xmlIdFields[5]);
+
+		// Формируем поля фильтра
+		$rawFields['COMMON'] = $rawFields['COMMON'] === 'Y';
+		$rawFields['USER_ID'] = ($xmlIdFields[1] === 'Y') ? 1 : 0;
+		$rawFields['FIELDS'] = $this->convertFieldsFromXml(unserialize($rawFields['FIELDS']));
+		if ($iblockInfo)
+		{
+			$rawFields['NAME'] = $xmlIdFields[0] . md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockInfo['ID']);
+		}
+
+		// Сохраняем фильтр
+		$filterId = 0;
+		$success = false;
+		if ($rawFields['CATEGORY'] && $rawFields['NAME'] && $rawFields['FIELDS'])
+		{
+			$success = CUserOptions::SetOption(
+				$rawFields['CATEGORY'],
+				$rawFields['NAME'],
+				$rawFields['FIELDS'],
+				$rawFields['COMMON'],
+				$rawFields['USER_ID']
+			);
+		}
+
+		if ($success)
+		{
+			$option = CUserOptions::GetList(
+				array(),
+				array(
+					'CATEGORY' => $rawFields['CATEGORY'],
+					'NAME' => $rawFields['NAME'],
+					'USER_ID' => $rawFields['USER_ID']
+				)
+			)->Fetch();
+
+			$filterId = $option['ID'] ?: 0;
+		}
+
+		return $filterId;
+	}
+
+	/**
 	 * Возвращает id ИБ по названию настройки фильтра.
 	 *
 	 * @param string $filterName название настройки фильтра.
@@ -458,6 +485,42 @@ class ElementFilter extends BaseData
 			}
 		}
 		return array();
+	}
+
+	/**
+	 * Возвращает ИБ по его xmlId.
+	 *
+	 * @param string $iblockXmlId xmlId ИБ.
+	 *
+	 * @return array данные ИБ.
+	 */
+	protected function getIblockByXmlId($iblockXmlId)
+	{
+		$iblockInfo = array();
+		if (Loader::includeModule('iblock'))
+		{
+			$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
+			$iblockInfo = \CIBlock::GetByID($iblockId)->GetNext();
+		}
+
+		return $iblockInfo;
+	}
+
+	/**
+	 * Возвращает свойства ИБ из БД.
+	 *
+	 * @return array массив свойств ИБ.
+	 */
+	protected function getIbProperties()
+	{
+		$dbProperties = array();
+		$dbRes = \CIBlockProperty::GetList();
+		while ($prop = $dbRes->Fetch())
+		{
+			$dbProperties[$prop['ID']] = $prop;
+		}
+
+		return $dbProperties;
 	}
 
 	/**
@@ -631,21 +694,13 @@ class ElementFilter extends BaseData
 	{
 	}
 
-	protected function convertFieldsFromXml($serializedFields)
+	protected function convertFieldsFromXml(array $filterFields)
 	{
-		$fields = unserialize($serializedFields);
-
-		// Даннные свойств из БД
-		$dbProperties = array();
-		$dbRes = \CIBlockProperty::GetList();
-		while ($prop = $dbRes->Fetch())
-		{
-			$dbProperties[$prop['ID']] = $prop;
-		}
+		$dbProperties = $this->getIbProperties();
 
 		// Конвертируем данные фильтров
 		$filterIbProperties = array();
-		foreach ($fields['filters'] as &$filter)
+		foreach ($filterFields['filters'] as &$filter)
 		{
 			/**
 			 * Конвертируем названия свойств в подмассиве filter_rows
@@ -712,6 +767,6 @@ class ElementFilter extends BaseData
 			$filter['fields'] = $newFilterFields;
 		}
 
-		return serialize($fields);
+		return $filterFields;
 	}
 }
