@@ -84,7 +84,6 @@ class ElementFilter extends BaseData
 	public function getList(array $filter = array())
 	{
 		$result = array();
-		$filtersName = array();
 
 		/**
 		 * Типы мигрируемых фильтров:
@@ -104,14 +103,7 @@ class ElementFilter extends BaseData
 			{
 				if (static::isFilter($option))
 				{
-					$filtersName[] = $option;
-					$record = new Record($this);
-					$record->setId($this->createId($option['ID']));
-					$record->setXmlId($this->getXmlIdFromArray($option));
-					$record->setFieldRaw('COMMON', $option['COMMON']);
-					$record->setFieldRaw('CATEGORY', $option['CATEGORY']);
-					$this->addPropertiesDependencies($record, $option['VALUE']);
-					$this->setRecordDependencies($record, $option);
+					$record = $this->createRecordFromArray($option);
 					$result[] = $record;
 				}
 			}
@@ -120,6 +112,11 @@ class ElementFilter extends BaseData
 		return $result;
 	}
 
+	/**
+	 * @param Record $record
+	 *
+	 * @throws \Exception
+	 */
 	public function update(Record $record)
 	{
 		$filterId = 0;
@@ -137,6 +134,12 @@ class ElementFilter extends BaseData
 		}
 	}
 
+	/**
+	 * @param Record $record
+	 *
+	 * @return RecordId
+	 * @throws \Exception
+	 */
 	protected function createInner(Record $record)
 	{
 		$filterId = $this->saveFilterFromRecord($record);
@@ -151,6 +154,11 @@ class ElementFilter extends BaseData
 		throw new \Exception($exceptionMessage);
 	}
 
+	/**
+	 * @param RecordId $id
+	 *
+	 * @throws \Exception
+	 */
 	protected function deleteInner(RecordId $id)
 	{
 		$success = false;
@@ -231,118 +239,77 @@ class ElementFilter extends BaseData
 		return null;
 	}
 
+	/**
+	 * @param \Intervolga\Migrato\Data\RecordId $id
+	 *
+	 * @return string
+	 */
+	public function getXmlId($id)
+	{
+		$dbRes = CUserOptions::GetList(array(), array('ID' => $id->getValue()));
+		if ($filter = $dbRes->Fetch())
+		{
+			return $this->getXmlIdFromArray($filter);
+		}
+		return '';
+	}
+
+	/**
+	 * Создает запись миграции фильтра
+	 * на основе $option.
+	 * 
+	 * @param array $option массив данных фильтра.
+	 *
+	 * @return Record запись миграции фильтра.
+	 */
+	protected function createRecordFromArray(array $option)
+	{
+		$record = new Record($this);
+		$record->setId($this->createId($option['ID']));
+		$record->setXmlId($this->getXmlIdFromArray($option));
+		$record->setFieldRaw('COMMON', $option['COMMON']);
+		$record->setFieldRaw('CATEGORY', $option['CATEGORY']);
+		$this->addPropertiesDependencies($record, $option['VALUE']);
+		$this->setRecordDependencies($record, $option);
+		
+		return $record;
+	}
+
+	/**
+	 * Создает массив данных фильтра
+	 * на основе $record.
+	 *
+	 * @param Record $record запись миграции фильтра.
+	 *
+	 * @return string[] массив данных фильтра.
+	 */
+	protected function createArrayFromRecord(Record $record)
+	{
+		$arFilter = $record->getFieldsRaw();
+		$xmlIdFields = $this->getArrayFromXmlId($record->getXmlId());
+		$iblockInfo = $this->getIblockByXmlId($xmlIdFields[5]);
+
+		// Формируем поля фильтра
+		$arFilter['COMMON'] = $arFilter['COMMON'] === 'Y';
+		$arFilter['USER_ID'] = ($xmlIdFields[1] === 'Y') ? 1 : 0;
+		$arFilter['FIELDS'] = $this->convertFieldsFromXml(unserialize($arFilter['FIELDS']));
+		if ($iblockInfo)
+		{
+			$arFilter['NAME'] = $xmlIdFields[0] . md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockInfo['ID']);
+		}
+
+		return $arFilter;
+	}
+	
 	protected function addPropertiesDependencies(Record $record, $fields)
 	{
-		// TODO: Рефакторинг метода (разбить на методы)
-
-		$properties = array();
 		$propXmlIds = array();
 		$enumPropXmlIds = array();
-		$arFields = unserialize($fields);
 
-		// Соберем id всех, используемых в фильтрах свойств
-		$propertyIds = array();
-		foreach ($arFields['filters'] as $filter)
-		{
-			$filterRows = explode(',', $filter['filter_rows']);
-			foreach ($filterRows as $filterRow)
-			{
-				if (static::isIbPropertyFilterRow($filterRow))
-				{
-					$propertyIds[] = static::getIbPropertyIdByFilterRow($filterRow);
-				}
-			}
-		}
-		$propertyIds = array_unique($propertyIds);
-
-		// Даннные свойств из БД
-		$dbRes = \CIBlockProperty::GetList();
-		while ($prop = $dbRes->Fetch())
-		{
-			$propertyId = $prop['ID'];
-			if (in_array($propertyId, $propertyIds))
-			{
-				$properties[$propertyId]['DATA'] = $prop;
-			}
-		}
-
-		// Получаем xml_id свойств
-		foreach ($propertyIds as $propertyId)
-		{
-			$propertyIdObj = Property::getInstance()->createId($propertyId);
-			$propertyXmlId = Property::getInstance()->getXmlId($propertyIdObj);
-
-			$properties[$propertyId]['PROPERTY_OBJECT'] = $propertyIdObj;
-			$properties[$propertyId]['PROPERTY_XML_ID'] = $propertyXmlId;
-		}
-
-		// Заменяем id свойств на xml_id в исходных фильтрах
-		foreach ($arFields['filters'] as &$filter)
-		{
-			// Заменяем свойства в filter_rows (используемые поля фильтра)
-			$arFilterRows = explode(',', $filter['filter_rows']);
-			foreach	($arFilterRows as &$filterRow)
-			{
-				if (static::isIbPropertyFilterRow($filterRow))
-				{
-					$propertyId = static::getIbPropertyIdByFilterRow($filterRow);
-					$propertyXmlId = $properties[$propertyId]['PROPERTY_XML_ID'];
-					$filterRow = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
-				}
-			}
-			unset($filterRow);
-			$filter['filter_rows'] = implode(',', $arFilterRows);
-
-			// Заменяем свойства в fields (значения полей фильтра)
-			$newFields = array();
-			foreach	($filter['fields'] as $fieldName => $fieldVal)
-			{
-				$newFieldName = $fieldName;
-				if (static::isIbPropertyFilterRow($fieldName))
-				{
-					$propertyId = static::getIbPropertyIdByFilterRow($fieldName);
-					$propertyData = $properties[$propertyId]['DATA'];
-					$propertyXmlId = $properties[$propertyId]['PROPERTY_XML_ID'];
-					$propXmlIds[] = $propertyXmlId;
-
-					// Новое название свойства
-					$newFieldName = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
-
-					// Новое значение для списочного свойства (заменить id значений на xml_id)
-					if ($propertyData['PROPERTY_TYPE'] === 'L')
-					{
-						if ($propertyData['MULTIPLE'] === 'Y')
-						{
-							foreach ($fieldVal as &$fieldValId)
-							{
-								$enumPropId = Enum::getInstance()->createId($fieldValId);
-								$enumPropXmlId = Enum::getInstance()->getXmlId($enumPropId);
-								if ($enumPropXmlId)
-								{
-									$fieldValId = $enumPropXmlId;
-									$enumPropXmlIds[] = $enumPropXmlId;
-								}
-							}
-						}
-						else
-						{
-							$enumPropId = Enum::getInstance()->createId($fieldVal);
-							$enumPropXmlId = Enum::getInstance()->getXmlId($enumPropId);
-							if ($enumPropXmlId)
-							{
-								$fieldVal = $enumPropXmlId;
-								$enumPropXmlIds[] = $enumPropXmlId;
-							}
-						}
-					}
-				}
-
-				$newFields[$newFieldName] = $fieldVal;
-			}
-			$filter['fields'] = $newFields;
-		}
+		$arFields = $this->convertFieldsToXml(unserialize($fields), $propXmlIds, $enumPropXmlIds);
 		$record->setFieldRaw('FIELDS', serialize($arFields));
 
+		// Зависимости от сторонней сущности: значения списочных свойства ИБ
 		if ($enumPropXmlIds)
 		{
 			$enumPropXmlIds = array_unique($enumPropXmlIds);
@@ -351,6 +318,7 @@ class ElementFilter extends BaseData
 			$record->setDependency('PROPERTY_ENUM_ID', $dependency);
 		}
 
+		// Зависимости от сторонней сущности: свойства ИБ
 		if ($propXmlIds)
 		{
 			$propXmlIds = array_unique($propXmlIds);
@@ -360,6 +328,13 @@ class ElementFilter extends BaseData
 		}
 	}
 
+	/**
+	 * Добавляет в запись миграции $record
+	 * зависимости от сторонных сущностей.
+	 *
+	 * @param Record $record запись миграции фильтра.
+	 * @param array $filter массив данных фильтра.
+	 */
 	public function setRecordDependencies(Record $record, array $filter)
 	{
 		//IBLOCK_ID
@@ -387,41 +362,31 @@ class ElementFilter extends BaseData
 	 */
 	protected function saveFilterFromRecord(Record $record)
 	{
-		$rawFields = $record->getFieldsRaw();
-		$xmlIdFields = $this->getArrayFromXmlId($record->getXmlId());
-		$iblockInfo = $this->getIblockByXmlId($xmlIdFields[5]);
-
-		// Формируем поля фильтра
-		$rawFields['COMMON'] = $rawFields['COMMON'] === 'Y';
-		$rawFields['USER_ID'] = ($xmlIdFields[1] === 'Y') ? 1 : 0;
-		$rawFields['FIELDS'] = $this->convertFieldsFromXml(unserialize($rawFields['FIELDS']));
-		if ($iblockInfo)
-		{
-			$rawFields['NAME'] = $xmlIdFields[0] . md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockInfo['ID']);
-		}
+		$arFilter = $this->createArrayFromRecord($record);
 
 		// Сохраняем фильтр
 		$filterId = 0;
 		$success = false;
-		if ($rawFields['CATEGORY'] && $rawFields['NAME'] && $rawFields['FIELDS'])
+		if ($arFilter['CATEGORY'] && $arFilter['NAME'] && $arFilter['FIELDS'])
 		{
 			$success = CUserOptions::SetOption(
-				$rawFields['CATEGORY'],
-				$rawFields['NAME'],
-				$rawFields['FIELDS'],
-				$rawFields['COMMON'],
-				$rawFields['USER_ID']
+				$arFilter['CATEGORY'],
+				$arFilter['NAME'],
+				$arFilter['FIELDS'],
+				$arFilter['COMMON'],
+				$arFilter['USER_ID']
 			);
 		}
 
+		// Проверяем успешность сохранения фильтра
 		if ($success)
 		{
 			$option = CUserOptions::GetList(
 				array(),
 				array(
-					'CATEGORY' => $rawFields['CATEGORY'],
-					'NAME' => $rawFields['NAME'],
-					'USER_ID' => $rawFields['USER_ID']
+					'CATEGORY' => $arFilter['CATEGORY'],
+					'NAME' => $arFilter['NAME'],
+					'USER_ID' => $arFilter['USER_ID']
 				)
 			)->Fetch();
 
@@ -524,8 +489,34 @@ class ElementFilter extends BaseData
 	}
 
 	/**
-	 * @param array $filter - filter fields
-	 * @return string
+	 * Возвращает свойства ИБ из БД, отфильтрованные по id.
+	 *
+	 * @param array $ibPropertyIds массив id свойств ИБ.
+	 *
+	 * @return array массив свойств ИБ.
+	 */
+	protected function getIbPropertiesById(array $ibPropertyIds)
+	{
+		$dbProperties = array();
+		$dbRes = \CIBlockProperty::GetList();
+		while ($prop = $dbRes->Fetch())
+		{
+			if (in_array($prop['ID'], $ibPropertyIds))
+			{
+				$dbProperties[$prop['ID']] = $prop;
+			}
+		}
+
+		return $dbProperties;
+	}
+
+	/**
+	 * Возвращает xmlId фильтра
+	 * на основе $filter.
+	 *
+	 * @param array $filter массив данных фильтра.
+	 *
+	 * @return string xmlId фильтра.
 	 */
 	protected function getXmlIdFromArray(array $filter)
 	{
@@ -556,23 +547,12 @@ class ElementFilter extends BaseData
 	}
 
 	/**
-	 * @param \Intervolga\Migrato\Data\RecordId $id
+	 * Возвращает массив данных фильтра
+	 * на основе $xmlId.
 	 *
-	 * @return string
-	 */
-	public function getXmlId($id)
-	{
-		$dbRes = CUserOptions::GetList(array(), array('ID' => $id->getValue()));
-		if ($filter = $dbRes->Fetch())
-		{
-			return $this->getXmlIdFromArray($filter);
-		}
-		return '';
-	}
-
-	/**
-	 * @param string $xmlId
-	 * @return array
+	 * @param string $xmlId xmlId фильтра.
+	 *
+	 * @return array массив данных фильтра.
 	 */
 	protected function getArrayFromXmlId($xmlId)
 	{
@@ -690,10 +670,138 @@ class ElementFilter extends BaseData
 		return $ibPropertyId;
 	}
 
-	protected function convertFieldsToXml($serializedFields)
+	/**
+	 * Возвращает id свойств ИБ, используемых в полях фильтра $filterFields.
+	 *
+	 * @param array $filterFields поля фильтра.
+	 *
+	 * @return array id свойств ИБ, используемых в фильтре.
+	 */
+	protected function getIbPropertiesUsedInFilter(array $filterFields)
 	{
+		$propertyIds = array();
+		foreach ($filterFields['filters'] as $filter)
+		{
+			$filterRows = explode(',', $filter['filter_rows']);
+			foreach ($filterRows as $filterRow)
+			{
+				if (static::isIbPropertyFilterRow($filterRow))
+				{
+					$propertyIds[] = static::getIbPropertyIdByFilterRow($filterRow);
+				}
+			}
+		}
+
+		return array_unique($propertyIds);
 	}
 
+	/**
+	 * Конвертирует поля фильтра в формат (xml), пригодный для выгрузки.
+	 *
+	 * @param array $filterFields поля фильтра.
+	 * @param array $propXmlIds xmlId свойств ИБ, которые были сконвертированы.
+	 * @param array $enumPropXmlIds xmlId значений списочных свойств ИБ, которые были сконвертированы.
+	 *
+	 * @return array поля фильтра в форме, пригодном для выгрузки.
+	 */
+	protected function convertFieldsToXml(array $filterFields, array &$propXmlIds, array &$enumPropXmlIds)
+	{
+		$propertyIds = $this->getIbPropertiesUsedInFilter($filterFields);
+		$properties = $this->getIbPropertiesById($propertyIds);
+
+		// Получаем xml_id свойств
+		foreach ($propertyIds as $propertyId)
+		{
+			$propertyIdObj = Property::getInstance()->createId($propertyId);
+			$propertyXmlId = Property::getInstance()->getXmlId($propertyIdObj);
+
+			$properties[$propertyId]['PROPERTY_OBJECT'] = $propertyIdObj;
+			$properties[$propertyId]['PROPERTY_XML_ID'] = $propertyXmlId;
+		}
+
+		// Конвертируем данные фильтров
+		foreach ($filterFields['filters'] as &$filter)
+		{
+			/**
+			 * Конвертируем названия свойств в подмассиве filter_rows
+			 * из PROPERTY_<property_id> в PROPERTY_<property_xml_id>
+			 */
+			$arFilterRows = explode(',', $filter['filter_rows']);
+			foreach	($arFilterRows as &$filterRow)
+			{
+				if (static::isIbPropertyFilterRow($filterRow))
+				{
+					$propertyId = static::getIbPropertyIdByFilterRow($filterRow);
+					$propertyXmlId = $properties[$propertyId]['PROPERTY_XML_ID'];
+					$filterRow = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
+				}
+			}
+			unset($filterRow);
+			$filter['filter_rows'] = implode(',', $arFilterRows);
+
+			/**
+			 * Конвертируем названия свойств в подмассиве fields
+			 * из PROPERTY_<property_id> в PROPERTY_<property_xml_id>, а также
+			 * значения списочных свойств из <enum_property_id> в <enum_property_xml_id>
+			 */
+			$newFields = array();
+			foreach	($filter['fields'] as $fieldName => $fieldVal)
+			{
+				$newFieldName = $fieldName;
+				if (static::isIbPropertyFilterRow($fieldName))
+				{
+					$propertyId = static::getIbPropertyIdByFilterRow($fieldName);
+					$propertyData = $properties[$propertyId];
+					$propertyXmlId = $propertyData['PROPERTY_XML_ID'];
+					$propXmlIds[] = $propertyXmlId;
+
+					// Название
+					$newFieldName = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
+
+					// Значение списочных свойств
+					if ($propertyData['PROPERTY_TYPE'] === 'L')
+					{
+						if ($propertyData['MULTIPLE'] === 'Y')
+						{
+							foreach ($fieldVal as &$fieldValId)
+							{
+								$enumPropId = Enum::getInstance()->createId($fieldValId);
+								$enumPropXmlId = Enum::getInstance()->getXmlId($enumPropId);
+								if ($enumPropXmlId)
+								{
+									$fieldValId = $enumPropXmlId;
+									$enumPropXmlIds[] = $enumPropXmlId;
+								}
+							}
+						}
+						else
+						{
+							$enumPropId = Enum::getInstance()->createId($fieldVal);
+							$enumPropXmlId = Enum::getInstance()->getXmlId($enumPropId);
+							if ($enumPropXmlId)
+							{
+								$fieldVal = $enumPropXmlId;
+								$enumPropXmlIds[] = $enumPropXmlId;
+							}
+						}
+					}
+				}
+
+				$newFields[$newFieldName] = $fieldVal;
+			}
+			$filter['fields'] = $newFields;
+		}
+
+		return $filterFields;
+	}
+
+	/**
+	 * Конвертирует поля фильтра в формат (xml), пригодный для сохранения в БД.
+	 *
+	 * @param array $filterFields поля фильтра.
+	 *
+	 * @return array поля фильтра в формате, пригодном для сохранения в БД.
+	 */
 	protected function convertFieldsFromXml(array $filterFields)
 	{
 		$dbProperties = $this->getIbProperties();
@@ -723,6 +831,7 @@ class ElementFilter extends BaseData
 				}
 			}
 			$filter['filter_rows'] = implode(',', $filterRows);
+			unset($filterRowName);
 
 			/**
 			 * Конвертируем названия свойств в подмассиве fields
