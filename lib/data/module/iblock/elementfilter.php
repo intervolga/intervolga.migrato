@@ -38,6 +38,11 @@ class ElementFilter extends BaseData
 	const XML_ID_SEPARATOR = '.';
 
 	/**
+	 * Регулярное выражения для определения, является ли поле фильтра - фильтром свойства элемента ИБ.
+	 */
+	const IB_PROPERTY_NAME_REGEX = '/(.*)PROPERTY_(\d+)(.*)/';
+
+	/**
 	 * Соответствие типов фильтра названиям настроек.
 	 * COMMON_VIEW - фильтр для ИБ (режим прссмотра - совместный).
 	 * SEPARATE_VIEW_SECTION - фильтр для разделов ИБ (режим просмотра - раздельный)
@@ -648,8 +653,14 @@ class ElementFilter extends BaseData
 	 */
 	protected function isIbPropertyFilterRow($filterRowName)
 	{
-		return strpos($filterRowName, static::PROPERTY_FIELD_PREFIX) === 0;
+		$isMatch = false;
+		$matches = array();
+
+		$this->testStringAgainstIbPropertyRegex($filterRowName, $isMatch, $matches);
+
+		return ($isMatch && $matches[2]);
 	}
+
 
 	/**
 	 * Возвращает id свойства элемента ИБ по названию поля фильтра.
@@ -660,14 +671,12 @@ class ElementFilter extends BaseData
 	 */
 	protected function getIbPropertyIdByFilterRow($filterRowName)
 	{
-		$ibPropertyId = '';
+		$isMatch = false;
+		$matches = array();
 
-		if ($this->isIbPropertyFilterRow($filterRowName))
-		{
-			$ibPropertyId = substr($filterRowName, strlen(static::PROPERTY_FIELD_PREFIX)) ?: '';
-		}
+		$this->testStringAgainstIbPropertyRegex($filterRowName, $isMatch, $matches);
 
-		return $ibPropertyId;
+		return ($isMatch && $matches[2]) ? $matches[2] : '';
 	}
 
 	/**
@@ -685,14 +694,31 @@ class ElementFilter extends BaseData
 			$filterRows = explode(',', $filter['filter_rows']);
 			foreach ($filterRows as $filterRow)
 			{
-				if (static::isIbPropertyFilterRow($filterRow))
+				$isMatch = false;
+				$matches = array();
+
+				$this->testStringAgainstIbPropertyRegex($filterRow, $isMatch, $matches);
+				if ($isMatch && $matches[2])
 				{
-					$propertyIds[] = static::getIbPropertyIdByFilterRow($filterRow);
+					$propertyIds[] = $matches[2];
 				}
 			}
 		}
 
 		return array_unique($propertyIds);
+	}
+
+	/**
+	 * Проверяет строку $string на соответсвие регулярному выражению
+	 * для названия фильтра свойства элемента ИБ.
+	 *
+	 * @param string $string проверяемая строка.
+	 * @param bool $isMatch признак соответствия проверяемой строки регулярному выражению.
+	 * @param array $matches массив совпадений.
+	 */
+	protected function testStringAgainstIbPropertyRegex($string, &$isMatch, &$matches)
+	{
+		$isMatch = preg_match(static::IB_PROPERTY_NAME_REGEX, $string, $matches);
 	}
 
 	/**
@@ -729,12 +755,7 @@ class ElementFilter extends BaseData
 			$arFilterRows = explode(',', $filter['filter_rows']);
 			foreach	($arFilterRows as &$filterRow)
 			{
-				if (static::isIbPropertyFilterRow($filterRow))
-				{
-					$propertyId = static::getIbPropertyIdByFilterRow($filterRow);
-					$propertyXmlId = $properties[$propertyId]['PROPERTY_XML_ID'];
-					$filterRow = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
-				}
+				$this->convertFilterRowToXml($filterRow, $properties);
 			}
 			unset($filterRow);
 			$filter['filter_rows'] = implode(',', $arFilterRows);
@@ -756,7 +777,7 @@ class ElementFilter extends BaseData
 					$propXmlIds[] = $propertyXmlId;
 
 					// Название
-					$newFieldName = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
+					$this->convertFilterRowToXml($newFieldName, $properties);
 
 					// Значение списочных свойств
 					if ($propertyData['PROPERTY_TYPE'] === 'L')
@@ -796,7 +817,40 @@ class ElementFilter extends BaseData
 	}
 
 	/**
-	 * Конвертирует поля фильтра в формат (xml), пригодный для сохранения в БД.
+	 * Конвертирует название поля фильтра в формат (xml), пригодный для выгрузки.
+	 *
+	 * @param string $filterRow название поля фильтра
+	 * @param array $propertiesInfo массив с xml_id свойств.
+	 */
+	protected function convertFilterRowToXml(&$filterRow, $propertiesInfo)
+	{
+		$isMatch = false;
+		$matches = array();
+
+		$this->testStringAgainstIbPropertyRegex($filterRow, $isMatch, $matches);
+
+		if ($isMatch && $matches[2])
+		{
+			$filterRowPrefix = $matches[1];
+			$filterRowPostfix = $matches[3];
+			$propertyId = $matches[2];
+
+			$propertyXmlId = $propertiesInfo[$propertyId]['PROPERTY_XML_ID'];
+
+			$filterRow = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
+			if ($filterRowPrefix)
+			{
+				$filterRow = $filterRowPrefix . $filterRow;
+			}
+			if ($filterRowPostfix)
+			{
+				$filterRow = $filterRow . $filterRowPostfix;
+			}
+		}
+	}
+
+	/**
+	 * Конвертирует поля фильтра в формат, пригодный для сохранения в БД.
 	 *
 	 * @param array $filterFields поля фильтра.
 	 *
