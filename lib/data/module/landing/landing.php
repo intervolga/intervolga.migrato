@@ -19,9 +19,9 @@ class Landing extends BaseData
 		$this->setVirtualXmlId(true);
 		Loader::includeModule("landing");
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.LANDING_LANDING_TYPE'));
-//		$this->setDependencies(array(
-//			'SITE' => new Link(Site::getInstance()),
-//		));
+		$this->setDependencies(array(
+			'SITE' => new Link(Site::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -45,13 +45,13 @@ class Landing extends BaseData
 				"FOLDER" => $landing["FOLDER"],
 				"FOLDER_ID" => $landing["FOLDER_ID"],
 				"XML_ID" => $landing["XML_ID"],
-				"SITE_ID" => $landing["SITE_ID"],
+				//"SITE_ID" => $landing["SITE_ID"],
 			));
-//			$dependency = clone $this->getDependency("SITE");
-//			$dependency->setValue(
-//				Site::getInstance()->getXmlId(Site::getInstance()->createId($landing['SITE_ID']))
-//			);
-//			$record->setDependency("SITE", $dependency);
+			$dependency = clone $this->getDependency("SITE");
+			$dependency->setValue(
+				Site::getInstance()->getXmlId(Site::getInstance()->createId($landing['SITE_ID']))
+			);
+			$record->setDependency("SITE", $dependency);
 			$result[] = $record;
 		}
 		return $result;
@@ -114,8 +114,17 @@ class Landing extends BaseData
 			'FOLDER' => $record->getFieldRaw('FOLDER'),
 			"FOLDER_ID" => $record->getFieldRaw("FOLDER_ID"),
 			'XML_ID' => $record->getFieldRaw('XML_ID'),
-			'SITE_ID' => $record->getFieldRaw('SITE_ID'),
 		);
+
+		if ($dependency = $record->getDependency('SITE'))
+		{
+			$linkXmlId = $dependency->getValue();
+			$idObject = Site::getInstance()->findRecord($linkXmlId);
+			if ($idObject)
+			{
+				$array['SITE_ID'] = $idObject->getValue();
+			}
+		}
 
 		return $array;
 	}
