@@ -8,6 +8,7 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\ExceptionText;
 use \Bitrix\Landing\Landing as CLanding;
+use Intervolga\Migrato\Data\Link;
 
 Loc::loadMessages(__FILE__);
 
@@ -18,6 +19,9 @@ class Landing extends BaseData
 		$this->setVirtualXmlId(true);
 		Loader::includeModule("landing");
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.LANDING_LANDING_TYPE'));
+//		$this->setDependencies(array(
+//			'SITE' => new Link(Site::getInstance()),
+//		));
 	}
 
 	public function getList(array $filter = array())
@@ -31,6 +35,7 @@ class Landing extends BaseData
 			$record->setId($id);
 			$record->setXmlId($landing['CODE']);
 			$record->addFieldsRaw(array(
+				"CODE" => $landing["CODE"],
 				"RULE" => $landing["RULE"],
 				"ACTIVE" => $landing["ACTIVE"],
 				"PUBLIC" => $landing["PUBLIC"],
@@ -42,6 +47,11 @@ class Landing extends BaseData
 				"XML_ID" => $landing["XML_ID"],
 				"SITE_ID" => $landing["SITE_ID"],
 			));
+//			$dependency = clone $this->getDependency("SITE");
+//			$dependency->setValue(
+//				Site::getInstance()->getXmlId(Site::getInstance()->createId($landing['SITE_ID']))
+//			);
+//			$record->setDependency("SITE", $dependency);
 			$result[] = $record;
 		}
 		return $result;
@@ -94,7 +104,7 @@ class Landing extends BaseData
 	protected function recordToArray(Record $record)
 	{
 		$array = array(
-			'CODE' => $record->getXmlId(),
+			'CODE' => $record->getFieldRaw('CODE'),
 			'RULE' => $record->getFieldRaw('RULE'),
 			'ACTIVE' => $record->getFieldRaw('ACTIVE'),
 			'PUBLIC' => $record->getFieldRaw('PUBLIC'),
