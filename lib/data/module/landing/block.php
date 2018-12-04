@@ -20,10 +20,9 @@ class Block extends BaseData
 		$this->setVirtualXmlId(true);
 		Loader::includeModule("landing");
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.LANDING_BLOCK_TYPE'));
-		$this->setDependencies(array(
-			'LANDING' => new Link(Landing::getInstance()),
+		$this->setReferences(array(
+			'LID' => new Link(Landing::getInstance()),
 		));
-
 	}
 
 	public function getList(array $filter = array())
@@ -44,13 +43,14 @@ class Block extends BaseData
 				"DELETED" => $block["DELETED"],
 				"ACCESS" => $block["ACCESS"],
 				"CONTENT" => $block["CONTENT"],
-				"LID" => $block["LID"],
 			));
-			$dependency = clone $this->getDependency("LANDING");
-			$dependency->setValue(
-				Landing::getInstance()->getXmlId(RecordId::createNumericId($block['LID']))
+
+			$reference = clone $this->getReference("LID");
+			$reference->setValue(
+				Landing::getInstance()->getXmlId(RecordId::createNumericId($block["LID"]))
 			);
-			$record->setDependency("LANDING", $dependency);
+			$record->setReference("LID", $reference);
+
 			$result[] = $record;
 		}
 		return $result;
@@ -90,7 +90,7 @@ class Block extends BaseData
 	{
 		$array = array(
 			'CODE' => $record->getFieldRaw('CODE'),
-			'LID' => $record->getFieldRaw('LID'),
+			//'LID' => $record->getFieldRaw('LID'),
 			'SORT' => $record->getFieldRaw('SORT'),
 			'ACTIVE' => $record->getFieldRaw('ACTIVE'),
 			'PUBLIC' => $record->getFieldRaw('PUBLIC'),
@@ -98,6 +98,14 @@ class Block extends BaseData
 			'ACCESS' => $record->getFieldRaw('ACCESS'),
 			'CONTENT' => $record->getFieldRaw('CONTENT'),
 		);
+
+		if ($reference = $record->getReference("LID"))
+		{
+			if ($reference->getId())
+			{
+				$array["LID"] = $reference->getId()->getValue();
+			}
+		}
 
 		return $array;
 	}
