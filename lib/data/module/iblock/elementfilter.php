@@ -40,7 +40,7 @@ class ElementFilter extends BaseData
 	/**
 	 * Регулярное выражения для определения, является ли поле фильтра - фильтром свойства элемента ИБ.
 	 */
-	const IB_PROPERTY_NAME_REGEX = '/(.*)PROPERTY_(\d+)(.*)/';
+	const IB_PROPERTY_NAME_REGEX = '/^([^_]*_?)PROPERTY_([^_\s]+)(_?.*)$/';
 
 	/**
 	 * Соответствие типов фильтра названиям настроек.
@@ -661,7 +661,6 @@ class ElementFilter extends BaseData
 		return ($isMatch && $matches[2]);
 	}
 
-
 	/**
 	 * Возвращает id свойства элемента ИБ по названию поля фильтра.
 	 *
@@ -735,61 +734,50 @@ class ElementFilter extends BaseData
 		$propertyIds = $this->getIbPropertiesUsedInFilter($filterFields);
 		$properties = $this->getIbPropertiesById($propertyIds);
 
-		// Получаем xml_id свойств
-		foreach ($propertyIds as $propertyId)
-		{
-			$propertyIdObj = Property::getInstance()->createId($propertyId);
-			$propertyXmlId = Property::getInstance()->getXmlId($propertyIdObj);
-
-			$properties[$propertyId]['PROPERTY_OBJECT'] = $propertyIdObj;
-			$properties[$propertyId]['PROPERTY_XML_ID'] = $propertyXmlId;
-		}
-
-		// Массив вида: <property_id> => <property_xml_id>
-		$propertiesXmlId = array_map(function ($property) {
-			return $property['PROPERTY_XML_ID'];
-		}, $properties);
-
 		// Конвертируем данные фильтров
 		foreach ($filterFields['filters'] as &$filter)
 		{
 			/**
 			 * Конвертируем названия свойств в подмассиве filter_rows
-			 * из PROPERTY_<property_id> в PROPERTY_<property_xml_id>
+			 * из (prefix_)PROPERTY_<property_id>(_postfix)
+			 * в (prefix_)PROPERTY_<property_xml_id>(_postfix)
 			 */
 			$arFilterRows = explode(',', $filter['filter_rows']);
 			foreach	($arFilterRows as &$filterRow)
 			{
-				$this->convertFilterRowToXml($filterRow, $propertiesXmlId);
+				$this->convertFilterRowToXml($filterRow);
 			}
 			unset($filterRow);
 			$filter['filter_rows'] = implode(',', $arFilterRows);
 
 			/**
 			 * Конвертируем названия свойств в подмассиве fields
-			 * из PROPERTY_<property_id> в PROPERTY_<property_xml_id>, а также
+			 * из (prefix_)PROPERTY_<property_id>(_postfix)
+			 * в (prefix_)PROPERTY_<property_xml_id>(_postfix),
+			 * а также
 			 * значения списочных свойств из <enum_property_id> в <enum_property_xml_id>
 			 */
 			$newFields = array();
 			foreach	($filter['fields'] as $fieldName => $fieldVal)
 			{
 				$newFieldName = $fieldName;
-				if (static::isIbPropertyFilterRow($fieldName))
+				$newFieldVal = $fieldVal;
+
+				// Название
+				$propertyXmlId = $this->convertFilterRowToXml($newFieldName);
+
+				if ($propertyXmlId)
 				{
 					$propertyId = static::getIbPropertyIdByFilterRow($fieldName);
 					$propertyData = $properties[$propertyId];
-					$propertyXmlId = $propertyData['PROPERTY_XML_ID'];
 					$propXmlIds[] = $propertyXmlId;
-
-					// Название
-					$this->convertFilterRowToXml($newFieldName, $propertiesXmlId);
 
 					// Значение списочных свойств
 					if ($propertyData['PROPERTY_TYPE'] === 'L')
 					{
 						if ($propertyData['MULTIPLE'] === 'Y')
 						{
-							foreach ($fieldVal as &$fieldValId)
+							foreach ($newFieldVal as &$fieldValId)
 							{
 								$enumPropId = Enum::getInstance()->createId($fieldValId);
 								$enumPropXmlId = Enum::getInstance()->getXmlId($enumPropId);
@@ -802,18 +790,18 @@ class ElementFilter extends BaseData
 						}
 						else
 						{
-							$enumPropId = Enum::getInstance()->createId($fieldVal);
+							$enumPropId = Enum::getInstance()->createId($newFieldVal);
 							$enumPropXmlId = Enum::getInstance()->getXmlId($enumPropId);
 							if ($enumPropXmlId)
 							{
-								$fieldVal = $enumPropXmlId;
+								$newFieldVal = $enumPropXmlId;
 								$enumPropXmlIds[] = $enumPropXmlId;
 							}
 						}
 					}
 				}
 
-				$newFields[$newFieldName] = $fieldVal;
+				$newFields[$newFieldName] = $newFieldVal;
 			}
 			$filter['fields'] = $newFields;
 		}
@@ -825,22 +813,29 @@ class ElementFilter extends BaseData
 	 * Конвертирует название поля фильтра в формат (xml), пригодный для выгрузки.
 	 *
 	 * @param string $filterRow название поля фильтра
-	 * @param array $propertiesXmlId массив с xml_id свойств.
+	 *
+	 * @return string xml_id свойства элемента ИБ
+	 *                или
+	 * 			 	  пустая строка, если конвертация не производилась.
 	 */
-	protected function convertFilterRowToXml(&$filterRow, $propertiesXmlId)
+	protected function convertFilterRowToXml(&$filterRow)
 	{
+		$propertyXmlId = '';
 		$isMatch = false;
 		$matches = array();
 
+		/**
+		 * Проверка, что поле фильтра является фильтром свойства элемента ИБ
+		 */
 		$this->testStringAgainstIbPropertyRegex($filterRow, $isMatch, $matches);
-
 		if ($isMatch && $matches[2])
 		{
 			$filterRowPrefix = $matches[1];
 			$filterRowPostfix = $matches[3];
 			$propertyId = $matches[2];
 
-			$propertyXmlId = $propertiesXmlId[$propertyId];
+			$propertyIdObj = Property::getInstance()->createId($propertyId);
+			$propertyXmlId = Property::getInstance()->getXmlId($propertyIdObj);
 
 			$filterRow = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
 			if ($filterRowPrefix)
@@ -852,6 +847,51 @@ class ElementFilter extends BaseData
 				$filterRow = $filterRow . $filterRowPostfix;
 			}
 		}
+
+		return $propertyXmlId;
+	}
+
+	/**
+	 * Конвертирует название поля фильтра в формат, пригодный для сохранения в БД.
+	 *
+	 * @param string $filterRow название поля фильтра
+	 *
+	 * @return int id свойства элемента ИБ
+	 * 			   или
+	 * 			   0, если конвертация не производилась.
+	 */
+	protected function convertFilterRowFromXml(&$filterRow)
+	{
+		$propertyId = 0;
+		$isMatch = false;
+		$matches = array();
+
+		/**
+		 * Проверка, что поле фильтра является фильтром свойства элемента ИБ
+		 */
+		$this->testStringAgainstIbPropertyRegex($filterRow, $isMatch, $matches);
+		if ($isMatch && $matches[2])
+		{
+			$filterRowPrefix = $matches[1];
+			$filterRowPostfix = $matches[3];
+			$propertyXmlId = $matches[2];
+
+			$propertyId = Property::getInstance()->findRecord($propertyXmlId);
+			if ($propertyId = $propertyId->getValue())
+			{
+				$filterRow = static::PROPERTY_FIELD_PREFIX . $propertyId;
+				if ($filterRowPrefix)
+				{
+					$filterRow = $filterRowPrefix . $filterRow;
+				}
+				if ($filterRowPostfix)
+				{
+					$filterRow = $filterRow . $filterRowPostfix;
+				}
+			}
+		}
+
+		return $propertyId;
 	}
 
 	/**
@@ -866,35 +906,26 @@ class ElementFilter extends BaseData
 		$dbProperties = $this->getIbProperties();
 
 		// Конвертируем данные фильтров
-		$filterIbProperties = array();
 		foreach ($filterFields['filters'] as &$filter)
 		{
 			/**
 			 * Конвертируем названия свойств в подмассиве filter_rows
-			 * из PROPERTY_<property_xml_id> в PROPERTY_<property_id>
+			 * из (prefix_)PROPERTY_<property_xml_id>(_postfix)
+			 * в (prefix_)PROPERTY_<property_id>(_postfix)
 			 */
 			$filterRows = explode(',', $filter['filter_rows']);
 			foreach	($filterRows as &$filterRowName)
 			{
-				$propXmlId = $this->getIbPropertyIdByFilterRow($filterRowName);
-				if ($propXmlId)
-				{
-					$propId = $filterIbProperties[$propXmlId] ?:
-						Property::getInstance()->findRecord($propXmlId);
-
-					if ($propId)
-					{
-						$filterIbProperties[$propXmlId] = $propId;
-						$filterRowName = static::PROPERTY_FIELD_PREFIX . $propId->getValue();
-					}
-				}
+				$this->convertFilterRowFromXml($filterRowName);
 			}
 			$filter['filter_rows'] = implode(',', $filterRows);
 			unset($filterRowName);
 
 			/**
 			 * Конвертируем названия свойств в подмассиве fields
-			 * из PROPERTY_<property_xml_id> в PROPERTY_<property_id>, а также
+			 * из (prefix_)PROPERTY_<property_xml_id>(_postfix)
+			 * в (prefix_)PROPERTY_<property_id>(_postfix),
+			 * а также
 			 * значения списочных свойств из <enum_property_xml_id> в <enum_property_id>
 			 */
 			$newFilterFields = array();
@@ -903,24 +934,23 @@ class ElementFilter extends BaseData
 				$newFilterRowName = $filterRowName;
 				$newFilterRowValue = $filterRowValue;
 
-				$propXmlId = $this->getIbPropertyIdByFilterRow($newFilterRowName);
-				if ($propXmlId)
+				// Название
+				$propertyId = $this->convertFilterRowFromXml($newFilterRowName);
+
+				if ($propertyId)
 				{
-					$propId = $filterIbProperties[$propXmlId] ?:
-						Property::getInstance()->findRecord($propXmlId);
-
-					// Название
-					$newFilterRowName = static::PROPERTY_FIELD_PREFIX . $propId->getValue();
-
 					// Значение списочных свойств
-					$propertyData = $dbProperties[$propId->getValue()];
+					$propertyData = $dbProperties[$propertyId];
 					if ($propertyData['PROPERTY_TYPE'] === 'L')
 					{
 						if ($propertyData['MULTIPLE'] === 'Y')
 						{
 							foreach ($newFilterRowValue as &$filterRowValueId)
 							{
-								$filterRowValueId = Enum::getInstance()->findRecord($filterRowValueId)->getValue();
+								if ($filterRowValueId && $filterRowValueId !== 'NOT_REF')
+								{
+									$filterRowValueId = Enum::getInstance()->findRecord($filterRowValueId)->getValue();
+								}
 							}
 						}
 						else
