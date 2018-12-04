@@ -745,6 +745,11 @@ class ElementFilter extends BaseData
 			$properties[$propertyId]['PROPERTY_XML_ID'] = $propertyXmlId;
 		}
 
+		// Массив вида: <property_id> => <property_xml_id>
+		$propertiesXmlId = array_map(function ($property) {
+			return $property['PROPERTY_XML_ID'];
+		}, $properties);
+
 		// Конвертируем данные фильтров
 		foreach ($filterFields['filters'] as &$filter)
 		{
@@ -755,7 +760,7 @@ class ElementFilter extends BaseData
 			$arFilterRows = explode(',', $filter['filter_rows']);
 			foreach	($arFilterRows as &$filterRow)
 			{
-				$this->convertFilterRowToXml($filterRow, $properties);
+				$this->convertFilterRowToXml($filterRow, $propertiesXmlId);
 			}
 			unset($filterRow);
 			$filter['filter_rows'] = implode(',', $arFilterRows);
@@ -777,7 +782,7 @@ class ElementFilter extends BaseData
 					$propXmlIds[] = $propertyXmlId;
 
 					// Название
-					$this->convertFilterRowToXml($newFieldName, $properties);
+					$this->convertFilterRowToXml($newFieldName, $propertiesXmlId);
 
 					// Значение списочных свойств
 					if ($propertyData['PROPERTY_TYPE'] === 'L')
@@ -820,9 +825,9 @@ class ElementFilter extends BaseData
 	 * Конвертирует название поля фильтра в формат (xml), пригодный для выгрузки.
 	 *
 	 * @param string $filterRow название поля фильтра
-	 * @param array $propertiesInfo массив с xml_id свойств.
+	 * @param array $propertiesXmlId массив с xml_id свойств.
 	 */
-	protected function convertFilterRowToXml(&$filterRow, $propertiesInfo)
+	protected function convertFilterRowToXml(&$filterRow, $propertiesXmlId)
 	{
 		$isMatch = false;
 		$matches = array();
@@ -835,7 +840,7 @@ class ElementFilter extends BaseData
 			$filterRowPostfix = $matches[3];
 			$propertyId = $matches[2];
 
-			$propertyXmlId = $propertiesInfo[$propertyId]['PROPERTY_XML_ID'];
+			$propertyXmlId = $propertiesXmlId[$propertyId];
 
 			$filterRow = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
 			if ($filterRowPrefix)
