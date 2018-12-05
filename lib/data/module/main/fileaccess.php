@@ -240,7 +240,16 @@ class FileAccess extends BaseData
 				$this->addGroupDependency($record, $group);
 			}
 
-			return $record;
+
+			if (is_numeric($group) || $isForAll || preg_match('/^G([0-9]+)$/', $group))
+			{
+				return $record;
+			}
+			else
+			{
+				$record->registerValidateError("Несуществующий код группы: " . $group);
+				return $record;
+			}
 		}
 
 		return null;
