@@ -20,7 +20,7 @@ class Landing extends BaseData
 		Loader::includeModule("landing");
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.LANDING_LANDING_TYPE'));
 		$this->setDependencies(array(
-			'SITE' => new Link(Site::getInstance()),
+			'SITE_ID' => new Link(Site::getInstance()),
 		));
 	}
 
@@ -45,13 +45,12 @@ class Landing extends BaseData
 				"FOLDER" => $landing["FOLDER"],
 				"FOLDER_ID" => $landing["FOLDER_ID"],
 				"XML_ID" => $landing["XML_ID"],
-				//"SITE_ID" => $landing["SITE_ID"],
 			));
-			$dependency = clone $this->getDependency("SITE");
-			$dependency->setValue(
-				Site::getInstance()->getXmlId(Site::getInstance()->createId($landing['SITE_ID']))
-			);
-			$record->setDependency("SITE", $dependency);
+
+			$link = clone $this->getDependency('SITE_ID');
+			$link->setValue($landing['SITE_ID']);
+			$record->setDependency('SITE_ID', $link);
+
 			$result[] = $record;
 		}
 		return $result;
@@ -116,7 +115,7 @@ class Landing extends BaseData
 			'XML_ID' => $record->getFieldRaw('XML_ID'),
 		);
 
-		if ($dependency = $record->getDependency('SITE'))
+		if ($dependency = $record->getDependency('SITE_ID'))
 		{
 			$linkXmlId = $dependency->getValue();
 			$idObject = Site::getInstance()->findRecord($linkXmlId);
