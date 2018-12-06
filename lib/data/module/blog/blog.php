@@ -75,24 +75,28 @@ class Blog extends BaseData
 				"EDITOR_USE_VIDEO" => $blog["EDITOR_USE_VIDEO"],
 			));
 			$link = clone $this->getDependency('GROUP');
-			$link->setValue(
+			$link->setValue(md5(
 				Group::getInstance()->getXmlId(
 					Group::getInstance()->createId($blog['GROUP_ID'])
-				));
+				)));
 			$record->setDependency('GROUP', $link);
+
 			$result[] = $record;
 		}
 		return $result;
 	}
+
 	public function getXmlId($id)
 	{
 		$blog = \CBlog::GetByID($id->getValue());
 		return $blog['URL'];
 	}
+
 	public function setXmlId($id, $xmlId)
 	{
 		\CBlog::Update($id->getValue(), array('URL' => $xmlId));
 	}
+
 	public function update(Record $record)
 	{
 		$data = $this->recordToArray($record);
