@@ -1,0 +1,2 @@
+<?
+$MESS['INTERVOLGA_MIGRATO.BLOG_PERMISSION'] = 'Права на блоги';
