@@ -1,5 +1,6 @@
 <?php
 namespace Intervolga\Migrato\Data\Module\Blog;
+
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
@@ -7,7 +8,9 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Tool\ExceptionText;
+
 Loc::loadMessages(__FILE__);
+
 class Blog extends BaseData
 {
 	protected function configure()
