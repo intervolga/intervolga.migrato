@@ -222,5 +222,8 @@
         <entity>
             <name>group</name>
         </entity>
+        <entity>
+            <name>permission</name>
+        </entity>
     </module>
 </config>

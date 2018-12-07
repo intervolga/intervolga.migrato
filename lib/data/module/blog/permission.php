@@ -17,34 +17,70 @@ class Permission extends BaseData
 	{
 		Loader::includeModule("blog");
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.BLOG_PERMISSION'));
-//		$this->setDependencies(array(
-//			'GROUP_ID' => new Link(Group::getInstance()),
-//		));
 	}
 
 	public function getList(array $filter = array())
 	{
+
+		$getListGroups = \CBlogUserGroupPerms::getList();
 		$result = array();
-		foreach ($this->getGroups() as $groupId)
+
+		while ($group = $getListGroups->fetch())
 		{
-			//$permissions = \CBlogUserGroup::GetGroupPerms($groupId);
+			$record = new Record($this);
+			$id = $this->createId(array(
+				"BLOG_ID" => $group['BLOG_ID'],
+				"USER_GROUP_ID" => $group['USER_GROUP_ID'],
+			));
+			$record->setXmlId($this->getXmlId($id));
+			$record->setId($id);
+
+			$record->addFieldsRaw(array(
+				"BLOG_ID" => $group["BLOG_ID"], // должен зависесть от id блога
+				"USER_GROUP_ID" => $group["USER_GROUP_ID"],// должен зависесть от id группы
+				"PERMS_TYPE" => $group["PERMS_TYPE"],
+				"POST_ID" => $group["POST_ID"],
+				"PERMS" => $group["PERMS"],
+				"AUTOSET" => $group["AUTOSET"],
+			));
+
+			$result[] = $record;
 		}
+		return $result;
 	}
 
 	public function getXmlId($id)
 	{
-//		$blog = \CBlog::GetByID($id->getValue());
-//		return $blog['URL'];
+		$array = $id->getValue();
+		$iblockData = Blog::getInstance();
+//		$groupData = Group::getInstance();
+//		$iblockXmlId = $iblockData->getXmlId($iblockData->createId($array['IBLOCK_ID']));
+//		$groupXmlId = $groupData->getXmlId($groupData->createId($array['GROUP_ID']));
+//		$md5 = md5(serialize(array(
+//			$iblockXmlId,
+//			$groupXmlId,
+//		)));
+//		return BaseXmlIdProvider::formatXmlId($md5);
 	}
 
-	public function setXmlId($id, $xmlId)
-	{
-
-	}
 
 	public function update(Record $record)
 	{
-
+		$data = $this->recordToArray($record);
+		$id = $record->getId()->getValue();
+		global $strError;
+		$strError = '';
+		$result = \CBlogUserGroupPerms::update($id,$data);
+		if (!$result)
+		{
+			if ($strError)
+			{
+				throw new \Exception($strError);
+			} else
+			{
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.BLOG_PERMISSION_UNKNOWN_ERROR'));
+			}
+		}
 	}
 
 	/**
@@ -53,30 +89,53 @@ class Permission extends BaseData
 	 */
 	protected function recordToArray(Record $record)
 	{
+		$array = array(
 
+		);
+
+		return $array;
 	}
+
 	protected function createInner(Record $record)
 	{
-
+		$data = $this->recordToArray($record);
+		global $strError;
+		$strError = '';
+		$result = \CBlogUserGroupPerms::add($data);
+		if ($result)
+		{
+			if (!$result->isSuccess())
+			{
+				throw new \Exception(ExceptionText::getFromResult($result));
+			}
+			else
+			{
+				return $this->createId($result->getId());
+			}
+		} else
+		{
+			if ($strError)
+			{
+				throw new \Exception($strError);
+			} else
+			{
+				throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.BLOG_PERMISSION_UNKNOWN_ERROR'));
+			}
+		}
 	}
+
 	protected function deleteInner(RecordId $id)
 	{
-
+		\CBlogUserGroupPerms::delete($id->getValue());
 	}
 
-	/**
-	 * @return array|int[]
-	 */
-	protected function getGroups()
+	public function createId($id)
 	{
-		$result = array();
-		$getList = \CBlogGroup::GetList();
-		while ($group = $getList->fetch())
-		{
-			$result[] = $group["ID"];
-		}
-
-		return $result;
+		return RecordId::createComplexId(array(
+				"USER_GROUP_ID" => intval($id['USER_GROUP_ID']),
+				"GROUP_ID" => intval($id['GROUP_ID']),
+			)
+		);
 	}
 
 }
