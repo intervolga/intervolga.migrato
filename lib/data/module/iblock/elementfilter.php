@@ -315,41 +315,22 @@ class ElementFilter extends BaseData
 		$arFields = $this->convertFieldsToXml(unserialize($fields), $dependencies);
 		$record->setFieldRaw('FIELDS', serialize($arFields));
 
-		// TODO: refactor below
-		// Зависимости от сторонней сущности: Списки свойств (ИБ)
-		if ($dependencies['ENUM'])
+		/**
+		 * Зависимости от сторонних сущностей:
+		 * - Списки свойств (ИБ)
+		 * - Свойства (ИБ)
+		 * - Списки UF-полей
+		 * - UF-поля
+		 */
+		foreach ($dependencies as $dependencyName => $dependencyXmlIds)
 		{
-			$dependencies['ENUM'] = array_unique($dependencies['ENUM']);
-			$dependency = clone $this->getDependency('ENUM');
-			$dependency->setValues($dependencies['ENUM']);
-			$record->setDependency('ENUM', $dependency);
-		}
-
-		// Зависимости от сторонней сущности: Свойства (ИБ)
-		if ($dependencies['PROPERTY'])
-		{
-			$dependencies['PROPERTY'] = array_unique($dependencies['PROPERTY']);
-			$dependency = clone $this->getDependency('PROPERTY');
-			$dependency->setValues($dependencies['PROPERTY']);
-			$record->setDependency('PROPERTY', $dependency);
-		}
-
-		// Зависимости от сторонней сущности: Списки UF-полей
-		if ($dependencies['FIELDENUM'])
-		{
-			$dependencies['FIELDENUM'] = array_unique($dependencies['FIELDENUM']);
-			$dependency = clone $this->getDependency('FIELDENUM');
-			$dependency->setValues($dependencies['FIELDENUM']);
-			$record->setDependency('FIELDENUM', $dependency);
-		}
-
-		// Зависимости от сторонней сущности: UF-поля
-		if ($dependencies['FIELD'])
-		{
-			$dependencies['FIELD'] = array_unique($dependencies['FIELD']);
-			$dependency = clone $this->getDependency('FIELD');
-			$dependency->setValues($dependencies['FIELD']);
-			$record->setDependency('FIELD', $dependency);
+			if ($dependencyXmlIds)
+			{
+				$dependencyXmlIds = array_unique($dependencyXmlIds);
+				$dependency = clone $this->getDependency($dependencyName);
+				$dependency->setValues($dependencyXmlIds);
+				$record->setDependency($dependencyName, $dependency);
+			}
 		}
 	}
 
