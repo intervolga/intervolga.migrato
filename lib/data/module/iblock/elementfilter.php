@@ -75,9 +75,9 @@ class ElementFilter extends BaseData
 		$this->setVirtualXmlId(true);
 		$this->setFilesSubdir('/type/iblock/admin/');
 		$this->setDependencies(array(
-			'IBLOCK_ID' => new Link(MigratoIblock::getInstance()),
-			'PROPERTY_ID' => new Link(Property::getInstance()),
-			'PROPERTY_ENUM_ID' => new Link(Enum::getInstance()),
+			'IBLOCK' => new Link(MigratoIblock::getInstance()),
+			'PROPERTY' => new Link(Property::getInstance()),
+			'ENUM' => new Link(Enum::getInstance()),
 			'FIELD' => new Link(Field::getInstance()),
 			'FIELDENUM' => new Link(FieldEnum::getInstance()),
 		));
@@ -320,18 +320,18 @@ class ElementFilter extends BaseData
 		if ($dependencies['ENUM'])
 		{
 			$dependencies['ENUM'] = array_unique($dependencies['ENUM']);
-			$dependency = clone $this->getDependency('PROPERTY_ENUM_ID');
+			$dependency = clone $this->getDependency('ENUM');
 			$dependency->setValues($dependencies['ENUM']);
-			$record->setDependency('PROPERTY_ENUM_ID', $dependency);
+			$record->setDependency('ENUM', $dependency);
 		}
 
 		// Зависимости от сторонней сущности: Свойства (ИБ)
 		if ($dependencies['PROPERTY'])
 		{
 			$dependencies['PROPERTY'] = array_unique($dependencies['PROPERTY']);
-			$dependency = clone $this->getDependency('PROPERTY_ID');
+			$dependency = clone $this->getDependency('PROPERTY');
 			$dependency->setValues($dependencies['PROPERTY']);
-			$record->setDependency('PROPERTY_ID', $dependency);
+			$record->setDependency('PROPERTY', $dependency);
 		}
 
 		// Зависимости от сторонней сущности: Списки UF-полей
@@ -371,9 +371,9 @@ class ElementFilter extends BaseData
 				$iblockIdObj = MigratoIblock::getInstance()->createId($iblockId);
 				$iblockXmlId = MigratoIblock::getInstance()->getXmlId($iblockIdObj);
 
-				$dependency = clone $this->getDependency('IBLOCK_ID');
+				$dependency = clone $this->getDependency('IBLOCK');
 				$dependency->setValue($iblockXmlId);
-				$record->setDependency('IBLOCK_ID', $dependency);
+				$record->setDependency('IBLOCK', $dependency);
 			}
 		}
 	}
