@@ -78,6 +78,8 @@ class ElementFilter extends BaseData
 			'IBLOCK_ID' => new Link(MigratoIblock::getInstance()),
 			'PROPERTY_ID' => new Link(Property::getInstance()),
 			'PROPERTY_ENUM_ID' => new Link(Enum::getInstance()),
+			'FIELD' => new Link(Field::getInstance()),
+			'FIELDENUM' => new Link(FieldEnum::getInstance()),
 		));
 	}
 
@@ -308,28 +310,46 @@ class ElementFilter extends BaseData
 	
 	protected function addPropertiesDependencies(Record $record, $fields)
 	{
-		$propXmlIds = array();
-		$enumPropXmlIds = array();
+		$dependencies = array();
 
-		$arFields = $this->convertFieldsToXml(unserialize($fields), $propXmlIds, $enumPropXmlIds);
+		$arFields = $this->convertFieldsToXml(unserialize($fields), $dependencies);
 		$record->setFieldRaw('FIELDS', serialize($arFields));
 
-		// Зависимости от сторонней сущности: значения списочных свойства ИБ
-		if ($enumPropXmlIds)
+		// TODO: refactor below
+		// Зависимости от сторонней сущности: Списки свойств (ИБ)
+		if ($dependencies['ENUM'])
 		{
-			$enumPropXmlIds = array_unique($enumPropXmlIds);
+			$dependencies['ENUM'] = array_unique($dependencies['ENUM']);
 			$dependency = clone $this->getDependency('PROPERTY_ENUM_ID');
-			$dependency->setValues($enumPropXmlIds);
+			$dependency->setValues($dependencies['ENUM']);
 			$record->setDependency('PROPERTY_ENUM_ID', $dependency);
 		}
 
-		// Зависимости от сторонней сущности: свойства ИБ
-		if ($propXmlIds)
+		// Зависимости от сторонней сущности: Свойства (ИБ)
+		if ($dependencies['PROPERTY'])
 		{
-			$propXmlIds = array_unique($propXmlIds);
+			$dependencies['PROPERTY'] = array_unique($dependencies['PROPERTY']);
 			$dependency = clone $this->getDependency('PROPERTY_ID');
-			$dependency->setValues($propXmlIds);
+			$dependency->setValues($dependencies['PROPERTY']);
 			$record->setDependency('PROPERTY_ID', $dependency);
+		}
+
+		// Зависимости от сторонней сущности: Списки UF-полей
+		if ($dependencies['FIELDENUM'])
+		{
+			$dependencies['FIELDENUM'] = array_unique($dependencies['FIELDENUM']);
+			$dependency = clone $this->getDependency('FIELDENUM');
+			$dependency->setValues($dependencies['FIELDENUM']);
+			$record->setDependency('FIELDENUM', $dependency);
+		}
+
+		// Зависимости от сторонней сущности: UF-поля
+		if ($dependencies['FIELD'])
+		{
+			$dependencies['FIELD'] = array_unique($dependencies['FIELD']);
+			$dependency = clone $this->getDependency('FIELD');
+			$dependency->setValues($dependencies['FIELD']);
+			$record->setDependency('FIELD', $dependency);
 		}
 	}
 
@@ -724,12 +744,11 @@ class ElementFilter extends BaseData
 	 * Конвертирует поля фильтра в формат (xml), пригодный для выгрузки.
 	 *
 	 * @param array $filterFields поля фильтра.
-	 * @param array $propXmlIds xmlId свойств ИБ, которые были сконвертированы.
-	 * @param array $enumPropXmlIds xmlId значений списочных свойств ИБ, которые были сконвертированы.
+	 * @param array $dependencies xmlId зависимостей сущности.
 	 *
 	 * @return array поля фильтра в форме, пригодном для выгрузки.
 	 */
-	protected function convertFieldsToXml(array $filterFields, array &$propXmlIds, array &$enumPropXmlIds)
+	protected function convertFieldsToXml(array $filterFields, array &$dependencies)
 	{
 		$propertyIds = $this->getIbPropertiesUsedInFilter($filterFields);
 		$properties = $this->getIbPropertiesById($propertyIds);
@@ -770,7 +789,7 @@ class ElementFilter extends BaseData
 				{
 					$propertyId = static::getIbPropertyIdByFilterRow($fieldName);
 					$propertyData = $properties[$propertyId];
-					$propXmlIds[] = $propertyXmlId;
+					$dependencies['PROPERTY'][] = $propertyXmlId;
 
 					// Значение списочных свойств
 					if ($propertyData['PROPERTY_TYPE'] === 'L')
@@ -784,7 +803,7 @@ class ElementFilter extends BaseData
 								if ($enumPropXmlId)
 								{
 									$fieldValId = $enumPropXmlId;
-									$enumPropXmlIds[] = $enumPropXmlId;
+									$dependencies['ENUM'][] = $enumPropXmlId;
 								}
 							}
 						}
@@ -795,7 +814,8 @@ class ElementFilter extends BaseData
 							if ($enumPropXmlId)
 							{
 								$newFieldVal = $enumPropXmlId;
-								$enumPropXmlIds[] = $enumPropXmlId;
+								$dependencies['ENUM'][] = $enumPropXmlId;
+
 							}
 						}
 					}
