@@ -43,6 +43,11 @@ class ElementFilter extends BaseData
 	const IB_PROPERTY_NAME_REGEX = '/^([^_]*_?)PROPERTY_([^_\s]+)(_?.*)$/';
 
 	/**
+	 * Регулярное выражения для определения, является ли поле фильтра - фильтром UF-поля.
+	 */
+	const UF_NAME_REGEX = '/^([^_]*_?)UF_([^_\s]+)(_?.*)$/';
+
+	/**
 	 * Соответствие типов фильтра названиям настроек.
 	 * COMMON_VIEW - фильтр для ИБ (режим прссмотра - совместный).
 	 * SEPARATE_VIEW_SECTION - фильтр для разделов ИБ (режим просмотра - раздельный)
@@ -722,6 +727,19 @@ class ElementFilter extends BaseData
 	}
 
 	/**
+	 * Проверяет строку $string на соответсвие регулярному выражению
+	 * для названия фильтра UF-полей.
+	 *
+	 * @param string $string проверяемая строка.
+	 * @param bool $isMatch признак соответствия проверяемой строки регулярному выражению.
+	 * @param array $matches массив совпадений.
+	 */
+	protected function testStringAgainstUFRegex($string, &$isMatch, &$matches)
+	{
+		$isMatch = preg_match(static::UF_NAME_REGEX, $string, $matches);
+	}
+
+	/**
 	 * Конвертирует поля фильтра в формат (xml), пригодный для выгрузки.
 	 *
 	 * @param array $filterFields поля фильтра.
@@ -839,6 +857,30 @@ class ElementFilter extends BaseData
 			$propertyXmlId = Property::getInstance()->getXmlId($propertyIdObj);
 
 			$filterRow = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
+			if ($filterRowPrefix)
+			{
+				$filterRow = $filterRowPrefix . $filterRow;
+			}
+			if ($filterRowPostfix)
+			{
+				$filterRow = $filterRow . $filterRowPostfix;
+			}
+		}
+
+		/**
+		 * Проверка, что поле фильтра является фильтром UF-поля
+		 */
+		$this->testStringAgainstUFRegex($filterRow, $isMatch, $matches);
+		if ($isMatch && $matches[2])
+		{
+			$filterRowPrefix = $matches[1];
+			$filterRowPostfix = $matches[3];
+			$ufFieldName = $matches[2];
+
+			// TODO: получить id UF-поля
+			//$ufFieldNameObj = Field::getInstance()->createId();
+			//$ufFieldXmlId = Field::getInstance()->getXmlId();
+
 			if ($filterRowPrefix)
 			{
 				$filterRow = $filterRowPrefix . $filterRow;
