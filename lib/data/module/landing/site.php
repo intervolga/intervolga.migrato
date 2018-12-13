@@ -51,9 +51,15 @@ class Site extends BaseData
 
 	public function getXmlId($id)
 	{
-		$site = CLandingSite::getById($id->getValue())->fetch();
-		return $site;
+//		$site = CLandingSite::getById($id->getValue())->fetch();
+//		return $site;
+		return $id->getValue();
 	}
+
+//	public function createId($id)
+//	{
+//		return RecordId::createStringId($id);
+//	}
 
 
 	public function update(Record $record)

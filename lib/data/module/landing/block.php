@@ -20,9 +20,9 @@ class Block extends BaseData
 		$this->setVirtualXmlId(true);
 		Loader::includeModule("landing");
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.LANDING_BLOCK_TYPE'));
-//		$this->setReferences(array(
-//			'LID' => new Link(Landing::getInstance()),
-//		));
+		$this->setReferences(array(
+			'LID' => new Link(Landing::getInstance()),
+		));
 	}
 
 	public function getList(array $filter = array())
@@ -46,11 +46,11 @@ class Block extends BaseData
 				"LID" => $block["LID"],
 			));
 
-//			$reference = clone $this->getReference("LID");
-//			$reference->setValue(
-//				Landing::getInstance()->getXmlId(RecordId::createNumericId($block["LID"]))
-//			);
-//			$record->setReference("LID", $reference);
+			$reference = clone $this->getReference("LID");
+			$reference->setValue(
+				Landing::getInstance()->getXmlId(RecordId::createNumericId($block["LID"]))
+			);
+			$record->setReference("LID", $reference);
 
 			$result[] = $record;
 		}
