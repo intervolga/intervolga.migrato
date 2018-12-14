@@ -80,7 +80,7 @@ class AdminListFilter extends BaseData
 	protected function configure()
 	{
 		Loader::includeModule('iblock');
-		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.ENTITY_NAME'));
+		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ADMIN_LIST_FILTERS.ENTITY_NAME'));
 		$this->setVirtualXmlId(true);
 		$this->setFilesSubdir('/type/iblock/admin/');
 		$this->setDependencies(array(
@@ -144,7 +144,7 @@ class AdminListFilter extends BaseData
 		if (!$filterId)
 		{
 			$exceptionMessage = ExceptionText::getFromString(
-				Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.UPDATE_ERROR')
+				Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ADMIN_LIST_FILTERS.UPDATE_ERROR')
 			);
 			throw new \Exception($exceptionMessage);
 		}
@@ -165,7 +165,7 @@ class AdminListFilter extends BaseData
 		}
 
 		$exceptionMessage = ExceptionText::getFromString(
-			Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.ADD_ERROR')
+			Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ADMIN_LIST_FILTERS.ADD_ERROR')
 		);
 		throw new \Exception($exceptionMessage);
 	}
@@ -188,7 +188,7 @@ class AdminListFilter extends BaseData
 		if (!$success)
 		{
 			$exceptionMessage = ExceptionText::getFromString(
-				Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ELEMENT_FILTER.DELETE_ERROR')
+				Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ADMIN_LIST_FILTERS.DELETE_ERROR')
 			);
 			throw new \Exception($exceptionMessage);
 		}
