@@ -496,13 +496,20 @@ class ElementFilter extends BaseData
 	/**
 	 * Возвращает свойства ИБ из БД.
 	 *
+	 * @param int $iblockId id инфоблока для фильтрации (опционально).
+	 *
 	 * @return array массив свойств ИБ.
 	 */
-	protected function getIbProperties()
+	protected function getIbProperties($iblockId = 0)
 	{
-		// TODO: for current IB ?
+		$filter = array();
+		if ($iblockId)
+		{
+			$filter = array('IBLOCK_ID' => $iblockId);
+		}
+
 		$dbProperties = array();
-		$dbRes = \CIBlockProperty::GetList();
+		$dbRes = \CIBlockProperty::GetList(array(), $filter);
 		while ($prop = $dbRes->Fetch())
 		{
 			$dbProperties[$prop['ID']] = $prop;
@@ -520,14 +527,13 @@ class ElementFilter extends BaseData
 	 */
 	protected function getUfFields($entityId = '')
 	{
-		$ufFields = array();
-
 		$filter = array();
 		if ($entityId)
 		{
 			$filter['ENTITY_ID'] = $entityId;
 		}
 
+		$ufFields = array();
 		$dbRes = CUserTypeEntity::GetList(array(), $filter);
 		while ($ufField = $dbRes->Fetch())
 		{
@@ -1029,7 +1035,7 @@ class ElementFilter extends BaseData
 	{
 		$filterFields = unserialize($filterData['FIELDS']);
 		$iblockId = $this->getIblockIdByFilterName($filterData['NAME']);
-		$dbProperties = $this->getIbProperties();
+		$dbProperties = $this->getIbProperties($iblockId);
 		$ufFields = $this->getUfFields('IBLOCK_' . $iblockId . '_SECTION');
 
 		// Конвертируем данные фильтров
