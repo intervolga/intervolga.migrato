@@ -15,8 +15,7 @@ use Intervolga\Migrato\Tool\ExceptionText;
 Loc::loadMessages(__FILE__);
 
 /**
- * Class ElementFilter - настройки фильтра для списка элементов инфоблока в административной части
- * (совместный и раздельный режимы просмотра).
+ * Class AdminListFilter - фильтры на админ. страницах списка элементов и разделов инфоблока.
  *
  * В рамках текущей сущности:
  *  - таблица БД - b_user_option,
@@ -28,10 +27,9 @@ Loc::loadMessages(__FILE__);
  *    - <FILTER_NAME_PREFIX> - одно из значений массива FILTER_NAME_PREFIXES,
  *    - <HASH> - md5(IBLOCK_TYPE_ID + "." + IBLOCK_ID)
  *
- *
  * @package Intervolga\Migrato\Data\Module\Iblock
  */
-class ElementFilter extends BaseData
+class AdminListFilter extends BaseData
 {
 	/**
 	 * Символ-разделитель логических блоков в строке с xmlId.
