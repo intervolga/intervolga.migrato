@@ -2,6 +2,7 @@
 namespace Intervolga\Migrato\Data\Module\Iblock;
 
 use Bitrix\Main\Loader;
+use CUserTypeEntity;
 use Intervolga\Migrato\Data\BaseData;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\Link;
@@ -24,8 +25,8 @@ Loc::loadMessages(__FILE__);
  *  - категория настройки - поле CATEGORY настройки,
  *
  * Название настройки фильтра: <FILTER_NAME_PREFIX><HASH> , где:
- * 	- <FILTER_NAME_PREFIX> - одно из значений массива FILTER_NAME_PREFIXES,
- * 	- <HASH> - md5(IBLOCK_TYPE_ID + "." + IBLOCK_ID)
+ *    - <FILTER_NAME_PREFIX> - одно из значений массива FILTER_NAME_PREFIXES,
+ *    - <HASH> - md5(IBLOCK_TYPE_ID + "." + IBLOCK_ID)
  *
  *
  * @package Intervolga\Migrato\Data\Module\Iblock
@@ -45,7 +46,7 @@ class ElementFilter extends BaseData
 	/**
 	 * Регулярное выражения для определения, является ли поле фильтра - фильтром UF-поля.
 	 */
-	const UF_NAME_REGEX = '^(UF_[A-Z0-9_]+)(_?.*)$';
+	const UF_NAME_REGEX = '/^(UF_[A-Z0-9_]+)(_?.*)$/';
 
 	/**
 	 * Соответствие типов фильтра названиям настроек.
@@ -65,7 +66,7 @@ class ElementFilter extends BaseData
 	const FILTER_CATEGORIES = array(
 		'main.ui.filter',
 		'main.ui.filter.common',
-		'main.ui.filter.common.presets'
+		'main.ui.filter.common.presets',
 	);
 
 	/**
@@ -112,7 +113,7 @@ class ElementFilter extends BaseData
 			'COMMON_OPTIONS' => array('COMMON' => 'Y', 'USER_ID' => '0'),
 		);
 
-		foreach	($optionTypeFilters as $optionTypeFilter)
+		foreach ($optionTypeFilters as $optionTypeFilter)
 		{
 			$optionsFilter = array_merge($filter, $optionTypeFilter);
 			$dbRes = CUserOptions::GetList(array(), $optionsFilter);
@@ -268,13 +269,14 @@ class ElementFilter extends BaseData
 		{
 			return $this->getXmlIdFromArray($filter);
 		}
+
 		return '';
 	}
 
 	/**
 	 * Создает запись миграции фильтра
 	 * на основе $option.
-	 * 
+	 *
 	 * @param array $option массив данных фильтра.
 	 *
 	 * @return Record запись миграции фильтра.
@@ -317,7 +319,7 @@ class ElementFilter extends BaseData
 
 		return $arFilter;
 	}
-	
+
 	protected function addPropertiesDependencies(Record $record, $filter)
 	{
 		$dependencies = array();
@@ -402,7 +404,7 @@ class ElementFilter extends BaseData
 				array(
 					'CATEGORY' => $arFilter['CATEGORY'],
 					'NAME' => $arFilter['NAME'],
-					'USER_ID' => $arFilter['USER_ID']
+					'USER_ID' => $arFilter['USER_ID'],
 				)
 			)->Fetch();
 
@@ -422,6 +424,7 @@ class ElementFilter extends BaseData
 	protected function getIblockIdByFilterName($filterName)
 	{
 		$iblock = static::getIblockByFilterName($filterName);
+
 		return $iblock['ID'] ?: '';
 	}
 
@@ -435,6 +438,7 @@ class ElementFilter extends BaseData
 	protected function getIblockTypeByFilterName($filterName)
 	{
 		$iblock = static::getIblockByFilterName($filterName);
+
 		return $iblock['IBLOCK_TYPE_ID'] ?: '';
 	}
 
@@ -465,6 +469,7 @@ class ElementFilter extends BaseData
 				}
 			}
 		}
+
 		return array();
 	}
 
@@ -494,6 +499,7 @@ class ElementFilter extends BaseData
 	 */
 	protected function getIbProperties()
 	{
+		// TODO: for current IB ?
 		$dbProperties = array();
 		$dbRes = \CIBlockProperty::GetList();
 		while ($prop = $dbRes->Fetch())
@@ -502,6 +508,32 @@ class ElementFilter extends BaseData
 		}
 
 		return $dbProperties;
+	}
+
+	/**
+	 * Возвращает UF-поля из БД.
+	 *
+	 * @param string $entityId id сущности для фильтрации (опционально).
+	 *
+	 * @return array данные UF-полей.
+	 */
+	protected function getUfFields($entityId = '')
+	{
+		$ufFields = array();
+
+		$filter = array();
+		if ($entityId)
+		{
+			$filter['ENTITY_ID'] = $entityId;
+		}
+
+		$dbRes = CUserTypeEntity::GetList(array(), $filter);
+		while ($ufField = $dbRes->Fetch())
+		{
+			$ufFields[$ufField['FIELD_NAME']] = $ufField;
+		}
+
+		return $ufFields;
 	}
 
 	/**
@@ -559,6 +591,7 @@ class ElementFilter extends BaseData
 				);
 			}
 		}
+
 		return $result;
 	}
 
@@ -578,6 +611,7 @@ class ElementFilter extends BaseData
 		$xmlFields = explode(static::XML_ID_SEPARATOR, $xmlId);
 		$xmlFields[$filterPrefixIndex] = static::FILTER_NAME_PREFIXES[$xmlFields[$filterPrefixIndex]];
 		$xmlFields[$filterCategoryIndex] = str_replace('_', '.', $xmlFields[$filterCategoryIndex]);
+
 		return $xmlFields;
 	}
 
@@ -598,13 +632,14 @@ class ElementFilter extends BaseData
 				$type = $key;
 			}
 		}
+
 		return $type;
 	}
 
 	/**
 	 * Проверяет, является ли $option настройкой фильтра:
 	 *  - поле CATEGORY должно соответствовать одному из FILTER_CATEGORIES
-	 * 	- префикс поля NAME должен соответствовать одному на FILTER_NAME_PREFIXES.
+	 *    - префикс поля NAME должен соответствовать одному на FILTER_NAME_PREFIXES.
 	 *
 	 * @param array $option настройка.
 	 *
@@ -682,12 +717,9 @@ class ElementFilter extends BaseData
 	 */
 	protected function isUfFilterRow($filterRowName)
 	{
-		$isMatch = false;
-		$matches = array();
+		$length = strlen(static::UF_FIELD_PREFIX);
 
-		$this->testStringAgainstUFRegex($filterRowName, $isMatch, $matches);
-
-		return ($isMatch && $matches[2]);
+		return (substr($filterRowName, 0, $length) === static::UF_FIELD_PREFIX);
 	}
 
 	/**
@@ -705,6 +737,26 @@ class ElementFilter extends BaseData
 		$this->testStringAgainstIbPropertyRegex($filterRowName, $isMatch, $matches);
 
 		return ($isMatch && $matches[2]) ? $matches[2] : '';
+	}
+
+	/**
+	 * Возвращает название UF-поля по названию поля фильтра.
+	 *
+	 * @param string $filterRowName название поля фильтра.
+	 *
+	 * @return string название UF-поля.
+	 */
+	protected function getUfNameByFilterRow($filterRowName)
+	{
+		$ufName = '';
+
+		$isMatch = preg_match(static::UF_NAME_REGEX, $filterRowName, $matches);
+		if ($isMatch && $matches[1])
+		{
+			$ufName = rtrim($matches[1], '_');
+		}
+
+		return $ufName;
 	}
 
 	/**
@@ -773,59 +825,30 @@ class ElementFilter extends BaseData
 	protected function convertFieldsToXml(array $filterData, array &$dependencies)
 	{
 		$filterFields = unserialize($filterData['VALUE']);
+		$iblockId = $this->getIblockIdByFilterName($filterData['NAME']);
 		$propertyIds = $this->getIbPropertiesUsedInFilter($filterFields);
 		$properties = $this->getIbPropertiesById($propertyIds);
-		$iblockId = $this->getIblockIdByFilterName($filterData['NAME']);
+		$ufFields = $this->getUfFields('IBLOCK_' . $iblockId . '_SECTION');
 
 		// Конвертируем данные фильтров
 		foreach ($filterFields['filters'] as &$filter)
 		{
-			 // Конвертируем названия свойств в подмассиве filter_rows
+			// Конвертируем названия Свойств в подмассиве filter_rows
 			$arFilterRows = explode(',', $filter['filter_rows']);
-			foreach	($arFilterRows as &$filterRow)
+			foreach ($arFilterRows as &$filterRow)
 			{
 				if ($this->isIbPropertyFilterRow($filterRow))
 				{
 					$this->convertIbPropertyFilterRowToXml($filterRow);
 				}
-				elseif ($this->isUfFilterRow($filterRow))
-				{
-					// TODO: Собрать id UF-полей
-//					$this->testStringAgainstUFRegex($filterRow, $isMatch, $matches);
-//					if ($isMatch && $matches[2])
-//					{
-//
-//					}
-//
-//					$dbRes = CUserTypeEntity::GetList(
-//						array(),
-//						array(
-//							'ENTITY_ID' => 'IBLOCK_' . $iblockId . '_SECTION',
-//							'FIELD_NAME' => $ufFieldName,
-//						)
-//					);
-//					if ($field = $dbRes->Fetch())
-//					{
-//						$ufFieldId = $field['ID'];
-//						$ufFieldNameObj = Field::getInstance()->createId($ufFieldId);
-//						$ufFieldXmlId = Field::getInstance()->getXmlId($ufFieldNameObj);
-//
-//					}
-				}
-
 			}
 			unset($filterRow);
 			$filter['filter_rows'] = implode(',', $arFilterRows);
 
-			/**
-			 * Конвертируем названия свойств в подмассиве fields
-			 * из (prefix_)PROPERTY_<property_id>(_postfix)
-			 * в (prefix_)PROPERTY_<property_xml_id>(_postfix),
-			 * а также
-			 * значения списочных свойств из <enum_property_id> в <enum_property_xml_id>
-			 */
+
+			// Конвертируем названия Свойств, Списков свойств, Списков UF-полей в подмассиве fields,
 			$newFields = array();
-			foreach	($filter['fields'] as $fieldName => $fieldVal)
+			foreach ($filter['fields'] as $fieldName => $fieldVal)
 			{
 				$newFieldName = $fieldName;
 				$newFieldVal = $fieldVal;
@@ -866,17 +889,37 @@ class ElementFilter extends BaseData
 								{
 									$newFieldVal = $enumPropXmlId;
 									$dependencies['ENUM'][] = $enumPropXmlId;
-
 								}
 							}
 						}
 					}
 				}
-				elseif($this->isUfFilterRow($newFieldName))
+				elseif ($this->isUfFilterRow($newFieldName))
 				{
-					// TODO: Собрать id значений списочных UF-полей
-					// TODO: Конвертировать значения списочных UF-полей
+					$ufName = $this->getUfNameByFilterRow($newFieldName);
+					$ufField = $ufFields[$ufName];
+					if ($ufField)
+					{
+						// Зависимости от UF-полей
+						$ufFieldId = $ufField['ID'];
+						$ufFieldIdObj = Field::getInstance()->createId($ufFieldId);
+						$dependencies['FIELD'][] = Field::getInstance()->getXmlId($ufFieldIdObj);
 
+						// Обработка значений фильтров Списоков UF-полей
+						if ($ufField['USER_TYPE_ID'] === 'enumeration' && is_array($newFieldVal))
+						{
+							foreach ($newFieldVal as &$ufFieldValId)
+							{
+								$ufFieldValIdObj = FieldEnum::getInstance()->createId($ufFieldValId);
+								$ufFieldValXmlId = FieldEnum::getInstance()->getXmlId($ufFieldValIdObj);
+								if ($ufFieldValXmlId)
+								{
+									$dependencies['FIELDENUM'][] = $ufFieldValXmlId;
+									$ufFieldValId = $ufFieldValXmlId;
+								}
+							}
+						}
+					}
 				}
 
 				$newFields[$newFieldName] = $newFieldVal;
@@ -895,7 +938,7 @@ class ElementFilter extends BaseData
 	 *
 	 * @return string xml_id свойства элемента ИБ
 	 *                или
-	 * 			 	  пустая строка, если конвертация не производилась.
+	 *                  пустая строка, если конвертация не производилась.
 	 */
 	protected function convertIbPropertyFilterRowToXml(&$filterRow)
 	{
@@ -936,8 +979,8 @@ class ElementFilter extends BaseData
 	 * @param string $filterRow название поля фильтра
 	 *
 	 * @return int id свойства элемента ИБ
-	 * 			   или
-	 * 			   0, если конвертация не производилась.
+	 *               или
+	 *               0, если конвертация не производилась.
 	 */
 	protected function convertFilterRowFromXml(&$filterRow)
 	{
@@ -993,7 +1036,7 @@ class ElementFilter extends BaseData
 			 * в (prefix_)PROPERTY_<property_id>(_postfix)
 			 */
 			$filterRows = explode(',', $filter['filter_rows']);
-			foreach	($filterRows as &$filterRowName)
+			foreach ($filterRows as &$filterRowName)
 			{
 				$this->convertFilterRowFromXml($filterRowName);
 			}
@@ -1008,7 +1051,7 @@ class ElementFilter extends BaseData
 			 * значения списочных свойств из <enum_property_xml_id> в <enum_property_id>
 			 */
 			$newFilterFields = array();
-			foreach	($filter['fields'] as $filterRowName => $filterRowValue)
+			foreach ($filter['fields'] as $filterRowName => $filterRowValue)
 			{
 				$newFilterRowName = $filterRowName;
 				$newFilterRowValue = $filterRowValue;
