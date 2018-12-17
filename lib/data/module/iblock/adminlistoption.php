@@ -12,7 +12,7 @@ use Intervolga\Migrato\Data\Module\Iblock\Iblock as MigratoIblock;
  *
  * @package Intervolga\Migrato\Data\Module\Iblock
  */
-class AdminListOptions extends BaseData
+class AdminListOption extends BaseData
 {
 	/**
 	 * Категории настроек.
