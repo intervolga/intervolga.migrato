@@ -252,39 +252,13 @@ class AdminListOption extends BaseData
 	 */
 	protected function convertOptionView(array &$view, array $option, array &$dependencies)
 	{
-		$ufFields = array();
-		$convertedProperties = array();
-
 		// Конвертация массива 'columns' (отображаемые колонки)
 		if ($view['columns'])
 		{
 			$arViewColumns = explode(',', $view['columns']);
 			foreach ($arViewColumns as &$viewColumn)
 			{
-				if ($this->isIblockProperty($viewColumn))
-				{
-					// Конвертация названий свойств ИБ + зависимости от свойств ИБ
-					$propertyXmlId = $this->convertIblockPropertyNameToXml($viewColumn, $convertedProperties);
-					$dependencies['PROPERTY'][] = $propertyXmlId;
-				}
-				elseif($this->isUfField($viewColumn))
-				{
-					// Получение UF-полей
-					if (!$ufFields)
-					{
-						$iblock = $this->getIblockByOptionName($option['NAME']);
-						$ufFields = $this->getUfFields('IBLOCK_' . $iblock['ID'] . '_SECTION');
-					}
-
-					// Зависимости от UF-полей
-					$ufField = $ufFields[$viewColumn];
-					if ($ufField)
-					{
-						$ufFieldId = $ufField['ID'];
-						$ufFieldIdObj = Field::getInstance()->createId($ufFieldId);
-						$dependencies['FIELD'][] = Field::getInstance()->getXmlId($ufFieldIdObj);
-					}
-				}
+				$this->convertString($viewColumn, $option, $dependencies);
 			}
 			$view['columns'] = implode(',', $arViewColumns);
 		}
@@ -305,7 +279,7 @@ class AdminListOption extends BaseData
 			$convertedArray = array();
 			foreach	($arrayToConvert as $arrayKey => $arrayVal)
 			{
-				$this->convertIblockPropertyNameToXml($arrayKey, $convertedProperties);
+				$this->convertString($arrayKey, $option, $dependencies);
 				$convertedArray[$arrayKey] = $arrayVal;
 			}
 			$arrayToConvert = $convertedArray;
@@ -328,7 +302,7 @@ class AdminListOption extends BaseData
 		{
 			if ($stringToConvert)
 			{
-				$this->convertIblockPropertyNameToXml($stringToConvert, $convertedProperties);
+				$this->convertString($stringToConvert, $option, $dependencies);
 			}
 		}
 		unset($stringToConvert);
@@ -336,48 +310,56 @@ class AdminListOption extends BaseData
 	}
 
 	/**
+	 * Конвертирует строку в формат (xml), пригодный для выгрузки.
+	 *
+	 * @param string $stringToConvert конвертируемая строка.
+	 * @param array $option данные настройки.
+	 * @param array $dependencies зависимости от xml_id сконвертированных данных.
+	 */
+	protected function convertString(&$stringToConvert, array $option, array &$dependencies)
+	{
+		if ($this->isIblockProperty($stringToConvert))
+		{
+			$propertyXmlId = $this->convertIblockPropertyNameToXml($stringToConvert);
+			$dependencies['PROPERTY'][] = $propertyXmlId;
+		}
+		elseif($this->isUfField($stringToConvert))
+		{
+			$iblock = $this->getIblockByOptionName($option['NAME']);
+			$ufField = $this->getUfField(array(
+				'ENTITY_ID' => 'IBLOCK_' . $iblock['ID'] . '_SECTION',
+				'FIELD_NAME' => $stringToConvert
+			));
+
+			if ($ufField)
+			{
+				$ufFieldIdObj = Field::getInstance()->createId($ufField['ID']);
+				$dependencies['FIELD'][] = Field::getInstance()->getXmlId($ufFieldIdObj);
+			}
+		}
+	}
+
+	/**
 	 * Конвертирует название свойства ИБ в формат (xml), пригодный для выгрузки.
 	 *
 	 * @param string $iblockPropertyName название свойства ИБ.
-	 * @param array $convertedProperties массив уже сконвертированных свойств (нужен для кэширования).
 	 *
 	 * @return string xml_id свойства ИБ
 	 *                или
 	 *                пустая строка, если конвертация не производилась.
 	 */
-	protected function convertIblockPropertyNameToXml(&$iblockPropertyName, array &$convertedProperties)
+	protected function convertIblockPropertyNameToXml(&$iblockPropertyName)
 	{
 		$propertyXmlId = '';
 
 		$this->testStringAgainstIblockPropertyRegex($iblockPropertyName, $isMatch, $matches);
 		if ($isMatch && $matches[1])
 		{
-			// Если конвертация свойства производилась ранее
-			if ($convertedProperties[$iblockPropertyName])
-			{
-				// Получаем сконвертированное ранее значение
-				$iblockPropertyName = $convertedProperties[$iblockPropertyName];
-
-				// Получаем xml_id свойства из нового значения
-				$this->testStringAgainstIblockPropertyRegex($iblockPropertyName, $isMatch, $matches);
-				if ($isMatch)
-				{
-					$propertyXmlId = $matches[1];
-				}
-			}
-			else
-			{
-				$baseIblockPropertyName = $iblockPropertyName;
-
-				// Конвертируем свойство
-				$propertyId = intval($matches[1]);
-				$propertyIdObj = Property::getInstance()->createId($propertyId);
-				$propertyXmlId = Property::getInstance()->getXmlId($propertyIdObj);
-				$iblockPropertyName = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
-
-				// Запоминаем сконвертированное значение
-				$convertedProperties[$baseIblockPropertyName] = $iblockPropertyName;
-			}
+			// Конвертируем свойство
+			$propertyId = intval($matches[1]);
+			$propertyIdObj = Property::getInstance()->createId($propertyId);
+			$propertyXmlId = Property::getInstance()->getXmlId($propertyIdObj);
+			$iblockPropertyName = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
 		}
 
 		return $propertyXmlId;
@@ -718,6 +700,19 @@ class AdminListOption extends BaseData
 		}
 
 		return $ufFields;
+	}
+
+	/**
+	 * Возвращает UF-поле из БД.
+	 *
+	 * @param array $filter фильтр выборки.
+	 *
+	 * @return array данные UF-поля.
+	 */
+	protected function getUfField(array $filter)
+	{
+		$dbRes = CUserTypeEntity::GetList(array(), $filter);
+		return $dbRes->Fetch() ?: array();
 	}
 
 	/**
