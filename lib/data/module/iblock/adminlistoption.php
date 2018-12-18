@@ -220,7 +220,6 @@ class AdminListOption extends BaseData
 	 */
 	protected function convertValueToXml(array $option, array &$dependencies)
 	{
-		$ufFields = array();
 		$arOptionValue = unserialize($option['VALUE']);
 
 		if (!$this->isConvertibleOption($option))
@@ -228,11 +227,37 @@ class AdminListOption extends BaseData
 			return $arOptionValue;
 		}
 
-		foreach	($arOptionValue['views'] as &$view)
+		// Для общих и персональных настроек структура поля VALUE отличается
+		if($option['COMMON'] === 'Y')
 		{
-			$convertedProperties = array();
+			$this->convertOptionView($arOptionValue['view'], $option, $dependencies);
+		}
+		else
+		{
+			foreach	($arOptionValue['views'] as &$view)
+			{
+				$this->convertOptionView($view, $option, $dependencies);
+			}
+		}
 
-			// Конвертация массива 'columns' (отображаемые колонки)
+		return $arOptionValue;
+	}
+
+	/**
+	 * Конвертирует массив view в поле VALUE настройки.
+	 *
+	 * @param array $view конвертируемый массив.
+	 * @param array $option данные настройки.
+	 * @param array $dependencies зависимости от xml_id сконвертированных данных.
+	 */
+	protected function convertOptionView(array &$view, array $option, array &$dependencies)
+	{
+		$ufFields = array();
+		$convertedProperties = array();
+
+		// Конвертация массива 'columns' (отображаемые колонки)
+		if ($view['columns'])
+		{
 			$arViewColumns = explode(',', $view['columns']);
 			foreach ($arViewColumns as &$viewColumn)
 			{
@@ -262,43 +287,52 @@ class AdminListOption extends BaseData
 				}
 			}
 			$view['columns'] = implode(',', $arViewColumns);
-
-
-			// Конвертируем массивы
-			$arraysToConvert = array(
-				&$view['columns_sizes']['columns'],
-				&$view['custom_names'],
-			);
-			foreach ($arraysToConvert as &$arrayToConvert)
-			{
-				$convertedArray = array();
-				foreach	($arrayToConvert as $arrayKey => $arrayVal)
-				{
-					$this->convertIblockPropertyNameToXml($arrayKey, $convertedProperties);
-					$convertedArray[$arrayKey] = $arrayVal;
-				}
-				$arrayToConvert = $convertedArray;
-			}
-			unset($arrayToConvert);
-			unset($arraysToConvert);
-
-			// Конвертируем строки
-			$stringsToConvert = array(
-				&$view['last_sort_by'],
-			);
-			foreach	($stringsToConvert as &$stringToConvert)
-			{
-				if ($stringToConvert)
-				{
-					$this->convertIblockPropertyNameToXml($stringToConvert, $convertedProperties);
-				}
-			}
-			unset($stringToConvert);
-			unset($stringsToConvert);
 		}
 
+		// Конвертируем массивы
+		$arraysToConvert = array();
+		if ($view['columns_sizes']['columns'])
+		{
+			$arraysToConvert[] = &$view['columns_sizes']['columns'];
+		}
+		if ($view['custom_names'])
+		{
+			$arraysToConvert[] = &$view['custom_names'];
+		}
 
-		return $arOptionValue;
+		foreach ($arraysToConvert as &$arrayToConvert)
+		{
+			$convertedArray = array();
+			foreach	($arrayToConvert as $arrayKey => $arrayVal)
+			{
+				$this->convertIblockPropertyNameToXml($arrayKey, $convertedProperties);
+				$convertedArray[$arrayKey] = $arrayVal;
+			}
+			$arrayToConvert = $convertedArray;
+		}
+		unset($arrayToConvert);
+		unset($arraysToConvert);
+
+		// Конвертируем строки
+		$stringsToConvert = array();
+		if ($view['last_sort_by'])
+		{
+			$stringsToConvert[] = &$view['last_sort_by'];
+		}
+		if ($view['sort_by'])
+		{
+			$stringsToConvert[] = &$view['sort_by'];
+		}
+
+		foreach	($stringsToConvert as &$stringToConvert)
+		{
+			if ($stringToConvert)
+			{
+				$this->convertIblockPropertyNameToXml($stringToConvert, $convertedProperties);
+			}
+		}
+		unset($stringToConvert);
+		unset($stringsToConvert);
 	}
 
 	/**
