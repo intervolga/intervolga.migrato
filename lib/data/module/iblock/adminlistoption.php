@@ -214,11 +214,11 @@ class AdminListOption extends BaseData
 	 * Конвертирует поле VALUE настройки в формат (xml), пригодный для выгрузки.
 	 *
 	 * @param array $option данные настройки.
-	 * @param array $dependencies зависимости от xml_id сконвертированных данных.
+	 * @param array $xmlIds xml_id сконвертированных данных.
 	 *
 	 * @return array массив сконвертированных данных.
 	 */
-	protected function convertValueToXml(array $option, array &$dependencies)
+	protected function convertValueToXml(array $option, array &$xmlIds)
 	{
 		$arOptionValue = unserialize($option['VALUE']);
 
@@ -230,13 +230,13 @@ class AdminListOption extends BaseData
 		// Для общих и персональных настроек структура поля VALUE отличается
 		if($option['COMMON'] === 'Y')
 		{
-			$this->convertOptionView($arOptionValue['view'], $option, $dependencies);
+			$this->convertOptionView($arOptionValue['view'], $option, $xmlIds);
 		}
 		else
 		{
 			foreach	($arOptionValue['views'] as &$view)
 			{
-				$this->convertOptionView($view, $option, $dependencies);
+				$this->convertOptionView($view, $option, $xmlIds);
 			}
 		}
 
@@ -248,9 +248,9 @@ class AdminListOption extends BaseData
 	 *
 	 * @param array $view конвертируемый массив.
 	 * @param array $option данные настройки.
-	 * @param array $dependencies зависимости от xml_id сконвертированных данных.
+	 * @param array $xmlIds xml_id сконвертированных данных.
 	 */
-	protected function convertOptionView(array &$view, array $option, array &$dependencies)
+	protected function convertOptionView(array &$view, array $option, array &$xmlIds)
 	{
 		// Конвертация массива 'columns' (отображаемые колонки)
 		if ($view['columns'])
@@ -258,7 +258,7 @@ class AdminListOption extends BaseData
 			$arViewColumns = explode(',', $view['columns']);
 			foreach ($arViewColumns as &$viewColumn)
 			{
-				$this->convertString($viewColumn, $option, $dependencies);
+				$this->convertString($viewColumn, $option, $xmlIds);
 			}
 			$view['columns'] = implode(',', $arViewColumns);
 		}
@@ -279,7 +279,7 @@ class AdminListOption extends BaseData
 			$convertedArray = array();
 			foreach	($arrayToConvert as $arrayKey => $arrayVal)
 			{
-				$this->convertString($arrayKey, $option, $dependencies);
+				$this->convertString($arrayKey, $option, $xmlIds);
 				$convertedArray[$arrayKey] = $arrayVal;
 			}
 			$arrayToConvert = $convertedArray;
@@ -302,7 +302,7 @@ class AdminListOption extends BaseData
 		{
 			if ($stringToConvert)
 			{
-				$this->convertString($stringToConvert, $option, $dependencies);
+				$this->convertString($stringToConvert, $option, $xmlIds);
 			}
 		}
 		unset($stringToConvert);
@@ -314,14 +314,14 @@ class AdminListOption extends BaseData
 	 *
 	 * @param string $stringToConvert конвертируемая строка.
 	 * @param array $option данные настройки.
-	 * @param array $dependencies зависимости от xml_id сконвертированных данных.
+	 * @param array $xmlIds xml_id сконвертированных данных.
 	 */
-	protected function convertString(&$stringToConvert, array $option, array &$dependencies)
+	protected function convertString(&$stringToConvert, array $option, array &$xmlIds)
 	{
 		if ($this->isIblockProperty($stringToConvert))
 		{
 			$propertyXmlId = $this->convertIblockPropertyNameToXml($stringToConvert);
-			$dependencies['PROPERTY'][] = $propertyXmlId;
+			$xmlIds['PROPERTY'][] = $propertyXmlId;
 		}
 		elseif($this->isUfField($stringToConvert))
 		{
@@ -334,7 +334,7 @@ class AdminListOption extends BaseData
 			if ($ufField)
 			{
 				$ufFieldIdObj = Field::getInstance()->createId($ufField['ID']);
-				$dependencies['FIELD'][] = Field::getInstance()->getXmlId($ufFieldIdObj);
+				$xmlIds['FIELD'][] = Field::getInstance()->getXmlId($ufFieldIdObj);
 			}
 		}
 	}
