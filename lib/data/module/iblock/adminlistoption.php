@@ -4,6 +4,7 @@ namespace Intervolga\Migrato\Data\Module\Iblock;
 use CUserOptions;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
+use CUserTypeEntity;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
@@ -12,6 +13,7 @@ use Intervolga\Migrato\Data\Record;
  * Class AdminListOptions - настройки отображения админ. страниц списка элементов и разделов инфоблока.
  *
  * Хэш названия настройки (<hash>): строка в которой закодирована информация об ИБ.
+ * Конвертируемые настройки: настройки, поле VALUE которых подлежит конвертации в формат выгрузки (xml).
  *
  * @package Intervolga\Migrato\Data\Module\Iblock
  */
@@ -155,6 +157,13 @@ class AdminListOption extends BaseData
 		return '';
 	}
 
+	/**
+	 * Создает запись миграции настройки
+	 *
+	 * @param array $option массив данных настройки.
+	 *
+	 * @return Record запись миграции настройки.
+	 */
 	protected function createRecordFromArray(array $option)
 	{
 		$record = new Record($this);
@@ -168,11 +177,19 @@ class AdminListOption extends BaseData
 		return $record;
 	}
 
+	/**
+	 * Добавляет в запись миграции $record поле VALUE настройки.
+	 * Предварительно поле конвертируется в формат (xml), пригодный для выгрузки.
+	 * Также добавляются зависимости от xml_id сконвертированных данных.
+	 *
+	 * @param Record $record запись миграции настройки.
+	 * @param array $option данные настройки.
+	 */
 	protected function setOptionValue(Record $record, array $option)
 	{
 		$dependencies = array();
 
-		$arFields = $this->convertFieldsToXml($option, $dependencies);
+		$arFields = $this->convertValueToXml($option, $dependencies);
 		$record->setFieldRaw('VALUE', serialize($arFields));
 
 
@@ -193,56 +210,140 @@ class AdminListOption extends BaseData
 		}
 	}
 
-	protected function convertFieldsToXml(array $option, array &$dependencies)
+	/**
+	 * Конвертирует поле VALUE настройки в формат (xml), пригодный для выгрузки.
+	 *
+	 * @param array $option данные настройки.
+	 * @param array $dependencies зависимости от xml_id сконвертированных данных.
+	 *
+	 * @return array массив сконвертированных данных.
+	 */
+	protected function convertValueToXml(array $option, array &$dependencies)
 	{
+		$ufFields = array();
 		$arOptionValue = unserialize($option['VALUE']);
 
-		foreach	($arOptionValue['views'] as $view)
+		if (!$this->isConvertibleOption($option))
+		{
+			return $arOptionValue;
+		}
+
+		foreach	($arOptionValue['views'] as &$view)
 		{
 			$convertedProperties = array();
 
-			$viewColumns = $view['columns'];
-			$arViewColumns = explode(',', $viewColumns);
+			// Конвертация массива 'columns' (отображаемые колонки)
+			$arViewColumns = explode(',', $view['columns']);
 			foreach ($arViewColumns as &$viewColumn)
 			{
 				if ($this->isIblockProperty($viewColumn))
 				{
-					$propertyName = $viewColumn;
-
-					$propertyXmlId = $this->convertIblockPropertyNameToXml($viewColumn);
+					// Конвертация названий свойств ИБ + зависимости от свойств ИБ
+					$propertyXmlId = $this->convertIblockPropertyNameToXml($viewColumn, $convertedProperties);
 					$dependencies['PROPERTY'][] = $propertyXmlId;
-					$convertedProperties[$propertyName] = $viewColumn;
-
 				}
 				elseif($this->isUfField($viewColumn))
 				{
-					// TODO: Добавить в массив зависимостей
+					// Получение UF-полей
+					if (!$ufFields)
+					{
+						$iblock = $this->getIblockByOptionName($option['NAME']);
+						$ufFields = $this->getUfFields('IBLOCK_' . $iblock['ID'] . '_SECTION');
+					}
+
+					// Зависимости от UF-полей
+					$ufField = $ufFields[$viewColumn];
+					if ($ufField)
+					{
+						$ufFieldId = $ufField['ID'];
+						$ufFieldIdObj = Field::getInstance()->createId($ufFieldId);
+						$dependencies['FIELD'][] = Field::getInstance()->getXmlId($ufFieldIdObj);
+					}
 				}
 			}
-			$viewColumns = implode(',', $arViewColumns);
+			$view['columns'] = implode(',', $arViewColumns);
 
 
-			// TODO: Конвертация названий свойств ИБ
-			$viewColumnSizes = $view['columns_sizes']['columns'];
-			$viewSortBy = $view['last_sort_by'];
-			$viewLastSortBy = $view['sort_by'];
+			// Конвертируем массивы
+			$arraysToConvert = array(
+				&$view['columns_sizes']['columns'],
+				&$view['custom_names'],
+			);
+			foreach ($arraysToConvert as &$arrayToConvert)
+			{
+				$convertedArray = array();
+				foreach	($arrayToConvert as $arrayKey => $arrayVal)
+				{
+					$this->convertIblockPropertyNameToXml($arrayKey, $convertedProperties);
+					$convertedArray[$arrayKey] = $arrayVal;
+				}
+				$arrayToConvert = $convertedArray;
+			}
+			unset($arrayToConvert);
+			unset($arraysToConvert);
+
+			// Конвертируем строки
+			$stringsToConvert = array(
+				&$view['last_sort_by'],
+			);
+			foreach	($stringsToConvert as &$stringToConvert)
+			{
+				if ($stringToConvert)
+				{
+					$this->convertIblockPropertyNameToXml($stringToConvert, $convertedProperties);
+				}
+			}
+			unset($stringToConvert);
+			unset($stringsToConvert);
 		}
 
 
 		return $arOptionValue;
 	}
 
-	protected function convertIblockPropertyNameToXml(&$iblockPropertyName)
+	/**
+	 * Конвертирует название свойства ИБ в формат (xml), пригодный для выгрузки.
+	 *
+	 * @param string $iblockPropertyName название свойства ИБ.
+	 * @param array $convertedProperties массив уже сконвертированных свойств (нужен для кэширования).
+	 *
+	 * @return string xml_id свойства ИБ
+	 *                или
+	 *                пустая строка, если конвертация не производилась.
+	 */
+	protected function convertIblockPropertyNameToXml(&$iblockPropertyName, array &$convertedProperties)
 	{
 		$propertyXmlId = '';
 
 		$this->testStringAgainstIblockPropertyRegex($iblockPropertyName, $isMatch, $matches);
 		if ($isMatch && $matches[1])
 		{
-			$propertyId = intval($matches[1]);
-			$propertyIdObj = Property::getInstance()->createId($propertyId);
-			$propertyXmlId = Property::getInstance()->getXmlId($propertyIdObj);
-			$iblockPropertyName = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
+			// Если конвертация свойства производилась ранее
+			if ($convertedProperties[$iblockPropertyName])
+			{
+				// Получаем сконвертированное ранее значение
+				$iblockPropertyName = $convertedProperties[$iblockPropertyName];
+
+				// Получаем xml_id свойства из нового значения
+				$this->testStringAgainstIblockPropertyRegex($iblockPropertyName, $isMatch, $matches);
+				if ($isMatch)
+				{
+					$propertyXmlId = $matches[1];
+				}
+			}
+			else
+			{
+				$baseIblockPropertyName = $iblockPropertyName;
+
+				// Конвертируем свойство
+				$propertyId = intval($matches[1]);
+				$propertyIdObj = Property::getInstance()->createId($propertyId);
+				$propertyXmlId = Property::getInstance()->getXmlId($propertyIdObj);
+				$iblockPropertyName = static::PROPERTY_FIELD_PREFIX . $propertyXmlId;
+
+				// Запоминаем сконвертированное значение
+				$convertedProperties[$baseIblockPropertyName] = $iblockPropertyName;
+			}
 		}
 
 		return $propertyXmlId;
@@ -406,6 +507,34 @@ class AdminListOption extends BaseData
 	}
 
 	/**
+	 * Возвращает типы настроек, поле VALUE которых подлежит конвертации в формат выгрузки (xml).
+	 *
+	 * @return array типы конвертируемых настроек.
+	 */
+	protected function getConvertibleOptionTypes()
+	{
+		$optionTypes = array_keys(static::OPTION_NAME_PREFIXES);
+		$nonConvertibleOptionTypes = array('IB_LIST_ADMIN', 'IB_LIST', 'IB_PROPERTIES_LIST');
+
+		return array_diff($optionTypes, $nonConvertibleOptionTypes);
+	}
+
+	/**
+	 * Проверяет, является ли настройка $option конвертируемой.
+	 *
+	 * @param array $option данные настройки.
+	 *
+	 * @return bool true, если настройка конвертируемая, иначе - false.
+	 */
+	protected function isConvertibleOption(array $option)
+	{
+		$optionType = $this->getOptionType($option['NAME']);
+		$convertibleOptionTypes = $this->getConvertibleOptionTypes();
+
+		return in_array($optionType, $convertibleOptionTypes);
+	}
+
+	/**
 	 * Проверяет, привязана ли настройка к определенному ИБ
 	 * (если нет, то привязана к типу ИБ)
 	 *
@@ -529,7 +658,32 @@ class AdminListOption extends BaseData
 
 		$this->testStringAgainstIblockPropertyRegex($string, $isMatch, $matches);
 
-		return ($isMatch && $matches[2]);
+		return ($isMatch && $matches[1]);
+	}
+
+	/**
+	 * Возвращает UF-поля из БД.
+	 *
+	 * @param string $entityId id сущности для фильтрации (опционально).
+	 *
+	 * @return array данные UF-полей.
+	 */
+	protected function getUfFields($entityId = '')
+	{
+		$filter = array();
+		if ($entityId)
+		{
+			$filter['ENTITY_ID'] = $entityId;
+		}
+
+		$ufFields = array();
+		$dbRes = CUserTypeEntity::GetList(array(), $filter);
+		while ($ufField = $dbRes->Fetch())
+		{
+			$ufFields[$ufField['FIELD_NAME']] = $ufField;
+		}
+
+		return $ufFields;
 	}
 
 	/**
