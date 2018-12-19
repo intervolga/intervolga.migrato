@@ -8,6 +8,8 @@ use CUserTypeEntity;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
+use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\ExceptionText;
 
 /**
  * Class AdminListOptions - настройки отображения админ. страниц списка элементов и разделов инфоблока.
@@ -142,6 +144,72 @@ class AdminListOption extends BaseData
 	}
 
 	/**
+	 * @param Record $record
+	 *
+	 * @return RecordId
+	 * @throws \Exception
+	 */
+	protected function createInner(Record $record)
+	{
+		$optionId = $this->saveFilterFromRecord($record);
+		if ($optionId)
+		{
+			return $this->createId($optionId);
+		}
+
+		$exceptionMessage = ExceptionText::getFromString(
+			Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ADMIN_LIST_OPTIONS.ADD_ERROR')
+		);
+		throw new \Exception($exceptionMessage);
+	}
+
+	/**
+	 * @param Record $record
+	 *
+	 * @throws \Exception
+	 */
+	public function update(Record $record)
+	{
+		$optionId = 0;
+		if ($record->getId())
+		{
+			$optionId = $this->saveFilterFromRecord($record);
+		}
+
+		if (!$optionId)
+		{
+			$exceptionMessage = ExceptionText::getFromString(
+				Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ADMIN_LIST_OPTIONS.UPDATE_ERROR')
+			);
+			throw new \Exception($exceptionMessage);
+		}
+	}
+
+	/**
+	 * @param RecordId $id
+	 *
+	 * @throws \Exception
+	 */
+	protected function deleteInner(RecordId $id)
+	{
+		$success = false;
+
+		$dbRes = CUserOptions::GetList(array(), array('ID' => $id->getValue()));
+		if ($filter = $dbRes->Fetch())
+		{
+			$success = CUserOptions::DeleteOptionsByName($filter['CATEGORY'], $filter['NAME']);
+		}
+
+		if (!$success)
+		{
+			$exceptionMessage = ExceptionText::getFromString(
+				Loc::getMessage('INTERVOLGA_MIGRATO.IBLOCK_ADMIN_LIST_OPTIONS.DELETE_ERROR')
+			);
+			throw new \Exception($exceptionMessage);
+		}
+	}
+
+	/**
 	 * @param \Intervolga\Migrato\Data\RecordId $id
 	 *
 	 * @return string
@@ -155,6 +223,68 @@ class AdminListOption extends BaseData
 		}
 
 		return '';
+	}
+
+	/**
+	 * Формирует настройку из $record и сохраняет ее в БД.
+	 *
+	 * @param Record $record запись миграции, получаемая на входе методов update(), createInner().
+	 *
+	 * @return int id сохраненной настройки или 0.
+	 */
+	protected function saveFilterFromRecord(Record $record)
+	{
+		$arOption = $this->createArrayFromRecord($record);
+
+		// Сохраняем настройку
+		$optionId = 0;
+		$success = false;
+		if ($arOption['CATEGORY'] && $arOption['NAME'] && $arOption['VALUE'])
+		{
+			$success = CUserOptions::SetOption(
+				$arOption['CATEGORY'],
+				$arOption['NAME'],
+				$arOption['VALUE'],
+				$arOption['COMMON'] === 'Y',
+				$arOption['USER_ID']
+			);
+		}
+
+		// Проверяем успешность сохранения
+		if ($success)
+		{
+			$option = CUserOptions::GetList(
+				array(),
+				array(
+					'CATEGORY' => $arOption['CATEGORY'],
+					'NAME' => $arOption['NAME'],
+					'USER_ID' => $arOption['USER_ID'],
+				)
+			)->Fetch();
+
+			$optionId = $option['ID'] ?: 0;
+		}
+
+		return $optionId;
+	}
+
+	/**
+	 * Создает массив данных настройки
+	 *
+	 * @param Record $record запись миграции настройки.
+	 *
+	 * @return string[] массив данных настройки.
+	 */
+	protected function createArrayFromRecord(Record $record)
+	{
+		$arOption = $record->getFieldsRaw();
+		$xmlIdFields = explode(static::XML_ID_SEPARATOR, $record->getXmlId());
+
+		$arOption['USER_ID'] = $xmlIdFields[2];
+		$arOption['NAME'] = $this->getOptionName($record->getXmlId());
+		$arOption['VALUE'] = $this->convertValueFromXml($arOption);
+
+		return $arOption;
 	}
 
 	/**
@@ -230,13 +360,13 @@ class AdminListOption extends BaseData
 		// Для общих и персональных настроек структура поля VALUE отличается
 		if($option['COMMON'] === 'Y')
 		{
-			$this->convertOptionView($arOptionValue['view'], $option, $xmlIds);
+			$this->convertOptionViewToXml($arOptionValue['view'], $option, $xmlIds);
 		}
 		else
 		{
 			foreach	($arOptionValue['views'] as &$view)
 			{
-				$this->convertOptionView($view, $option, $xmlIds);
+				$this->convertOptionViewToXml($view, $option, $xmlIds);
 			}
 		}
 
@@ -244,13 +374,45 @@ class AdminListOption extends BaseData
 	}
 
 	/**
-	 * Конвертирует массив view в поле VALUE настройки.
+	 * Конвертирует поле VALUE настройки в формат, пригодный для сохранения в БД.
+	 *
+	 * @param array $option данные настройки.
+	 *
+	 * @return array массив сконвертированных данных.
+	 */
+	protected function convertValueFromXml(array $option)
+	{
+		$arOptionValue = unserialize($option['VALUE']);
+
+		if (!$this->isConvertibleOption($option))
+		{
+			return $arOptionValue;
+		}
+
+		// Для общих и персональных настроек структура поля VALUE отличается
+		if($option['COMMON'] === 'Y')
+		{
+			$this->convertOptionViewFromXml($arOptionValue['view']);
+		}
+		else
+		{
+			foreach	($arOptionValue['views'] as &$view)
+			{
+				$this->convertOptionViewFromXml($view);
+			}
+		}
+
+		return $arOptionValue;
+	}
+
+	/**
+	 * Конвертирует массив view в поле VALUE настройки в формат (xml), пригодный для выгрузки.
 	 *
 	 * @param array $view конвертируемый массив.
 	 * @param array $option данные настройки.
 	 * @param array $xmlIds xml_id сконвертированных данных.
 	 */
-	protected function convertOptionView(array &$view, array $option, array &$xmlIds)
+	protected function convertOptionViewToXml(array &$view, array $option, array &$xmlIds)
 	{
 		// Конвертация массива 'columns' (отображаемые колонки)
 		if ($view['columns'])
@@ -258,7 +420,7 @@ class AdminListOption extends BaseData
 			$arViewColumns = explode(',', $view['columns']);
 			foreach ($arViewColumns as &$viewColumn)
 			{
-				$this->convertString($viewColumn, $option, $xmlIds);
+				$this->convertStringToXml($viewColumn, $option, $xmlIds);
 			}
 			$view['columns'] = implode(',', $arViewColumns);
 		}
@@ -279,7 +441,7 @@ class AdminListOption extends BaseData
 			$convertedArray = array();
 			foreach	($arrayToConvert as $arrayKey => $arrayVal)
 			{
-				$this->convertString($arrayKey, $option, $xmlIds);
+				$this->convertStringToXml($arrayKey, $option, $xmlIds);
 				$convertedArray[$arrayKey] = $arrayVal;
 			}
 			$arrayToConvert = $convertedArray;
@@ -302,7 +464,71 @@ class AdminListOption extends BaseData
 		{
 			if ($stringToConvert)
 			{
-				$this->convertString($stringToConvert, $option, $xmlIds);
+				$this->convertStringToXml($stringToConvert, $option, $xmlIds);
+			}
+		}
+		unset($stringToConvert);
+		unset($stringsToConvert);
+	}
+
+	/**
+	 * Конвертирует массив view в поле VALUE настройки в формат, пригодный для сохранения в БД.
+	 *
+	 * @param array $view конвертируемый массив.
+	 */
+	protected function convertOptionViewFromXml(array &$view)
+	{
+		// Конвертация массива 'columns' (отображаемые колонки)
+		if ($view['columns'])
+		{
+			$arViewColumns = explode(',', $view['columns']);
+			foreach ($arViewColumns as &$viewColumn)
+			{
+				$this->convertStringFromXml($viewColumn);
+			}
+			$view['columns'] = implode(',', $arViewColumns);
+		}
+
+		// Конвертируем массивы
+		$arraysToConvert = array();
+		if ($view['columns_sizes']['columns'])
+		{
+			$arraysToConvert[] = &$view['columns_sizes']['columns'];
+		}
+		if ($view['custom_names'])
+		{
+			$arraysToConvert[] = &$view['custom_names'];
+		}
+
+		foreach ($arraysToConvert as &$arrayToConvert)
+		{
+			$convertedArray = array();
+			foreach	($arrayToConvert as $arrayKey => $arrayVal)
+			{
+				$this->convertStringFromXml($arrayKey);
+				$convertedArray[$arrayKey] = $arrayVal;
+			}
+			$arrayToConvert = $convertedArray;
+		}
+		unset($arrayToConvert);
+		unset($arraysToConvert);
+
+		// Конвертируем строки
+		$stringsToConvert = array();
+		if ($view['last_sort_by'])
+		{
+			$stringsToConvert[] = &$view['last_sort_by'];
+		}
+		if ($view['sort_by'])
+		{
+			$stringsToConvert[] = &$view['sort_by'];
+		}
+
+		foreach	($stringsToConvert as &$stringToConvert)
+		{
+			if ($stringToConvert)
+			{
+				$this->convertStringFromXml($stringToConvert);
 			}
 		}
 		unset($stringToConvert);
@@ -316,7 +542,7 @@ class AdminListOption extends BaseData
 	 * @param array $option данные настройки.
 	 * @param array $xmlIds xml_id сконвертированных данных.
 	 */
-	protected function convertString(&$stringToConvert, array $option, array &$xmlIds)
+	protected function convertStringToXml(&$stringToConvert, array $option, array &$xmlIds)
 	{
 		if ($this->isIblockProperty($stringToConvert))
 		{
@@ -336,6 +562,19 @@ class AdminListOption extends BaseData
 				$ufFieldIdObj = Field::getInstance()->createId($ufField['ID']);
 				$xmlIds['FIELD'][] = Field::getInstance()->getXmlId($ufFieldIdObj);
 			}
+		}
+	}
+
+	/**
+	 * Конвертирует строку в формат (xml), пригодный для сохранения в БД.
+	 *
+	 * @param string $stringToConvert конвертируемая строка.
+	 */
+	protected function convertStringFromXml(&$stringToConvert)
+	{
+		if ($this->isIblockProperty($stringToConvert))
+		{
+			$this->convertIblockPropertyNameFromXml($stringToConvert);
 		}
 	}
 
@@ -366,6 +605,33 @@ class AdminListOption extends BaseData
 	}
 
 	/**
+	 * Конвертирует название свойства ИБ в формат, пригодный для сохранения в БД.
+	 *
+	 * @param string $iblockPropertyName название свойства ИБ.
+	 *
+	 * @return string id свойства ИБ
+	 *                или
+	 *                пустая строка, если конвертация не производилась.
+	 */
+	protected function convertIblockPropertyNameFromXml(&$iblockPropertyName)
+	{
+		$propertyId = 0;
+
+		$this->testStringAgainstIblockPropertyRegex($iblockPropertyName, $isMatch, $matches);
+		if ($isMatch && $matches[1])
+		{
+			$propertyRecord = Property::getInstance()->findRecord($matches[1]);
+			if ($propertyRecord)
+			{
+				$propertyId = $propertyRecord->getValue();
+				$iblockPropertyName = static::PROPERTY_FIELD_PREFIX . $propertyId;
+			}
+		}
+
+		return $propertyId;
+	}
+
+	/**
 	 * Добавляет в запись миграции $record
 	 * зависимость от ИБ или типа ИБ.
 	 *
@@ -386,7 +652,8 @@ class AdminListOption extends BaseData
 	}
 
 	/**
-	 * Возвращает xmlId настройки на основе массива ее данных $option.
+	 * Возвращает xmlId настройки
+	 * на основе массива ее данных $option.
 	 *
 	 * @param array $option массив данных настройки.
 	 *
@@ -471,6 +738,88 @@ class AdminListOption extends BaseData
 	}
 
 	/**
+	 * Вохзвращает название настройки по ее xml_id.
+	 *
+	 * @param string $optionXmlId xml_id настройки.
+	 *
+	 * @return string название настройки.
+	 */
+	protected function getOptionName($optionXmlId)
+	{
+		$xmlIdFields = explode(static::XML_ID_SEPARATOR, $optionXmlId);
+		$xmlId = $xmlIdFields[1];
+		$optionType = $xmlIdFields[0];
+		$optionTypePrefix = static::OPTION_NAME_PREFIXES[$optionType];
+
+		if (in_array($optionType, $this->getIblockOptionTypes()))
+		{
+			/** @var RecordId $iblockRecord */
+			$iblockRecord = Iblock::getInstance()->findRecord($xmlId);
+			if ($iblockRecord)
+			{
+				$iblockInfo = \CIBlock::GetByID($iblockRecord->getValue())->GetNext();
+				if ($optionType === 'IB_PROPERTIES_LIST')
+				{
+					return $optionTypePrefix . $iblockInfo['ID'];
+				}
+				else
+				{
+					return $optionTypePrefix . md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockInfo['ID']);
+				}
+			}
+		}
+		else
+		{
+			/** @var RecordId $iblockTypeRecord */
+			$iblockTypeRecord = Type::getInstance()->findRecord($xmlId);
+			if ($iblockTypeRecord)
+			{
+				$iblockTypeInfo = \CIBlockType::GetByID($iblockTypeRecord->getValue())->GetNext();
+				return $optionTypePrefix . md5($iblockTypeInfo['ID']);
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Возвращает ИБ по его xmlId.
+	 *
+	 * @param string $iblockXmlId xmlId ИБ.
+	 *
+	 * @return array данные ИБ.
+	 */
+	protected function getIblockByXmlId($iblockXmlId)
+	{
+		$identifier = 0;
+		$iblockInfo = array();
+
+		if (Loader::includeModule('iblock'))
+		{
+			$iblockRecord = Iblock::getInstance()->findRecord($iblockXmlId);
+
+			if ($iblockRecord)
+			{
+				$identifier = $iblockRecord->getValue();
+				$iblockInfo = \CIBlock::GetByID($identifier)->GetNext();
+			}
+			else
+			{
+				$iblockTypeRecord = Type::getInstance()->findRecord($iblockXmlId);
+				if ($iblockTypeRecord)
+				{
+					$identifier = $iblockTypeRecord->getValue();
+					$iblockInfo = \CIBlockType::GetByID($identifier)->GetNext();
+				}
+			}
+
+			\Bitrix\Main\Diag\Debug::writeToFile(__FILE__ . ':' . __LINE__ . "\n(" . date('Y-m-d H').")\n" . print_r($iblockInfo, true) . "\n\n", '', '/log/__debug_petrenko.log');
+		}
+
+		return $iblockInfo;
+	}
+
+	/**
 	 * Проверяет, принадлежит ли настройка $optionName инфоблоку $iblockInfo.
 	 * Проверка происходит по закодированному в названиии настройки <hash>.
 	 *
@@ -533,6 +882,20 @@ class AdminListOption extends BaseData
 		$nonConvertibleOptionTypes = array('IB_LIST_ADMIN', 'IB_LIST', 'IB_PROPERTIES_LIST');
 
 		return array_diff($optionTypes, $nonConvertibleOptionTypes);
+	}
+
+	/**
+	 * Возвращает типы настроек для ИБ.
+	 * <hash> таких настроек содержит id ИБ.
+	 *
+	 * @return array типы настрое для ИБ.
+	 */
+	protected function getIblockOptionTypes()
+	{
+		$optionTypes = array_keys(static::OPTION_NAME_PREFIXES);
+		$iblockTypeOptionTypes = array('IB_LIST_ADMIN', 'IB_LIST');
+
+		return array_diff($optionTypes, $iblockTypeOptionTypes);
 	}
 
 	/**
