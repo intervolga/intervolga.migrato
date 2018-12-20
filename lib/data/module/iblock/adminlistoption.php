@@ -151,7 +151,7 @@ class AdminListOption extends BaseData
 	 */
 	protected function createInner(Record $record)
 	{
-		$optionId = $this->saveFilterFromRecord($record);
+		$optionId = $this->saveOptionFromRecord($record);
 		if ($optionId)
 		{
 			return $this->createId($optionId);
@@ -173,7 +173,7 @@ class AdminListOption extends BaseData
 		$optionId = 0;
 		if ($record->getId())
 		{
-			$optionId = $this->saveFilterFromRecord($record);
+			$optionId = $this->saveOptionFromRecord($record);
 		}
 
 		if (!$optionId)
@@ -257,7 +257,7 @@ class AdminListOption extends BaseData
 	 *
 	 * @return int id сохраненной настройки или 0.
 	 */
-	protected function saveFilterFromRecord(Record $record)
+	protected function saveOptionFromRecord(Record $record)
 	{
 		$arOption = $this->createArrayFromRecord($record);
 
@@ -285,7 +285,7 @@ class AdminListOption extends BaseData
 					'NAME' => $arOption['NAME'],
 					'USER_ID' => $arOption['USER_ID'],
 				)
-			)->Fetch();
+			)->GetNext();
 
 			$optionId = $option['ID'] ?: 0;
 		}
@@ -616,7 +616,7 @@ class AdminListOption extends BaseData
 	{
 		$propertyXmlId = '';
 
-		$this->testStringAgainstIblockPropertyRegex($iblockPropertyName, $isMatch, $matches);
+		$isMatch = preg_match(static::IBLOCK_PROPERTY_NAME_REGEX, $iblockPropertyName, $matches);
 		if ($isMatch && $matches[1])
 		{
 			// Конвертируем свойство
@@ -642,7 +642,7 @@ class AdminListOption extends BaseData
 	{
 		$propertyId = 0;
 
-		$this->testStringAgainstIblockPropertyRegex($iblockPropertyName, $isMatch, $matches);
+		$isMatch = preg_match(static::IBLOCK_PROPERTY_NAME_REGEX, $iblockPropertyName, $matches);
 		if ($isMatch && $matches[1])
 		{
 			$propertyRecord = Property::getInstance()->findRecord($matches[1]);
@@ -687,19 +687,16 @@ class AdminListOption extends BaseData
 	protected function getXmlIdFromArray(array $option)
 	{
 		$result = '';
-		$dependencyXmlId = $this->getOptionIblockDependency($option['NAME']);
 
+		$dependencyXmlId = $this->getOptionIblockDependency($option['NAME']);
 		if ($dependencyXmlId)
 		{
-			$filterType = $this->getOptionType($option['NAME']);
-
-			$result = (
-				$filterType
-				. static::XML_ID_SEPARATOR .
-				$dependencyXmlId
-				. static::XML_ID_SEPARATOR .
-				$option['USER_ID']
-			);
+			$optionType = $this->getOptionType($option['NAME']);
+			$result = $optionType
+				. static::XML_ID_SEPARATOR
+				. $dependencyXmlId
+				. static::XML_ID_SEPARATOR
+				. $option['USER_ID'];
 		}
 
 		return $result;
@@ -763,7 +760,7 @@ class AdminListOption extends BaseData
 	}
 
 	/**
-	 * Вохзвращает название настройки по ее xml_id.
+	 * Возвращает название настройки по ее xml_id.
 	 *
 	 * @param string $optionXmlId xml_id настройки.
 	 *
@@ -822,7 +819,6 @@ class AdminListOption extends BaseData
 		if (Loader::includeModule('iblock'))
 		{
 			$iblockRecord = Iblock::getInstance()->findRecord($iblockXmlId);
-
 			if ($iblockRecord)
 			{
 				$identifier = $iblockRecord->getValue();
@@ -837,8 +833,6 @@ class AdminListOption extends BaseData
 					$iblockInfo = \CIBlockType::GetByID($identifier)->GetNext();
 				}
 			}
-
-			\Bitrix\Main\Diag\Debug::writeToFile(__FILE__ . ':' . __LINE__ . "\n(" . date('Y-m-d H').")\n" . print_r($iblockInfo, true) . "\n\n", '', '/log/__debug_petrenko.log');
 		}
 
 		return $iblockInfo;
@@ -913,7 +907,7 @@ class AdminListOption extends BaseData
 	 * Возвращает типы настроек для ИБ.
 	 * <hash> таких настроек содержит id ИБ.
 	 *
-	 * @return array типы настрое для ИБ.
+	 * @return array типы настроек для ИБ.
 	 */
 	protected function getIblockOptionTypes()
 	{
@@ -1052,11 +1046,7 @@ class AdminListOption extends BaseData
 	 */
 	protected function isIblockProperty($string)
 	{
-		$isMatch = false;
-		$matches = array();
-
-		$this->testStringAgainstIblockPropertyRegex($string, $isMatch, $matches);
-
+		$isMatch = preg_match(static::IBLOCK_PROPERTY_NAME_REGEX, $string, $matches);
 		return ($isMatch && $matches[1]);
 	}
 
@@ -1110,31 +1100,5 @@ class AdminListOption extends BaseData
 		$length = strlen(static::UF_FIELD_PREFIX);
 
 		return (substr($string, 0, $length) === static::UF_FIELD_PREFIX);
-	}
-
-	/**
-	 * Проверяет строку $string на соответсвие регулярному выражению
-	 * для названия свойства ИБ.
-	 *
-	 * @param string $string проверяемая строка.
-	 * @param bool $isMatch признак соответствия проверяемой строки регулярному выражению.
-	 * @param array $matches массив совпадений.
-	 */
-	protected function testStringAgainstIblockPropertyRegex($string, &$isMatch, &$matches)
-	{
-		$isMatch = preg_match(static::IBLOCK_PROPERTY_NAME_REGEX, $string, $matches);
-	}
-
-	/**
-	 * Проверяет строку $string на соответсвие регулярному выражению
-	 * для названия UF-поля.
-	 *
-	 * @param string $string проверяемая строка.
-	 * @param bool $isMatch признак соответствия проверяемой строки регулярному выражению.
-	 * @param array $matches массив совпадений.
-	 */
-	protected function testStringAgainstUFRegex($string, &$isMatch, &$matches)
-	{
-		$isMatch = preg_match(static::UF_FIELD_NAME_REGEX, $string, $matches);
 	}
 }
