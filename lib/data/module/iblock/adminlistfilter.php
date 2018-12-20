@@ -44,7 +44,7 @@ class AdminListFilter extends BaseData
 	/**
 	 * REGEX: название фильтра свойства ИБ
 	 */
-	const IB_PROPERTY_NAME_REGEX = '/^([^_]*_?)PROPERTY_([^_\s]+)(_?.*)$/';
+	const IB_PROPERTY_NAME_REGEX = '/^([a-z]+_)?PROPERTY_(.+?)(_[a-z]+)?$/';
 
 	/**
 	 * REGEX: название фильтра UF-поля
@@ -1200,7 +1200,7 @@ class AdminListFilter extends BaseData
 	 */
 	protected function convertValueFromXml(array $filterData)
 	{
-		$filterFields = unserialize($filterData['FIELDS']);
+		$filterFields = unserialize($filterData['VALUE']);
 
 		if (!$this->isConvertibleFilter($filterData))
 		{
