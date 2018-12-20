@@ -280,7 +280,7 @@ class AdminListFilter extends BaseData
 		$record->setFieldRaw('COMMON', $option['COMMON']);
 		$record->setFieldRaw('CATEGORY', $option['CATEGORY']);
 		$this->setIblockDependency($record, $option);
-		$this->addPropertiesDependencies($record, $option);
+		$this->setFilterValue($record, $option);
 
 		return $record;
 	}
@@ -305,7 +305,15 @@ class AdminListFilter extends BaseData
 		return $arFilter;
 	}
 
-	protected function addPropertiesDependencies(Record $record, $filter)
+	/**
+	 * Добавляет в запись миграции $record поле VALUE фильтра.
+	 * Предварительно поле конвертируется в формат (xml), пригодный для выгрузки.
+	 * Также добавляются зависимости от xml_id сконвертированных данных.
+	 *
+	 * @param Record $record запись миграции настройки.
+	 * @param array $filter данные фильтра.
+	 */
+	protected function setFilterValue(Record $record, array $filter)
 	{
 		$dependencies = array();
 
