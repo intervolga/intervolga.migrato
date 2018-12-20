@@ -466,8 +466,12 @@ class AdminListFilter extends BaseData
 		$iblockInfo = array();
 		if (Loader::includeModule('iblock'))
 		{
-			$iblockId = MigratoIblock::getInstance()->findRecord($iblockXmlId)->getValue();
-			$iblockInfo = \CIBlock::GetByID($iblockId)->GetNext();
+			$iblockRecord = MigratoIblock::getInstance()->findRecord($iblockXmlId);
+			if ($iblockRecord)
+			{
+				$iblockId = $iblockRecord->getValue();
+				$iblockInfo = \CIBlock::GetByID($iblockId)->GetNext();
+			}
 		}
 
 		return $iblockInfo;
@@ -1168,9 +1172,10 @@ class AdminListFilter extends BaseData
 			$filterRowPostfix = $matches[3];
 			$propertyXmlId = $matches[2];
 
-			$propertyId = Property::getInstance()->findRecord($propertyXmlId);
-			if ($propertyId = $propertyId->getValue())
+			$propertyRecord = Property::getInstance()->findRecord($propertyXmlId);
+			if ($propertyRecord)
 			{
+				$propertyId = $propertyRecord->getValue();
 				$filterRow = static::PROPERTY_FIELD_PREFIX . $propertyId;
 				if ($filterRowPrefix)
 				{
@@ -1245,17 +1250,22 @@ class AdminListFilter extends BaseData
 							{
 								foreach ($newFilterRowValue as &$filterRowValueId)
 								{
-									if ($filterRowValueId && $filterRowValueId !== 'NOT_REF')
+									$enumRecord = Enum::getInstance()->findRecord($filterRowValueId);
+									if ($enumRecord)
 									{
-										$filterRowValueId = Enum::getInstance()->findRecord($filterRowValueId)->getValue();
+										$filterRowValueId = $enumRecord->getValue();
 										$filterRowValueId = strval($filterRowValueId);
 									}
 								}
 							}
 							else
 							{
-								$newFilterRowValue = Enum::getInstance()->findRecord($newFilterRowValue)->getValue();
-								$newFilterRowValue = strval($newFilterRowValue);
+								$enumRecord = Enum::getInstance()->findRecord($newFilterRowValue);
+								if ($enumRecord)
+								{
+									$newFilterRowValue = $enumRecord->getValue();
+									$newFilterRowValue = strval($newFilterRowValue);
+								}
 							}
 						}
 					}
@@ -1271,8 +1281,12 @@ class AdminListFilter extends BaseData
 						{
 							foreach ($newFilterRowValue as &$ufFieldValXmlId)
 							{
-								$ufFieldValXmlId = FieldEnum::getInstance()->findRecord($ufFieldValXmlId)->getValue();
-								$ufFieldValXmlId = strval($ufFieldValXmlId);
+								$fieldEnumRecord = FieldEnum::getInstance()->findRecord($ufFieldValXmlId);
+								if ($fieldEnumRecord)
+								{
+									$ufFieldValXmlId = $fieldEnumRecord->getValue();
+									$ufFieldValXmlId = strval($ufFieldValXmlId);
+								}
 							}
 						}
 					}
