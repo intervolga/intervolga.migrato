@@ -300,7 +300,7 @@ class AdminListFilter extends BaseData
 
 		$arFilter['USER_ID'] = $xmlIdFields[2];
 		$arFilter['NAME'] = $this->getFilterName($record->getXmlId());
-		$arFilter['VALUE'] = $this->convertFieldsFromXml($arFilter);
+		$arFilter['VALUE'] = $this->convertValueFromXml($arFilter);
 
 		return $arFilter;
 	}
@@ -317,7 +317,7 @@ class AdminListFilter extends BaseData
 	{
 		$dependencies = array();
 
-		$arFields = $this->convertFieldsToXml($filter, $dependencies);
+		$arFields = $this->convertValueToXml($filter, $dependencies);
 		$record->setFieldRaw('VALUE', serialize($arFields));
 
 		/**
@@ -957,7 +957,7 @@ class AdminListFilter extends BaseData
 	 *
 	 * @return array поля фильтра в форме, пригодном для выгрузки.
 	 */
-	protected function convertFieldsToXml(array $filterData, array &$dependencies)
+	protected function convertValueToXml(array $filterData, array &$dependencies)
 	{
 		$filterFields = unserialize($filterData['VALUE']);
 		$iblockId = $this->getIblockIdByFilterName($filterData['NAME']);
@@ -1159,7 +1159,7 @@ class AdminListFilter extends BaseData
 	 *
 	 * @return array поля фильтра в формате, пригодном для сохранения в БД.
 	 */
-	protected function convertFieldsFromXml(array $filterData)
+	protected function convertValueFromXml(array $filterData)
 	{
 		$filterFields = unserialize($filterData['FIELDS']);
 		$iblockId = $this->getIblockIdByFilterName($filterData['NAME']);
