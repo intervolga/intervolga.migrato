@@ -48,7 +48,7 @@ class AdminListFilter extends BaseData
 	/**
 	 * REGEX: название фильтра UF-поля
 	 */
-	const UF_NAME_REGEX = '/^(UF_[A-Z0-9_]+)(_?.*)$/';
+	const UF_NAME_REGEX = '/^(UF_[A-Z0-9_]+)(_[a-z]+)?$/';
 
 	/**
 	 * Префиксы названия фильтров.
@@ -865,11 +865,7 @@ class AdminListFilter extends BaseData
 	 */
 	protected function isIbPropertyFilterRow($filterRowName)
 	{
-		$isMatch = false;
-		$matches = array();
-
-		$this->testStringAgainstIbPropertyRegex($filterRowName, $isMatch, $matches);
-
+		$isMatch = preg_match(static::IB_PROPERTY_NAME_REGEX, $filterRowName, $matches);
 		return ($isMatch && $matches[2]);
 	}
 
@@ -897,11 +893,7 @@ class AdminListFilter extends BaseData
 	 */
 	protected function getIbPropertyIdByFilterRow($filterRowName)
 	{
-		$isMatch = false;
-		$matches = array();
-
-		$this->testStringAgainstIbPropertyRegex($filterRowName, $isMatch, $matches);
-
+		$isMatch = preg_match(static::IB_PROPERTY_NAME_REGEX, $filterRowName, $matches);
 		return ($isMatch && $matches[2]) ? $matches[2] : '';
 	}
 
@@ -914,15 +906,8 @@ class AdminListFilter extends BaseData
 	 */
 	protected function getUfNameByFilterRow($filterRowName)
 	{
-		$ufName = '';
-
 		$isMatch = preg_match(static::UF_NAME_REGEX, $filterRowName, $matches);
-		if ($isMatch && $matches[1])
-		{
-			$ufName = rtrim($matches[1], '_');
-		}
-
-		return $ufName;
+		return ($isMatch && $matches[1]) ? $matches[1] : '';
 	}
 
 	/**
@@ -940,10 +925,7 @@ class AdminListFilter extends BaseData
 			$filterRows = explode(',', $filter['filter_rows']);
 			foreach ($filterRows as $filterRow)
 			{
-				$isMatch = false;
-				$matches = array();
-
-				$this->testStringAgainstIbPropertyRegex($filterRow, $isMatch, $matches);
+				$isMatch = preg_match(static::IB_PROPERTY_NAME_REGEX, $filterRow, $matches);
 				if ($isMatch && $matches[2])
 				{
 					$propertyIds[] = $matches[2];
@@ -952,32 +934,6 @@ class AdminListFilter extends BaseData
 		}
 
 		return array_unique($propertyIds);
-	}
-
-	/**
-	 * Проверяет строку $string на соответсвие регулярному выражению
-	 * для названия фильтра свойства элемента ИБ.
-	 *
-	 * @param string $string проверяемая строка.
-	 * @param bool $isMatch признак соответствия проверяемой строки регулярному выражению.
-	 * @param array $matches массив совпадений.
-	 */
-	protected function testStringAgainstIbPropertyRegex($string, &$isMatch, &$matches)
-	{
-		$isMatch = preg_match(static::IB_PROPERTY_NAME_REGEX, $string, $matches);
-	}
-
-	/**
-	 * Проверяет строку $string на соответсвие регулярному выражению
-	 * для названия фильтра UF-полей.
-	 *
-	 * @param string $string проверяемая строка.
-	 * @param bool $isMatch признак соответствия проверяемой строки регулярному выражению.
-	 * @param array $matches массив совпадений.
-	 */
-	protected function testStringAgainstUFRegex($string, &$isMatch, &$matches)
-	{
-		$isMatch = preg_match(static::UF_NAME_REGEX, $string, $matches);
 	}
 
 	/**
@@ -1115,13 +1071,11 @@ class AdminListFilter extends BaseData
 	protected function convertIbPropertyFilterRowToXml(&$filterRow)
 	{
 		$propertyXmlId = '';
-		$isMatch = false;
-		$matches = array();
 
 		/**
 		 * Проверка, что поле фильтра является фильтром свойства элемента ИБ
 		 */
-		$this->testStringAgainstIbPropertyRegex($filterRow, $isMatch, $matches);
+		$isMatch = preg_match(static::IB_PROPERTY_NAME_REGEX, $filterRow, $matches);
 		if ($isMatch && $matches[2])
 		{
 			$filterRowPrefix = $matches[1];
@@ -1158,13 +1112,11 @@ class AdminListFilter extends BaseData
 	protected function convertIbPropertyFilterRowFromXml(&$filterRow)
 	{
 		$propertyId = 0;
-		$isMatch = false;
-		$matches = array();
 
 		/**
 		 * Проверка, что поле фильтра является фильтром свойства элемента ИБ
 		 */
-		$this->testStringAgainstIbPropertyRegex($filterRow, $isMatch, $matches);
+		$isMatch = preg_match(static::IB_PROPERTY_NAME_REGEX, $filterRow, $matches);
 		if ($isMatch && $matches[2])
 		{
 			$filterRowPrefix = $matches[1];
