@@ -238,12 +238,14 @@ class AdminListOption extends BaseData
 		$optionCommon = $optionUserId == 0;
 		$optionCategory = $optionCommon ? static::OPTION_CATEGORIES['COMMON'] : static::OPTION_CATEGORIES['PERSONAL'];
 
-		$option = CUserOptions::GetOption(
-			$optionCategory,
-			$optionName,
-			false,
-			$optionUserId
-		);
+		$option = CUserOptions::GetList(
+			array(),
+			array(
+				'CATEGORY' => $optionCategory,
+				'NAME' => $optionName,
+				'USER_ID' => $optionUserId
+			)
+		)->GetNext();
 
 		return $option['ID'] ? $this->createId($option['ID']) : null;
 	}
