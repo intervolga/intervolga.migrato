@@ -6,7 +6,6 @@ use CUserTypeEntity;
 use Intervolga\Migrato\Data\BaseData;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\Link;
-use Intervolga\Migrato\Data\Module\Iblock\Iblock as MigratoIblock;
 use CUserOptions;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
@@ -112,7 +111,7 @@ class AdminListFilter extends BaseData
 		$this->setVirtualXmlId(true);
 		$this->setFilesSubdir('/type/iblock/admin/');
 		$this->setDependencies(array(
-			'IBLOCK' => new Link(MigratoIblock::getInstance()),
+			'IBLOCK' => new Link(Iblock::getInstance()),
 			'IBLOCK_TYPE' => new Link(Type::getInstance()),
 			'PROPERTY' => new Link(Property::getInstance()),
 			'ENUM' => new Link(Enum::getInstance()),
@@ -466,7 +465,7 @@ class AdminListFilter extends BaseData
 		$iblockInfo = array();
 		if (Loader::includeModule('iblock'))
 		{
-			$iblockRecord = MigratoIblock::getInstance()->findRecord($iblockXmlId);
+			$iblockRecord = Iblock::getInstance()->findRecord($iblockXmlId);
 			if ($iblockRecord)
 			{
 				$iblockId = $iblockRecord->getValue();
@@ -664,7 +663,7 @@ class AdminListFilter extends BaseData
 		if (in_array($filterType, $this->getIblockFilterTypes()))
 		{
 			/** @var RecordId $iblockRecord */
-			$iblockRecord = MigratoIblock::getInstance()->findRecord($xmlId);
+			$iblockRecord = Iblock::getInstance()->findRecord($xmlId);
 			if ($iblockRecord)
 			{
 				$iblockInfo = \CIBlock::GetByID($iblockRecord->getValue())->GetNext();
