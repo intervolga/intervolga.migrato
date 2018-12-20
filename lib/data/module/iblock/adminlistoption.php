@@ -25,8 +25,8 @@ class AdminListOption extends BaseData
 	 * Категории настроек.
 	 */
 	const OPTION_CATEGORIES = array(
-		'main.interface.grid',
-		'main.interface.grid.common',
+		'PERSONAL' => 'main.interface.grid',
+		'COMMON' => 'main.interface.grid.common',
 	);
 
 	/**
@@ -223,6 +223,29 @@ class AdminListOption extends BaseData
 		}
 
 		return '';
+	}
+
+	/**
+	 * @param string $xmlId
+	 *
+	 * @return RecordId|null
+	 */
+	public function findRecord($xmlId)
+	{
+		$xmlIdFields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		$optionUserId = $xmlIdFields[2];
+		$optionName = $this->getOptionName($xmlId);
+		$optionCommon = $optionUserId == 0;
+		$optionCategory = $optionCommon ? static::OPTION_CATEGORIES['COMMON'] : static::OPTION_CATEGORIES['PERSONAL'];
+
+		$option = CUserOptions::GetOption(
+			$optionCategory,
+			$optionName,
+			false,
+			$optionUserId
+		);
+
+		return $option['ID'] ? $this->createId($option['ID']) : null;
 	}
 
 	/**
