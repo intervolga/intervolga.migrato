@@ -703,6 +703,34 @@ class AdminListFilter extends BaseData
 	}
 
 	/**
+	 * Возвращает типы фильтров, поле VALUE которых подлежит конвертации в формат выгрузки (xml).
+	 *
+	 * @return array типы конвертируемых фильтров.
+	 */
+	protected function getConvertibleFilterTypes()
+	{
+		$filterTypes = array_keys(static::FILTER_NAME_PREFIXES);
+		$nonConvertibleFilterTypes = array('IB_LIST_ADMIN', 'IB_LIST', 'IB_PROPERTIES_LIST');
+
+		return array_diff($filterTypes, $nonConvertibleFilterTypes);
+	}
+
+	/**
+	 * Проверяет, является ли фильтр $filter конвертируемым.
+	 *
+	 * @param array $filter данные фильтра.
+	 *
+	 * @return bool true, если фильтр конвертируемый, иначе - false.
+	 */
+	protected function isConvertibleFilter(array $filter)
+	{
+		$filterType = $this->getFilterType($filter['NAME']);
+		$convertibleFilterTypes = $this->getConvertibleFilterTypes();
+
+		return in_array($filterType, $convertibleFilterTypes);
+	}
+
+	/**
 	 * Проверяет, привязан ли фильтр к определенному ИБ
 	 * (если нет, то привязан к типу ИБ)
 	 *
@@ -960,6 +988,12 @@ class AdminListFilter extends BaseData
 	protected function convertValueToXml(array $filterData, array &$dependencies)
 	{
 		$filterFields = unserialize($filterData['VALUE']);
+
+		if (!$this->isConvertibleFilter($filterData))
+		{
+			return $filterFields;
+		}
+
 		$iblockId = $this->getIblockIdByFilterName($filterData['NAME']);
 		$propertyIds = $this->getIbPropertiesUsedInFilter($filterFields);
 		$properties = $this->getIbPropertiesById($propertyIds);
@@ -1162,6 +1196,12 @@ class AdminListFilter extends BaseData
 	protected function convertValueFromXml(array $filterData)
 	{
 		$filterFields = unserialize($filterData['FIELDS']);
+
+		if (!$this->isConvertibleFilter($filterData))
+		{
+			return $filterFields;
+		}
+
 		$iblockId = $this->getIblockIdByFilterName($filterData['NAME']);
 		$dbProperties = $this->getIbProperties($iblockId);
 		$ufFields = $this->getUfFields('IBLOCK_' . $iblockId . '_SECTION');
