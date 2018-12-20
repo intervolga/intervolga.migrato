@@ -37,34 +37,62 @@ class AdminListFilter extends BaseData
 	const XML_ID_SEPARATOR = '.';
 
 	/**
-	 * Регулярное выражения для определения, является ли поле фильтра - фильтром свойства элемента ИБ.
+	 * REGEX: имя фильтра
+	 */
+	const FILTER_NAME_REGEX = '/^([a-z_]+_)(.+)$/';
+
+	/**
+	 * REGEX: название фильтра свойства ИБ
 	 */
 	const IB_PROPERTY_NAME_REGEX = '/^([^_]*_?)PROPERTY_([^_\s]+)(_?.*)$/';
 
 	/**
-	 * Регулярное выражения для определения, является ли поле фильтра - фильтром UF-поля.
+	 * REGEX: название фильтра UF-поля
 	 */
 	const UF_NAME_REGEX = '/^(UF_[A-Z0-9_]+)(_?.*)$/';
 
 	/**
-	 * Соответствие типов фильтра названиям настроек.
-	 * COMMON_VIEW - фильтр для ИБ (режим прссмотра - совместный).
-	 * SEPARATE_VIEW_SECTION - фильтр для разделов ИБ (режим просмотра - раздельный)
-	 * SEPARATE_VIEW_ELEMENT - фильтр для элементов ИБ (режим просмотра - раздельный)
+	 * Префиксы названия фильтров.
+	 * После префиксов в названиях идет <hash>:
+	 * filter_name=<prefix><hash>
+	 *
+	 * IB_MIXED_LIST - список элементов и разделов ИБ              ( <hash>=md5(IBLOCK_TYPE_CODE.IBLOCK_ID) )
+	 * PRODUCTS_MIXED_LIST - список товаров и разделов каталога    ( <hash>=md5(IBLOCK_TYPE_CODE.IBLOCK_ID) )
+	 *
+	 * IB_SECTION_LIST - список разделов ИБ                        ( <hash>=md5(IBLOCK_TYPE_CODE.IBLOCK_ID) )
+	 * PRODUCTS_SECTION_LIST - список разделов каталога            ( <hash>=md5(IBLOCK_TYPE_CODE.IBLOCK_ID) )
+	 *
+	 * IB_ELEMENT_LIST - список элементов ИБ                       ( <hash>=md5(IBLOCK_TYPE_CODE.IBLOCK_ID) )
+	 * PRODUCTS_LIST - список товаров                              ( <hash>=md5(IBLOCK_TYPE_CODE.IBLOCK_ID) )
+	 *
+	 * IB_LIST - список ИБ конкретного типа                        ( <hash> = md5(IBLOCK_TYPE_CODE) )
+	 * IB_LIST_ADMIN - список ИБ конкретного типа (admin=Y)        ( <hash> = md5(IBLOCK_TYPE_CODE) )
+	 *
+	 * IB_PROPERTIES_LIST - список свойств ИБ                      ( <hash>=IBLOCK_ID )
 	 */
 	const FILTER_NAME_PREFIXES = array(
-		'COMMON_VIEW' => 'tbl_iblock_list_',
-		'SEPARATE_VIEW_SECTION' => 'tbl_iblock_section_',
-		'SEPARATE_VIEW_ELEMENT' => 'tbl_iblock_element_',
+		'IB_MIXED_LIST' => 'tbl_iblock_list_',
+		'PRODUCTS_MIXED_LIST' => 'tbl_product_list_',
+
+		'IB_SECTION_LIST' => 'tbl_iblock_section_',
+		'PRODUCTS_SECTION_LIST' => 'tbl_catalog_section_',
+
+
+		'IB_ELEMENT_LIST' => 'tbl_iblock_element_',
+		'PRODUCTS_LIST' => 'tbl_product_admin_',
+
+		'IB_LIST' => 'tbl_iblock_',
+		'IB_LIST_ADMIN' => 'tbl_iblock_admin_',
+
+		'IB_PROPERTIES_LIST' => 'tbl_iblock_property_admin_'
 	);
 
 	/**
 	 * Категории настроек фильтра.
 	 */
 	const FILTER_CATEGORIES = array(
-		'main.ui.filter',
-		'main.ui.filter.common',
-		'main.ui.filter.common.presets',
+		'PERSONAL' => 'main.ui.filter',
+		'COMMON' => 'main.ui.filter.common',
 	);
 
 	/**
@@ -85,6 +113,7 @@ class AdminListFilter extends BaseData
 		$this->setFilesSubdir('/type/iblock/admin/');
 		$this->setDependencies(array(
 			'IBLOCK' => new Link(MigratoIblock::getInstance()),
+			'IBLOCK_TYPE' => new Link(Type::getInstance()),
 			'PROPERTY' => new Link(Property::getInstance()),
 			'ENUM' => new Link(Enum::getInstance()),
 			'FIELD' => new Link(Field::getInstance()),
@@ -286,8 +315,8 @@ class AdminListFilter extends BaseData
 		$record->setXmlId($this->getXmlIdFromArray($option));
 		$record->setFieldRaw('COMMON', $option['COMMON']);
 		$record->setFieldRaw('CATEGORY', $option['CATEGORY']);
+		$this->setIblockDependency($record, $option);
 		$this->addPropertiesDependencies($record, $option);
-		$this->setRecordDependencies($record, $option);
 
 		return $record;
 	}
@@ -367,6 +396,26 @@ class AdminListFilter extends BaseData
 				$dependency->setValue($iblockXmlId);
 				$record->setDependency('IBLOCK', $dependency);
 			}
+		}
+	}
+
+	/**
+	 * Добавляет в запись миграции $record
+	 * зависимость от ИБ или типа ИБ.
+	 *
+	 * @param Record $record запись миграции фильтра.
+	 * @param array $filter массив данных фильтра.
+	 */
+	protected function setIblockDependency(Record $record, array $filter)
+	{
+		$dependencyXmlId = $this->getFilterIblockDependency($filter['NAME']);
+		$dependencyName = $this->isFilterForIblock($filter['NAME']) ? 'IBLOCK' : 'IBLOCK_TYPE';
+
+		if ($dependencyXmlId)
+		{
+			$dependency = clone $this->getDependency($dependencyName);
+			$dependency->setValue($dependencyXmlId);
+			$record->setDependency($dependencyName, $dependency);
 		}
 	}
 
@@ -452,19 +501,12 @@ class AdminListFilter extends BaseData
 	{
 		if (Loader::includeModule('iblock'))
 		{
-			$type = $this->getFilterTypeByName($filterName);
-			$prefix = static::FILTER_NAME_PREFIXES[$type];
-			if ($prefix)
+			$res = \CIBlock::GetList();
+			while ($iblock = $res->Fetch())
 			{
-				$hash = substr($filterName, strlen($prefix));
-
-				$res = \CIBlock::GetList();
-				while ($iblock = $res->Fetch())
+				if ($this->isFilterIblock($iblock, $filterName))
 				{
-					if (md5($iblock['IBLOCK_TYPE_ID'] . '.' . $iblock['ID']) == $hash)
-					{
-						return $iblock;
-					}
+					return $iblock;
 				}
 			}
 		}
@@ -489,6 +531,39 @@ class AdminListFilter extends BaseData
 		}
 
 		return $iblockInfo;
+	}
+
+	/**
+	 * Возвращает xml_id основной зависимости фильтра - зависимости от ИБ или типа ИБ.
+	 *
+	 * @param string $filterName название фильтра.
+	 *
+	 * @return string xml_id основной зависимости фильтра.
+	 */
+	protected function getFilterIblockDependency($filterName)
+	{
+		$dependencyXmlId = '';
+
+		$iblock = $this->getIblockByFilterName($filterName);
+		if ($iblock)
+		{
+			if ($this->isFilterForIblock($filterName))
+			{
+				$id = $iblock['ID'];
+				$className = Iblock::class;
+			}
+			else
+			{
+				$id = $iblock['IBLOCK_TYPE_ID'];
+				$className = Type::class;
+			}
+
+			/** @var BaseData $className */
+			$idObj = $className::getInstance()->createId($id);
+			$dependencyXmlId = $className::getInstance()->getXmlId($idObj);
+		}
+
+		return $dependencyXmlId;
 	}
 
 	/**
@@ -629,6 +704,7 @@ class AdminListFilter extends BaseData
 	 */
 	protected function getFilterTypeByName($filterName)
 	{
+		// TODO: replace usages to getFilterType()
 		$type = '';
 		foreach (static::FILTER_NAME_PREFIXES as $key => $tableName)
 		{
@@ -639,6 +715,114 @@ class AdminListFilter extends BaseData
 		}
 
 		return $type;
+	}
+
+	/**
+	 * Возвращает тип фильтра.
+	 *
+	 * @param string $filterName название фильтра (поле NAME фильтра).
+	 *
+	 * @return string тип фильтра.
+	 */
+	protected function getFilterType($filterName)
+	{
+		$isMatch = preg_match(static::FILTER_NAME_REGEX, $filterName, $matches);
+		if ($isMatch && $matches[1])
+		{
+			$prefix = $matches[1];
+			$key = array_search($prefix, static::FILTER_NAME_PREFIXES);
+
+			return $key !== false ? $key : '';
+		}
+
+		return '';
+	}
+
+	/**
+	 * Возвращает хэш названия фильтра.
+	 *
+	 * @param string $filterName название фильтра (поле NAME фильтра).
+	 *
+	 * @return string хэш названия фильтра.
+	 */
+	protected function getFilterHash($filterName)
+	{
+		$isMatch = preg_match(static::FILTER_NAME_REGEX, $filterName, $matches);
+		if ($isMatch && $matches[2])
+		{
+			return $matches[2];
+		}
+
+		return '';
+	}
+
+	/**
+	 * Проверяет, привязан ли фильтр к определенному ИБ
+	 * (если нет, то привязан к типу ИБ)
+	 *
+	 * @param string $filterName название фильтра.
+	 *
+	 * @return bool true, если фильтр привязан к ИБ, иначе - false.
+	 */
+	protected function isFilterForIblock($filterName)
+	{
+		$filterType = $this->getFilterType($filterName);
+
+		return ($filterType === 'IB_LIST_ADMIN' || $filterType === 'IB_LIST')
+			? false
+			: true;
+	}
+
+	/**
+	 * Проверяет, принадлежит ли фильтр $filterName инфоблоку $iblockInfo.
+	 * Проверка происходит по закодированному в названиии фильтра <hash>.
+	 *
+	 * @param array $iblockInfo данные ИБ (ID и IBLOCK_TYPE_ID).
+	 * @param string $filterName название фильтра.
+	 *
+	 * @return bool true, если фильтр принадлежит ИБ, иначе - false.
+	 */
+	protected function isFilterIblock(array $iblockInfo, $filterName)
+	{
+		$iblockId = $iblockInfo['ID'];
+		$iblockTypeCode = $iblockInfo['IBLOCK_TYPE_ID'];
+		$hash = $this->getFilterHash($filterName);
+		$type = $this->getFilterType($filterName);
+
+		if ($hash && $type)
+		{
+			switch ($type)
+			{
+				case 'IB_MIXED_LIST':
+				case 'PRODUCTS_MIXED_LIST':
+				case 'IB_SECTION_LIST':
+				case 'PRODUCTS_SECTION_LIST':
+				case 'IB_ELEMENT_LIST':
+				case 'PRODUCTS_LIST':
+				{
+					return md5($iblockTypeCode . '.' . $iblockId) === $hash;
+				}
+				break;
+				case 'IB_LIST':
+				case 'IB_LIST_ADMIN':
+				{
+					return md5($iblockTypeCode) === $hash;
+				}
+				break;
+				case 'IB_PROPERTIES_LIST':
+				{
+					return $iblockId === $hash;
+				}
+				break;
+				default:
+				{
+					return false;
+				}
+				break;
+			}
+		}
+
+		return false;
 	}
 
 	/**
