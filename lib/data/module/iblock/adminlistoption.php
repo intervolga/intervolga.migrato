@@ -950,14 +950,9 @@ class AdminListOption extends BaseData
 	{
 		$optionType = $this->getOptionType($optionName);
 
-		if ($optionType === 'IB_LIST_ADMIN' || $optionType === 'IB_LIST')
-		{
-			return false;
-		}
-		else
-		{
-			return true;
-		}
+		return ($optionType === 'IB_LIST_ADMIN' || $optionType === 'IB_LIST')
+			? false
+			: true;
 	}
 
 	/**
