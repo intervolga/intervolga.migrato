@@ -230,58 +230,22 @@ class AdminListFilter extends BaseData
 	 */
 	public function findRecord($xmlId)
 	{
-		// Получаем необходимые данные из xmlId
-		$xmlFields = $this->getArrayFromXmlId($xmlId);
-		$xmlFilterPrefix = $xmlFields[0];
-		$xmlIsUserAdmin = $xmlFields[1];
-		$xmlIsFilterCommon = $xmlFields[2];
-		$xmlFilterCategory = $xmlFields[3];
-		$xmlFilterName = $xmlFields[4];
-		$xmlIblockXmlId = $xmlFields[5];
+		$xmlIdFields = explode(static::XML_ID_SEPARATOR, $xmlId);
+		$filterUserId = $xmlIdFields[2];
+		$filterName = $this->getFilterName($xmlId);
+		$filterCommon = $filterUserId == 0;
+		$filterCategory = $filterCommon ? static::FILTER_CATEGORIES['COMMON'] : static::FILTER_CATEGORIES['PERSONAL'];
 
-		// Данные инфблока
-		$iblockInfo = array();
-		$iblockRecord = MigratoIblock::getInstance()->findRecord($xmlIblockXmlId);
-		if ($iblockRecord)
-		{
-			$iblockId = $iblockRecord->getValue();
-			if ($iblockId && Loader::includeModule('iblock'))
-			{
-				$iblockInfo = \CIBlock::GetById($iblockId)->Fetch();
-			}
-		}
+		$filter = CUserOptions::GetList(
+			array(),
+			array(
+				'CATEGORY' => $filterCategory,
+				'NAME' => $filterName,
+				'USER_ID' => $filterUserId
+			)
+		)->GetNext();
 
-		// Формируем фильтр для запроса
-		$arFilter = array(
-			'COMMON' => $xmlIsFilterCommon,
-			'CATEGORY' => $xmlFilterCategory,
-		);
-
-		if ($xmlIsUserAdmin === 'Y')
-		{
-			$arFilter['USER_ID'] = 1;
-		}
-
-		if ($iblockInfo)
-		{
-			$dbRes = CUserOptions::GetList(array(), $arFilter);
-			while ($filter = $dbRes->Fetch())
-			{
-				$filterName = $filter['NAME'];
-				if (strpos($filterName, $xmlFilterPrefix) === 0
-					&& md5($filterName) === $xmlFilterName
-				)
-				{
-					$hash = substr($filterName, strlen($xmlFilterPrefix));
-					if (md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockInfo['ID']) === $hash)
-					{
-						return $this->createId($filter['ID']);
-					}
-				}
-			}
-		}
-
-		return null;
+		return $filter['ID'] ? $this->createId($filter['ID']) : null;
 	}
 
 	/**
@@ -332,18 +296,11 @@ class AdminListFilter extends BaseData
 	protected function createArrayFromRecord(Record $record)
 	{
 		$arFilter = $record->getFieldsRaw();
-		$xmlIdFields = $this->getArrayFromXmlId($record->getXmlId());
-		$iblockInfo = $this->getIblockByXmlId($xmlIdFields[5]);
+		$xmlIdFields = explode(static::XML_ID_SEPARATOR, $record->getXmlId());
 
-		// Формируем поля фильтра
-		$arFilter['COMMON'] = $arFilter['COMMON'] === 'Y';
-		$arFilter['USER_ID'] = ($xmlIdFields[1] === 'Y') ? 1 : 0;
-		if ($iblockInfo)
-		{
-			$arFilter['NAME'] = $xmlIdFields[0] . md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockInfo['ID']);
-		}
-		$arFilter['FIELDS'] = $this->convertFieldsFromXml($arFilter);
-
+		$arFilter['USER_ID'] = $xmlIdFields[2];
+		$arFilter['NAME'] = $this->getFilterName($record->getXmlId());
+		$arFilter['VALUE'] = $this->convertFieldsFromXml($arFilter);
 
 		return $arFilter;
 	}
@@ -353,7 +310,7 @@ class AdminListFilter extends BaseData
 		$dependencies = array();
 
 		$arFields = $this->convertFieldsToXml($filter, $dependencies);
-		$record->setFieldRaw('FIELDS', serialize($arFields));
+		$record->setFieldRaw('VALUE', serialize($arFields));
 
 		/**
 		 * Зависимости от сторонних сущностей:
@@ -370,31 +327,6 @@ class AdminListFilter extends BaseData
 				$dependency = clone $this->getDependency($dependencyName);
 				$dependency->setValues($dependencyXmlIds);
 				$record->setDependency($dependencyName, $dependency);
-			}
-		}
-	}
-
-	/**
-	 * Добавляет в запись миграции $record
-	 * зависимости от сторонных сущностей.
-	 *
-	 * @param Record $record запись миграции фильтра.
-	 * @param array $filter массив данных фильтра.
-	 */
-	public function setRecordDependencies(Record $record, array $filter)
-	{
-		//IBLOCK_ID
-		if ($filter['NAME'])
-		{
-			$iblockId = $this->getIblockIdByFilterName($filter['NAME']);
-			if ($iblockId)
-			{
-				$iblockIdObj = MigratoIblock::getInstance()->createId($iblockId);
-				$iblockXmlId = MigratoIblock::getInstance()->getXmlId($iblockIdObj);
-
-				$dependency = clone $this->getDependency('IBLOCK');
-				$dependency->setValue($iblockXmlId);
-				$record->setDependency('IBLOCK', $dependency);
 			}
 		}
 	}
@@ -433,13 +365,13 @@ class AdminListFilter extends BaseData
 		// Сохраняем фильтр
 		$filterId = 0;
 		$success = false;
-		if ($arFilter['CATEGORY'] && $arFilter['NAME'] && $arFilter['FIELDS'])
+		if ($arFilter['CATEGORY'] && $arFilter['NAME'] && $arFilter['VALUE'])
 		{
 			$success = CUserOptions::SetOption(
 				$arFilter['CATEGORY'],
 				$arFilter['NAME'],
-				$arFilter['FIELDS'],
-				$arFilter['COMMON'],
+				$arFilter['VALUE'],
+				$arFilter['COMMON'] === 'Y',
 				$arFilter['USER_ID']
 			);
 		}
@@ -454,7 +386,7 @@ class AdminListFilter extends BaseData
 					'NAME' => $arFilter['NAME'],
 					'USER_ID' => $arFilter['USER_ID'],
 				)
-			)->Fetch();
+			)->GetNext();
 
 			$filterId = $option['ID'] ?: 0;
 		}
@@ -649,72 +581,19 @@ class AdminListFilter extends BaseData
 	protected function getXmlIdFromArray(array $filter)
 	{
 		$result = '';
-		$iblockId = $this->getIblockIdByFilterName($filter['NAME']);
-		if ($iblockId)
+
+		$dependencyXmlId = $this->getFilterIblockDependency($filter['NAME']);
+		if ($dependencyXmlId)
 		{
-			$iblockXmlId = MigratoIblock::getInstance()->getXmlId(MigratoIblock::getInstance()->createId($iblockId));
-			if ($iblockXmlId)
-			{
-				$filterType = $this->getFilterTypeByName($filter['NAME']);
-				$result = (
-					$filterType
-					. static::XML_ID_SEPARATOR .
-					($filter['USER_ID'] == 1 ? 'Y' : 'N')
-					. static::XML_ID_SEPARATOR .
-					$filter['COMMON']
-					. static::XML_ID_SEPARATOR .
-					str_replace('.', '_', $filter['CATEGORY'])
-					. static::XML_ID_SEPARATOR .
-					md5($filter['NAME'])
-					. static::XML_ID_SEPARATOR
-					. $iblockXmlId
-				);
-			}
+			$filterType = $this->getFilterType($filter['NAME']);
+			$result = $filterType
+				. static::XML_ID_SEPARATOR
+				. $dependencyXmlId
+				. static::XML_ID_SEPARATOR
+				. $filter['USER_ID'];
 		}
 
 		return $result;
-	}
-
-	/**
-	 * Возвращает массив данных фильтра
-	 * на основе $xmlId.
-	 *
-	 * @param string $xmlId xmlId фильтра.
-	 *
-	 * @return array массив данных фильтра.
-	 */
-	protected function getArrayFromXmlId($xmlId)
-	{
-		$filterCategoryIndex = 3;
-		$filterPrefixIndex = 0;
-
-		$xmlFields = explode(static::XML_ID_SEPARATOR, $xmlId);
-		$xmlFields[$filterPrefixIndex] = static::FILTER_NAME_PREFIXES[$xmlFields[$filterPrefixIndex]];
-		$xmlFields[$filterCategoryIndex] = str_replace('_', '.', $xmlFields[$filterCategoryIndex]);
-
-		return $xmlFields;
-	}
-
-	/**
-	 * Возвращает тип настройки фильтра по имени фильтра $filterName.
-	 *
-	 * @param string $filterName название фильтра (поле NAME настройки фильтра).
-	 *
-	 * @return string тип настройки - ключ массива FILTER_NAME_PREFIXES.
-	 */
-	protected function getFilterTypeByName($filterName)
-	{
-		// TODO: replace usages to getFilterType()
-		$type = '';
-		foreach (static::FILTER_NAME_PREFIXES as $key => $tableName)
-		{
-			if (strpos($filterName, $tableName) === 0)
-			{
-				$type = $key;
-			}
-		}
-
-		return $type;
 	}
 
 	/**
@@ -754,6 +633,65 @@ class AdminListFilter extends BaseData
 		}
 
 		return '';
+	}
+
+	/**
+	 * Возвращает название фильтра по его xml_id.
+	 *
+	 * @param string $filterXmlId xml_id фильтра.
+	 *
+	 * @return string название фильтра.
+	 */
+	protected function getFilterName($filterXmlId)
+	{
+		$xmlIdFields = explode(static::XML_ID_SEPARATOR, $filterXmlId);
+		$xmlId = $xmlIdFields[1];
+		$filterType = $xmlIdFields[0];
+		$filterTypePrefix = static::FILTER_NAME_PREFIXES[$filterType];
+
+		if (in_array($filterType, $this->getIblockFilterTypes()))
+		{
+			/** @var RecordId $iblockRecord */
+			$iblockRecord = MigratoIblock::getInstance()->findRecord($xmlId);
+			if ($iblockRecord)
+			{
+				$iblockInfo = \CIBlock::GetByID($iblockRecord->getValue())->GetNext();
+				if ($filterType === 'IB_PROPERTIES_LIST')
+				{
+					return $filterTypePrefix . $iblockInfo['ID'];
+				}
+				else
+				{
+					return $filterTypePrefix . md5($iblockInfo['IBLOCK_TYPE_ID'] . '.' . $iblockInfo['ID']);
+				}
+			}
+		}
+		else
+		{
+			/** @var RecordId $iblockTypeRecord */
+			$iblockTypeRecord = Type::getInstance()->findRecord($xmlId);
+			if ($iblockTypeRecord)
+			{
+				$iblockTypeInfo = \CIBlockType::GetByID($iblockTypeRecord->getValue())->GetNext();
+				return $filterTypePrefix . md5($iblockTypeInfo['ID']);
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Возвращает типы фильтров для ИБ.
+	 * <hash> таких фильтров содержит id ИБ.
+	 *
+	 * @return array типы фильтров для ИБ.
+	 */
+	protected function getIblockFilterTypes()
+	{
+		$filterTypes = array_keys(static::FILTER_NAME_PREFIXES);
+		$iblockTypeFilterTypes = array('IB_LIST_ADMIN', 'IB_LIST');
+
+		return array_diff($filterTypes, $iblockTypeFilterTypes);
 	}
 
 	/**
