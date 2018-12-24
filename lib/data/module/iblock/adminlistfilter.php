@@ -1225,56 +1225,13 @@ class AdminListFilter extends BaseData
 		}
 	}
 
-	/**
-	 * Конвертирует название поля фильтра, являющегося фильтром свойства ИБ,
-	 * в формат, пригодный для сохранения в БД.
-	 *
-	 * @param string $filterRow название поля фильтра (свойство ИБ).
-	 *
-	 * @return int id свойства элемента ИБ
-	 *             или
-	 *             0, если конвертация не производилась.
-	 */
-	protected function convertIblockPropertyFilterNameFromXml(&$filterRow)
-	{
-		$propertyId = 0;
-
-		/**
-		 * Проверка, что поле фильтра является фильтром свойства элемента ИБ
-		 */
-		$isMatch = preg_match(static::IB_PROPERTY_NAME_REGEX, $filterRow, $matches);
-		if ($isMatch && $matches[2])
-		{
-			$filterRowPrefix = $matches[1];
-			$filterRowPostfix = $matches[3];
-			$propertyXmlId = $matches[2];
-
-			$propertyRecord = Property::getInstance()->findRecord($propertyXmlId);
-			if ($propertyRecord)
-			{
-				$propertyId = $propertyRecord->getValue();
-				$filterRow = static::PROPERTY_FIELD_PREFIX . $propertyId;
-				if ($filterRowPrefix)
-				{
-					$filterRow = $filterRowPrefix . $filterRow;
-				}
-				if ($filterRowPostfix)
-				{
-					$filterRow = $filterRow . $filterRowPostfix;
-				}
-			}
-		}
-
-		return $propertyId;
-	}
-
-	/**
-	 * Конвертирует поля фильтра в формат, пригодный для сохранения в БД.
-	 *
-	 * @param array $filterData данные фильтра.
-	 *
-	 * @return array поля фильтра в формате, пригодном для сохранения в БД.
-	 */
+    /**
+     * Конвертирует поля фильтра в формат, пригодный для сохранения в БД.
+     *
+     * @param array $filterData данные фильтра.
+     *
+     * @return array поля фильтра в формате, пригодном для сохранения в БД.
+     */
 	protected function convertValueFromXml(array $filterData)
 	{
 		$filterFields = unserialize($filterData['VALUE']);
@@ -1284,96 +1241,219 @@ class AdminListFilter extends BaseData
 			return $filterFields;
 		}
 
-		$iblockId = $this->getIblockIdByFilterName($filterData['NAME']);
-		$dbProperties = $this->getIbProperties($iblockId);
-		$ufFields = $this->getUfFields('IBLOCK_' . $iblockId . '_SECTION');
+        $filterData['IBLOCK_ID'] = $this->getIblockIdByFilterName($filterData['NAME']);
 
 		// Конвертируем данные фильтров
 		foreach ($filterFields['filters'] as &$filter)
 		{
 			// Конвертируем названия Свойств в подмассиве filter_rows
 			$filterRows = explode(',', $filter['filter_rows']);
-			foreach ($filterRows as &$filterRowName)
+			foreach ($filterRows as &$filterFieldName)
 			{
-				if ($this->isIblockPropertyFilterName($filterRowName))
-				{
-					$this->convertIblockPropertyFilterNameFromXml($filterRowName);
-				}
-
-			}
+                $filterField = array($filterFieldName);
+                $this->convertFilterFieldFromXml($filterField, $filterData);
+                list($filterFieldName) = $filterField;
+            }
 			$filter['filter_rows'] = implode(',', $filterRows);
-			unset($filterRowName);
+			unset($filterFieldName);
 
-			// Конвертируем названия Свойств, Списков свойств, Списков UF-полей в подмассиве fields,
-			$newFilterFields = array();
-			foreach ($filter['fields'] as $filterRowName => $filterRowValue)
-			{
-				$newFilterRowName = $filterRowName;
-				$newFilterRowValue = $filterRowValue;
+            // Конвертируем пары <называние_поля_фильтра> => <значение_поля_фильтра>
+            $newFields = array();
+            foreach ($filter['fields'] as $fieldName => $fieldVal)
+            {
+                $filterField = array($fieldName, $fieldVal);
+                $this->convertFilterFieldFromXml($filterField, $filterData);
+                list($newFieldName, $newFieldVal) = $filterField;
 
-				if ($this->isIblockPropertyFilterName($newFilterRowName))
-				{
-					// Конвертируем название поля фильтра
-					$propertyId = $this->convertIblockPropertyFilterNameFromXml($newFilterRowName);
-
-					// Конфертируем значение поля фильтра
-					if ($propertyId)
-					{
-						// Значение списочных свойств
-						$propertyData = $dbProperties[$propertyId];
-						if ($propertyData['PROPERTY_TYPE'] === 'L')
-						{
-							if ($propertyData['MULTIPLE'] === 'Y')
-							{
-								foreach ($newFilterRowValue as &$filterRowValueId)
-								{
-									$enumRecord = Enum::getInstance()->findRecord($filterRowValueId);
-									if ($enumRecord)
-									{
-										$filterRowValueId = $enumRecord->getValue();
-										$filterRowValueId = strval($filterRowValueId);
-									}
-								}
-							}
-							else
-							{
-								$enumRecord = Enum::getInstance()->findRecord($newFilterRowValue);
-								if ($enumRecord)
-								{
-									$newFilterRowValue = $enumRecord->getValue();
-									$newFilterRowValue = strval($newFilterRowValue);
-								}
-							}
-						}
-					}
-				}
-				elseif($this->isUfFieldFilterName($newFilterRowName))
-				{
-					$ufName = $this->getUfFieldName($newFilterRowName);
-					$ufField = $ufFields[$ufName];
-					if ($ufField)
-					{
-						// Обработка значений фильтров Списоков UF-полей
-						if ($ufField['USER_TYPE_ID'] === 'enumeration' && is_array($newFilterRowValue))
-						{
-							foreach ($newFilterRowValue as &$ufFieldValXmlId)
-							{
-								$fieldEnumRecord = FieldEnum::getInstance()->findRecord($ufFieldValXmlId);
-								if ($fieldEnumRecord)
-								{
-									$ufFieldValXmlId = $fieldEnumRecord->getValue();
-									$ufFieldValXmlId = strval($ufFieldValXmlId);
-								}
-							}
-						}
-					}
-				}
-
-				$newFilterFields[$newFilterRowName] = $newFilterRowValue;
-			}
-			$filter['fields'] = $newFilterFields;
+                $newFields[$newFieldName] = $newFieldVal;
+            }
+            $filter['fields'] = $newFields;
 		}
 
 		return $filterFields;
 	}
+
+    /**
+     * Конвертирует поле фильтра в формат, пригодный для сохранения в БД.
+     * Поле фильтра - пара <название_поля_фильтра> => <значение_поля_фильтра>.
+     *
+     * @param array $filter поле фильтра.
+     * @param array $arFilter данные фильтра.
+     */
+	protected function convertFilterFieldFromXml(array &$filter, array $arFilter)
+    {
+        // $filter - пара <название_поля_фильтра> => <значение_поля_фильтра>
+        list($filterName, $filterValue) = $filter;
+
+        if ($this->isIblockPropertyFilterName($filterName))
+        { // Если фильтр - фильтр Свойства ИБ
+            $this->convertIblockPropertyFilterNameFromXml($filterName);
+
+            if ($filterValue)
+            {
+                $propertyId = $this->getIblockPropertyId($filterName);
+                $property = $this->getIblockProperty(array(
+                    'IBLOCK_ID' => $arFilter['IBLOCK_ID'],
+                    'ID' => $propertyId,
+                ));
+
+                if ($property['PROPERTY_TYPE'] == 'L')
+                {
+                    $this->convertEnumPropertyValueFromXml($filterValue);
+                }
+            }
+        }
+        elseif($ufName = $this->getUfFieldName($filterName))
+        { // Если фильтр - фильтр UF-поля
+            if ($filterValue)
+            {
+                $ufField = $this->getUfField(array(
+                    'ENTITY_ID' => 'IBLOCK_' . $arFilter['IBLOCK_ID'] . '_SECTION',
+                    'FIELD_NAME' => $ufName
+                ));
+
+                if ($ufField['USER_TYPE_ID'] === 'enumeration')
+                {
+                    $this->convertEnumUfFieldValueFromXml($filterValue);
+                }
+            }
+        }
+        elseif($this->isSiteIdFilterName($filterName))
+        { // Если фильтр - фильтр Сайта
+            if ($filterValue)
+            {
+                $this-$this->convertSiteIdValueFromXml($filterValue);
+            }
+        }
+
+        $filter = array($filterName, $filterValue);
+    }
+
+    /**
+     * Конвертирует название фильтра Свойства ИБ
+     * в формат, пригодный для сохранения в БД.
+     *
+     * @param string $filterRow название поля фильтра (свойство ИБ).
+     */
+    protected function convertIblockPropertyFilterNameFromXml(&$filterRow)
+    {
+        /**
+         * Проверка, что поле фильтра является фильтром свойства элемента ИБ
+         */
+        $isMatch = preg_match(static::IB_PROPERTY_NAME_REGEX, $filterRow, $matches);
+        if ($isMatch && $matches[2])
+        {
+            $filterRowPrefix = $matches[1];
+            $filterRowPostfix = $matches[3];
+            $propertyXmlId = $matches[2];
+
+            $propertyRecord = Property::getInstance()->findRecord($propertyXmlId);
+            if ($propertyRecord)
+            {
+                $propertyId = $propertyRecord->getValue();
+                $filterRow = static::PROPERTY_FIELD_PREFIX . $propertyId;
+                if ($filterRowPrefix)
+                {
+                    $filterRow = $filterRowPrefix . $filterRow;
+                }
+                if ($filterRowPostfix)
+                {
+                    $filterRow = $filterRow . $filterRowPostfix;
+                }
+            }
+        }
+    }
+
+    /**
+     * Конвертирует значение фильтра Свойства ИБ
+     * в формат, пригодный для сохранения в БД.
+     *
+     * @param string|array $propertyValue значение списочного Свойства ИБ.
+     */
+    protected function convertEnumPropertyValueFromXml(&$propertyValue)
+    {
+        if (is_array($propertyValue))
+        {
+            foreach	($propertyValue as &$propertyValueId)
+            {
+                $enumRecord = Enum::getInstance()->findRecord($propertyValueId);
+                if ($enumRecord)
+                {
+                    $propertyValueId = $enumRecord->getValue();
+                    $propertyValueId = strval($propertyValueId);
+                }
+            }
+        }
+        else
+        {
+            $enumRecord = Enum::getInstance()->findRecord($propertyValue);
+            if ($enumRecord)
+            {
+                $propertyValue = $enumRecord->getValue();
+                $propertyValue = strval($propertyValue);
+            }
+        }
+    }
+
+    /**
+     * Конвертирует значение фильтра UF-поля
+     * в формат, пригодный для сохранения в БД.
+     *
+     * @param string|array $ufFieldValue значение списочного UF-поля.
+     */
+    protected function convertEnumUfFieldValueFromXml(&$ufFieldValue)
+    {
+        if (is_array($ufFieldValue))
+        {
+            foreach ($ufFieldValue as &$ufFieldValXmlId)
+            {
+                $fieldEnumRecord = FieldEnum::getInstance()->findRecord($ufFieldValXmlId);
+                if ($fieldEnumRecord)
+                {
+                    $ufFieldValXmlId = $fieldEnumRecord->getValue();
+                    $ufFieldValXmlId = strval($ufFieldValXmlId);
+                }
+            }
+        }
+        else
+        {
+            $fieldEnumRecord = FieldEnum::getInstance()->findRecord($ufFieldValue);
+            if ($fieldEnumRecord)
+            {
+                $ufFieldValue = $fieldEnumRecord->getValue();
+                $ufFieldValue = strval($ufFieldValue);
+            }
+        }
+    }
+
+    /**
+     * Конвертирует значение фильтра Сайта
+     * в формат,пригодный для сохранения в БД.
+     *
+     * @param string|array $siteId id сайта.
+     */
+    protected function convertSiteIdValueFromXml(&$siteId)
+    {
+        if (is_array($siteId))
+        {
+            foreach	($siteId as &$siteIdVal)
+            {
+                $siteRecord = Site::getInstance()->findRecord($siteIdVal);
+                if ($siteRecord)
+                {
+                    $siteIdVal = $siteRecord->getValue();
+                    $siteIdVal = strval($siteIdVal);
+                }
+            }
+        }
+        else
+        {
+            $siteRecord = Site::getInstance()->findRecord($siteId);
+            if ($siteRecord)
+            {
+                $siteId = $siteRecord->getValue();
+                $siteId = strval($siteId);
+            }
+        }
+    }
 }
