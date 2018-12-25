@@ -805,40 +805,6 @@ class AdminListOption extends BaseData
 	}
 
 	/**
-	 * Возвращает ИБ по его xmlId.
-	 *
-	 * @param string $iblockXmlId xmlId ИБ.
-	 *
-	 * @return array данные ИБ.
-	 */
-	protected function getIblockByXmlId($iblockXmlId)
-	{
-		$identifier = 0;
-		$iblockInfo = array();
-
-		if (Loader::includeModule('iblock'))
-		{
-			$iblockRecord = Iblock::getInstance()->findRecord($iblockXmlId);
-			if ($iblockRecord)
-			{
-				$identifier = $iblockRecord->getValue();
-				$iblockInfo = \CIBlock::GetByID($identifier)->GetNext();
-			}
-			else
-			{
-				$iblockTypeRecord = Type::getInstance()->findRecord($iblockXmlId);
-				if ($iblockTypeRecord)
-				{
-					$identifier = $iblockTypeRecord->getValue();
-					$iblockInfo = \CIBlockType::GetByID($identifier)->GetNext();
-				}
-			}
-		}
-
-		return $iblockInfo;
-	}
-
-	/**
 	 * Проверяет, принадлежит ли настройка $optionName инфоблоку $iblockInfo.
 	 * Проверка происходит по закодированному в названиии настройки <hash>.
 	 *

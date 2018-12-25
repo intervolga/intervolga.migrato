@@ -73,7 +73,6 @@ class AdminListFilter extends BaseData
 		'IB_SECTION_LIST' => 'tbl_iblock_section_',
 		'PRODUCTS_SECTION_LIST' => 'tbl_catalog_section_',
 
-
 		'IB_ELEMENT_LIST' => 'tbl_iblock_element_',
 		'PRODUCTS_LIST' => 'tbl_product_admin_',
 
@@ -450,29 +449,6 @@ class AdminListFilter extends BaseData
 		}
 
 		return array();
-	}
-
-	/**
-	 * Возвращает ИБ по его xmlId.
-	 *
-	 * @param string $iblockXmlId xmlId ИБ.
-	 *
-	 * @return array данные ИБ.
-	 */
-	protected function getIblockByXmlId($iblockXmlId)
-	{
-		$iblockInfo = array();
-		if (Loader::includeModule('iblock'))
-		{
-			$iblockRecord = Iblock::getInstance()->findRecord($iblockXmlId);
-			if ($iblockRecord)
-			{
-				$iblockId = $iblockRecord->getValue();
-				$iblockInfo = \CIBlock::GetByID($iblockId)->GetNext();
-			}
-		}
-
-		return $iblockInfo;
 	}
 
 	/**
@@ -1322,7 +1298,7 @@ class AdminListFilter extends BaseData
         { // Если фильтр - фильтр Сайта
             if ($filterValue)
             {
-                $this-$this->convertSiteIdValueFromXml($filterValue);
+                $this->convertSiteIdValueFromXml($filterValue);
             }
         }
 
