@@ -3,11 +3,14 @@ namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\ExceptionText;
+use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
 
 Loc::loadMessages(__FILE__);
 
 abstract class BaseUserFieldEnum extends BaseData
 {
+	const XML_ID_SEPARATOR = '.';
+
 	protected function configure()
 	{
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD_ENUM'));
@@ -26,7 +29,8 @@ abstract class BaseUserFieldEnum extends BaseData
 		while ($enum = $rsEnum->Fetch())
 		{
 			$record = new Record($this);
-			$record->setXmlId($enum["XML_ID"]);
+			$id = $this->createId($enum['ID']);
+			$record->setXmlId($this->getXmlId($id));
 			$record->setId(RecordId::createNumericId($enum["ID"]));
 			$record->addFieldsRaw(array(
 				"VALUE" => $enum["VALUE"],
@@ -51,7 +55,7 @@ abstract class BaseUserFieldEnum extends BaseData
 		$fields = $record->getFieldsRaw();
 		if ($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
 		{
-			$fields["XML_ID"] = $record->getXmlId();
+			$fields["XML_ID"] = static::getEnumXmlIdWithoutProp($record->getXmlId());
 			$enumObject = new \CUserFieldEnum();
 
 			$isUpdated = $enumObject->setEnumValues($fieldId->getValue(), array($record->getId()->getValue() => $fields));
@@ -67,7 +71,7 @@ abstract class BaseUserFieldEnum extends BaseData
 		$fields = $record->getFieldsRaw();
 		if ($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
 		{
-			$fields["XML_ID"] = $record->getXmlId();
+			$fields["XML_ID"] = static::getEnumXmlIdWithoutProp($record->getXmlId());
 			$fields["USER_FIELD_ID"] = $fieldId->getValue();
 			$enumObject = new \CUserFieldEnum();
 
@@ -98,7 +102,11 @@ abstract class BaseUserFieldEnum extends BaseData
 	protected function deleteInner(RecordId $id)
 	{
 		$fieldenumObject = new \CUserFieldEnum();
-		$fieldenumObject->deleteFieldEnum($id->getValue());
+		$obEnum = $fieldenumObject->GetList(array(), array('ID' => $id->getValue()));
+		if($arEnum = $obEnum->Fetch())
+		{
+			$fieldenumObject->SetEnumValues($arEnum['USER_FIELD_ID'], array($arEnum['ID'] => array('DEL' => 'Y')));
+		}
 	}
 
 	public function setXmlId($id, $xmlId)
@@ -112,7 +120,7 @@ abstract class BaseUserFieldEnum extends BaseData
 				$arEnum["USER_FIELD_ID"],
 				array(
 					$arEnum['ID'] => array(
-						'XML_ID' => $xmlId,
+						'XML_ID' => static::getEnumXmlIdWithoutProp($xmlId),
 						'VALUE' => $arEnum['VALUE'],
 					),
 				)
@@ -129,7 +137,14 @@ abstract class BaseUserFieldEnum extends BaseData
 			$rsEnum = $obEnum->getList(array(), array("ID" => $id));
 			if ($arEnum = $rsEnum->fetch())
 			{
-				$xmlId = $arEnum["XML_ID"];
+				$userField = \CUserTypeEntity::getById($arEnum['USER_FIELD_ID']);
+				$md5 = md5(serialize(array(
+					$userField['ENTITY_ID'],
+					$userField['FIELD_NAME'],
+				)));
+
+				$propXml = BaseXmlIdProvider::formatXmlId($md5);
+				$xmlId = $propXml . static::XML_ID_SEPARATOR . $arEnum["XML_ID"];
 			}
 		}
 		return $xmlId;
@@ -147,7 +162,7 @@ abstract class BaseUserFieldEnum extends BaseData
 			array(),
 			array(
 				"USER_FIELD_ID" => $fieldId,
-				"XML_ID" => $xmlId,
+				"XML_ID" => static::getEnumXmlIdWithoutProp($xmlId),
 			)
 		)->fetch();
 
@@ -159,5 +174,15 @@ abstract class BaseUserFieldEnum extends BaseData
 		{
 			return null;
 		}
+	}
+
+	/**
+	 * @param string $xmlId
+	 * @return mixed
+	 */
+	protected static function getEnumXmlIdWithoutProp($xmlId)
+	{
+		$arXml = explode(static::XML_ID_SEPARATOR, $xmlId);
+		return $arXml[1];
 	}
 }
