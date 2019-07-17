@@ -3,7 +3,7 @@
 use Bitrix\Main\Localization\Loc;
 use \Bitrix\Main\Loader;
 use Intervolga\Migrato\Tool\Console\Logger;
-
+use \Bitrix\Main\Config\Option;
 
 Loc::loadMessages(__FILE__);
 
@@ -53,7 +53,7 @@ class DiagnosticInformationCommand extends BaseCommand
 	{
 		include($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/classes/general/update_client.php');
 		$errors = null;
-		$stableVersionsOnly = \COption::GetOptionString('main', 'stable_versions_only', 'Y');
+		$stableVersionsOnly = Option::get('main', 'stable_versions_only', 'Y');
 		$updateList = \CUpdateClient::GetUpdatesList($errors, LANG, $stableVersionsOnly);
 
 		return $updateList['CLIENT'][0]['@']['LICENSE'];
