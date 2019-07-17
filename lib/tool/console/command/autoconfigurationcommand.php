@@ -13,20 +13,20 @@ class AutoconfigurationCommand extends BaseCommand
 
 	public function executeInner()
 	{
-		//self::getConfigXML();
-		self::getInstalledModules();
+		//self::getConfigData();
+		//self::getInstalledModules();
 	}
 
-	protected static function getConfigXML()
+	protected static function getConfigData()
 	{
-		$arResult = array();
+		$configData = array();
 
 		$configXML = file_get_contents($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config.xml");
 		$xml = new \CDataXML();
 		$xml->LoadString($configXML);
-		$arData = $xml->GetArray();
+		$arDataXML = $xml->GetArray();
 
-		foreach ($arData['config']['#']['module'] as $module)
+		foreach ($arDataXML['config']['#']['module'] as $module)
 		{
 			$arEntities = array();
 
@@ -35,10 +35,10 @@ class AutoconfigurationCommand extends BaseCommand
 				$arEntities[] = $entity['#']['name'][0]['#'];
 			}
 
-			$arResult[$module['#']['name'][0]['#']] = $arEntities;
+			$configData[$module['#']['name'][0]['#']] = $arEntities;
 		}
 
-		return $arResult;
+		return $configData;
 	}
 
 	protected static function getInstalledModules()
@@ -52,5 +52,15 @@ class AutoconfigurationCommand extends BaseCommand
 		}
 
 		return $installedModules;
+	}
+
+	protected static function deleteFromConfigNonExistentModules()
+	{
+		$installedModules = self::getInstalledModules();
+		$configData = self::getConfigData();
+
+		$configXML = file_get_contents($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config.xml");
+		$xml = new \CDataXML();
+		$xml->LoadString($configXML);
 	}
 }
