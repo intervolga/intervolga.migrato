@@ -18,7 +18,7 @@ class AutoconfigurationCommand extends BaseCommand
 
 	protected static function getConfigXML()
 	{
-		$arModules = array();
+		$arResult = array();
 
 		$configXML = file_get_contents($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config.xml");
 		$xml = new \CDataXML();
@@ -34,10 +34,10 @@ class AutoconfigurationCommand extends BaseCommand
 				$arEntities[] = $entity['#']['name'][0]['#'];
 			}
 
-			$arModules[$module['#']['name'][0]['#']] = $arEntities;
+			$arResult[$module['#']['name'][0]['#']] = $arEntities;
 		}
 
-		return $arModules;
+		return $arResult;
 	}
 
 	protected static function getInstalledModules()
