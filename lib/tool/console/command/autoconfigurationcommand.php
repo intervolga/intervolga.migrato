@@ -1,5 +1,7 @@
 <?namespace Intervolga\Migrato\Tool\Console\Command;
+
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\IO\File;
 
 Loc::loadMessages(__FILE__);
 
@@ -15,6 +17,9 @@ class AutoconfigurationCommand extends BaseCommand
 	{
 		//self::getConfigData();
 		//self::getInstalledModules();
+		//self::deleteFromConfigNonExistentModules();
+		//self::createFile();
+		self::getAvailableModules();
 	}
 
 	protected static function getConfigData()
@@ -54,13 +59,41 @@ class AutoconfigurationCommand extends BaseCommand
 		return $installedModules;
 	}
 
-	protected static function deleteFromConfigNonExistentModules()
+//	protected static function deleteFromConfigNonExistentModules()
+//	{
+//		$installedModules = self::getInstalledModules();
+//		$configData = self::getConfigData();
+//
+//		$configXML = file_get_contents($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config.xml");
+//		$xml = new \CDataXML();
+//		$xml->LoadString($configXML);
+//
+//		$file = $_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config_update.xml";
+//		if (!file_exists($file)) {
+//			$fp = fopen($file, "w");
+//			fwrite($fp, $configData);
+//			fclose($fp);
+//		}
+//	}
+
+	protected static function getAvailableModules()
 	{
 		$installedModules = self::getInstalledModules();
 		$configData = self::getConfigData();
+		$availableModules = array_intersect_key(array_flip($installedModules), $configData);
 
-		$configXML = file_get_contents($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config.xml");
-		$xml = new \CDataXML();
-		$xml->LoadString($configXML);
+		return array_keys($availableModules);
+	}
+
+
+
+	protected static function createFile()
+	{
+		// TO DO
+		// ($path, $data)
+
+
+		$path = $_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config_update.xml";
+		File::putFileContents($path, 'daad');
 	}
 }
