@@ -13,7 +13,8 @@ class AutoconfigurationCommand extends BaseCommand
 
 	public function executeInner()
 	{
-		self::getConfigXML();
+		//self::getConfigXML();
+		self::getInstalledModules();
 	}
 
 	protected static function getConfigXML()
@@ -42,6 +43,14 @@ class AutoconfigurationCommand extends BaseCommand
 
 	protected static function getInstalledModules()
 	{
+		$installedModules = array();
 
+		$rsInstalledModules = \CModule::GetList();
+		while ($module = $rsInstalledModules->Fetch())
+		{
+			$installedModules[] = $module['ID'];
+		}
+
+		return $installedModules;
 	}
 }
