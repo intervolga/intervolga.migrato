@@ -13,6 +13,11 @@ class AutoconfigurationCommand extends BaseCommand
 
 	public function executeInner()
 	{
+		self::getConfigXML();
+	}
 
+	protected static function getConfigXML()
+	{
+		$configXML =  file_get_contents($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config.xml");
 	}
 }
