@@ -7,6 +7,7 @@ Loc::loadMessages(__FILE__);
 
 class AutoconfigurationCommand extends BaseCommand
 {
+
 	protected function configure()
 	{
 		$this->setName('autoconfiguration');
@@ -15,18 +16,19 @@ class AutoconfigurationCommand extends BaseCommand
 
 	public function executeInner()
 	{
-		//self::getConfigData();
-		//self::getInstalledModules();
-		//self::deleteFromConfigNonExistentModules();
-		//self::createFile();
-		self::getAvailableModules();
+		self::createFile();
+	}
+
+	protected static function getPathConfigXML()
+	{
+		return $_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config.xml";
 	}
 
 	protected static function getConfigData()
 	{
 		$configData = array();
 
-		$configXML = file_get_contents($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config.xml");
+		$configXML = file_get_contents(self::getPathConfigXML());
 		$xml = new \CDataXML();
 		$xml->LoadString($configXML);
 		$arDataXML = $xml->GetArray();
@@ -59,23 +61,6 @@ class AutoconfigurationCommand extends BaseCommand
 		return $installedModules;
 	}
 
-//	protected static function deleteFromConfigNonExistentModules()
-//	{
-//		$installedModules = self::getInstalledModules();
-//		$configData = self::getConfigData();
-//
-//		$configXML = file_get_contents($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config.xml");
-//		$xml = new \CDataXML();
-//		$xml->LoadString($configXML);
-//
-//		$file = $_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config_update.xml";
-//		if (!file_exists($file)) {
-//			$fp = fopen($file, "w");
-//			fwrite($fp, $configData);
-//			fclose($fp);
-//		}
-//	}
-
 	protected static function getAvailableModules()
 	{
 		$installedModules = self::getInstalledModules();
@@ -85,15 +70,77 @@ class AutoconfigurationCommand extends BaseCommand
 		return array_keys($availableModules);
 	}
 
-
-
 	protected static function createFile()
 	{
-		// TO DO
-		// ($path, $data)
+		$configXML = file_get_contents(self::getPathConfigXML());
+		$xml = new \CDataXML();
+		$xml->LoadString($configXML);
+		$arDataXML = $xml->GetArray();
+		//$workerFileName = 'config_' . md5(date('Y-m-d') . rand(5, 15)) . '.xml';
+
+		$export = new \Bitrix\Main\XmlWriter(array(
+			//'file' => '/local/migrato/' . $workerFileName,
+			'file' => '/local/migrato/config_update.xml',
+			'create_file' => true,
+			'charset' => 'utf-8',
+			'lowercase' => false
+		));
+
+		$export->openFile();
+		$export->writeBeginTag('config');
+
+		$export->writeBeginTag('options');
+		// options
+		foreach ($arDataXML['config']['#']['options'][0]['#']['exclude'] as $option)
+		{
+			if ($option['@']['module'])
+			{
+				$export->writeBeginTag('exclude module="' . $option['@']['module'] . '"');
+			}
+			else
+			{
+				$export->writeBeginTag('exclude');
+			}
 
 
-		$path = $_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config_update.xml";
-		File::putFileContents($path, 'daad');
+
+			$export->writeEndTag('exclude');
+		}
+		$export->writeEndTag('options');
+
+		$availableModules = self::getAvailableModules();
+		// modules
+		foreach ($arDataXML['config']['#']['module'] as $module)
+		{
+			$moduleName = $module['#']['name'][0]['#'];
+
+			if (in_array($moduleName, $availableModules))
+			{
+				$export->writeBeginTag('module');
+				$export->writeItem(array('name' => $moduleName));
+
+				// entities
+				foreach ($module['#']['entity'] as $entity)
+				{
+					$export->writeBeginTag('entity');
+					$export->writeItem(array('name' => $entity['#']['name'][0]['#']));
+					$export->writeEndTag('entity');
+				}
+
+				$export->writeEndTag('module');
+			}
+		}
+
+
+		$export->writeEndTag('config');
+		$export->closeFile();
+
+
+		// удалить config.xml
+		//unlink($_SERVER["DOCUMENT_ROOT"] . '/local/migrato/config.xml');
+
+		// переименовать рабочий файл в config.xml
+		//rename($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config_update.xml", self::getPathConfigXML());
+
 	}
 }
