@@ -76,11 +76,10 @@ class AutoconfigurationCommand extends BaseCommand
 		$xml = new \CDataXML();
 		$xml->LoadString($configXML);
 		$arDataXML = $xml->GetArray();
-		//$workerFileName = 'config_' . md5(date('Y-m-d') . rand(5, 15)) . '.xml';
+		$workerFileName = 'config_' . md5(rand(5, 15)) . '.xml';
 
 		$export = new \Bitrix\Main\XmlWriter(array(
-			//'file' => '/local/migrato/' . $workerFileName,
-			'file' => '/local/migrato/config_update.xml',
+			'file' => "/local/migrato/$workerFileName",
 			'create_file' => true,
 			'charset' => 'utf-8',
 			'lowercase' => false
@@ -95,16 +94,14 @@ class AutoconfigurationCommand extends BaseCommand
 		{
 			if ($option['@']['module'])
 			{
-				$export->writeBeginTag('exclude module="' . $option['@']['module'] . '"');
+				$data = "    	<exclude module=" . '"' . $option['@']['module'] . '"' . ">" . $option['#'] . "</exclude>\n";
 			}
 			else
 			{
-				$export->writeBeginTag('exclude');
+				$data = "    	<exclude>" . $option['#'] . "</exclude>\n";
 			}
 
-
-
-			$export->writeEndTag('exclude');
+			File::putFileContents($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/$workerFileName", $data, true);
 		}
 		$export->writeEndTag('options');
 
@@ -136,11 +133,10 @@ class AutoconfigurationCommand extends BaseCommand
 		$export->closeFile();
 
 
-		// удалить config.xml
-		//unlink($_SERVER["DOCUMENT_ROOT"] . '/local/migrato/config.xml');
+		// delete config.xml
+		unlink(self::getPathConfigXML());
 
-		// переименовать рабочий файл в config.xml
-		//rename($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/config_update.xml", self::getPathConfigXML());
-
+		// rename $workerFileName to config.xml
+		rename($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/$workerFileName", self::getPathConfigXML());
 	}
 }
