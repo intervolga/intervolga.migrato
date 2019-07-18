@@ -21,6 +21,11 @@ abstract class BaseData
 	protected $dependencies = array();
 	protected $references = array();
 
+	public static function getMinVersion()
+	{
+		return "1.0.0";
+	}
+
 	/**
 	 * @return static
 	 */

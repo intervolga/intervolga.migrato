@@ -70,13 +70,26 @@ class AutoconfigurationCommand extends BaseCommand
 		return array_keys($availableModules);
 	}
 
+	protected static function getVersionMainModule()
+	{
+		if (defined("SM_VERSION"))
+		{
+			return SM_VERSION;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
 	protected static function createFile()
 	{
 		$configXML = file_get_contents(self::getPathConfigXML());
 		$xml = new \CDataXML();
 		$xml->LoadString($configXML);
 		$arDataXML = $xml->GetArray();
-		$workerFileName = 'config_' . md5(rand(5, 15)) . '.xml';
+		//$workerFileName = 'config_' . md5(rand(5, 15)) . '.xml';
+		$workerFileName = 'config_update.xml';
 
 		$export = new \Bitrix\Main\XmlWriter(array(
 			'file' => "/local/migrato/$workerFileName",
@@ -119,6 +132,11 @@ class AutoconfigurationCommand extends BaseCommand
 				// entities
 				foreach ($module['#']['entity'] as $entity)
 				{
+//					if (version_compare(self::getVersionMainModule(), \Intervolga\Migrato\Data\Module\Main\Culture::getMinVersion(), '>='))
+//					{
+//
+//					}
+
 					$export->writeBeginTag('entity');
 					$export->writeItem(array('name' => $entity['#']['name'][0]['#']));
 					$export->writeEndTag('entity');
@@ -132,11 +150,10 @@ class AutoconfigurationCommand extends BaseCommand
 		$export->writeEndTag('config');
 		$export->closeFile();
 
-
 		// delete config.xml
-		unlink(self::getPathConfigXML());
+		//unlink(self::getPathConfigXML());
 
 		// rename $workerFileName to config.xml
-		rename($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/$workerFileName", self::getPathConfigXML());
+		//rename($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/$workerFileName", self::getPathConfigXML());
 	}
 }
