@@ -16,7 +16,7 @@ class Event extends BaseData
 {
 	public static function getMinVersion()
 	{
-		return "12.0.7";
+		return "14.0";
 	}
 
 	protected function configure()

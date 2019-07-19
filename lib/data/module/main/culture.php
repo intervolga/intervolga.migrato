@@ -12,6 +12,11 @@ Loc::loadMessages(__FILE__);
 
 class Culture extends BaseData
 {
+	public static function getMinVersion()
+	{
+		return "14.0";
+	}
+
 	protected function configure()
 	{
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.MAIN_CULTURE'));
