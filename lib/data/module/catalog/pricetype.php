@@ -19,6 +19,11 @@ Loc::loadMessages(__FILE__);
 
 class PriceType extends BaseData
 {
+	public static function getMinVersion()
+	{
+		return "15.0.2";
+	}
+
 	protected function configure()
 	{
 		Loader::includeModule("catalog");

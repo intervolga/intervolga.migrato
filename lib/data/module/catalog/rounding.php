@@ -18,6 +18,11 @@ class Rounding extends BaseData
 	const PRICE_TYPE_DEPENDENCY_KEY = 'CATALOG_GROUP_ID';
 	const XML_ID_SEPARATOR = '___';
 
+	public static function getMinVersion()
+	{
+		return "16.5.4";
+	}
+
 	protected function configure()
 	{
 		Loader::includeModule('catalog');

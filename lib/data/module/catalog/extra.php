@@ -13,6 +13,12 @@ Loc::loadMessages(__FILE__);
 
 class Extra extends BaseData
 {
+	public static function getMinVersion()
+	{
+		return "16.5.1";
+	}
+
+
 	protected function configure()
 	{
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.CATALOG_EXTRA'));

@@ -14,6 +14,11 @@ Loc::loadMessages(__FILE__);
 
 class Store extends BaseData
 {
+	public static function getMinVersion()
+	{
+		return "12.5.1";
+	}
+
 	public function configure()
 	{
 		Loader::includeModule("catalog");

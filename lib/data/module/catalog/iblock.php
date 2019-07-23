@@ -21,6 +21,11 @@ Loc::loadMessages(__FILE__);
  */
 class Iblock extends BaseData
 {
+	public static function getMinVersion()
+	{
+		return "15.0.1";
+	}
+
 	protected function configure()
 	{
 		Loader::includeModule('catalog');
