@@ -19,6 +19,11 @@ class Property extends BaseData
 {
 	const XML_ID_SEPARATOR = '.';
 
+	public static function getMinVersion()
+	{
+		return "14.0.0";
+	}
+
 	protected function configure()
 	{
 		Loader::includeModule("iblock");

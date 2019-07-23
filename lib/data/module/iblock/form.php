@@ -24,6 +24,11 @@ class Form extends BaseData
 	const XML_ELEMENT = 'el';
 	const XML_SECTION = 'sec';
 
+	public static function getMinVersion()
+	{
+		return "14.0.0";
+	}
+
 	protected function configure()
 	{
 		$this->setVirtualXmlId(true);
