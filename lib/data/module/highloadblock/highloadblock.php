@@ -13,6 +13,11 @@ Loc::loadMessages(__FILE__);
 
 class HighloadBlock extends BaseData
 {
+	public static function getMinVersion()
+	{
+		return "12.0.0";
+	}
+
 	protected function configure()
 	{
 		$this->setVirtualXmlId(true);

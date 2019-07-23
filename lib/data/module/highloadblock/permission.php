@@ -26,6 +26,11 @@ Loc::loadMessages(__FILE__);
  */
 class Permission extends BaseData
 {
+	public static function getMinVersion()
+	{
+		return "12.0.0";
+	}
+
 	protected function configure()
 	{
 		Loader::includeModule('highloadblock');
