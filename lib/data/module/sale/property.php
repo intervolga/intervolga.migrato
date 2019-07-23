@@ -15,6 +15,11 @@ Loc::loadMessages(__FILE__);
 
 class Property extends BaseData
 {
+	public static function getMinVersion()
+	{
+		return "14.0.0";
+	}
+
 	protected function configure()
 	{
 		$this->setVirtualXmlId(true);

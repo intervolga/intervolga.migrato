@@ -16,6 +16,11 @@ use Intervolga\Migrato\Tool\ExceptionText;
 
 class Status extends BaseData
 {
+	public static function getMinVersion()
+	{
+		return "14.0.0";
+	}
+
 	public function getList(array $filter = array())
 	{
 		$result = array();

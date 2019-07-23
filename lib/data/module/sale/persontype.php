@@ -16,6 +16,11 @@ Loc::loadMessages(__FILE__);
 
 class PersonType extends BaseData
 {
+	public static function getMinVersion()
+	{
+		return "12.0.3";
+	}
+
 	protected function configure()
 	{
 		$this->setVirtualXmlId(true);
