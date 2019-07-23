@@ -2,12 +2,13 @@
 
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\IO\File;
+use Intervolga\Migrato\Data\Module;
+
 
 Loc::loadMessages(__FILE__);
 
 class AutoconfigurationCommand extends BaseCommand
 {
-
 	protected function configure()
 	{
 		$this->setName('autoconfiguration');
@@ -16,7 +17,7 @@ class AutoconfigurationCommand extends BaseCommand
 
 	public function executeInner()
 	{
-		self::createFile();
+		static::createFile();
 	}
 
 	protected static function getPathConfigXML()
@@ -70,18 +71,6 @@ class AutoconfigurationCommand extends BaseCommand
 		return array_keys($availableModules);
 	}
 
-	protected static function getVersionMainModule()
-	{
-		if (defined("SM_VERSION"))
-		{
-			return SM_VERSION;
-		}
-		else
-		{
-			return false;
-		}
-	}
-
 	protected static function createFile()
 	{
 		$configXML = file_get_contents(self::getPathConfigXML());
@@ -132,14 +121,15 @@ class AutoconfigurationCommand extends BaseCommand
 				// entities
 				foreach ($module['#']['entity'] as $entity)
 				{
-//					if (version_compare(self::getVersionMainModule(), \Intervolga\Migrato\Data\Module\Main\Culture::getMinVersion(), '>='))
-//					{
-//
-//					}
+					$class = '\Intervolga\Migrato\Data\Module\\' . $moduleName . '\\' . $entity['#']['name'][0]['#'];
+					$minVersion = $class::getMinVersion();
 
-					$export->writeBeginTag('entity');
-					$export->writeItem(array('name' => $entity['#']['name'][0]['#']));
-					$export->writeEndTag('entity');
+					if (version_compare(SM_VERSION, $minVersion, '>='))
+					{
+						$export->writeBeginTag('entity');
+						$export->writeItem(array('name' => $entity['#']['name'][0]['#']));
+						$export->writeEndTag('entity');
+					}
 				}
 
 				$export->writeEndTag('module');
