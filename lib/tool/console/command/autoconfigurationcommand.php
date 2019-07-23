@@ -77,8 +77,7 @@ class AutoconfigurationCommand extends BaseCommand
 		$xml = new \CDataXML();
 		$xml->LoadString($configXML);
 		$arDataXML = $xml->GetArray();
-		//$workerFileName = 'config_' . md5(rand(5, 15)) . '.xml';
-		$workerFileName = 'config_update.xml';
+		$workerFileName = 'config_' . md5(rand(5, 15)) . '.xml';
 
 		$export = new \Bitrix\Main\XmlWriter(array(
 			'file' => "/local/migrato/$workerFileName",
@@ -136,14 +135,13 @@ class AutoconfigurationCommand extends BaseCommand
 			}
 		}
 
-
 		$export->writeEndTag('config');
 		$export->closeFile();
 
 		// delete config.xml
-		//unlink(self::getPathConfigXML());
+		unlink(self::getPathConfigXML());
 
 		// rename $workerFileName to config.xml
-		//rename($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/$workerFileName", self::getPathConfigXML());
+		rename($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/$workerFileName", self::getPathConfigXML());
 	}
 }
