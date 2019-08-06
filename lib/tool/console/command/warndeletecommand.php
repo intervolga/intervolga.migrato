@@ -12,7 +12,9 @@ Loc::loadMessages(__FILE__);
 class WarnDeleteCommand extends BaseCommand
 {
 	protected $willDelete = 0;
+	protected $willAdd = 0;
 	protected $totalRecords = 0;
+	protected $databaseRecords = array();
 
 	protected function configure()
 	{
@@ -24,6 +26,7 @@ class WarnDeleteCommand extends BaseCommand
 	public function executeInner()
 	{
 		$this->willDelete = 0;
+		$this->willAdd = 0;
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		foreach ($configDataClasses as $dataClass)
 		{
@@ -38,12 +41,24 @@ class WarnDeleteCommand extends BaseCommand
 	protected function checkData(BaseData $dataClass)
 	{
 		$fileRecordsXmlIds = $this->getFileRecordsXmlIds($dataClass);
+		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . '/';
+
 		$databaseRecords = $dataClass->getList();
 		foreach ($databaseRecords as $databaseRecord)
 		{
 			$this->totalRecords++;
-			$this->checkRecord($databaseRecord, $fileRecordsXmlIds);
+			$this->checkRecord($databaseRecord, $fileRecordsXmlIds, $path);
 		}
+
+
+//		$tempFile = fopen($_SERVER['DOCUMENT_ROOT'] . '/log/__bx_log2.log', 'a');
+//		fwrite(
+//			$tempFile,
+//			__FILE__ . ':' . __LINE__ . PHP_EOL . '(' . date('Y-m-d H:i:s').')' . PHP_EOL
+//			. print_r($this->databaseRecords, TRUE)
+//			. PHP_EOL . PHP_EOL
+//		);
+//		fclose($tempFile);
 	}
 
 	/**
@@ -70,9 +85,12 @@ class WarnDeleteCommand extends BaseCommand
 	/**
 	 * @param \Intervolga\Migrato\Data\Record $databaseRecord
 	 * @param array $fileRecordsXmlIds
+	 * @param string $path
 	 */
-	protected function checkRecord(Record $databaseRecord, array $fileRecordsXmlIds)
+	protected function checkRecord(Record $databaseRecord, array $fileRecordsXmlIds, $path)
 	{
+		//$this->databaseRecords[$path][] = $databaseRecord->getXmlId();
+
 		if (!in_array($databaseRecord->getXmlId(), $fileRecordsXmlIds))
 		{
 			$this->willDelete++;
@@ -81,6 +99,14 @@ class WarnDeleteCommand extends BaseCommand
 				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_REMOVED'),
 			));
 		}
+//		elseif (!in_array($databaseRecord->getXmlId(), $fileRecordsXmlIds))
+//		{
+//			$this->willAdd++;
+//			$this->logger->addDb(array(
+//				//'RECORD' => $databaseRecord,
+//				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_ADD'),
+//			));
+//		}
 		else
 		{
 			$this->logger->addDb(
