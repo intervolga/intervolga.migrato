@@ -72,7 +72,6 @@ class WarnDeleteCommand extends BaseCommand
 	/**
 	 * @param \Intervolga\Migrato\Data\Record $databaseRecord
 	 * @param array $fileRecordsXmlIds
-	 * @param string $path
 	 */
 	protected function checkRecord(Record $databaseRecord, array $fileRecordsXmlIds)
 	{

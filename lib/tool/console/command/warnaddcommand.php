@@ -25,9 +25,10 @@ class WarnAddCommand extends BaseCommand
 
 	public function executeInner()
 	{
-		$this->willDelete = 0;
 		$this->willAdd = 0;
+		$addedRecords = array();
 		$configDataClasses = Config::getInstance()->getDataClasses();
+
 		foreach ($configDataClasses as $dataClass)
 		{
 			$this->checkData($dataClass);
@@ -39,11 +40,27 @@ class WarnAddCommand extends BaseCommand
 			{
 				if ($dirFiles == $dirDatabase) {
 					$result = array_diff($files, $records);
+					$addedRecords[] = array_values($result);
 					$this->willAdd += count($result);
 				}
 			}
 		}
 
+		foreach ($configDataClasses as $dataClass)
+		{
+			$this->checkAddedRecords($dataClass, $addedRecords);
+		}
+
+//		foreach ($addedRecords as $records)
+//		{
+//			foreach ($records as $record)
+//			{
+//				$this->logger->addDb(array(
+//					//'RECORD' => $databaseRecord,
+//					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_ADD'),
+//				));
+//			}
+//		}
 
 		$this->addResult();
 	}
@@ -53,15 +70,38 @@ class WarnAddCommand extends BaseCommand
 	 */
 	protected function checkData(BaseData $dataClass)
 	{
-		$fileRecordsXmlIds = $this->getFileRecordsXmlIds($dataClass);
+		$this->getFileRecordsXmlIds($dataClass);
 		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . '/';
 
 		$databaseRecords = $dataClass->getList();
 		foreach ($databaseRecords as $databaseRecord)
 		{
 			$this->totalRecords++;
-			$this->checkRecord($databaseRecord, $fileRecordsXmlIds);
 			$this->filesInDatabase[$path][] = $databaseRecord->getXmlId();
+		}
+	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
+	 * @param array $addedRecords
+	 */
+	protected function checkAddedRecords(BaseData $dataClass, $addedRecords)
+	{
+		$databaseRecords = $dataClass->getList();
+		foreach ($databaseRecords as $key => $databaseRecord)
+		{
+			if ($addedRecords[$key])
+			{
+//				foreach ($addedRecords[$key] as $file)
+//				{
+//					$this->logger->addDb(array(
+//						'RECORD' => $databaseRecord,
+//						'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_ADD'),
+//					));
+//				}
+
+
+			}
 		}
 	}
 
@@ -88,50 +128,15 @@ class WarnAddCommand extends BaseCommand
 		return $fileRecordsXmlIds;
 	}
 
-	/**
-	 * @param \Intervolga\Migrato\Data\Record $databaseRecord
-	 * @param array $fileRecordsXmlIds
-	 * @param string $path
-	 */
-	protected function checkRecord(Record $databaseRecord, array $fileRecordsXmlIds)
-	{
-		if (!in_array($databaseRecord->getXmlId(), $fileRecordsXmlIds))
-		{
-			$this->willDelete++;
-			$this->logger->addDb(array(
-				'RECORD' => $databaseRecord,
-				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_REMOVED'),
-			));
-		}
-//		elseif (!in_array($databaseRecord->getXmlId(), $fileRecordsXmlIds))
-//		{
-//			$this->willAdd++;
-//			$this->logger->addDb(array(
-//				//'RECORD' => $databaseRecord,
-//				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_ADD'),
-//			));
-//		}
-		else
-		{
-			$this->logger->addDb(
-				array(
-					'RECORD' => $databaseRecord,
-					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_SAVED'),
-				),
-				Logger::TYPE_OK
-			);
-		}
-	}
-
 	protected function addResult()
 	{
-		if ($this->willDelete)
+		if ($this->willAdd)
 		{
-			if ($this->willDelete == $this->totalRecords)
+			if ($this->willAdd == $this->totalRecords)
 			{
 				$this->logger->add(
 					Loc::getMessage(
-						'INTERVOLGA_MIGRATO.ALL_WILL_BE_DELETED',
+						'INTERVOLGA_MIGRATO.ALL_WILL_BE_ADD',
 						array(
 							'#TOTAL#' => $this->totalRecords,
 						)
@@ -144,9 +149,9 @@ class WarnAddCommand extends BaseCommand
 			{
 				$this->logger->add(
 					Loc::getMessage(
-						'INTERVOLGA_MIGRATO.SOME_WILL_BE_DELETED',
+						'INTERVOLGA_MIGRATO.SOME_WILL_BE_ADD',
 						array(
-							'#COUNT#' => $this->willDelete,
+							'#COUNT#' => $this->willAdd,
 							'#TOTAL#' => $this->totalRecords,
 						)
 					),
@@ -155,25 +160,11 @@ class WarnAddCommand extends BaseCommand
 				);
 			}
 		}
-		elseif ($this->willAdd)
-		{
-			$this->logger->add(
-				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.SOME_WILL_BE_ADD',
-					array(
-						'#COUNT#' => $this->willAdd,
-						'#TOTAL#' => $this->totalRecords,
-					)
-				),
-				0,
-				Logger::TYPE_INFO
-			);
-		}
 		else
 		{
 			$this->logger->add(
 				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.NOTHING_WILL_BE_DELETED',
+					'INTERVOLGA_MIGRATO.NOTHING_WILL_BE_ADD',
 					array(
 						'#TOTAL#' => $this->totalRecords,
 					)
