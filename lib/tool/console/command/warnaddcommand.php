@@ -9,26 +9,41 @@ use Intervolga\Migrato\Tool\DataFileViewXml;
 
 Loc::loadMessages(__FILE__);
 
-class WarnDeleteCommand extends BaseCommand
+class WarnAddCommand extends BaseCommand
 {
-	protected $willDelete = 0;
+	protected $willAdd = 0;
 	protected $totalRecords = 0;
+	protected $filesInDatabase = array();
+	protected $filesInDirectories = array();
 
 	protected function configure()
 	{
 		$this->setHidden(true);
-		$this->setName('warndelete');
-		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.WARN_DELETE_DESCRIPTION'));
+		$this->setName('warnadd');
+		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.WARN_ADD_DESCRIPTION'));
 	}
 
 	public function executeInner()
 	{
 		$this->willDelete = 0;
+		$this->willAdd = 0;
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		foreach ($configDataClasses as $dataClass)
 		{
 			$this->checkData($dataClass);
 		}
+
+		foreach ($this->filesInDirectories as $dirFiles => $files)
+		{
+			foreach ($this->filesInDatabase as $dirDatabase => $records)
+			{
+				if ($dirFiles == $dirDatabase) {
+					$result = array_diff($files, $records);
+					$this->willAdd += count($result);
+				}
+			}
+		}
+
 
 		$this->addResult();
 	}
@@ -39,12 +54,14 @@ class WarnDeleteCommand extends BaseCommand
 	protected function checkData(BaseData $dataClass)
 	{
 		$fileRecordsXmlIds = $this->getFileRecordsXmlIds($dataClass);
+		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . '/';
 
 		$databaseRecords = $dataClass->getList();
 		foreach ($databaseRecords as $databaseRecord)
 		{
 			$this->totalRecords++;
 			$this->checkRecord($databaseRecord, $fileRecordsXmlIds);
+			$this->filesInDatabase[$path][] = $databaseRecord->getXmlId();
 		}
 	}
 
@@ -66,6 +83,8 @@ class WarnDeleteCommand extends BaseCommand
 			}
 		}
 
+		$this->filesInDirectories[$path] = $fileRecordsXmlIds;
+
 		return $fileRecordsXmlIds;
 	}
 
@@ -84,6 +103,14 @@ class WarnDeleteCommand extends BaseCommand
 				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_REMOVED'),
 			));
 		}
+//		elseif (!in_array($databaseRecord->getXmlId(), $fileRecordsXmlIds))
+//		{
+//			$this->willAdd++;
+//			$this->logger->addDb(array(
+//				//'RECORD' => $databaseRecord,
+//				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_ADD'),
+//			));
+//		}
 		else
 		{
 			$this->logger->addDb(
@@ -127,6 +154,20 @@ class WarnDeleteCommand extends BaseCommand
 					Logger::TYPE_INFO
 				);
 			}
+		}
+		elseif ($this->willAdd)
+		{
+			$this->logger->add(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.SOME_WILL_BE_ADD',
+					array(
+						'#COUNT#' => $this->willAdd,
+						'#TOTAL#' => $this->totalRecords,
+					)
+				),
+				0,
+				Logger::TYPE_INFO
+			);
 		}
 		else
 		{

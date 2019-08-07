@@ -17,5 +17,6 @@ class ValidateComplexCommand extends BaseCommand
 		$this->runSubcommand('validatexmlid');
 		$this->runSubcommand('unused');
 		$this->runSubcommand('warndelete');
+		$this->runSubcommand('warnadd');
 	}
 }
