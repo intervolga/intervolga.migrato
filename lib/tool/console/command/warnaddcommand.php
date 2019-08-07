@@ -34,32 +34,59 @@ class WarnAddCommand extends BaseCommand
 			$this->checkData($dataClass);
 		}
 
-		foreach ($this->filesInDirectories as $dirFiles => $files)
+
+		// найди расходящиеся сущности, чтобы потом применить $this->logger->addDb
+		foreach ($this->filesInDirectories as $module => $entity)
 		{
-			foreach ($this->filesInDatabase as $dirDatabase => $records)
+			foreach ($entity as $record)
 			{
-				if ($dirFiles == $dirDatabase) {
-					$result = array_diff($files, $records);
-					$addedRecords[] = array_values($result);
-					$this->willAdd += count($result);
-				}
+				//"\Intervolga\Migrato\Data\\" . $module->findRecord($record);
 			}
 		}
 
-		foreach ($configDataClasses as $dataClass)
-		{
-			$this->checkAddedRecords($dataClass, $addedRecords);
-		}
 
-//		foreach ($addedRecords as $records)
+
+
+//		foreach ($this->filesInDirectories as $dirFiles => $files)
 //		{
-//			foreach ($records as $record)
+//			foreach ($this->filesInDatabase as $dirDatabase => $records)
 //			{
-//				$this->logger->addDb(array(
-//					//'RECORD' => $databaseRecord,
-//					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_ADD'),
-//				));
+//				if ($dirFiles == $dirDatabase) {
+//					$result = array_diff($files, $records);
+//					$addedRecords[$dirFiles] = array_values($result);
+//					$this->willAdd += count($result);
+//				}
 //			}
+//		}
+
+
+//		foreach ($addedRecords as $dir => $records)
+//		{
+//			if(count($records) > 0)
+//			{
+//				$this->logger->add(
+//					Loc::getMessage(
+//						'INTERVOLGA_MIGRATO.RECORDS_WILL_BE_ADD',
+//						array(
+//							'#PATH#' => $dir,
+//							'#TOTAL#' => count($records),
+//						)
+//					),
+//					0,
+//					Logger::TYPE_INFO
+//				);
+//			}
+//
+////			foreach ($configDataClasses as $dataClass)
+////			{
+////				$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . '/';
+////
+////				if($path == $dir)
+////				{
+////					$this->checkAddedRecords($dataClass, $records);
+////				}
+////			}
+//
 //		}
 
 		$this->addResult();
@@ -77,32 +104,41 @@ class WarnAddCommand extends BaseCommand
 		foreach ($databaseRecords as $databaseRecord)
 		{
 			$this->totalRecords++;
-			$this->filesInDatabase[$path][] = $databaseRecord->getXmlId();
+			$this->filesInDatabase[$dataClass->getModule()][$dataClass->getEntityName()][] = $databaseRecord->getXmlId();
 		}
 	}
 
 	/**
 	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
-	 * @param array $addedRecords
+	 * @param array $records
 	 */
-	protected function checkAddedRecords(BaseData $dataClass, $addedRecords)
+	protected function checkAddedRecords(BaseData $dataClass, $records)
 	{
 		$databaseRecords = $dataClass->getList();
-		foreach ($databaseRecords as $key => $databaseRecord)
-		{
-			if ($addedRecords[$key])
-			{
-//				foreach ($addedRecords[$key] as $file)
-//				{
-//					$this->logger->addDb(array(
-//						'RECORD' => $databaseRecord,
-//						'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_ADD'),
-//					));
-//				}
 
 
-			}
-		}
+//		foreach ($databaseRecords as $databaseRecord)
+//		{
+//			if (!in_array($databaseRecord->getXmlId(), $records))
+//			{
+//				$this->logger->addDb(array(
+//					'RECORD' => $databaseRecord,
+//					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORDS_WILL_BE_ADD'),
+//				));
+//			}
+//		}
+
+
+//		foreach ($records as $records)
+//		{
+//
+//			$this->logger->addDb(array(
+//				//'RECORD' => $databaseRecord,
+//				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_ADD'),
+//			));
+//
+//		}
+
 	}
 
 	/**
@@ -115,6 +151,7 @@ class WarnAddCommand extends BaseCommand
 		$path = INTERVOLGA_MIGRATO_DIRECTORY . $dataClass->getModule() . $dataClass->getFilesSubdir() . $dataClass->getEntityName() . '/';
 		$fileRecords = DataFileViewXml::readFromFileSystem($path);
 		$fileRecordsXmlIds = array();
+
 		foreach ($fileRecords as $record)
 		{
 			if (!$record->getDeleteMark())
@@ -122,8 +159,7 @@ class WarnAddCommand extends BaseCommand
 				$fileRecordsXmlIds[] = $record->getXmlId();
 			}
 		}
-
-		$this->filesInDirectories[$path] = $fileRecordsXmlIds;
+		$this->filesInDirectories[$dataClass->getModule()][$dataClass->getEntityName()] = $fileRecordsXmlIds;
 
 		return $fileRecordsXmlIds;
 	}
