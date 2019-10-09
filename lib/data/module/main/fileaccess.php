@@ -247,7 +247,12 @@ class FileAccess extends BaseData
 			}
 			else
 			{
-				$record->registerValidateError("Несуществующий код группы: " . $group);
+				$record->registerValidateError(Loc::getMessage(
+					'INTERVOLGA_MIGRATO.CODE_GROUP_IS_NOT_EXIST',
+					array(
+						'#CODE_GROUP#' =>$group
+					)
+				));
 				return $record;
 			}
 		}
