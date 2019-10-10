@@ -38,6 +38,7 @@ use Symfony\Component\Console\Exception\CommandNotFoundException;
 use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Debug\Exception\FatalThrowableError;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use \Bitrix\Main\Config\Option;
 
 /**
  * An Application is the container for a collection of commands.
@@ -164,7 +165,7 @@ class Application
     public function doRun(InputInterface $input, OutputInterface $output)
     {
         if (true === $input->hasParameterOption(array('--version', '-V'), true)) {
-            $output->writeln($this->getLongVersion());
+			$output->writeln($this->doDiagnostic());
 
             return 0;
         }
@@ -1095,4 +1096,45 @@ class Application
 
         return $namespaces;
     }
+
+	public function doDiagnostic()
+	{
+
+		return array(
+			"Версия модуля миграций: " . self::getVersionMigrationModule(),
+			"Версия главного модуля: " . self::getVersionMainModule(),
+			"Редакция Битрикса: " . self::getEditorialBitrix(),
+			"Версия PHP: " . phpversion()
+		);
+	}
+
+	private static function getVersionMigrationModule()
+	{
+		$moduleDir = dirname(dirname(dirname(__DIR__)));
+		$arModuleVersion = array();
+		include $moduleDir . '/install/version.php';
+		return $arModuleVersion["VERSION"];
+	}
+
+	private static function getVersionMainModule()
+	{
+		if (defined("SM_VERSION"))
+		{
+			return SM_VERSION;
+		}
+		else
+		{
+			return 'не определена';
+		}
+	}
+
+	private static function getEditorialBitrix()
+	{
+		include($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/classes/general/update_client.php');
+		$errors = null;
+		$stableVersionsOnly = Option::get('main', 'stable_versions_only', 'Y');
+		$updateList = \CUpdateClient::GetUpdatesList($errors, LANG, $stableVersionsOnly);
+
+		return $updateList['CLIENT'][0]['@']['LICENSE'];
+	}
 }

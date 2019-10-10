@@ -21,7 +21,6 @@ use Intervolga\Migrato\Tool\Console\Command\UrlRewriteCommand;
 use Intervolga\Migrato\Tool\Console\Command\ValidateCommand;
 use Intervolga\Migrato\Tool\Console\Command\ValidateComplexCommand;
 use Intervolga\Migrato\Tool\Console\Command\WarnDeleteCommand;
-use Intervolga\Migrato\Tool\Console\Command\DiagnosticInformationCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -59,8 +58,7 @@ class Application extends \Symfony\Component\Console\Application
 			new ImportXmlIdCommand(),
 			new LogCommand(),
 			new CheckExecCommand(),
-			new ReIndexFacetCommand(),
-			new DiagnosticInformationCommand(),
+			new ReIndexFacetCommand()
 		));
 	}
 
