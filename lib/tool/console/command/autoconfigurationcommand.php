@@ -11,7 +11,7 @@ class AutoconfigurationCommand extends BaseCommand
 {
 	protected function configure()
 	{
-		$this->setName('autoconfiguration');
+		$this->setName('autoconfig');
 		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.AUTOCONFIG_DESCRIPTION'));
 	}
 
