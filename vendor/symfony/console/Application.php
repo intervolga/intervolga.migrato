@@ -1097,9 +1097,8 @@ class Application
         return $namespaces;
     }
 
-	public function doDiagnostic()
+	protected function doDiagnostic()
 	{
-
 		return array(
 			"Версия модуля миграций: " . self::getVersionMigrationModule(),
 			"Версия главного модуля: " . self::getVersionMainModule(),
@@ -1133,7 +1132,7 @@ class Application
 		include($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/classes/general/update_client.php');
 		$errors = null;
 		$stableVersionsOnly = Option::get('main', 'stable_versions_only', 'Y');
-		$updateList = \CUpdateClient::GetUpdatesList($errors, LANG, $stableVersionsOnly);
+		$updateList = \CUpdateClient::GetUpdatesList($errors, 'ru', $stableVersionsOnly);
 
 		return $updateList['CLIENT'][0]['@']['LICENSE'];
 	}
