@@ -3,6 +3,7 @@
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\IO\File;
 use Intervolga\Migrato\Data\Module;
+use Intervolga\Migrato\Tool\Console\Logger;
 
 
 Loc::loadMessages(__FILE__);
@@ -17,7 +18,33 @@ class AutoconfigurationCommand extends BaseCommand
 
 	public function executeInner()
 	{
-		static::createFile();
+		self::createFile();
+
+		$this->logger->add(
+			Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_DELETED',
+				array(
+					"#COUNT#" => 7
+				)
+			),
+			Logger::LEVEL_NORMAL,
+			Logger::TYPE_INFO
+		);
+
+//		$this->logger->add(
+//			"LEVEL_NORMAL",
+//			Logger::LEVEL_NORMAL,
+//			Logger::TYPE_INFO);
+//
+//		$this->logger->add(
+//			"LEVEL_SHORT",
+//			Logger::LEVEL_SHORT,
+//			Logger::TYPE_INFO);
+//
+//		$this->logger->add(
+//			"LEVEL_DETAIL",
+//			Logger::LEVEL_DETAIL,
+//			Logger::TYPE_INFO);
+
 	}
 
 	protected static function getPathConfigXML()
@@ -73,37 +100,21 @@ class AutoconfigurationCommand extends BaseCommand
 
 	protected static function getDeletedModules()
 	{
-		$deleteEntities = array();
-		$deleteModules = array();
+		$deleteData = array();
 
 		$installedModules = array_keys(self::getInstalledModules());
 		$configData = self::getConfigData();
-		$configModules = array_keys($configData);
 
-		//TODO пересмотреть логику - надо сущности брать и модули
-		// сейчас попытка по модулям, но попадают сущности
-
-		// 1. Узнать какие сущности будут удалены из config.xml  - $deleteEntities
-		// 2. Вложить удаляемые сущности в модули
+		// 1. Узнать какие сущности будут удалены из config.xml  +++
+		// 2. Вложить удаляемые сущности в модули +++
 		// 3. В каждом ключе модуля иметь: ключ с кол-вом, название модуля, код модуля
 		// 4. Сущности вложены в модули, ключом сущности выступает ее код, значение - название на русском
 
-		foreach ($configModules as $configModule)
+		foreach ($configData as $module => $entities)
 		{
-			if(!in_array($configModule, $installedModules))
+			if (!in_array($module, $installedModules))
 			{
-				$deleteEntities[] = $configModule;
-			}
-		}
-
-
-		// get all the information about the removed module
-		foreach ($deleteEntities as $moduleName)
-		{
-
-			if(in_array($moduleName, $configData))
-			{
-				$deleteModules[$moduleName] = $configData[$moduleName];
+				$deleteData[$module] = $entities;
 			}
 		}
 
