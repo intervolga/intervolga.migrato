@@ -18,33 +18,8 @@ class AutoconfigurationCommand extends BaseCommand
 
 	public function executeInner()
 	{
+		$this->createReport();
 		self::createFile();
-
-		$this->logger->add(
-			Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_DELETED',
-				array(
-					"#COUNT#" => 7
-				)
-			),
-			Logger::LEVEL_NORMAL,
-			Logger::TYPE_INFO
-		);
-
-//		$this->logger->add(
-//			"LEVEL_NORMAL",
-//			Logger::LEVEL_NORMAL,
-//			Logger::TYPE_INFO);
-//
-//		$this->logger->add(
-//			"LEVEL_SHORT",
-//			Logger::LEVEL_SHORT,
-//			Logger::TYPE_INFO);
-//
-//		$this->logger->add(
-//			"LEVEL_DETAIL",
-//			Logger::LEVEL_DETAIL,
-//			Logger::TYPE_INFO);
-
 	}
 
 	protected static function getPathConfigXML()
@@ -98,26 +73,24 @@ class AutoconfigurationCommand extends BaseCommand
 		return array_keys($availableModules);
 	}
 
-	protected static function getDeletedModules()
+	protected static function getDeletedData()
 	{
 		$deleteData = array();
+		$deleteData['ALL_COUNT_ENTITIES'] = 0;
 
 		$installedModules = array_keys(self::getInstalledModules());
 		$configData = self::getConfigData();
-
-		// 1. Узнать какие сущности будут удалены из config.xml  +++
-		// 2. Вложить удаляемые сущности в модули +++
-		// 3. В каждом ключе модуля иметь: ключ с кол-вом, название модуля, код модуля
-		// 4. Сущности вложены в модули, ключом сущности выступает ее код, значение - название на русском
 
 		foreach ($configData as $module => $entities)
 		{
 			if (!in_array($module, $installedModules))
 			{
-				$deleteData[$module] = $entities;
+				$deleteData['MODULES'][$module] = $entities;
+				$deleteData['ALL_COUNT_ENTITIES'] += count($entities);
 			}
 		}
 
+		return $deleteData;
 	}
 
 	protected static function createFile()
@@ -157,8 +130,6 @@ class AutoconfigurationCommand extends BaseCommand
 
 		$availableModules = self::getAvailableModules();
 
-		self::getDeletedModules();
-
 		// modules
 		foreach ($arDataXML['config']['#']['module'] as $module)
 		{
@@ -195,5 +166,56 @@ class AutoconfigurationCommand extends BaseCommand
 
 		// rename $workerFileName to config.xml
 		rename($_SERVER["DOCUMENT_ROOT"] . "/local/migrato/$workerFileName", self::getPathConfigXML());
+	}
+
+	protected function createReport()
+	{
+		$data = self::getDeletedData();
+
+		// with -vv
+		foreach ($data['MODULES'] as $module => $entities)
+		{
+			foreach ($entities as $entity)
+			{
+				$this->logger->add(
+					Loc::getMessage('INTERVOLGA_MIGRATO.ENTITY_DELETED_VV',
+						array(
+							'#MODULE#' => $this->logger->getModuleNameLoc($module),
+							'#ENTITY#' => $this->logger->getEntityNameLoc($module, $entity),
+							'#MODULE_CODE#' => $module
+						)
+					),
+					Logger::LEVEL_DETAIL,
+					Logger::TYPE_INFO);
+			}
+		}
+
+		// with -v
+		foreach ($data['MODULES'] as $module => $entities)
+		{
+			$this->logger->add(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.ENTITY_DELETED_V',
+					array(
+						'#MODULE#' => $this->logger->getModuleNameLoc($module),
+						'#COUNT#' => count($entities),
+					)
+				),
+				Logger::LEVEL_SHORT,
+				Logger::TYPE_INFO
+			);
+		}
+
+		// without -v or -vv
+		$this->logger->add(
+			Loc::getMessage(
+				'INTERVOLGA_MIGRATO.ENTITY_DELETED',
+				array(
+					'#COUNT#' => $data['ALL_COUNT_ENTITIES'],
+				)
+			),
+			Logger::LEVEL_NORMAL,
+			Logger::TYPE_INFO
+		);
 	}
 }
