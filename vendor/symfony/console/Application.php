@@ -164,8 +164,8 @@ class Application
      */
     public function doRun(InputInterface $input, OutputInterface $output)
     {
-        if (true === $input->hasParameterOption(array('--version', '-V'), true)) {
-			$output->writeln($this->doDiagnostic());
+        if (true === $input->hasParameterOption(array('--version', '-V'), true) && !$input->getFirstArgument()) {
+        	$output->writeln($this->doDiagnostic());
 
             return 0;
         }
