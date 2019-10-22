@@ -212,6 +212,12 @@ class Logger
 			'#MODULE#' => $this->getModuleNameLoc($dbLog['MODULE_NAME']),
 			'#ENTITY#' => $this->getEntityNameLoc($dbLog['MODULE_NAME'], $dbLog['ENTITY_NAME']),
 		);
+
+		if ($dbLog['XML_ID'])
+		{
+			$replaces['#IDS#'] =  $dbLog['XML_ID'];
+		}
+
 		$data = null;
 		if ($dbLog['RECORD'])
 		{

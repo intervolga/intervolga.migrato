@@ -44,24 +44,6 @@ class WarnAddCommand extends BaseCommand
 		$recordsInFiles = self::getRecordsInFiles($dataClass);
 		$recordsInDatabase = self::getRecordsInDatabase($dataClass);
 
-		////////////////////////////////////////////////////
-		// для ТЕСТА
-		if($recordsInDatabase['main']['group'])
-		{
-			$recordsInDatabase['main']['group'][] = 'test_entitity in database';
-		}
-		// для ТЕСТА
-		if($recordsInFiles['main']['group'])
-		{
-			$recordsInFiles['main']['group'][] = 'test_entitity in files 1';
-			$recordsInFiles['main']['group'][] = 'test_entitity in files 2';
-		}
-		if($recordsInFiles['main']['event'])
-		{
-			$recordsInFiles['main']['event'][] = 'test_event in files 1';
-		}
-		////////////////////////////////////////////////////
-
 		// вычислить расхождение между файлами и БД
 		$recordsWillAdd = array_diff($recordsInFiles[$dataClass->getModule()][$dataClass->getEntityName()], $recordsInDatabase[$dataClass->getModule()][$dataClass->getEntityName()]);
 
@@ -72,8 +54,7 @@ class WarnAddCommand extends BaseCommand
 			$this->logger->addDb(array(
 				'MODULE_NAME' => $dataClass->getModule(),
 				'ENTITY_NAME' => $dataClass->getEntityName(),
-				//'XML_ID' => RecordId::createStringId($record),
-				'ID' => RecordId::createStringId($record),
+				'XML_ID' => $record,
 				'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_WILL_BE_ADD'),
 			));
 		}
