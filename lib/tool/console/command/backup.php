@@ -26,23 +26,37 @@ class Backup extends BaseCommand
 		$USER->Authorize(1);
 
 		$httpClient = new HttpClient();
-		$httpClient->setAuthorization($USER->GetLogin(), ''); // login and password
+		//$httpClient->setHeader('Content-Type', 'application/json', true);
+		$httpClient->setAuthorization($USER->GetLogin(), '91sede'); // login and password
 
-		//$sessid = explode("=", bitrix_sessid_get())[1];
-		$postData = array(
+
+		$site = array();
+		$defSite = \Bitrix\Main\SiteTable::getList(array('filter' => array('DEF' => 'Y')));
+		if  ($arSite = $defSite->fetch())
+		{
+			$site = $arSite;
+		}
+
+		$sessid = explode("=", bitrix_sessid_get())[1];
+		$postData = json_encode(array(
 			"lang" => 'ru',
 			"process" => 'Y',
 			"action" => 'start',
 			"dump_bucket_id" => 0, // Размещение резервной копии
-			"dump_all" => "Y",
-			"sessid" => ''
-		);
+			//"dump_all" => "Y",
+			"dump_max_exec_time" => 20,
+			"dump_max_exec_time_sleep" => 1,
+			"dump_archive_size_limit" => 100,
+			"dump_integrity_check" => 'Y',
+			"dump_base" => 'Y',
+			"dump_base_skip_stat" => 'Y',
+			"dump_base_skip_search" => 'Y',
+			"dump_base_skip_log" => 'Y',
+			"sessid" => $sessid
+		));
 
 
-		$response = $httpClient->post("http://gurjev.ivdev.ru/bitrix/admin/dump.php", $postData);
-
-
-
+		$response = $httpClient->post("http://" . $site['SERVER_NAME'] . "/bitrix/admin/dump.php", $postData);
 
 	}
 }
