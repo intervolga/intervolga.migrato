@@ -1,5 +1,4 @@
-<?php
-namespace Intervolga\Migrato\Data;
+<?php namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\ExceptionText;
@@ -8,6 +7,11 @@ Loc::loadMessages(__FILE__);
 
 abstract class BaseUserFieldEnum extends BaseData
 {
+    /**
+     * @var Link user field
+     */
+    private $dependency;
+
 	protected function configure()
 	{
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD_ENUM'));
@@ -21,24 +25,29 @@ abstract class BaseUserFieldEnum extends BaseData
 	public function getList(array $filter = array())
 	{
 		$result = array();
+
 		$enumFieldObject = new \CUserFieldEnum();
 		$rsEnum = $enumFieldObject->GetList(array(), $filter);
 		while ($enum = $rsEnum->Fetch())
 		{
 			$record = new Record($this);
-			$record->setXmlId($enum["XML_ID"]);
-			$record->setId(RecordId::createNumericId($enum["ID"]));
+            $id = $this->createId($enum['ID']);
+
+            // Configure dependency
+            $this->dependency = clone $this->getDependency('USER_FIELD_ID');
+            $this->dependency->setValue(
+                $this->dependency->getTargetData()->getXmlId(RecordId::createNumericId($enum['USER_FIELD_ID']))
+            );
+            $record->setDependency('USER_FIELD_ID', $this->dependency);
+
+
+			$record->setXmlId($this->getXmlId($id));
+			$record->setId($id);
 			$record->addFieldsRaw(array(
 				"VALUE" => $enum["VALUE"],
 				"DEF" => $enum["DEF"],
 				"SORT" => $enum["SORT"],
 			));
-
-			$dependency = clone $this->getDependency("USER_FIELD_ID");
-			$dependency->setValue(
-				$dependency->getTargetData()->getXmlId(RecordId::createNumericId($enum["USER_FIELD_ID"]))
-			);
-			$record->setDependency("USER_FIELD_ID", $dependency);
 
 			$result[] = $record;
 		}
@@ -122,16 +131,18 @@ abstract class BaseUserFieldEnum extends BaseData
 
 	public function getXmlId($id)
 	{
-		$xmlId = "";
-		if ($id = $id->getValue())
+        $xmlId = '';
+        $id = $id->getValue();
+		if ($id && $this->dependency)
 		{
 			$obEnum = new \CUserFieldEnum();
-			$rsEnum = $obEnum->getList(array(), array("ID" => $id));
-			if ($arEnum = $rsEnum->fetch())
+            $arEnum = $obEnum->getList(array(), array('ID' => $id))->Fetch();
+			if ($arEnum)
 			{
-				$xmlId = $arEnum["XML_ID"];
+				$xmlId = $this->dependency->getValue() . '.' . $arEnum['XML_ID'];
 			}
 		}
+
 		return $xmlId;
 	}
 
