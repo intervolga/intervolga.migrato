@@ -108,8 +108,21 @@ abstract class BaseUserFieldEnum extends BaseData
 
 	protected function deleteInner(RecordId $id)
 	{
+	    // Get UF value
 		$fieldEnumObject = new \CUserFieldEnum();
-		$fieldEnumObject->deleteFieldEnum($id->getValue());
+		$ufValue = $fieldEnumObject->GetList(
+		    array(),
+            array('ID' => $id->getValue())
+        )->Fetch();
+
+        $isDeleted = $fieldEnumObject->SetEnumValues(
+            $ufValue['USER_FIELD_ID'],
+            array($ufValue['ID'] => array('DEL' => 'Y'))
+        );
+        if (!$isDeleted)
+        {
+            throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.DELETE_ERROR'));
+        }
 	}
 
     public function findRecord($xmlId)
