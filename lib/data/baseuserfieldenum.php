@@ -74,40 +74,39 @@ abstract class BaseUserFieldEnum extends BaseData
 	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
-		if ($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
-		{
-			$fields["XML_ID"] = $record->getXmlId();
-			$fields["USER_FIELD_ID"] = $fieldId->getValue();
-			$enumObject = new \CUserFieldEnum();
+        $fieldId = $record->getDependency('USER_FIELD_ID')->getId();
+        if (!$fieldId)
+        {
+            throw new \Exception(Loc::getMessage(
+                'INTERVOLGA_MIGRATO.CREATE_NOT_USER_FIELD',
+                array('#XML_ID#' => $record->getXmlId())
+            ));
+        }
 
-			$isUpdated = $enumObject->setEnumValues($fieldId->getValue(), array("n" => $fields));
-			if ($isUpdated)
-			{
-				$recordId = $this->findRecordForField($fieldId->getValue(), $record->getXmlId());
-				if ($recordId)
-				{
-					return $this->createId($recordId->getValue());
-				}
-				else
-				{
-					throw new \Exception(ExceptionText::getUnknown());
-				}
-			}
-			else
-			{
-				throw new \Exception(ExceptionText::getFromApplication());
-			}
-		}
-		else
-		{
-			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.CREATE_NOT_USER_FIELD', array('#XML_ID#' => $record->getXmlId())));
-		}
+        $fields['XML_ID'] = $record->getXmlId();
+        $fields['USER_FIELD_ID'] = $fieldId->getValue();
+        $enumObject = new \CUserFieldEnum();
+
+        $isUpdated = $enumObject->setEnumValues($fieldId->getValue(), array("n" => $fields));
+        if (!$isUpdated)
+        {
+            throw new \Exception(ExceptionText::getFromApplication());
+        }
+
+
+        $recordId = $this->findRecordForField($fieldId->getValue(), $record->getXmlId());
+        if (!$recordId)
+        {
+            throw new \Exception(ExceptionText::getUnknown());
+        }
+
+        return $this->createId($recordId->getValue());
 	}
 
 	protected function deleteInner(RecordId $id)
 	{
-		$fieldenumObject = new \CUserFieldEnum();
-		$fieldenumObject->deleteFieldEnum($id->getValue());
+		$fieldEnumObject = new \CUserFieldEnum();
+		$fieldEnumObject->deleteFieldEnum($id->getValue());
 	}
 
 	public function setXmlId($id, $xmlId)
