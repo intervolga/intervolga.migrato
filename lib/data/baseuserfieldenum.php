@@ -2,7 +2,6 @@
 
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\ExceptionText;
-use Intervolga\Migrato\Data\Module\Iblock\Field;
 
 Loc::loadMessages(__FILE__);
 
@@ -131,21 +130,37 @@ abstract class BaseUserFieldEnum extends BaseData
         $fields = explode(static::XML_ID_SEPARATOR, $xmlId);
         if (count($fields) === 2 && $fields[0] && $fields[1])
         {
-            $fieldEnumObject = new \CUserFieldEnum();
-            $enum = $fieldEnumObject->GetList(
-                array(),
-                array(
-                    'USER_FIELD_ID' => Field::getPublicId($fields[0]),
-                    'XML_ID' => $fields[1]
-                )
-            )->Fetch();
-            if ($enum)
+            $ufXmlId = $fields[0];
+            $ufValueXmlId = $fields[1];
+
+            $ufId = $this->getUfId($ufXmlId);
+            if ($ufId && $ufValueXmlId)
             {
-                $id = $this->createId($enum['ID']);
+
+                $fieldEnumObject = new \CUserFieldEnum();
+                $enum = $fieldEnumObject->GetList(
+                    array(),
+                    array(
+                        'USER_FIELD_ID' => $ufId,
+                        'XML_ID' => $ufValueXmlId,
+                    )
+                )->Fetch();
+                if ($enum)
+                {
+                    $id = $this->createId($enum['ID']);
+                }
             }
         }
 
         return $id;
+    }
+
+    protected function getUfId($ufXmlId)
+    {
+        $ufClass = $this->getDependency('USER_FIELD_ID')->getTargetData();
+        $ufRecordId = $ufClass::getInstance()->findRecord($ufXmlId);
+
+        return $ufRecordId ? $ufRecordId->getValue() : 0;
     }
 
     public function setXmlId($id, $xmlId)
