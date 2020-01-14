@@ -562,6 +562,6 @@ class Logger
 		$this->add(Loc::getMessage('INTERVOLGA_MIGRATO.BACKTRACE'), static::LEVEL_DETAIL);
 		$this->add('## ' . $error->getFile() . '(' . $error->getLine() . ')', static::LEVEL_SHORT);
 		$this->add($error->getTraceAsString(), static::LEVEL_DETAIL);
-		die;
+		die($error->getCode());
 	}
 }
