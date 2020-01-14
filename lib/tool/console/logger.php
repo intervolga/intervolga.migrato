@@ -16,6 +16,8 @@ Loc::loadMessages(__FILE__);
 
 class Logger
 {
+    const SUCCESS_RETURN_CODE = 0;
+    const HAS_ERRORS_RETURN_CODE = 1;
     const UNHANDLED_EXCEPTION_RETURN_CODE = 2;
 
 	const TYPE_INFO = 'info';
@@ -566,4 +568,15 @@ class Logger
 		$this->add($error->getTraceAsString(), static::LEVEL_DETAIL);
 		die(static::UNHANDLED_EXCEPTION_RETURN_CODE);
 	}
+
+    /**
+     * Returns a return code for cli execution.
+     *
+     * @return int
+     */
+	public function getReturnCode()
+    {
+        $errorsCount =  (int)$this->typesCounter[static::TYPE_FAIL];
+        return $errorsCount ? static::HAS_ERRORS_RETURN_CODE : static::SUCCESS_RETURN_CODE;
+    }
 }

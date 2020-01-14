@@ -76,6 +76,8 @@ abstract class BaseCommand extends Command
 			}
 			$this->logger->endCommand();
 		}
+
+		return $this->logger->getReturnCode();
 	}
 
 	/**
