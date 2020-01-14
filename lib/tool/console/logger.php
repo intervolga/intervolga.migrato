@@ -16,6 +16,8 @@ Loc::loadMessages(__FILE__);
 
 class Logger
 {
+    const UNHANDLED_EXCEPTION_RETURN_CODE = 2;
+
 	const TYPE_INFO = 'info';
 	const TYPE_OK = 'ok';
 	const TYPE_FAIL = 'fail';
@@ -562,6 +564,6 @@ class Logger
 		$this->add(Loc::getMessage('INTERVOLGA_MIGRATO.BACKTRACE'), static::LEVEL_DETAIL);
 		$this->add('## ' . $error->getFile() . '(' . $error->getLine() . ')', static::LEVEL_SHORT);
 		$this->add($error->getTraceAsString(), static::LEVEL_DETAIL);
-		die($error->getCode());
+		die(static::UNHANDLED_EXCEPTION_RETURN_CODE);
 	}
 }
