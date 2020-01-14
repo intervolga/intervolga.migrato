@@ -37,6 +37,7 @@ class Logger
 	protected $output;
 	protected $stepNumber = 0;
 	protected $step = '';
+	protected $unhandledExceptionOccurred = false;
 
 	public function __construct(BaseCommand $command, OutputInterface $output)
 	{
@@ -566,7 +567,8 @@ class Logger
 		$this->add(Loc::getMessage('INTERVOLGA_MIGRATO.BACKTRACE'), static::LEVEL_DETAIL);
 		$this->add('## ' . $error->getFile() . '(' . $error->getLine() . ')', static::LEVEL_SHORT);
 		$this->add($error->getTraceAsString(), static::LEVEL_DETAIL);
-		die(static::UNHANDLED_EXCEPTION_RETURN_CODE);
+
+		$this->unhandledExceptionOccurred = true;
 	}
 
     /**
@@ -577,6 +579,11 @@ class Logger
 	public function getReturnCode()
     {
         $errorsCount =  (int)$this->typesCounter[static::TYPE_FAIL];
-        return $errorsCount ? static::HAS_ERRORS_RETURN_CODE : static::SUCCESS_RETURN_CODE;
+
+        return $this->unhandledExceptionOccurred
+            ? static::UNHANDLED_EXCEPTION_RETURN_CODE
+            : ($errorsCount
+                ? static::HAS_ERRORS_RETURN_CODE
+                : static::SUCCESS_RETURN_CODE);
     }
 }
