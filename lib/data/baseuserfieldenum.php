@@ -1,5 +1,4 @@
-<?php
-namespace Intervolga\Migrato\Data;
+<?php namespace Intervolga\Migrato\Data;
 
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\ExceptionText;
@@ -8,6 +7,13 @@ Loc::loadMessages(__FILE__);
 
 abstract class BaseUserFieldEnum extends BaseData
 {
+    const XML_ID_SEPARATOR = '.';
+
+    /**
+     * @var Link user field
+     */
+    private $dependency;
+
 	protected function configure()
 	{
 		$this->setEntityNameLoc(Loc::getMessage('INTERVOLGA_MIGRATO.USER_FIELD_ENUM'));
@@ -21,24 +27,27 @@ abstract class BaseUserFieldEnum extends BaseData
 	public function getList(array $filter = array())
 	{
 		$result = array();
+
 		$enumFieldObject = new \CUserFieldEnum();
 		$rsEnum = $enumFieldObject->GetList(array(), $filter);
 		while ($enum = $rsEnum->Fetch())
 		{
 			$record = new Record($this);
-			$record->setXmlId($enum["XML_ID"]);
-			$record->setId(RecordId::createNumericId($enum["ID"]));
-			$record->addFieldsRaw(array(
-				"VALUE" => $enum["VALUE"],
-				"DEF" => $enum["DEF"],
-				"SORT" => $enum["SORT"],
-			));
+            $id = $this->createId($enum['ID']);
 
-			$dependency = clone $this->getDependency("USER_FIELD_ID");
-			$dependency->setValue(
-				$dependency->getTargetData()->getXmlId(RecordId::createNumericId($enum["USER_FIELD_ID"]))
-			);
-			$record->setDependency("USER_FIELD_ID", $dependency);
+            $this->dependency = clone $this->getDependency('USER_FIELD_ID');
+            $this->dependency->setValue(
+                $this->dependency->getTargetData()->getXmlId(RecordId::createNumericId($enum['USER_FIELD_ID']))
+            );
+            $record->setDependency('USER_FIELD_ID', $this->dependency);
+
+			$record->setXmlId($this->getXmlId($id));
+			$record->setId($id);
+			$record->addFieldsRaw(array(
+				'VALUE' => $enum['VALUE'],
+				'DEF' => $enum['DEF'],
+				'SORT' => $enum['SORT'],
+			));
 
 			$result[] = $record;
 		}
@@ -49,12 +58,16 @@ abstract class BaseUserFieldEnum extends BaseData
 	public function update(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
-		if ($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
+        $fieldId = $record->getDependency('USER_FIELD_ID')->getId();
+		if ($fieldId)
 		{
-			$fields["XML_ID"] = $record->getXmlId();
-			$enumObject = new \CUserFieldEnum();
+			$fields['XML_ID'] = $this->getSiteXmlId($record->getXmlId());
 
-			$isUpdated = $enumObject->setEnumValues($fieldId->getValue(), array($record->getId()->getValue() => $fields));
+			$enumObject = new \CUserFieldEnum();
+			$isUpdated = $enumObject->setEnumValues(
+			    $fieldId->getValue(),
+                array($record->getId()->getValue() => $fields)
+            );
 			if (!$isUpdated)
 			{
 				throw new \Exception(ExceptionText::getFromApplication());
@@ -65,54 +78,105 @@ abstract class BaseUserFieldEnum extends BaseData
 	protected function createInner(Record $record)
 	{
 		$fields = $record->getFieldsRaw();
-		if ($fieldId = $record->getDependency("USER_FIELD_ID")->getId())
-		{
-			$fields["XML_ID"] = $record->getXmlId();
-			$fields["USER_FIELD_ID"] = $fieldId->getValue();
-			$enumObject = new \CUserFieldEnum();
+        $fieldId = $record->getDependency('USER_FIELD_ID')->getId();
+        if (!$fieldId)
+        {
+            throw new \Exception(Loc::getMessage(
+                'INTERVOLGA_MIGRATO.CREATE_NOT_USER_FIELD',
+                array('#XML_ID#' => $record->getXmlId())
+            ));
+        }
 
-			$isUpdated = $enumObject->setEnumValues($fieldId->getValue(), array("n" => $fields));
-			if ($isUpdated)
-			{
-				$recordId = $this->findRecordForField($fieldId->getValue(), $record->getXmlId());
-				if ($recordId)
-				{
-					return $this->createId($recordId->getValue());
-				}
-				else
-				{
-					throw new \Exception(ExceptionText::getUnknown());
-				}
-			}
-			else
-			{
-				throw new \Exception(ExceptionText::getFromApplication());
-			}
-		}
-		else
-		{
-			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.CREATE_NOT_USER_FIELD', array('#XML_ID#' => $record->getXmlId())));
-		}
+        $fields['XML_ID'] = $this->getSiteXmlId($record->getXmlId());
+        $fields['USER_FIELD_ID'] = $fieldId->getValue();
+        $enumObject = new \CUserFieldEnum();
+        $isUpdated = $enumObject->setEnumValues($fieldId->getValue(), array('n' => $fields));
+        if (!$isUpdated)
+        {
+            throw new \Exception(ExceptionText::getFromApplication());
+        }
+
+        $recordId = $this->findRecordForField($fieldId->getValue(), $fields['XML_ID']);
+        if (!$recordId)
+        {
+            throw new \Exception(ExceptionText::getUnknown());
+        }
+
+        return $this->createId($recordId->getValue());
 	}
 
 	protected function deleteInner(RecordId $id)
 	{
-		$fieldenumObject = new \CUserFieldEnum();
-		$fieldenumObject->deleteFieldEnum($id->getValue());
+	    // Get UF value
+		$fieldEnumObject = new \CUserFieldEnum();
+		$ufValue = $fieldEnumObject->GetList(
+		    array(),
+            array('ID' => $id->getValue())
+        )->Fetch();
+
+        $isDeleted = $fieldEnumObject->SetEnumValues(
+            $ufValue['USER_FIELD_ID'],
+            array($ufValue['ID'] => array('DEL' => 'Y'))
+        );
+        if (!$isDeleted)
+        {
+            throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.DELETE_ERROR'));
+        }
 	}
 
-	public function setXmlId($id, $xmlId)
+    public function findRecord($xmlId)
+    {
+        $id = null;
+        $fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+        if (count($fields) === 2 && $fields[0] && $fields[1])
+        {
+            $ufXmlId = $fields[0];
+            $ufValueXmlId = $fields[1];
+
+            $ufId = $this->getUfId($ufXmlId);
+            if ($ufId && $ufValueXmlId)
+            {
+
+                $fieldEnumObject = new \CUserFieldEnum();
+                $enum = $fieldEnumObject->GetList(
+                    array(),
+                    array(
+                        'USER_FIELD_ID' => $ufId,
+                        'XML_ID' => $ufValueXmlId,
+                    )
+                )->Fetch();
+                if ($enum)
+                {
+                    $id = $this->createId($enum['ID']);
+                }
+            }
+        }
+
+        return $id;
+    }
+
+    protected function getUfId($ufXmlId)
+    {
+        $ufClass = $this->getDependency('USER_FIELD_ID')->getTargetData();
+        $ufRecordId = $ufClass::getInstance()->findRecord($ufXmlId);
+
+        return $ufRecordId ? $ufRecordId->getValue() : 0;
+    }
+
+    public function setXmlId($id, $xmlId)
 	{
+	    $fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+
 		$obEnum = new \CUserFieldEnum();
-		$rsEnum = $obEnum->getList(array(), array("ID" => $id->getValue()));
-		if ($arEnum = $rsEnum->fetch())
+        $arEnum = $obEnum->getList(array(), array('ID' => $id->getValue()))->Fetch();
+		if ($arEnum)
 		{
 			$userFieldObject = new \CUserFieldEnum();
 			$userFieldObject->setEnumValues(
-				$arEnum["USER_FIELD_ID"],
+				$arEnum['USER_FIELD_ID'],
 				array(
 					$arEnum['ID'] => array(
-						'XML_ID' => $xmlId,
+						'XML_ID' => $fields[1],
 						'VALUE' => $arEnum['VALUE'],
 					),
 				)
@@ -122,18 +186,26 @@ abstract class BaseUserFieldEnum extends BaseData
 
 	public function getXmlId($id)
 	{
-		$xmlId = "";
-		if ($id = $id->getValue())
+        $xmlId = '';
+        $id = $id->getValue();
+		if ($id && $this->dependency)
 		{
 			$obEnum = new \CUserFieldEnum();
-			$rsEnum = $obEnum->getList(array(), array("ID" => $id));
-			if ($arEnum = $rsEnum->fetch())
+            $arEnum = $obEnum->getList(array(), array('ID' => $id))->Fetch();
+			if ($arEnum)
 			{
-				$xmlId = $arEnum["XML_ID"];
+				$xmlId = $this->dependency->getValue() . static::XML_ID_SEPARATOR . $arEnum['XML_ID'];
 			}
 		}
+
 		return $xmlId;
 	}
+
+	protected function getSiteXmlId($migratoXmlId)
+    {
+        $fields = explode(static::XML_ID_SEPARATOR, $migratoXmlId);
+        return $fields[1] ?: $migratoXmlId;
+    }
 
 	/**
 	 * @param int $fieldId
@@ -146,18 +218,32 @@ abstract class BaseUserFieldEnum extends BaseData
 		$result = $enum->getList(
 			array(),
 			array(
-				"USER_FIELD_ID" => $fieldId,
-				"XML_ID" => $xmlId,
+				'USER_FIELD_ID' => $fieldId,
+				'XML_ID' => $xmlId,
 			)
 		)->fetch();
 
 		if ($result['ID'])
 		{
-			return static::createId($result['ID']);
+			return $this->createId($result['ID']);
 		}
-		else
-		{
-			return null;
-		}
-	}
+
+        return null;
+    }
+
+    public function validateXmlIdCustom($xmlId)
+    {
+        $fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+        $isValid = (count($fields) === 2 && $fields[0] && $fields[1]);
+        if (!$isValid)
+        {
+            throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INVALID_XML_ID'));
+        }
+    }
+
+    public function getValidationXmlId($xmlId)
+    {
+        $fields = explode(static::XML_ID_SEPARATOR, $xmlId);
+        return $fields[1];
+    }
 }
