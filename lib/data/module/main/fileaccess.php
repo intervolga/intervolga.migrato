@@ -200,50 +200,60 @@ class FileAccess extends BaseData
 	 */
 	protected function makeRecord($dir, $path, $group, $permission)
 	{
-		if ($dir && $path && $permission)
-		{
-			$isForAll = false;
-			if ($this->isForAllGroup($group))
-			{
-				$isForAll = true;
-			}
+	    if (!$dir || !$path || !$permission) {
+	        return null;
+        }
 
-			$record = new Record($this);
+        $isForAll = false;
+        if ($this->isForAllGroup($group))
+        {
+            $isForAll = true;
+        }
 
-			$complexId = $this->createId(array(
-				'DIR' => $dir,
-				'PATH' => $path,
-				'GROUP' => $group,
-			));
+        $record = new Record($this);
 
-			$record->setId($complexId);
-			if ($xmlId = $this->getXmlId($complexId))
-			{
-				$record->setXmlId($xmlId);
-			}
+        $complexId = $this->createId(array(
+            'DIR' => $dir,
+            'PATH' => $path,
+            'GROUP' => $group,
+        ));
 
-			$arFields = array(
-				'DIR' => $dir,
-				'PATH' => $path,
-				'PERMISSION' => $permission,
-			);
+        $record->setId($complexId);
+        if ($xmlId = $this->getXmlId($complexId))
+        {
+            $record->setXmlId($xmlId);
+        }
 
-			if ($isForAll)
-			{
-				$arFields = array_merge(array('GROUP' => '*'), $arFields);
-			}
+        $arFields = array(
+            'DIR' => $dir,
+            'PATH' => $path,
+            'PERMISSION' => $permission,
+        );
 
-			$record->addFieldsRaw($arFields);
+        if ($isForAll)
+        {
+            $arFields = array_merge(array('GROUP' => '*'), $arFields);
+        }
 
-			if (!$isForAll)
-			{
-				$this->addGroupDependency($record, $group);
-			}
+        $record->addFieldsRaw($arFields);
 
-			return $record;
-		}
+        if (!$isForAll)
+        {
+            $this->addGroupDependency($record, $group);
+        }
 
-		return null;
+        if (!is_numeric($group)
+            && !$isForAll
+            && !preg_match('/^G([0-9]+)$/', $group)
+        )
+        {
+            $record->registerValidateError(Loc::getMessage(
+                'INTERVOLGA_MIGRATO.CODE_GROUP_IS_NOT_EXIST',
+                array('#CODE_GROUP#' => $group)
+            ));
+        }
+
+        return $record;
 	}
 
 	/**
@@ -268,31 +278,21 @@ class FileAccess extends BaseData
 
 	public function getXmlId($id)
 	{
+        $groupXmlId = null;
 		$array = $id->getValue();
-		$md5 = array();
 
-		if ($this->isForAllGroup($array['GROUP']))
+		$group = $array['GROUP'];
+		if (!$this->isForAllGroup($group))
 		{
-			$md5 = md5(serialize(array(
-				$array['DIR'],
-				$array['PATH'],
-				$array['GROUP'],
-			)));
-		}
-		else
-		{
-			$groupData = Group::getInstance();
-			$groupXmlId = $groupData->getXmlId($groupData->createId($array['GROUP']));
+            $groupData = Group::getInstance();
+            $groupXmlId = $groupData->getXmlId($groupData->createId($group));
+        }
 
-			if ($groupXmlId)
-			{
-				$md5 = md5(serialize(array(
-					$array['DIR'],
-					$array['PATH'],
-					$groupXmlId,
-				)));
-			}
-		}
+		$md5 = md5(serialize(array(
+            $array['DIR'],
+            $array['PATH'],
+            $groupXmlId ?: $group,
+        )));
 
 		return BaseXmlIdProvider::formatXmlId($md5);
 	}
