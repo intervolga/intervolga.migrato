@@ -55,7 +55,6 @@ class Form extends BaseData
 				"STAT_EVENT2" => $form["STAT_EVENT2"],
 				"STAT_EVENT3" => $form["STAT_EVENT3"],
 				"VARNAME" => $form["VARNAME"],
-				"LID" => $form["LID"],
 				"RESTRICT_USER" => $form["RESTRICT_USER"],
 				"RESTRICT_TIME" => $form["RESTRICT_TIME"],
 				"RESTRICT_STATUS" => $form["RESTRICT_STATUS"],
@@ -165,22 +164,11 @@ class Form extends BaseData
 			'STAT_EVENT2' => $record->getFieldRaw('STAT_EVENT2'),
 			'STAT_EVENT3' => $record->getFieldRaw('STAT_EVENT3'),
 			'VARNAME' => $record->getFieldRaw('VARNAME'),
-			'LID' => $record->getFieldRaw('LID'),
 			'RESTRICT_USER' => $record->getFieldRaw('RESTRICT_USER'),
 			'RESTRICT_TIME' => $record->getFieldRaw('RESTRICT_TIME'),
 			'RESTRICT_STATUS' => $record->getFieldRaw('RESTRICT_STATUS'),
 			'USE_RESTRICTIONS' => $record->getFieldRaw('USE_RESTRICTIONS'),
 		);
-
-		$link = $record->getDependency('LANGUAGE');
-		$array['LID'] = array();
-		if ($link && $link->getValues())
-		{
-			foreach ($link->findIds() as $language)
-			{
-				$array['LID'][] = $language->getValue();
-			}
-		}
 
 		$link = $record->getDependency('SITE');
 		if ($link && $link->getValues())
