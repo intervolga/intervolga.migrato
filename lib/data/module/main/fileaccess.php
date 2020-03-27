@@ -200,64 +200,60 @@ class FileAccess extends BaseData
 	 */
 	protected function makeRecord($dir, $path, $group, $permission)
 	{
-		if ($dir && $path && $permission)
-		{
-			$isForAll = false;
-			if ($this->isForAllGroup($group))
-			{
-				$isForAll = true;
-			}
+	    if (!$dir || !$path || !$permission) {
+	        return null;
+        }
 
-			$record = new Record($this);
+        $isForAll = false;
+        if ($this->isForAllGroup($group))
+        {
+            $isForAll = true;
+        }
 
-			$complexId = $this->createId(array(
-				'DIR' => $dir,
-				'PATH' => $path,
-				'GROUP' => $group,
-			));
+        $record = new Record($this);
 
-			$record->setId($complexId);
-			if ($xmlId = $this->getXmlId($complexId))
-			{
-				$record->setXmlId($xmlId);
-			}
+        $complexId = $this->createId(array(
+            'DIR' => $dir,
+            'PATH' => $path,
+            'GROUP' => $group,
+        ));
 
-			$arFields = array(
-				'DIR' => $dir,
-				'PATH' => $path,
-				'PERMISSION' => $permission,
-			);
+        $record->setId($complexId);
+        if ($xmlId = $this->getXmlId($complexId))
+        {
+            $record->setXmlId($xmlId);
+        }
 
-			if ($isForAll)
-			{
-				$arFields = array_merge(array('GROUP' => '*'), $arFields);
-			}
+        $arFields = array(
+            'DIR' => $dir,
+            'PATH' => $path,
+            'PERMISSION' => $permission,
+        );
 
-			$record->addFieldsRaw($arFields);
+        if ($isForAll)
+        {
+            $arFields = array_merge(array('GROUP' => '*'), $arFields);
+        }
 
-			if (!$isForAll)
-			{
-				$this->addGroupDependency($record, $group);
-			}
+        $record->addFieldsRaw($arFields);
 
+        if (!$isForAll)
+        {
+            $this->addGroupDependency($record, $group);
+        }
 
-			if (is_numeric($group) || $isForAll || preg_match('/^G([0-9]+)$/', $group))
-			{
-				return $record;
-			}
-			else
-			{
-				$record->registerValidateError(Loc::getMessage(
-					'INTERVOLGA_MIGRATO.CODE_GROUP_IS_NOT_EXIST',
-					array(
-                        '#CODE_GROUP#' => $group,
-					)
-				));
-				return $record;
-			}
-		}
+        if (!is_numeric($group)
+            && !$isForAll
+            && !preg_match('/^G([0-9]+)$/', $group)
+        )
+        {
+            $record->registerValidateError(Loc::getMessage(
+                'INTERVOLGA_MIGRATO.CODE_GROUP_IS_NOT_EXIST',
+                array('#CODE_GROUP#' => $group)
+            ));
+        }
 
-		return null;
+        return $record;
 	}
 
 	/**
@@ -286,7 +282,8 @@ class FileAccess extends BaseData
 		$array = $id->getValue();
 
 		$group = $array['GROUP'];
-		if (!$this->isForAllGroup($group)) {
+		if (!$this->isForAllGroup($group))
+		{
             $groupData = Group::getInstance();
             $groupXmlId = $groupData->getXmlId($groupData->createId($group));
         }
