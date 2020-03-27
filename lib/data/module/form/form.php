@@ -173,6 +173,7 @@ class Form extends BaseData
 		);
 
 		$link = $record->getDependency('LANGUAGE');
+		$array['LID'] = array();
 		if ($link && $link->getValues())
 		{
 			foreach ($link->findIds() as $language)
