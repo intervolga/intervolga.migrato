@@ -282,27 +282,20 @@ class FileAccess extends BaseData
 
 	public function getXmlId($id)
 	{
+        $groupXmlId = null;
 		$array = $id->getValue();
 
-		if ($this->isForAllGroup($array['GROUP']))
-		{
-			$md5 = md5(serialize(array(
-				$array['DIR'],
-				$array['PATH'],
-				$array['GROUP'],
-			)));
-		}
-		else
-		{
-			$groupData = Group::getInstance();
-			$groupXmlId = $groupData->getXmlId($groupData->createId($array['GROUP']));
+		$group = $array['GROUP'];
+		if (!$this->isForAllGroup($group)) {
+            $groupData = Group::getInstance();
+            $groupXmlId = $groupData->getXmlId($groupData->createId($group));
+        }
 
-            $md5 = md5(serialize(array(
-                $array['DIR'],
-                $array['PATH'],
-                $groupXmlId ?: $array['GROUP'],
-            )));
-		}
+		$md5 = md5(serialize(array(
+            $array['DIR'],
+            $array['PATH'],
+            $groupXmlId ?: $group,
+        )));
 
 		return BaseXmlIdProvider::formatXmlId($md5);
 	}
