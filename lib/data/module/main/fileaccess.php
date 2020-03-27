@@ -250,7 +250,7 @@ class FileAccess extends BaseData
 				$record->registerValidateError(Loc::getMessage(
 					'INTERVOLGA_MIGRATO.CODE_GROUP_IS_NOT_EXIST',
 					array(
-						'#CODE_GROUP#' =>$group
+                        '#CODE_GROUP#' => $group,
 					)
 				));
 				return $record;
@@ -283,7 +283,6 @@ class FileAccess extends BaseData
 	public function getXmlId($id)
 	{
 		$array = $id->getValue();
-		$md5 = array();
 
 		if ($this->isForAllGroup($array['GROUP']))
 		{
@@ -298,14 +297,11 @@ class FileAccess extends BaseData
 			$groupData = Group::getInstance();
 			$groupXmlId = $groupData->getXmlId($groupData->createId($array['GROUP']));
 
-			if ($groupXmlId)
-			{
-				$md5 = md5(serialize(array(
-					$array['DIR'],
-					$array['PATH'],
-					$groupXmlId,
-				)));
-			}
+            $md5 = md5(serialize(array(
+                $array['DIR'],
+                $array['PATH'],
+                $groupXmlId ?: $array['GROUP'],
+            )));
 		}
 
 		return BaseXmlIdProvider::formatXmlId($md5);
