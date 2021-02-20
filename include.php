@@ -4,4 +4,4 @@ $root = \Bitrix\Main\Application::getDocumentRoot();
 define("INTERVOLGA_MIGRATO_DIRECTORY", $root . "/local/migrato/");
 define("INTERVOLGA_MIGRATO_CONFIG_PATH", INTERVOLGA_MIGRATO_DIRECTORY . "config.xml");
 
-include 'vendor/autoload.php';
+include __DIR__ . '/vendor/autoload.php';
