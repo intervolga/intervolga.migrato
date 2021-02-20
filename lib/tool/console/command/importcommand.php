@@ -9,9 +9,9 @@ Loc::loadMessages(__FILE__);
 
 class ImportCommand extends BaseCommand
 {
-    const TWO_HOURS = 7200;
+	const TWO_HOURS = 7200;
 
-    protected $wasClosedAtStart = false;
+	protected $wasClosedAtStart = false;
 
 	protected function configure()
 	{
@@ -40,18 +40,18 @@ class ImportCommand extends BaseCommand
 	public function executeInner()
 	{
 		if (!$this->input->getOption('force')
-            && !$this->checkSiteBackup()
-        )
+			&& !$this->checkSiteBackup()
+		)
 		{
-		    return;
-        }
+			return;
+		}
 
-        $this->wasClosedAtStart = $this->isSiteClosed();
-        $this->closeSite();
+		$this->wasClosedAtStart = $this->isSiteClosed();
+		$this->closeSite();
 
-        try
-        {
-            ReIndexFacetCommand::saveActiveFacet();
+		try
+		{
+			ReIndexFacetCommand::saveActiveFacet();
 			if ($this->input->getOption('safe-delete'))
 			{
 				$args['--safe-delete'] = true;
@@ -61,27 +61,27 @@ class ImportCommand extends BaseCommand
 			{
 				$this->runSubcommand('importdata');
 			}
-            $this->runSubcommand('importoptions');
-            if (!$this->input->getOption('quick'))
-            {
-                $this->runSubcommand('clearcache');
-                $this->runSubcommand('urlrewrite');
-                $this->runSubcommand('reindex');
-                $this->runSubcommand('reindexfacet');
-            }
-        }
-        catch (\Throwable $throwable)
-        {
-            $this->openSite();
-            throw $throwable;
-        }
-        catch (\Exception $exception)
-        {
-            $this->openSite();
-            throw $exception;
-        }
+			$this->runSubcommand('importoptions');
+			if (!$this->input->getOption('quick'))
+			{
+				$this->runSubcommand('clearcache');
+				$this->runSubcommand('urlrewrite');
+				$this->runSubcommand('reindex');
+				$this->runSubcommand('reindexfacet');
+			}
+		}
+		catch (\Throwable $throwable)
+		{
+			$this->openSite();
+			throw $throwable;
+		}
+		catch (\Exception $exception)
+		{
+			$this->openSite();
+			throw $exception;
+		}
 
-        $this->openSite();
+		$this->openSite();
 	}
 
 	protected function closeSite()
@@ -121,48 +121,49 @@ class ImportCommand extends BaseCommand
 		return (Option::get('main', 'site_stopped') === 'Y');
 	}
 
-    /**
-     * @return bool
-     */
+	/**
+	 * @return bool
+	 */
 	protected function checkSiteBackup()
 	{
-        $backupDates = array();
-        $hasFreshBackup = false;
-        $backupDir = $_SERVER['DOCUMENT_ROOT'] . '/bitrix/backup';
+		$backupDates = array();
+		$hasFreshBackup = false;
+		$backupDir = $_SERVER['DOCUMENT_ROOT'] . '/bitrix/backup';
 
-        $files = scandir($backupDir);
+		$files = scandir($backupDir);
 		foreach ($files as $file)
 		{
-            if (stripos($file, '.tar.gz') !== false
-                && stripos($file, '_full_') !== false
-            )
+			if (stripos($file, '.tar.gz') !== false
+				&& stripos($file, '_full_') !== false
+			)
 			{
-                $fileModificationTime = filemtime($backupDir . '/' . $file);
-                $fileLifeTime = time() - $fileModificationTime;
-                $backupDates[] = $fileModificationTime;
+				$fileModificationTime = filemtime($backupDir . '/' . $file);
+				$fileLifeTime = time() - $fileModificationTime;
+				$backupDates[] = $fileModificationTime;
 
-                if (!$hasFreshBackup && $fileLifeTime <= self::TWO_HOURS)
+				if (!$hasFreshBackup && $fileLifeTime <= self::TWO_HOURS)
 				{
-                    $hasFreshBackup = true;
+					$hasFreshBackup = true;
 				}
 			}
 		}
 
 		$msg = Loc::getMessage('INTERVOLGA_MIGRATO.FOUND_ACTUAL_BACKUP');
 		if (!$hasFreshBackup)
-        {
-            $msg = Loc::getMessage('INTERVOLGA_MIGRATO.BACKUP_WARN') . PHP_EOL;
-            if ($backupDates) {
-                $msg .= Loc::getMessage(
-                    'INTERVOLGA_MIGRATO.LAST_BACKUP_DATE',
-                    array('#DATE_LAST_BACKUP#' => date('Y-m-d H:i:s', max($backupDates)))
-                ) . PHP_EOL;
-            }
-            $msg .= Loc::getMessage('INTERVOLGA_MIGRATO.BACKUP_WARN_HINT');
-        }
+		{
+			$msg = Loc::getMessage('INTERVOLGA_MIGRATO.BACKUP_WARN') . PHP_EOL;
+			if ($backupDates)
+			{
+				$msg .= Loc::getMessage(
+						'INTERVOLGA_MIGRATO.LAST_BACKUP_DATE',
+						array('#DATE_LAST_BACKUP#' => date('Y-m-d H:i:s', max($backupDates)))
+					) . PHP_EOL;
+			}
+			$msg .= Loc::getMessage('INTERVOLGA_MIGRATO.BACKUP_WARN_HINT');
+		}
 
-        $this->logger->separate();
-        $this->logger->add($msg, 0, $hasFreshBackup ? Logger::TYPE_INFO : Logger::TYPE_FAIL);
+		$this->logger->separate();
+		$this->logger->add($msg, 0, $hasFreshBackup ? Logger::TYPE_INFO : Logger::TYPE_FAIL);
 
 		return $hasFreshBackup;
 	}
