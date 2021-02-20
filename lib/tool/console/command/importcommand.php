@@ -1,6 +1,9 @@
-<?namespace Intervolga\Migrato\Tool\Console\Command;
+<? namespace Intervolga\Migrato\Tool\Console\Command;
 
+use Bitrix\Main\Application;
 use Bitrix\Main\Config\Option;
+use Bitrix\Main\IO\Directory;
+use Bitrix\Main\IO\File;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Console\Logger;
 use Symfony\Component\Console\Input\InputOption;
@@ -9,7 +12,7 @@ Loc::loadMessages(__FILE__);
 
 class ImportCommand extends BaseCommand
 {
-	const TWO_HOURS = 7200;
+	const MAX_ACTUAL_BACKUP_TIME_SECONDS = 7200;
 
 	protected $wasClosedAtStart = false;
 
@@ -39,9 +42,7 @@ class ImportCommand extends BaseCommand
 
 	public function executeInner()
 	{
-		if (!$this->input->getOption('force')
-			&& !$this->checkSiteBackup()
-		)
+		if ($this->hasBackupProblem())
 		{
 			return;
 		}
@@ -124,47 +125,57 @@ class ImportCommand extends BaseCommand
 	/**
 	 * @return bool
 	 */
-	protected function checkSiteBackup()
+	protected function hasBackupProblem()
 	{
-		$backupDates = array();
-		$hasFreshBackup = false;
-		$backupDir = $_SERVER['DOCUMENT_ROOT'] . '/bitrix/backup';
-
-		$files = scandir($backupDir);
-		foreach ($files as $file)
+		$result = false;
+		if (!$this->input->getOption('force'))
 		{
-			if (stripos($file, '.tar.gz') !== false
-				&& stripos($file, '_full_') !== false
-			)
+			$lastDate = $this->getLastFullBackupDate();
+			if ((time() - $lastDate) >= static::MAX_ACTUAL_BACKUP_TIME_SECONDS)
 			{
-				$fileModificationTime = filemtime($backupDir . '/' . $file);
-				$fileLifeTime = time() - $fileModificationTime;
-				$backupDates[] = $fileModificationTime;
-
-				if (!$hasFreshBackup && $fileLifeTime <= self::TWO_HOURS)
+				if ($lastDate)
 				{
-					$hasFreshBackup = true;
+					$msg = Loc::getMessage('INTERVOLGA_MIGRATO.NOT_ACTUAL_BACKUP', array('#LAST_DATE#' => date('d.m.Y H:i:s', $lastDate)));
+				}
+				else
+				{
+					$msg = Loc::getMessage('INTERVOLGA_MIGRATO.NO_ACTUAL_BACKUP');
+				}
+
+				$this->logger->separate();
+				$this->logger->add($msg, 0, Logger::TYPE_FAIL);
+				$result = true;
+			}
+			else
+			{
+				$msg = Loc::getMessage('INTERVOLGA_MIGRATO.FOUND_ACTUAL_BACKUP', array('#LAST_DATE#' => date('d.m.Y H:i:s', $lastDate)));
+				$this->logger->separate();
+				$this->logger->add($msg, 0, Logger::TYPE_INFO);
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * @return int
+	 */
+	protected function getLastFullBackupDate()
+	{
+		$backupDates = array(0);
+		$directory = new Directory(Application::getDocumentRoot() . '/bitrix/backup');
+		foreach ($directory->getChildren() as $fileSystemEntry)
+		{
+			if ($fileSystemEntry instanceof File)
+			{
+				$fileSystemEntry->getName();
+				if (substr_count($fileSystemEntry->getName(), '.tar.gz') && substr_count($fileSystemEntry->getName(), '_full_'))
+				{
+					$backupDates[] = $fileSystemEntry->getModificationTime();
 				}
 			}
 		}
 
-		$msg = Loc::getMessage('INTERVOLGA_MIGRATO.FOUND_ACTUAL_BACKUP');
-		if (!$hasFreshBackup)
-		{
-			$msg = Loc::getMessage('INTERVOLGA_MIGRATO.BACKUP_WARN') . PHP_EOL;
-			if ($backupDates)
-			{
-				$msg .= Loc::getMessage(
-						'INTERVOLGA_MIGRATO.LAST_BACKUP_DATE',
-						array('#DATE_LAST_BACKUP#' => date('Y-m-d H:i:s', max($backupDates)))
-					) . PHP_EOL;
-			}
-			$msg .= Loc::getMessage('INTERVOLGA_MIGRATO.BACKUP_WARN_HINT');
-		}
-
-		$this->logger->separate();
-		$this->logger->add($msg, 0, $hasFreshBackup ? Logger::TYPE_INFO : Logger::TYPE_FAIL);
-
-		return $hasFreshBackup;
+		return max($backupDates);
 	}
 }
