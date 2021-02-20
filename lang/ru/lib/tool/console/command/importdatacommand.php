@@ -9,9 +9,12 @@ $MESS['INTERVOLGA_MIGRATO.NEED_MORE_STEPS'] = 'Ошибка, требуется 
 $MESS['INTERVOLGA_MIGRATO.STEP_DELETE_MARKED'] = 'Удаление устаревших записей';
 $MESS['INTERVOLGA_MIGRATO.STEP_RESOLVE_REFERENCES'] = 'Обновление ссылок';
 $MESS['INTERVOLGA_MIGRATO.STEP_DELETE_NOT_IMPORTED'] = 'Удаление записей, отсутствующих в XML';
+$MESS['INTERVOLGA_MIGRATO.STEP_SKIP_DELETE_NOT_IMPORTED'] = 'Принудительный пропуск удаления записей, отсутствующих в XML';
 $MESS['INTERVOLGA_MIGRATO.OPERATION_UPDATE'] = 'обновление данных';
 $MESS['INTERVOLGA_MIGRATO.OPERATION_CREATE'] = 'создание данных';
 $MESS['INTERVOLGA_MIGRATO.OPERATION_DELETE'] = 'удаление данных';
+$MESS['INTERVOLGA_MIGRATO.OPERATION_DELETE_SKIPPED'] = 'принудительный пропуск удаления данных';
+$MESS['INTERVOLGA_MIGRATO.DELETE_SKIPPED'] = 'Пропуск удаления записи #MODULE#:#ENTITY# (MIGRATO_ID=#XML_ID#)';
 $MESS['INTERVOLGA_MIGRATO.OPERATION_UPDATE_REFERENCES'] = 'обновление ссылок';
 $MESS['INTERVOLGA_MIGRATO.OPERATION_NOT_IMPORTED'] = 'пропуск данных';
 $MESS['INTERVOLGA_MIGRATO.RECORD_NOT_FOUND'] = 'Запись не найдена';
