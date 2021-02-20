@@ -226,4 +226,37 @@ class ImportList
 
 		return $result;
 	}
+
+	/**
+	 * @param \Intervolga\Migrato\Data\Record $dataRecord
+	 * @return string[]
+	 */
+	public function getNotResolvedXmlIds(Record $dataRecord)
+	{
+		$resultXmlIds = array();
+		foreach ($dataRecord->getDependencies() as $code => $dependency)
+		{
+			$class = get_class($dependency->getTargetData());
+			if ($dependency->isMultiple())
+			{
+				foreach ($dependency->getValues() as $xmlId)
+				{
+					if ($this->createdXmlIds[$class][$xmlId] != "Y")
+					{
+						$resultXmlIds[$code][] = $xmlId;
+					}
+				}
+			}
+			else
+			{
+				$xmlId = $dependency->getValue();
+				if ($this->createdXmlIds[$class][$xmlId] != "Y")
+				{
+					$resultXmlIds[$code][] = $xmlId;
+				}
+			}
+		}
+
+		return $resultXmlIds;
+	}
 }

@@ -29,6 +29,12 @@ class ImportCommand extends BaseCommand
 			InputOption::VALUE_NONE,
 			Loc::getMessage('INTERVOLGA_MIGRATO.IGNORE_NEW_BACKUPS')
 		);
+		$this->addOption(
+			'safe-delete',
+			null,
+			InputOption::VALUE_NONE,
+			Loc::getMessage('INTERVOLGA_MIGRATO.OPTION_SAFE_DELETE')
+		);
 	}
 
 	public function executeInner()
@@ -46,7 +52,15 @@ class ImportCommand extends BaseCommand
         try
         {
             ReIndexFacetCommand::saveActiveFacet();
-            $this->runSubcommand('importdata');
+			if ($this->input->getOption('safe-delete'))
+			{
+				$args['--safe-delete'] = true;
+				$this->runSubcommand('importdata', array('--safe-delete' => true));
+			}
+			else
+			{
+				$this->runSubcommand('importdata');
+			}
             $this->runSubcommand('importoptions');
             if (!$this->input->getOption('quick'))
             {

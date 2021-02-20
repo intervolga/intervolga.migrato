@@ -4,6 +4,7 @@ $MESS['INTERVOLGA_MIGRATO.NO_AFTER_CLEAR_DESCRIPTION'] = 'Пропустить �
 $MESS['INTERVOLGA_MIGRATO.SITE_CLOSED'] = 'Сайт закрыт';
 $MESS['INTERVOLGA_MIGRATO.SITE_OPENED'] = 'Сайт открыт';
 $MESS['INTERVOLGA_MIGRATO.IGNORE_NEW_BACKUPS'] = 'Импортировать данные в базу без свежей резервной копии';
+$MESS['INTERVOLGA_MIGRATO.OPTION_SAFE_DELETE'] = 'Не удалять записи, которых нет в XML';
 $MESS['INTERVOLGA_MIGRATO.BACKUP_WARN'] = 'Нельзя импортировать данные без актуальной резервной копии сайта.';
 $MESS['INTERVOLGA_MIGRATO.LAST_BACKUP_DATE'] = 'Дата последнего полного бекапа: #DATE_LAST_BACKUP#';
 $MESS['INTERVOLGA_MIGRATO.BACKUP_WARN_HINT'] = 'Сделайте полный бекап или используйте параметр --force';
