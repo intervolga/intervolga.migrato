@@ -447,6 +447,16 @@ class ImportDataCommand extends BaseCommand
 				),
 				Logger::TYPE_OK
 			);
+			$this->logger->add(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.DELETE_SKIPPED',
+					array(
+						'#MODULE#' => $this->logger->getModuleNameLoc($dataRecord->getData()->getModule()),
+						'#ENTITY#' => $this->logger->getEntityNameLoc($dataRecord->getData()->getModule(), $dataRecord->getData()->getEntityName()),
+						'#XML_ID#' => $dataRecord->getXmlId()
+					)
+				)
+			);
 		}
 	}
 

@@ -14,6 +14,7 @@ $MESS['INTERVOLGA_MIGRATO.OPERATION_UPDATE'] = 'обновление данны�
 $MESS['INTERVOLGA_MIGRATO.OPERATION_CREATE'] = 'создание данных';
 $MESS['INTERVOLGA_MIGRATO.OPERATION_DELETE'] = 'удаление данных';
 $MESS['INTERVOLGA_MIGRATO.OPERATION_DELETE_SKIPPED'] = 'принудительный пропуск удаления данных';
+$MESS['INTERVOLGA_MIGRATO.DELETE_SKIPPED'] = 'Пропуск удаления записи #MODULE#:#ENTITY# (MIGRATO_ID=#XML_ID#)';
 $MESS['INTERVOLGA_MIGRATO.OPERATION_UPDATE_REFERENCES'] = 'обновление ссылок';
 $MESS['INTERVOLGA_MIGRATO.OPERATION_NOT_IMPORTED'] = 'пропуск данных';
 $MESS['INTERVOLGA_MIGRATO.RECORD_NOT_FOUND'] = 'Запись не найдена';
