@@ -400,10 +400,16 @@ class ImportDataCommand extends BaseCommand
 		$this->logger->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.NOT_RESOLVED_STEP'));
 		foreach ($this->list->getNotResolvedRecords() as $notResolvedRecord)
 		{
+			$xmlIds = $this->list->getNotResolvedXmlIds($notResolvedRecord);
+			$errorLines = array();
+			foreach ($xmlIds as $code => $values)
+			{
+				$errorLines[] = Loc::getMessage('INTERVOLGA_MIGRATO.DEPENDENCY_DESCRIPTION', array('#NAME#' => $code, '#VALUES#' => implode(', ', $values)));
+			}
 			$this->logger->addDb(
 				array(
 					'RECORD' => $notResolvedRecord,
-					'EXCEPTION' => new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.NOT_RESOLVED')),
+					'EXCEPTION' => new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.NOT_RESOLVED', array('#CODES#' => implode(';', $errorLines)))),
 					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RESOLVE'),
 				),
 				Logger::TYPE_FAIL
