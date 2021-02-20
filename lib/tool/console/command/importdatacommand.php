@@ -35,6 +35,7 @@ class ImportDataCommand extends BaseCommand
 		$this->setName('importdata');
 		$this->setHidden(true);
 		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.IMPORT_DATA_DESCRIPTION'));
+		$this->addOption('safe-delete');
 	}
 
 	public function executeInner()
@@ -52,7 +53,14 @@ class ImportDataCommand extends BaseCommand
 			$this->logNotResolved();
 			$this->analyzeNotImported();
 			$this->deleteMarked();
-			$this->deleteNotImported();
+			if ($this->input->getOption('safe-delete'))
+			{
+				$this->displayNotImported();
+			}
+			else
+			{
+				$this->deleteNotImported();
+			}
 			$this->resolveReferences();
 		}
 		PublicCache::getInstance()->clearTagCache();
@@ -392,10 +400,16 @@ class ImportDataCommand extends BaseCommand
 		$this->logger->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.NOT_RESOLVED_STEP'));
 		foreach ($this->list->getNotResolvedRecords() as $notResolvedRecord)
 		{
+			$xmlIds = $this->list->getNotResolvedXmlIds($notResolvedRecord);
+			$errorLines = array();
+			foreach ($xmlIds as $code => $values)
+			{
+				$errorLines[] = Loc::getMessage('INTERVOLGA_MIGRATO.DEPENDENCY_DESCRIPTION', array('#NAME#' => $code, '#VALUES#' => implode(', ', $values)));
+			}
 			$this->logger->addDb(
 				array(
 					'RECORD' => $notResolvedRecord,
-					'EXCEPTION' => new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.NOT_RESOLVED')),
+					'EXCEPTION' => new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.NOT_RESOLVED', array('#CODES#' => implode(';', $errorLines)))),
 					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RESOLVE'),
 				),
 				Logger::TYPE_FAIL
@@ -424,6 +438,31 @@ class ImportDataCommand extends BaseCommand
 		foreach ($this->list->getRecordsToDelete() as $dataRecord)
 		{
 			$this->deleteRecordWithLog($dataRecord);
+		}
+	}
+
+	protected function displayNotImported()
+	{
+		$this->logger->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_SKIP_DELETE_NOT_IMPORTED'));
+		foreach ($this->list->getRecordsToDelete() as $dataRecord)
+		{
+			$this->logger->addDb(
+				array(
+					'RECORD' => $dataRecord,
+					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_DELETE_SKIPPED'),
+				),
+				Logger::TYPE_OK
+			);
+			$this->logger->add(
+				Loc::getMessage(
+					'INTERVOLGA_MIGRATO.DELETE_SKIPPED',
+					array(
+						'#MODULE#' => $this->logger->getModuleNameLoc($dataRecord->getData()->getModule()),
+						'#ENTITY#' => $this->logger->getEntityNameLoc($dataRecord->getData()->getModule(), $dataRecord->getData()->getEntityName()),
+						'#XML_ID#' => $dataRecord->getXmlId()
+					)
+				)
+			);
 		}
 	}
 

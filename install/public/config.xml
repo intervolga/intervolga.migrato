@@ -196,6 +196,12 @@
         <entity>
             <name>form</name>
         </entity>
+        <entity>
+            <name>adminlistfilter</name>
+        </entity>
+        <entity>
+            <name>adminlistoption</name>
+        </entity>
     </module>
     <module>
         <name>highloadblock</name>

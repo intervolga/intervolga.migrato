@@ -62,6 +62,7 @@ class Property extends BaseData
 				"UTIL" => $property["UTIL"],
 				"INPUT_FIELD_LOCATION" => $property["INPUT_FIELD_LOCATION"],
 				"MULTIPLE" => $property["MULTIPLE"],
+				"ENTITY_REGISTRY_TYPE" => $property["ENTITY_REGISTRY_TYPE"],
 			));
 			$record->addFieldsRaw(Value::treeToList($property["SETTINGS"], "SETTINGS"));
 			$this->addLinks($record, $property);
