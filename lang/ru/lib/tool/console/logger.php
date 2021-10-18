@@ -18,7 +18,6 @@ $MESS['INTERVOLGA_MIGRATO.COMPLEX_ID_SEPARATOR'] = '";"';
 $MESS['INTERVOLGA_MIGRATO.ERROR'] = '<fail>При выполнении команды произошла ошибка (Класс: #CLASS#)</fail>';
 $MESS['INTERVOLGA_MIGRATO.ERROR_MESSAGE_CODE'] = '<fail>#MESSAGE# (Код ошибки: #CODE#)</fail>';
 $MESS['INTERVOLGA_MIGRATO.ERROR_NOT_BACKUP'] = '<fail>Нет полного бекапа сайта. Сделайте полный бекап или используйте параметр --force</fail>';
-
 $MESS['INTERVOLGA_MIGRATO.BACKTRACE'] = '<info>Стек вызова:</info>';
 $MESS['INTERVOLGA_MIGRATO.MODULE_UNKNOWN'] = 'Модуль #MODULE#';
 $MESS['INTERVOLGA_MIGRATO.OPTIONS'] = 'Настройки модуля';
