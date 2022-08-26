@@ -109,7 +109,7 @@ class Event extends BaseData
 			$sites,
 		))), 0, 10);
 
-		return $XmlId;
+		return strtolower($XmlId);
 	}
 
 	/**
