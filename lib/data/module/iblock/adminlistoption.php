@@ -385,7 +385,10 @@ class AdminListOption extends BaseData
 		// Для общих и персональных настроек структура поля VALUE отличается
 		if($option['COMMON'] === 'Y')
 		{
-			$this->convertOptionViewToXml($arOptionValue['view'], $option, $xmlIds);
+			if (is_array($arOptionValue['view']))
+			{
+				$this->convertOptionViewToXml($arOptionValue['view'], $option, $xmlIds);
+			}
 		}
 		else
 		{
