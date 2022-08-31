@@ -22,6 +22,7 @@ use Intervolga\Migrato\Tool\Console\Command\UrlRewriteCommand;
 use Intervolga\Migrato\Tool\Console\Command\ValidateCommand;
 use Intervolga\Migrato\Tool\Console\Command\ValidateComplexCommand;
 use Intervolga\Migrato\Tool\Console\Command\WarnDeleteCommand;
+use Intervolga\Migrato\Tool\Console\Command\Backup;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -59,7 +60,8 @@ class Application extends \Symfony\Component\Console\Application
 			new ImportXmlIdCommand(),
 			new LogCommand(),
 			new CheckExecCommand(),
-			new ReIndexFacetCommand()
+			new ReIndexFacetCommand(),
+			new Backup()
 		));
 	}
 
@@ -124,6 +126,7 @@ class Application extends \Symfony\Component\Console\Application
 		return $inputDefinition;
 	}
 
+
 	/**
 	 * Возвращает инстанс приложения
 	 * @return Application
@@ -133,47 +136,7 @@ class Application extends \Symfony\Component\Console\Application
 		return self::$instance;
 	}
 
-    public function getLongVersion()
-    {
-        return array(
-            Loc::getMessage('INTERVOLGA_MIGRATO.VERSION.MIGRATO') . $this->getMigratoVersion(),
-            Loc::getMessage('INTERVOLGA_MIGRATO.VERSION.MAIN_MODULE') . $this->getMainModuleVersion(),
-            Loc::getMessage('INTERVOLGA_MIGRATO.VERSION.BITRIX') . $this->getBitrixEdition(),
-            Loc::getMessage('INTERVOLGA_MIGRATO.VERSION.PHP') . PHP_VERSION
-        );
-    }
-
-    private function getMigratoVersion()
-    {
-        $arModuleVersion = array();
-
-        $moduleDir = dirname(__DIR__, 3);
-        require($moduleDir . '/install/version.php');
-
-        return $arModuleVersion['VERSION'] ?: Loc::getMessage('INTERVOLGA_MIGRATO.VERSION.NOT_DEFINED');
-    }
-
-    private function getMainModuleVersion()
-    {
-        return defined('SM_VERSION')
-            ? SM_VERSION
-            : Loc::getMessage('INTERVOLGA_MIGRATO.VERSION.NOT_DEFINED');
-    }
-
-    private function getBitrixEdition()
-    {
-        require_once($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/classes/general/update_client.php');
-
-        $errors = '';
-        $stableVersionsOnly = Option::get('main', 'stable_versions_only', 'Y');
-        $updateList = \CUpdateClient::GetUpdatesList($errors, 'ru', $stableVersionsOnly);
-
-        return $updateList['CLIENT']
-            ? $updateList['CLIENT'][0]['@']['LICENSE']
-            : Loc::getMessage('INTERVOLGA_MIGRATO.VERSION.NOT_DEFINED');
-    }
-
-    /**
+	/**
 	 * Выходной интерфейс для вывода ворнингов
 	 * @var OutputInterface
 	 */
