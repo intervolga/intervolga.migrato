@@ -103,14 +103,13 @@ class Event extends BaseData
 		{
 			$sites[] = Site::getInstance()->getXmlId(Site::getInstance()->createId($site['SITE_ID']));
 		}
-		$md5 = md5(serialize(array(
+		$XmlId = $message["EVENT_NAME"] . '-' . mb_substr(md5(serialize(array(
 			$message["EMAIL_FROM"],
 			$message["EMAIL_TO"],
-			$message["EVENT_NAME"],
 			$sites,
-		)));
+		))), 0, 10);
 
-		return BaseXmlIdProvider::formatXmlId($md5);
+		return strtolower($XmlId);
 	}
 
 	/**
