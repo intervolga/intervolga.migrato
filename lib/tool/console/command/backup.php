@@ -22,7 +22,7 @@ class Backup extends BaseCommand
 	protected function init()
 	{
 		$this->login = $this->ask('Login: ', 'admin');
-		$this->password = $this->ask('Password: ', '123456', true);
+		$this->password = $this->ask('Password: ', 'admin', true);
 		$this->httpClient = new HttpClient();
 		$this->site = $this->getSiteInfo();
 	}
@@ -71,24 +71,9 @@ class Backup extends BaseCommand
 		return $answer;
 	}
 
-	private function test()
-	{
-		for($loop=0;$loop<4;$loop++) {
-			$html = $this->get('/local/modules/intervolga.migrato/tools/check_session.php');
-			con3([
-				$loop,
-				'result'=>$html,
-				'cookies'=>$cookies,
-				'type of cookies' => gettype($cookies),
-			]);
-			sleep (35);
-		}
-	}
-
 	public function executeInner()
 	{
 		$this->init();
-		// $this->test();
  		$this->createBackup();
 	}
 
@@ -185,33 +170,32 @@ class Backup extends BaseCommand
 
 		while (true)
 		{
-			con3('loop start');
-			con3($response);
-
-			preg_match('/[0-9]{1-3}%/ui', $response, $parts);
+			$informMessage = '';
+			preg_match('/[0-9]{1,3}%/ui', $response, $parts);
 			if (!empty($parts[0]))
 			{
 				$progress = $parts[0];
-				echo 'Прогресс: '.$progress.'   ';
+				$informMessage .= 'Прогресс: '.$progress.'   ';
 			}
 			preg_match('/[0-9:]+:[0-9]{2}/ui', $response, $parts);
 			if (!empty($parts[0]))
 			{
 				$spentTime = $parts[0];
-				echo 'Прошло времени: '.$spentTime.'';
+				$informMessage .= 'Прошло времени: '.$spentTime.'   ';
 			}
-			echo "\n";
+			if ($informMessage)
+			{
+				$this->output->writeln($informMessage);
+			}
 			preg_match('/AjaxSend\([\'\"]([^\'\"]+)[\'\"]\)/ui', $response, $parts);
 			if (empty($parts[0]))
 			{
-				echo "Завершено.\n";
+				$this->output->writeln('Завершено.');
 				break;
 			}
 			if ($nextStepUrl === false) {
 				$nextStepUrl = $startUrl . $parts[1];
 			}
-			con3($nextStepUrl);
-			flush();
 			$response = $this->get($nextStepUrl);
 
 			sleep($this->exec_time_sleep);
