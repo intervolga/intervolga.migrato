@@ -5,41 +5,26 @@ use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Web\HttpClient;
 use Intervolga\Migrato\Data\Module;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Question\Question;
 
 Loc::loadMessages(__FILE__);
 
 class Backup extends BaseCommand
 {
 	protected $httpClient;
+	protected $cookies = false;
 	protected $site;
-	protected $login = 'admin';
-	protected $password = '123456';
-	protected $exec_time = 120;
+	protected $login;
+	protected $password;
+	protected $exec_time = 20;
 	protected $exec_time_sleep = 5;
-	protected $cookiesFile = __DIR__.'/cookies.dat';
 
-	private function getCookiesInfo()
+	protected function init()
 	{
-		if (!is_file($this->cookiesFile))
-		{
-			return [];
-		}
-		$content = file_get_contents($this->cookiesFile);
-		$sessionInfo = json_decode($content, true);
-		return $sessionInfo;
-	}
-
-	private function setCookiesInfo($info)
-	{
-		file_put_contents($this->cookiesFile, json_encode($info));
-	}
-
-	private function delCookiesInfo()
-	{
-		if (is_file($this->cookiesFile))
-		{
-			unlink($this->cookiesFile);
-		}
+		$this->login = $this->ask('Login: ', 'admin');
+		$this->password = $this->ask('Password: ', '123456', true);
+		$this->httpClient = new HttpClient();
+		$this->site = $this->getSiteInfo();
 	}
 
 	protected function configure()
@@ -77,31 +62,34 @@ class Backup extends BaseCommand
 		);
 	}
 
+	protected function ask($questionText, $defaultValue='', $hidden=false)
+	{
+		$helper = $this->getHelper('question');
+		$question = new Question($questionText, $defaultValue);
+		$question->setHidden($hidden);
+		$answer = $helper->ask($this->input, $this->output, $question);
+		return $answer;
+	}
+
+	private function test()
+	{
+		for($loop=0;$loop<4;$loop++) {
+			$html = $this->get('/local/modules/intervolga.migrato/tools/check_session.php');
+			con3([
+				$loop,
+				'result'=>$html,
+				'cookies'=>$cookies,
+				'type of cookies' => gettype($cookies),
+			]);
+			sleep (35);
+		}
+	}
+
 	public function executeInner()
 	{
-		$this->httpClient = new HttpClient();
-		$this->httpClient->setCookies($this->getCookiesInfo());
-		$this->site = $this->getSiteInfo();
-		// static::createBackup();
-
-
-
-		$html = $this->get('/local/modules/intervolga.migrato/tools/check_session.php');
-		$cookies = $this->httpClient->getCookies()->toArray();
-		con3([
-			'first',
-			'result'=>$html,
-			'cookies'=>$cookies,
-			'type of cookies' => gettype($cookies),
-		]);
-
-		$cookies2 = $this->httpClient->getCookies()->toArray();
-		con3([
-			'second',
-			'result'=>$html,
-			'cookies'=>$cookies,
-			'type of cookies' => gettype($cookies),
-		]);
+		$this->init();
+		// $this->test();
+ 		$this->createBackup();
 	}
 
 	protected function getSiteInfo()
@@ -123,10 +111,9 @@ class Backup extends BaseCommand
 	{
 		$fullUrl = 'http://'.$this->site['SERVER_NAME'].$urlPath;
 		$this->httpClient->setHeader('Authorization', 'Basic '.base64_encode($this->login.':'.$this->password), true);
-		$cookies = $this->getCookiesInfo();
-		if (!$cookie)
+		if ($this->cookies !== false)
 		{
-			// $this->httpClient->setCookies($cookies);
+			$this->httpClient->setCookies($this->cookies);
 		}
 		if ($isPost)
 		{
@@ -134,8 +121,10 @@ class Backup extends BaseCommand
 		} else {
 			$html = $this->httpClient->get($fullUrl);
 		}
-		$cookies = $this->httpClient->getCookies()->toArray();
-		$this->setCookiesInfo($cookies);
+		if ($this->cookies === false)
+		{
+			$this->cookies = $this->httpClient->getCookies()->toArray();
+		}
 
 		return $html;
 	}
@@ -189,16 +178,43 @@ class Backup extends BaseCommand
 	protected function createBackup()
 	{
 		$startUrl = "/bitrix/admin/dump.php";
-		// $postData = $this->prepareParams();
-		// $postData['sessid'] = bitrix_sessid();
-		// $response = $this->post($startUrl, $postData);
-		// con3($response);
-		//
-		// preg_match ('/AjaxSend\([\'\"]([^\'\"]+)[\'\"]\)/ui', $response, $parts);
-		// $nextStepUrl = $startUrl . $parts[1];
-		$nextStepUrl = $startUrl . '?process=Y&sessid=d2652ed05a704e8fabf66addd57eebb7';
-		con3($nextStepUrl);
-		$response = $this->get($nextStepUrl);
-		con3($response);
+		$nextStepUrl = false;
+		$postData = $this->prepareParams();
+		$postData['sessid'] = bitrix_sessid();
+		$response = $this->post($startUrl, $postData);
+
+		while (true)
+		{
+			con3('loop start');
+			con3($response);
+
+			preg_match('/[0-9]{1-3}%/ui', $response, $parts);
+			if (!empty($parts[0]))
+			{
+				$progress = $parts[0];
+				echo 'Прогресс: '.$progress.'   ';
+			}
+			preg_match('/[0-9:]+:[0-9]{2}/ui', $response, $parts);
+			if (!empty($parts[0]))
+			{
+				$spentTime = $parts[0];
+				echo 'Прошло времени: '.$spentTime.'';
+			}
+			echo "\n";
+			preg_match('/AjaxSend\([\'\"]([^\'\"]+)[\'\"]\)/ui', $response, $parts);
+			if (empty($parts[0]))
+			{
+				echo "Завершено.\n";
+				break;
+			}
+			if ($nextStepUrl === false) {
+				$nextStepUrl = $startUrl . $parts[1];
+			}
+			con3($nextStepUrl);
+			flush();
+			$response = $this->get($nextStepUrl);
+
+			sleep($this->exec_time_sleep);
+		}
 	}
 }
