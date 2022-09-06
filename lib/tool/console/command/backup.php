@@ -188,13 +188,13 @@ class Backup extends BaseCommand
 			if (!empty($parts[1]))
 			{
 				$progress = $parts[1];
-				$informMessage .= 'Прогресс: '.sprintf('%3d', $progress).'%   ';
+				$informMessage .= Loc::getMessage('INTERVOLGA_MIGRATO.BACKUP_PROGRESS').sprintf('%3d', $progress).'%   ';
 			}
 			preg_match('/[0-9:]+:[0-9]{2}/ui', $response, $parts);
 			if (!empty($parts[0]))
 			{
 				$spentTime = $parts[0];
-				$informMessage .= 'Прошло времени: '.$spentTime.'   ';
+				$informMessage .= Loc::getMessage('INTERVOLGA_MIGRATO.BACKUP_SPENT_TIME').$spentTime.'   ';
 			}
 			if ($informMessage)
 			{
@@ -203,7 +203,7 @@ class Backup extends BaseCommand
 			preg_match('/AjaxSend\([\'\"]([^\'\"]+)[\'\"]\)/ui', $response, $parts);
 			if (empty($parts[0]))
 			{
-				$this->output->writeln('Прогресс: 100%. Завершено.');
+				$this->output->writeln(Loc::getMessage('INTERVOLGA_MIGRATO.BACKUP_100PRC'));
 				break;
 			}
 			if ($nextStepUrl === false) {
