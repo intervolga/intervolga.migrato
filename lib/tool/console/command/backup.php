@@ -14,15 +14,11 @@ class Backup extends BaseCommand
 	protected $httpClient;
 	protected $cookies = false;
 	protected $site;
-	protected $login;
-	protected $password;
 	protected $exec_time = 20;
 	protected $exec_time_sleep = 5;
 
 	protected function init()
 	{
-		$this->login = $this->ask('Login: ', 'admin');
-		$this->password = $this->ask('Password: ', 'admin', true);
 		$this->httpClient = new HttpClient();
 		$this->site = $this->getSiteInfo();
 	}
@@ -71,6 +67,25 @@ class Backup extends BaseCommand
 		return $answer;
 	}
 
+	private function createAdminSession()
+	{
+		$rootDir = realpath(__DIR__.'/../../../../../../../upload/');
+		$contentDir = scandir($rootDir);
+		sort($contentDir);
+		$serialized = serialize($contentDir);
+		$secret = md5($serialized);
+
+		$time = time();
+		$sign = hash('SHA256', 'create-admin-sessid|'.$time.'|'.$secret);
+
+		$json = $this->post('/local/modules/intervolga.migrato/tools/create_session.php', [
+			'time' => $time,
+			'sign' => $sign,
+		]);
+		$values = @json_decode($json, true);
+		return $values['sessid'] ?? '';
+	}
+
 	public function executeInner()
 	{
 		$this->init();
@@ -95,7 +110,6 @@ class Backup extends BaseCommand
 	protected function makeRequest($urlPath, $isPost=false, $postData=[])
 	{
 		$fullUrl = 'http://'.$this->site['SERVER_NAME'].$urlPath;
-		$this->httpClient->setHeader('Authorization', 'Basic '.base64_encode($this->login.':'.$this->password), true);
 		if ($this->cookies !== false)
 		{
 			$this->httpClient->setCookies($this->cookies);
@@ -165,17 +179,16 @@ class Backup extends BaseCommand
 		$startUrl = "/bitrix/admin/dump.php";
 		$nextStepUrl = false;
 		$postData = $this->prepareParams();
-		$postData['sessid'] = bitrix_sessid();
+		$postData['sessid'] = $this->createAdminSession();
 		$response = $this->post($startUrl, $postData);
-
 		while (true)
 		{
 			$informMessage = '';
-			preg_match('/[0-9]{1,3}%/ui', $response, $parts);
-			if (!empty($parts[0]))
+			preg_match('/([0-9]{1,2})%/ui', $response, $parts);
+			if (!empty($parts[1]))
 			{
-				$progress = $parts[0];
-				$informMessage .= 'Прогресс: '.$progress.'   ';
+				$progress = $parts[1];
+				$informMessage .= 'Прогресс: '.sprintf('%3d', $progress).'%   ';
 			}
 			preg_match('/[0-9:]+:[0-9]{2}/ui', $response, $parts);
 			if (!empty($parts[0]))
@@ -190,7 +203,7 @@ class Backup extends BaseCommand
 			preg_match('/AjaxSend\([\'\"]([^\'\"]+)[\'\"]\)/ui', $response, $parts);
 			if (empty($parts[0]))
 			{
-				$this->output->writeln('Завершено.');
+				$this->output->writeln('Прогресс: 100%. Завершено.');
 				break;
 			}
 			if ($nextStepUrl === false) {
