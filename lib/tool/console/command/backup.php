@@ -58,15 +58,6 @@ class Backup extends BaseCommand
 		);
 	}
 
-	protected function ask($questionText, $defaultValue='', $hidden=false)
-	{
-		$helper = $this->getHelper('question');
-		$question = new Question($questionText, $defaultValue);
-		$question->setHidden($hidden);
-		$answer = $helper->ask($this->input, $this->output, $question);
-		return $answer;
-	}
-
 	private function createAdminSession()
 	{
 		$rootDir = realpath(__DIR__.'/../../../../../../../upload/');
