@@ -1,11 +1,20 @@
 <? namespace Intervolga\Migrato\Tool\Console;
 
+use \Bitrix\Main\Localization\Loc;
+Loc::loadMessages(__FILE__);
+
 class DiffCounter
 {
 	private static $instance = false;
 	public function __construct()
 	{
 		$this->clear();
+		$this->actionValues = [
+			Loc::getMessage('INTERVOLGA_MIGRATO.DIFFCOUNTER_ACTION_NO_CHANGED'),
+			Loc::getMessage('INTERVOLGA_MIGRATO.DIFFCOUNTER_ACTION_CREATE'),
+			Loc::getMessage('INTERVOLGA_MIGRATO.DIFFCOUNTER_ACTION_UPDATE'),
+			Loc::getMessage('INTERVOLGA_MIGRATO.DIFFCOUNTER_ACTION_DELETE'),
+		];
 	}
 	public function __wakeup()
 	{
@@ -22,7 +31,13 @@ class DiffCounter
 		return self::$instance;
 	}
 
-	public $list;
+	private $list;
+	public const CREATE = 1;
+	public const UPDATE = 2;
+	public const DELETE = 3;
+	public const NO_CHANGE = 0;
+
+	public $actionValues = [];
 
 	private function addToList(&$list, $add)
 	{
@@ -50,14 +65,17 @@ class DiffCounter
 	public function add($action, $id, $xmlId, $entityName, $module)
 	{
 		$add = [];
-		$add['-'][$action] = 1;
-		$add['v'][$action][$module][$entityName] = 1;
-		$add['vv'][$action][$module][$entityName][$xmlId][$id?:''] = true;
+		$add[0][$action] = 1;
+		$add[1][$action][$module][$entityName] = 1;
+		$add[2][$action][$module][$entityName][$xmlId][$id?:''] = true;
 		$this->addToList($this->list, $add);
 	}
 
 	public function addRecord($action, $record)
 	{
+		if (is_numeric($action)) {
+			$action = $this->actionValues[$action] ?? '?';
+		}
 		$this->add(
 			$action,
 			$record->getId(),
@@ -132,6 +150,10 @@ class DiffCounter
 
 	public function makeTable($top, $header=false)
 	{
+		if (!$header)
+		{
+			$header = Loc::getMessage('INTERVOLGA_MIGRATO.DIFFCOUNTER_VIEW_'.$top) ?? '';
+		}
 		$cols = [];
 		$rows = [];
 		if ($header)

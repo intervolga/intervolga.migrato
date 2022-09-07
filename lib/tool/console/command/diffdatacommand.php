@@ -57,9 +57,7 @@ class DiffDataCommand extends BaseCommand
 			if (!$this->input->getOption('safe-delete'))
 			{
 				$this->deleteNotImported();
-				// echo DiffCounter::getInstance()->makeTable('-', ['Action', 'Count']);
-				echo DiffCounter::getInstance()->makeTable('v', ['Action', 'Module', 'Entity', 'Count']);
-				// echo DiffCounter::getInstance()->makeTable('vv', ['Action', 'Module', 'Entity', 'XML id', 'id']);
+				echo DiffCounter::getInstance()->makeTable(0);
 			}
 			$this->resolveReferences();
 		}
@@ -339,7 +337,7 @@ class DiffDataCommand extends BaseCommand
 				self::setLinkId($dependency);
 			}
 			self::setRuntimesId($dataRecord->getRuntimes());
-			$counter->addRecord('update', $dataRecord);
+			$counter->addRecord(DiffCounter::UPDATE, $dataRecord);
 		}
 		catch (\Exception $exception)
 		{
@@ -353,7 +351,7 @@ class DiffDataCommand extends BaseCommand
 	{
 		try
 		{
-			$counter = DiffCounter::getInstance()->addRecord('create', $dataRecord);
+			$counter = DiffCounter::getInstance()->addRecord(DiffCounter::CREATE, $dataRecord);
 			foreach($dataRecord->getDependencies() as $dependency)
 			{
 				self::setLinkId($dependency);
@@ -388,11 +386,10 @@ class DiffDataCommand extends BaseCommand
 
 	protected function analyzeNotImported()
 	{
-		// $this->logger->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_SHOW_NOT_IMPORTED'));
 		$counter = DiffCounter::getInstance();
 		foreach ($this->list->getRecordsToDelete() as $dataRecord)
 		{
-			$counter->addRecord('not changed', $dataRecord);
+			$counter->addRecord(DiffCounter::NO_CHANGE, $dataRecord);
 		}
 	}
 
@@ -412,7 +409,7 @@ class DiffDataCommand extends BaseCommand
 	{
 		try
 		{
-			DiffCounter::getInstance()->addRecord($record);
+			DiffCounter::getInstance()->addRecord(DiffCounter::DELETE, $record);
 		}
 		catch (\Exception $exception)
 		{
@@ -452,7 +449,7 @@ class DiffDataCommand extends BaseCommand
 				{
 					throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_NOT_FOUND'));
 				}
-				$counter->addRecord('update refs', $dataRecord);
+				$counter->addRecord(DiffCounter::UPDATE, $dataRecord);
 			}
 			catch (\Exception $exception)
 			{
