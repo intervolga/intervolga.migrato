@@ -12,10 +12,11 @@ use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Tool\DataTree\Builder;
 use Intervolga\Migrato\Tool\ImportList;
 use Intervolga\Migrato\Tool\PublicCache;
+use Intervolga\Migrato\Tool\Console\DiffCounter;
 
 Loc::loadMessages(__FILE__);
 
-class ImportDataCommand extends BaseCommand
+class DiffDataCommand extends BaseCommand
 {
 	/**
 	 * @var \Intervolga\Migrato\Data\Record[]
@@ -32,7 +33,7 @@ class ImportDataCommand extends BaseCommand
 
 	protected function configure()
 	{
-		$this->setName('importdata');
+		$this->setName('diffdata');
 		$this->setHidden(true);
 		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.IMPORT_DATA_DESCRIPTION'));
 		$this->addOption('safe-delete');
@@ -53,13 +54,12 @@ class ImportDataCommand extends BaseCommand
 			$this->logNotResolved();
 			$this->analyzeNotImported();
 			$this->deleteMarked();
-			if ($this->input->getOption('safe-delete'))
-			{
-				$this->displayNotImported();
-			}
-			else
+			if (!$this->input->getOption('safe-delete'))
 			{
 				$this->deleteNotImported();
+				// echo DiffCounter::getInstance()->makeTable('-', ['Action', 'Count']);
+				echo DiffCounter::getInstance()->makeTable('v', ['Action', 'Module', 'Entity', 'Count']);
+				// echo DiffCounter::getInstance()->makeTable('vv', ['Action', 'Module', 'Entity', 'XML id', 'id']);
 			}
 			$this->resolveReferences();
 		}
@@ -91,6 +91,7 @@ class ImportDataCommand extends BaseCommand
 	 */
 	protected function prepareNonConfigData(BaseData $data)
 	{
+		$counter = DiffCounter::getInstance();
 		if (Loader::includeModule($data->getModule()))
 		{
 			$dataGetList = $data->getList();
@@ -106,6 +107,7 @@ class ImportDataCommand extends BaseCommand
 	 */
 	protected function prepareConfigData(BaseData $data)
 	{
+		$counter = DiffCounter::getInstance();
 		$this->list->addExistingRecords($data->getList());
 		$records = array();
 		foreach ($this->readFromFile($data) as $record)
@@ -128,6 +130,7 @@ class ImportDataCommand extends BaseCommand
 	 */
 	protected function importWithDependencies()
 	{
+		$counter = DiffCounter::getInstance();
 		$this->logger->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_ITERATE_IMPORT'));
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		for ($i = 0; $i < count($configDataClasses); $i++)
@@ -330,31 +333,16 @@ class ImportDataCommand extends BaseCommand
 	{
 		try
 		{
+			$counter = DiffCounter::getInstance();
 			foreach ($dataRecord->getDependencies() as $dependency)
 			{
 				self::setLinkId($dependency);
 			}
 			self::setRuntimesId($dataRecord->getRuntimes());
-
-			$dataRecord->setId($dataRecordId);
-			$dataRecord->update();
-			$this->logger->addDb(array(
-					'RECORD' => $dataRecord,
-					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_UPDATE'),
-				),
-				Logger::TYPE_OK
-			);
+			$counter->addRecord('update', $dataRecord);
 		}
 		catch (\Exception $exception)
 		{
-			$this->logger->addDb(
-				array(
-					'RECORD' => $dataRecord,
-					'EXCEPTION' => $exception,
-					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_UPDATE'),
-				),
-				Logger::TYPE_FAIL
-			);
 		}
 	}
 
@@ -365,33 +353,14 @@ class ImportDataCommand extends BaseCommand
 	{
 		try
 		{
+			$counter = DiffCounter::getInstance()->addRecord('create', $dataRecord);
 			foreach($dataRecord->getDependencies() as $dependency)
 			{
 				self::setLinkId($dependency);
 			}
-			$dataRecord->setId($dataRecord->create());
-			$dataRecord->getData()->setXmlId(
-				$dataRecord->getId(),
-				$dataRecord->getXmlId()
-			);
-			$this->logger->addDb(
-				array(
-					'RECORD' => $dataRecord,
-					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_CREATE'),
-				),
-				Logger::TYPE_OK
-			);
 		}
 		catch (\Exception $exception)
 		{
-			$this->logger->addDb(
-				array(
-					'RECORD' => $dataRecord,
-					'EXCEPTION' => $exception,
-					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_CREATE'),
-				),
-				Logger::TYPE_FAIL
-			);
 		}
 	}
 
@@ -419,16 +388,11 @@ class ImportDataCommand extends BaseCommand
 
 	protected function analyzeNotImported()
 	{
-		$this->logger->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_SHOW_NOT_IMPORTED'));
+		// $this->logger->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_SHOW_NOT_IMPORTED'));
+		$counter = DiffCounter::getInstance();
 		foreach ($this->list->getRecordsToDelete() as $dataRecord)
 		{
-			$this->logger->addDb(
-				array(
-					'RECORD' => $dataRecord,
-					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_NOT_IMPORTED'),
-				),
-				Logger::TYPE_OK
-			);
+			$counter->addRecord('not changed', $dataRecord);
 		}
 	}
 
@@ -441,31 +405,6 @@ class ImportDataCommand extends BaseCommand
 		}
 	}
 
-	protected function displayNotImported()
-	{
-		$this->logger->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_SKIP_DELETE_NOT_IMPORTED'));
-		foreach ($this->list->getRecordsToDelete() as $dataRecord)
-		{
-			$this->logger->addDb(
-				array(
-					'RECORD' => $dataRecord,
-					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_DELETE_SKIPPED'),
-				),
-				Logger::TYPE_OK
-			);
-			$this->logger->add(
-				Loc::getMessage(
-					'INTERVOLGA_MIGRATO.DELETE_SKIPPED',
-					array(
-						'#MODULE#' => $this->logger->getModuleNameLoc($dataRecord->getData()->getModule()),
-						'#ENTITY#' => $this->logger->getEntityNameLoc($dataRecord->getData()->getModule(), $dataRecord->getData()->getEntityName()),
-						'#XML_ID#' => $dataRecord->getXmlId()
-					)
-				)
-			);
-		}
-	}
-
 	/**
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 */
@@ -473,25 +412,10 @@ class ImportDataCommand extends BaseCommand
 	{
 		try
 		{
-			$record->delete();
-			$this->logger->addDb(
-				array(
-					'RECORD' => $record,
-					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_DELETE'),
-				),
-				Logger::TYPE_OK
-			);
+			DiffCounter::getInstance()->addRecord($record);
 		}
 		catch (\Exception $exception)
 		{
-			$this->logger->addDb(
-				array(
-					'RECORD' => $record,
-					'EXCEPTION' => $exception,
-					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_DELETE'),
-				),
-				Logger::TYPE_FAIL
-			);
 		}
 	}
 
@@ -506,6 +430,7 @@ class ImportDataCommand extends BaseCommand
 
 	protected function resolveReferences()
 	{
+		$counter = DiffCounter::getInstance();
 		$this->logger->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_RESOLVE_REFERENCES'));
 		/**
 		 * @var Record $dataRecord
@@ -527,26 +452,10 @@ class ImportDataCommand extends BaseCommand
 				{
 					throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.RECORD_NOT_FOUND'));
 				}
-				$clone->setId($id);
-				$clone->updateReferences();
-				$this->logger->addDb(
-					array(
-						'RECORD' => $dataRecord,
-						'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_UPDATE_REFERENCES'),
-					),
-					Logger::TYPE_OK
-				);
+				$counter->addRecord('update refs', $dataRecord);
 			}
 			catch (\Exception $exception)
 			{
-				$this->logger->addDb(
-					array(
-						'RECORD' => $dataRecord,
-						'EXCEPTION' => $exception,
-						'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.OPERATION_UPDATE_REFERENCES'),
-					),
-					Logger::TYPE_FAIL
-				);
 			}
 		}
 	}
