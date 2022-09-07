@@ -25,7 +25,6 @@ use Intervolga\Migrato\Tool\Console\Command\WarnDeleteCommand;
 use Intervolga\Migrato\Tool\Console\Command\Backup;
 use Intervolga\Migrato\Tool\Console\Command\DiffCommand;
 use Intervolga\Migrato\Tool\Console\Command\DiffDataCommand;
-use Intervolga\Migrato\Tool\Console\Command\DiffOptionCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -66,8 +65,7 @@ class Application extends \Symfony\Component\Console\Application
 			new ReIndexFacetCommand(),
 			new Backup(),
 			new DiffCommand(),
-			new DiffDataCommand(),
-			new DiffOptionCommand()
+			new DiffDataCommand()
 		));
 	}
 

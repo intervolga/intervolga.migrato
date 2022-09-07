@@ -58,7 +58,6 @@ class DiffCommand extends BaseCommand
 			{
 				$this->runSubcommand('diffdata');
 			}
-			$this->runSubcommand('diffoptions');
 			if (!$this->input->getOption('quick'))
 			{
 				$this->runSubcommand('clearcache');
