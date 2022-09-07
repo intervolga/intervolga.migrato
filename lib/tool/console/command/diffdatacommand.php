@@ -7,7 +7,6 @@ use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
 use Intervolga\Migrato\Tool\Config;
-use Intervolga\Migrato\Tool\Console\Logger;
 use Intervolga\Migrato\Tool\DataFileViewXml;
 use Intervolga\Migrato\Tool\DataTree\Builder;
 use Intervolga\Migrato\Tool\ImportList;
@@ -39,8 +38,18 @@ class DiffDataCommand extends BaseCommand
 		$this->addOption('safe-delete');
 	}
 
+	protected function getVerbosityLevel()
+	{
+		return $this->output->isVerbose()
+				+ $this->output->isVeryVerbose()
+				+ $this->output->isDebug();
+	}
+
 	public function executeInner()
 	{
+		$verbosity = $this->getVerbosityLevel();
+		$this->output->setVerbosity(32);
+
 		$this->runSubcommand('unused');
 		/**
 		 * @var ValidateCommand $validateCommand
@@ -57,11 +66,11 @@ class DiffDataCommand extends BaseCommand
 			if (!$this->input->getOption('safe-delete'))
 			{
 				$this->deleteNotImported();
-				echo DiffCounter::getInstance()->makeTable(0);
 			}
 			$this->resolveReferences();
 		}
 		PublicCache::getInstance()->clearTagCache();
+		$this->output->writeln(DiffCounter::getInstance()->makeTable($verbosity));
 	}
 
 	protected function init()
@@ -129,7 +138,6 @@ class DiffDataCommand extends BaseCommand
 	protected function importWithDependencies()
 	{
 		$counter = DiffCounter::getInstance();
-		$this->logger->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_ITERATE_IMPORT'));
 		$configDataClasses = Config::getInstance()->getDataClasses();
 		for ($i = 0; $i < count($configDataClasses); $i++)
 		{
@@ -364,7 +372,6 @@ class DiffDataCommand extends BaseCommand
 
 	protected function logNotResolved()
 	{
-		$this->logger->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.NOT_RESOLVED_STEP'));
 		foreach ($this->list->getNotResolvedRecords() as $notResolvedRecord)
 		{
 			$xmlIds = $this->list->getNotResolvedXmlIds($notResolvedRecord);
@@ -373,14 +380,6 @@ class DiffDataCommand extends BaseCommand
 			{
 				$errorLines[] = Loc::getMessage('INTERVOLGA_MIGRATO.DEPENDENCY_DESCRIPTION', array('#NAME#' => $code, '#VALUES#' => implode(', ', $values)));
 			}
-			$this->logger->addDb(
-				array(
-					'RECORD' => $notResolvedRecord,
-					'EXCEPTION' => new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.NOT_RESOLVED', array('#CODES#' => implode(';', $errorLines)))),
-					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.RESOLVE'),
-				),
-				Logger::TYPE_FAIL
-			);
 		}
 	}
 
@@ -395,7 +394,6 @@ class DiffDataCommand extends BaseCommand
 
 	protected function deleteNotImported()
 	{
-		$this->logger->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_DELETE_NOT_IMPORTED'));
 		foreach ($this->list->getRecordsToDelete() as $dataRecord)
 		{
 			$this->deleteRecordWithLog($dataRecord);
@@ -418,7 +416,6 @@ class DiffDataCommand extends BaseCommand
 
 	protected function deleteMarked()
 	{
-		$this->logger->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_DELETE_MARKED'));
 		foreach ($this->deleteRecords as $record)
 		{
 			$this->deleteRecordWithLog($record);
@@ -428,7 +425,6 @@ class DiffDataCommand extends BaseCommand
 	protected function resolveReferences()
 	{
 		$counter = DiffCounter::getInstance();
-		$this->logger->startStep(Loc::getMessage('INTERVOLGA_MIGRATO.STEP_RESOLVE_REFERENCES'));
 		/**
 		 * @var Record $dataRecord
 		 */
