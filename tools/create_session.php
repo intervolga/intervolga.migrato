@@ -1,22 +1,12 @@
 <?php
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 
-$rootDir = realpath(__DIR__.'/../../../../upload/');
-$contentDir = scandir($rootDir);
-sort($contentDir);
-$serialized = serialize($contentDir);
-$secret = md5($serialized);
-$time = time();
-$diffTime = 5;
+require __DIR__.'/simplesign.php';
 
-$requestedTime = $_REQUEST['time'] ?? 0;
-$expectedSign = hash('SHA256', 'create-admin-sessid|'.$requestedTime.'|'.$secret);
 
-if (
-	$requestedTime >= $time - $diffTime
-	&& $requestedTime <= $time
-	&& $_REQUEST['sign'] == $expectedSign
-) {
+if ($_REQUEST['action'] == 'create_admin_sessid'
+ && SimpleSign::getInstance()->check($_REQUEST))
+{
 	$USER->Authorize(1);
 	$sessid = bitrix_sessid();
 } else {

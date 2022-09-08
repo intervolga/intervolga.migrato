@@ -7,6 +7,8 @@ use Intervolga\Migrato\Data\Module;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Question\Question;
 
+require $_SERVER['DOCUMENT_ROOT'].'/local/modules/intervolga.migrato/tools/simplesign.php';
+
 Loc::loadMessages(__FILE__);
 
 class Backup extends BaseCommand
@@ -60,20 +62,13 @@ class Backup extends BaseCommand
 
 	private function createAdminSession()
 	{
-		$rootDir = realpath(__DIR__.'/../../../../../../../upload/');
-		$contentDir = scandir($rootDir);
-		sort($contentDir);
-		$serialized = serialize($contentDir);
-		$secret = md5($serialized);
+		$request = [
+			'action' => 'create_admin_sessid',
+		];
+		\SimpleSign::getInstance()->sign($request);
 
-		$time = time();
-		$sign = hash('SHA256', 'create-admin-sessid|'.$time.'|'.$secret);
-
-		$json = $this->post('/local/modules/intervolga.migrato/tools/create_session.php', [
-			'time' => $time,
-			'sign' => $sign,
-		]);
-		$values = @json_decode($json, true);
+		$json = $this->post('/local/modules/intervolga.migrato/tools/create_session.php', $request);
+		$values = json_decode($json, true);
 		return $values['sessid'] ?? '';
 	}
 
@@ -100,7 +95,8 @@ class Backup extends BaseCommand
 
 	protected function makeRequest($urlPath, $isPost=false, $postData=[])
 	{
-		$fullUrl = 'http://'.$this->site['SERVER_NAME'].$urlPath;
+		$protocol = !empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off' ? "https" : "http";
+		$fullUrl = $protocol.'://'.$this->site['SERVER_NAME'].$urlPath;
 		if ($this->cookies !== false)
 		{
 			$this->httpClient->setCookies($this->cookies);
@@ -175,7 +171,7 @@ class Backup extends BaseCommand
 		while (true)
 		{
 			$informMessage = '';
-			preg_match('/([0-9]{1,2})%/ui', $response, $parts);
+			preg_match('/([0-9]{1,3})%/ui', $response, $parts);
 			if (!empty($parts[1]))
 			{
 				$progress = $parts[1];
