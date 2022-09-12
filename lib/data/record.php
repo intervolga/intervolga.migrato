@@ -179,6 +179,11 @@ class Record extends BaseDataObject
 		$this->dataClass = $dataObject;
 	}
 
+	public function getFieldsFromDB()
+	{
+		return $this->getData()->getFieldsFromDB($this);
+	}
+
 	public function update()
 	{
 		$this->getData()->update($this);

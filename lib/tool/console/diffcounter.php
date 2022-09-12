@@ -10,11 +10,12 @@ class DiffCounter
 	{
 		$this->clear();
 		$this->actionValues = [
-			Loc::getMessage('INTERVOLGA_MIGRATO.DIFFCOUNTER_ACTION_NO_CHANGED'),
+			Loc::getMessage('INTERVOLGA_MIGRATO.DIFFCOUNTER_ACTION_NO_CHANGES'),
 			Loc::getMessage('INTERVOLGA_MIGRATO.DIFFCOUNTER_ACTION_CREATE'),
 			Loc::getMessage('INTERVOLGA_MIGRATO.DIFFCOUNTER_ACTION_UPDATE'),
 			Loc::getMessage('INTERVOLGA_MIGRATO.DIFFCOUNTER_ACTION_DELETE'),
 		];
+		$this->loadLanguageList();
 	}
 	public function __wakeup()
 	{
@@ -32,12 +33,29 @@ class DiffCounter
 	}
 
 	private $list;
+	private $languageList = [];
 	public const CREATE = 1;
 	public const UPDATE = 2;
 	public const DELETE = 3;
 	public const NO_CHANGE = 0;
 
 	public $actionValues = [];
+
+	private function loadLanguageList()
+	{
+		$result = [];
+		$res = \CLanguage::GetList();
+		while ($row = $res->fetch())
+		{
+			$result[] = $row['LID'];
+		}
+		$this->languageList = $result;
+	}
+
+	public function getLanguageList()
+	{
+		return $this->languageList;
+	}
 
 	private function addToList(&$list, $add)
 	{
@@ -62,26 +80,85 @@ class DiffCounter
 		$this->list = [];
 	}
 
-	public function add($action, $id, $xmlId, $entityName, $module)
+	public function add($action, $id, $xmlId, $entityName, $module, $differences=[])
 	{
 		$add = [];
 		$add[0][$action] = 1;
 		$add[1][$action][$module][$entityName] = 1;
 		$add[2][$action][$module][$entityName][$xmlId][$id?:''] = true;
+		if (!$differences)
+		{
+			// $add[3] = $add[2];
+			// $add[3][''][''][''] = true;
+		} else {
+			foreach ($differences as $var => $value)
+			{
+				$add[3][$action][$module][$entityName][$xmlId][$id?:''][$var][$value['xml']][$value['db']] = true;
+			}
+		}
 		$this->addToList($this->list, $add);
+	}
+
+	public function checkDifferences($record)
+	{
+		$inXML = $record->getFieldsRaw();
+		$inDB = $record->getFieldsFromDB();
+		$result = [];
+		foreach ($inXML as $var => $value)
+		{
+			if (!preg_match('/^SECURITY_POLICY\./ui', $var))
+			{
+				if (!isset($inDB[$var]))
+				{
+					if ($value)
+					{
+						$result[$var] = ['xml'=>$value, 'db'=>null];
+					}
+				}
+				elseif ($value != $inDB[$var])
+				{
+					$result[$var] = ['xml'=>$value, 'db'=>$inDB[$var]];
+				}
+			}
+		}
+		foreach ($inDB as $var => $value)
+		{
+			if (!preg_match('/^ID$|SETTINGS\.|ENTITY_ID/ui', $var)) {
+				if (!isset($inXML[$var]) && $value)
+				{
+					$result[$var] = ['xml'=>null, 'db'=>$value];
+				}
+			}
+		}
+		return $result;
 	}
 
 	public function addRecord($action, $record)
 	{
-		if (is_numeric($action)) {
-			$action = $this->actionValues[$action] ?? '?';
+		$listSkip = [
+			'event', 'eventtype',
+		];
+		$entity = $record->getData()->getEntityName();
+		if (in_array($entity, $listSkip))
+		{
+			$differences = [];
+		} else {
+			$differences = $this->checkDifferences($record);
 		}
+
+
+		if ($action == $this::UPDATE && !$differences)
+		{
+			$action = $this::NO_CHANGE;
+		}
+		$actionTxt = $this->actionValues[$action] ?? $action;
 		$this->add(
-			$action,
+			$actionTxt,
 			$record->getId(),
 			$record->getXmlId(),
 			$record->getData()->getEntityName(),
-			$record->getData()->getModule()
+			$record->getData()->getModule(),
+			$differences
 		);
 	}
 

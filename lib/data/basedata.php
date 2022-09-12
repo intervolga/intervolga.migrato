@@ -460,4 +460,30 @@ abstract class BaseData
 	{
 		return $this->virtualXmlId;
 	}
+
+
+	private $recordsByXmlId = [];
+	public function findByXmlId($xmlId)
+	{
+		if (!isset($this->recordsByXmlId[$xmlId]))
+		{
+			$recordsByXmlId[$xmlId] = false;
+			$list = $this->getList();
+			foreach ($list as $record)
+			{
+				if ($record->getXmlId() == $xmlId)
+				{
+					$this->recordsByXmlId[$xmlId] = $record;
+					break;
+				}
+			}
+		}
+		return $this->recordsByXmlId[$xmlId];
+	}
+
+	public function getFieldsFromDB(Record $record)
+	{
+		$dbRecord = $this->findByXmlId($record->getXmlId());
+		return $dbRecord ? $dbRecord->getFieldsRaw() : [];
+	}
 }

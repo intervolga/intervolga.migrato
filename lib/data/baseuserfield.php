@@ -7,6 +7,7 @@ use Intervolga\Migrato\Data\Module\Highloadblock\HighloadBlock;
 use Intervolga\Migrato\Data\Module\Iblock\Iblock;
 use Intervolga\Migrato\Tool\ExceptionText;
 use Intervolga\Migrato\Tool\XmlIdProvider\BaseXmlIdProvider;
+use Intervolga\Migrato\Tool\Console\DiffCounter;
 
 Loc::loadMessages(__FILE__);
 

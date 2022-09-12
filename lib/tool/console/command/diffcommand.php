@@ -18,7 +18,7 @@ class DiffCommand extends BaseCommand
 	protected function configure()
 	{
 		$this->setName('diff');
-		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.IMPORT_DESCRIPTION'));
+		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.DIFF_DESCRIPTION'));
 		$this->addOption(
 			'quick',
 			null,
@@ -57,13 +57,6 @@ class DiffCommand extends BaseCommand
 			else
 			{
 				$this->runSubcommand('diffdata');
-			}
-			if (!$this->input->getOption('quick'))
-			{
-				$this->runSubcommand('clearcache');
-				$this->runSubcommand('urlrewrite');
-				$this->runSubcommand('reindex');
-				$this->runSubcommand('reindexfacet');
 			}
 		}
 		catch (\Throwable $throwable)

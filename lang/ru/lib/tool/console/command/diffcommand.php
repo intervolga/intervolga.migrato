@@ -1,0 +1,2 @@
+<?
+$MESS['INTERVOLGA_MIGRATO.DIFF_DESCRIPTION'] = 'Проверка XML => БД';

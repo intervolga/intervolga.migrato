@@ -34,7 +34,7 @@ class DiffDataCommand extends BaseCommand
 	{
 		$this->setName('diffdata');
 		$this->setHidden(true);
-		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.IMPORT_DATA_DESCRIPTION'));
+		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.DIFF_DATA_DESCRIPTION'));
 		$this->addOption('safe-delete');
 	}
 
@@ -339,13 +339,12 @@ class DiffDataCommand extends BaseCommand
 	{
 		try
 		{
-			$counter = DiffCounter::getInstance();
 			foreach ($dataRecord->getDependencies() as $dependency)
 			{
 				self::setLinkId($dependency);
 			}
 			self::setRuntimesId($dataRecord->getRuntimes());
-			$counter->addRecord(DiffCounter::UPDATE, $dataRecord);
+			DiffCounter::getInstance()->addRecord(DiffCounter::UPDATE, $dataRecord);
 		}
 		catch (\Exception $exception)
 		{
