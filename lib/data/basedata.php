@@ -467,36 +467,28 @@ abstract class BaseData
 	{
 		if (!isset($this->recordsByXmlId[$xmlId]))
 		{
-			$recordsByXmlId[$xmlId] = false;
 			$list = $this->getList();
 			foreach ($list as $record)
 			{
-				if ($record->getXmlId() == $xmlId)
+				$recordXmlId = $record->getXmlId();
+				if (isset($this->recordsByXmlId[$recordXmlId]))
 				{
-					$this->recordsByXmlId[$xmlId] = $record;
 					break;
 				}
+				$this->recordsByXmlId[$recordXmlId] = $record;
 			}
 		}
-		return $this->recordsByXmlId[$xmlId];
+		return $this->recordsByXmlId[$xmlId] ?? false;
 	}
 
 	public function getFieldsFromDB(Record $record)
 	{
-		if (in_array($record->getData()->getEntityName(), ['event', 'eventtype']))
-		{
-			return $record->getFieldsRaw();
-		}
 		$dbRecord = $this->findRecordByXmlId($record->getXmlId());
 		return $dbRecord ? $dbRecord->getFieldsRaw() : [];
 	}
 
 	public function getIdFromDB(Record $record)
 	{
-		if (in_array($record->getData()->getEntityName(), ['event', 'eventtype']))
-		{
-			return '';
-		}
 		$dbRecord = $this->findRecordByXmlId($record->getXmlId());
 		return ($dbRecord && $dbRecord->getId()) ? $dbRecord->getId()->getValue() : '';
 	}
