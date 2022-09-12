@@ -483,6 +483,10 @@ abstract class BaseData
 
 	public function getFieldsFromDB(Record $record)
 	{
+		if (in_array($record->getData()->getEntityName(), ['event', 'eventtype']))
+		{
+			return $record->getFieldsRaw();
+		}
 		$dbRecord = $this->findByXmlId($record->getXmlId());
 		return $dbRecord ? $dbRecord->getFieldsRaw() : [];
 	}

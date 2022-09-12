@@ -106,28 +106,23 @@ class DiffCounter
 		$result = [];
 		foreach ($inXML as $var => $value)
 		{
-			if (!preg_match('/^SECURITY_POLICY\./ui', $var))
+			if (!isset($inDB[$var]))
 			{
-				if (!isset($inDB[$var]))
+				if ($value)
 				{
-					if ($value)
-					{
-						$result[$var] = ['xml'=>$value, 'db'=>null];
-					}
+					$result[$var] = ['xml'=>$value, 'db'=>null];
 				}
-				elseif ($value != $inDB[$var])
-				{
-					$result[$var] = ['xml'=>$value, 'db'=>$inDB[$var]];
-				}
+			}
+			elseif ($value != $inDB[$var])
+			{
+				$result[$var] = ['xml'=>$value, 'db'=>$inDB[$var]];
 			}
 		}
 		foreach ($inDB as $var => $value)
 		{
-			if (!preg_match('/^ID$|SETTINGS\.|ENTITY_ID/ui', $var)) {
-				if (!isset($inXML[$var]) && $value)
-				{
-					$result[$var] = ['xml'=>null, 'db'=>$value];
-				}
+			if (!isset($inXML[$var]) && $value)
+			{
+				$result[$var] = ['xml'=>null, 'db'=>$value];
 			}
 		}
 		return $result;
@@ -135,18 +130,7 @@ class DiffCounter
 
 	public function addRecord($action, $record)
 	{
-		$listSkip = [
-			'event', 'eventtype',
-		];
-		$entity = $record->getData()->getEntityName();
-		if (in_array($entity, $listSkip))
-		{
-			$differences = [];
-		} else {
-			$differences = $this->checkDifferences($record);
-		}
-
-
+		$differences = $this->checkDifferences($record);
 		if ($action == $this::UPDATE && !$differences)
 		{
 			$action = $this::NO_CHANGE;
@@ -154,7 +138,7 @@ class DiffCounter
 		$actionTxt = $this->actionValues[$action] ?? $action;
 		$this->add(
 			$actionTxt,
-			$record->getId(),
+			$record->getIdFromDB(),
 			$record->getXmlId(),
 			$record->getData()->getEntityName(),
 			$record->getData()->getModule(),
