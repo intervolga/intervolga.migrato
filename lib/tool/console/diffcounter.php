@@ -128,7 +128,7 @@ class DiffCounter
 		return $result;
 	}
 
-	private function entityStillExists(Record $record)
+	private function entityStillExists($record)
 	{
 		return $record->findRecordByXmlId() !== false;
 	}
@@ -143,7 +143,7 @@ class DiffCounter
 				$action = $this::NO_CHANGE;
 			}
 		}
-		if ($action == $this::DELETE && !entityStillExists($record))
+		if ($action == $this::DELETE && !$this->entityStillExists($record))
 		{
 			return;
 		}
