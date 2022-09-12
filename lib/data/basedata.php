@@ -490,4 +490,14 @@ abstract class BaseData
 		$dbRecord = $this->findByXmlId($record->getXmlId());
 		return $dbRecord ? $dbRecord->getFieldsRaw() : [];
 	}
+
+	public function getIdFromDB(Record $record)
+	{
+		if (in_array($record->getData()->getEntityName(), ['event', 'eventtype']))
+		{
+			return '';
+		}
+		$dbRecord = $this->findByXmlId($record->getXmlId());
+		return ($dbRecord && $dbRecord->getId()) ? $dbRecord->getId()->getValue() : '';
+	}
 }

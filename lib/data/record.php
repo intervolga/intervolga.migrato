@@ -184,6 +184,11 @@ class Record extends BaseDataObject
 		return $this->getData()->getFieldsFromDB($this);
 	}
 
+	public function getIdFromDB()
+	{
+		return $this->getData()->getIdFromDB($this);
+	}
+
 	public function update()
 	{
 		$this->getData()->update($this);
