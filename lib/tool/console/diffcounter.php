@@ -128,12 +128,24 @@ class DiffCounter
 		return $result;
 	}
 
+	private function entityStillExists(Record $record)
+	{
+		return $record->findRecordByXmlId() !== false;
+	}
+
 	public function addRecord($action, $record)
 	{
-		$differences = $this->checkDifferences($record);
-		if ($action == $this::UPDATE && !$differences)
+		if ($action == $this::UPDATE)
 		{
-			$action = $this::NO_CHANGE;
+			$differences = $this->checkDifferences($record);
+			if (!$differences)
+			{
+				$action = $this::NO_CHANGE;
+			}
+		}
+		if ($action == $this::DELETE && !entityStillExists($record))
+		{
+			return;
 		}
 		$actionTxt = $this->actionValues[$action] ?? $action;
 		$this->add(

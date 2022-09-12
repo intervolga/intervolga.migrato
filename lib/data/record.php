@@ -179,6 +179,11 @@ class Record extends BaseDataObject
 		$this->dataClass = $dataObject;
 	}
 
+	public function findRecordByXmlId()
+	{
+		return $this->getData()->findRecordByXmlId($this->getXmlId());
+	}
+
 	public function getFieldsFromDB()
 	{
 		return $this->getData()->getFieldsFromDB($this);

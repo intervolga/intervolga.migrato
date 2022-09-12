@@ -463,7 +463,7 @@ abstract class BaseData
 
 
 	private $recordsByXmlId = [];
-	public function findByXmlId($xmlId)
+	public function findRecordByXmlId($xmlId)
 	{
 		if (!isset($this->recordsByXmlId[$xmlId]))
 		{
@@ -487,7 +487,7 @@ abstract class BaseData
 		{
 			return $record->getFieldsRaw();
 		}
-		$dbRecord = $this->findByXmlId($record->getXmlId());
+		$dbRecord = $this->findRecordByXmlId($record->getXmlId());
 		return $dbRecord ? $dbRecord->getFieldsRaw() : [];
 	}
 
@@ -497,7 +497,7 @@ abstract class BaseData
 		{
 			return '';
 		}
-		$dbRecord = $this->findByXmlId($record->getXmlId());
+		$dbRecord = $this->findRecordByXmlId($record->getXmlId());
 		return ($dbRecord && $dbRecord->getId()) ? $dbRecord->getId()->getValue() : '';
 	}
 }
