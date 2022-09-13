@@ -67,19 +67,21 @@ class DiffCommand extends BaseCommand
 
 		if ($this->input->getOption('show-changes'))
 		{
-			$displayLevel = 1;
+			$displayLevel = DiffCounter::HAS_CHANGES;
 		}
 		elseif ($this->input->getOption('show-nochanges'))
 		{
-			$displayLevel = 2;
+			$displayLevel = DiffCounter::WITHOUT_CHANGES;
 		}
 		elseif ($this->input->getOption('show-bothchanges'))
 		{
-			$displayLevel = 3;
+			$displayLevel = DiffCounter::BOTH_CHANGES;
 		}
 		else
 		{
-			$displayLevel = $this->output->isVeryVerbose() ? 1 : 3;
+			$displayLevel = $this->output->isVeryVerbose()
+			? DiffCounter::HAS_CHANGES
+			: DiffCounter::BOTH_CHANGES;
 		}
 
 		try

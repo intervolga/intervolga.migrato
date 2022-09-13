@@ -15,7 +15,6 @@ class DiffCounter
 			Loc::getMessage('INTERVOLGA_MIGRATO.DIFFCOUNTER_ACTION_UPDATE'),
 			Loc::getMessage('INTERVOLGA_MIGRATO.DIFFCOUNTER_ACTION_DELETE'),
 		];
-		$this->loadLanguageList();
 	}
 	public function __wakeup()
 	{
@@ -32,31 +31,19 @@ class DiffCounter
 		return self::$instance;
 	}
 
-	private $list;
-	private $languageList = [];
-	private $displayLevel = 3;
 	public const CREATE = 1;
 	public const UPDATE = 2;
 	public const DELETE = 3;
 	public const NO_CHANGE = 0;
 
+	public const HAS_CHANGES = 1;
+	public const WITHOUT_CHANGES = 2;
+	public const BOTH_CHANGES = 3;
+
+	private $list;
+	private $displayLevel = 3;
+
 	public $actionValues = [];
-
-	private function loadLanguageList()
-	{
-		$result = [];
-		$res = \CLanguage::GetList();
-		while ($row = $res->fetch())
-		{
-			$result[] = $row['LID'];
-		}
-		$this->languageList = $result;
-	}
-
-	public function getLanguageList()
-	{
-		return $this->languageList;
-	}
 
 	public function setDisplayLevel($level)
 	{
@@ -86,12 +73,12 @@ class DiffCounter
 		$this->list = [];
 	}
 
-	public function add($action, $id, $xmlId, $entityName, $module, $differences=[])
+	public function addRecordToList($action, $id, $xmlId, $entityName, $module, $differences=[])
 	{
 		$changed = $action !== $this->actionValues[$this::NO_CHANGE];
 		if (
-			$changed && !($this->displayLevel & 1)
-			|| !$changed && !($this->displayLevel & 2)
+			$changed && !($this->displayLevel & $this::HAS_CHANGES)
+			|| !$changed && !($this->displayLevel & $this::WITHOUT_CHANGES)
 		) {
 			return;
 		}
@@ -185,7 +172,7 @@ class DiffCounter
 			$differences = $this->convertToDifferences($record, 'db');
 		}
 		$actionTxt = $this->actionValues[$action] ?? $action;
-		$this->add(
+		$this->addRecordToList(
 			$actionTxt,
 			$record->getIdFromDB(),
 			$record->getXmlId(),
@@ -193,11 +180,6 @@ class DiffCounter
 			$record->getData()->getModule(),
 			$differences
 		);
-	}
-
-	public function getResult()
-	{
-		return $this->list;
 	}
 
 	private function makeTableFromArray($top, $level, &$cols, $colValues, &$rows)
