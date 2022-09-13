@@ -128,6 +128,21 @@ class DiffCounter
 		return $result;
 	}
 
+	private function convertToDifferences($record, $side)
+	{
+		$result = [];
+		$sides = ['xml', 'db'];
+		foreach ($record->getFieldsRaw() as $fieldName => $fieldValue)
+		{
+			foreach ($sides as $currentSide)
+			{
+				$value = ($side == $currentSide) ? $fieldValue : null;
+				$result[$fieldName][$currentSide] = $value;
+			}
+		}
+		return $result;
+	}
+
 	private function entityStillExists($record)
 	{
 		return $record->findRecordByXmlId() !== false;
@@ -135,6 +150,10 @@ class DiffCounter
 
 	public function addRecord($action, $record)
 	{
+		if ($action == $this::CREATE)
+		{
+			$differences = $this->convertToDifferences($record, 'xml');
+		}
 		if ($action == $this::UPDATE)
 		{
 			$differences = $this->checkDifferences($record);
@@ -143,9 +162,13 @@ class DiffCounter
 				$action = $this::NO_CHANGE;
 			}
 		}
-		if ($action == $this::DELETE && !$this->entityStillExists($record))
+		if ($action == $this::DELETE)
 		{
-			return;
+			if (!$this->entityStillExists($record))
+			{
+				return;
+			}
+			$differences = $this->convertToDifferences($record, 'db');
 		}
 		$actionTxt = $this->actionValues[$action] ?? $action;
 		$this->add(
