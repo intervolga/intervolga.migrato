@@ -37,6 +37,25 @@ class DiffCommand extends BaseCommand
 			InputOption::VALUE_NONE,
 			Loc::getMessage('INTERVOLGA_MIGRATO.OPTION_SAFE_DELETE')
 		);
+		$this->addOption(
+			'show-changes',
+			null,
+			InputOption::VALUE_NONE,
+			Loc::getMessage('INTERVOLGA_MIGRATO.OPTION_SHOW_CHANGES')
+		);
+		$this->addOption(
+			'show-nochanges',
+			null,
+			InputOption::VALUE_NONE,
+			Loc::getMessage('INTERVOLGA_MIGRATO.OPTION_SHOW_NOCHANGES')
+		);
+		$this->addOption(
+			'show-bothchanges',
+			null,
+			InputOption::VALUE_NONE,
+			Loc::getMessage('INTERVOLGA_MIGRATO.OPTION_SHOW_BOTHCHANGES')
+		);
+		$this->addArgument('display-level');
 	}
 
 	public function executeInner()
@@ -46,17 +65,39 @@ class DiffCommand extends BaseCommand
 			return;
 		}
 
+		if ($this->input->getOption('show-changes'))
+		{
+			$displayLevel = 1;
+		}
+		elseif ($this->input->getOption('show-nochanges'))
+		{
+			$displayLevel = 2;
+		}
+		elseif ($this->input->getOption('show-bothchanges'))
+		{
+			$displayLevel = 3;
+		}
+		else
+		{
+			$displayLevel = $this->output->isVeryVerbose() ? 1 : 3;
+		}
+
 		try
 		{
 			ReIndexFacetCommand::saveActiveFacet();
 			if ($this->input->getOption('safe-delete'))
 			{
 				$args['--safe-delete'] = true;
-				$this->runSubcommand('diffdata', array('--safe-delete' => true));
+				$this->runSubcommand('diffdata', array(
+					'--safe-delete' => true,
+					'--display-level' => $displayLevel,
+				));
 			}
 			else
 			{
-				$this->runSubcommand('diffdata');
+				$this->runSubcommand('diffdata', array(
+					'--display-level' => $displayLevel,
+				));
 			}
 		}
 		catch (\Throwable $throwable)

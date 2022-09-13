@@ -34,6 +34,7 @@ class DiffCounter
 
 	private $list;
 	private $languageList = [];
+	private $displayLevel = 3;
 	public const CREATE = 1;
 	public const UPDATE = 2;
 	public const DELETE = 3;
@@ -55,6 +56,11 @@ class DiffCounter
 	public function getLanguageList()
 	{
 		return $this->languageList;
+	}
+
+	public function setDisplayLevel($level)
+	{
+		$this->displayLevel = $level;
 	}
 
 	private function addToList(&$list, $add)
@@ -82,14 +88,22 @@ class DiffCounter
 
 	public function add($action, $id, $xmlId, $entityName, $module, $differences=[])
 	{
+		$changed = $action !== $this->actionValues[$this::NO_CHANGE];
+		if (
+			$changed && !($this->displayLevel & 1)
+			|| !$changed && !($this->displayLevel & 2)
+		) {
+			return;
+		}
+
 		$add = [];
 		$add[0][$action] = 1;
 		$add[1][$action][$module][$entityName] = 1;
 		$add[2][$action][$module][$entityName][$xmlId][$id?:''] = true;
 		if (!$differences)
 		{
-			// $add[3] = $add[2];
-			// $add[3][''][''][''] = true;
+			$add[3] = $add[2];
+			$add[3][''][''][''] = true;
 		} else {
 			foreach ($differences as $var => $value)
 			{

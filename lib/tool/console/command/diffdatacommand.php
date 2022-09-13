@@ -36,6 +36,7 @@ class DiffDataCommand extends BaseCommand
 		$this->setHidden(true);
 		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.DIFF_DATA_DESCRIPTION'));
 		$this->addOption('safe-delete');
+		$this->addOption('display-level');
 	}
 
 	protected function getVerbosityLevel()
@@ -47,6 +48,8 @@ class DiffDataCommand extends BaseCommand
 
 	public function executeInner()
 	{
+		DiffCounter::getInstance()->setDisplayLevel($this->input->getOption('display-level'));
+
 		$verbosity = $this->getVerbosityLevel();
 		$this->output->setVerbosity(32);
 
