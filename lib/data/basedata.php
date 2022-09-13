@@ -468,14 +468,12 @@ abstract class BaseData
 		if (!isset($this->recordsByXmlId[$xmlId]))
 		{
 			$list = $this->getList();
-			foreach ($list as $record)
+			if (count($list) && !isset($this->recordsByXmlId[$list[0]->getXmlId()]))
 			{
-				$recordXmlId = $record->getXmlId();
-				if (isset($this->recordsByXmlId[$recordXmlId]))
+				foreach ($list as $record)
 				{
-					break;
+					$this->recordsByXmlId[$record->getXmlId()] = $record;
 				}
-				$this->recordsByXmlId[$recordXmlId] = $record;
 			}
 		}
 		return $this->recordsByXmlId[$xmlId] ?? false;
