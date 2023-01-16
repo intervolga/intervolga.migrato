@@ -185,7 +185,7 @@ class Iblock extends BaseData
 		{
 			foreach ($templates as $k => $template)
 			{
-				if (array_key_exists('TEMPLATE', $template))
+				if (is_array($template) && array_key_exists('TEMPLATE', $template))
 				{
 					$templates[$k] = $template["TEMPLATE"];
 				}
