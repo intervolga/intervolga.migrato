@@ -40,13 +40,15 @@ class OptionFileViewXml
 		$xmlParser = new \CDataXML();
 		$xmlParser->Load($path);
 		$xmlArray = $xmlParser->getArray();
-		foreach ($xmlArray['options']['#']['option'] as $optionArray)
-		{
-			$options[] = array(
-				'NAME' => $optionArray['#']['name'][0]['#'],
-				'VALUE' => $optionArray['#']['value'][0]['#'],
-				'SITE_ID' => $optionArray['#']['site'][0]['#'],
-			);
+
+		if (is_array($xmlArray['options']) && is_array($xmlArray['options']['#']) && is_array($xmlArray['options']['#']['option'])) {
+			foreach ($xmlArray['options']['#']['option'] as $optionArray) {
+				$options[] = array(
+					'NAME' => $optionArray['#']['name'][0]['#'],
+					'VALUE' => $optionArray['#']['value'][0]['#'],
+					'SITE_ID' => $optionArray['#']['site'][0]['#'],
+				);
+			}
 		}
 
 		return $options;

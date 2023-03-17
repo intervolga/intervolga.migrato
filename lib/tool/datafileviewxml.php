@@ -104,7 +104,7 @@ class DataFileViewXml
 								$map["entity"] = $fieldValue->getTargetData()->getEntityName();
 							}
 						}
-						if (array_key_exists($i, $descriptions))
+						if (is_array($descriptions) && array_key_exists($i, $descriptions))
 						{
 							$map["description"] = $descriptions[$i];
 						}

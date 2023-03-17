@@ -110,7 +110,7 @@ class Config
 	 *
 	 * @return bool
 	 */
-	protected function isOptionMatchesRule($module, $name, $rule)
+	protected static function isOptionMatchesRule($module, $name, $rule)
 	{
 		$result = false;
 		$ruleModule = $rule['module'] ? $rule['module'] : '.*';
