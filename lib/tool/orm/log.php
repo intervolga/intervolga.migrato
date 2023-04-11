@@ -69,7 +69,7 @@ class LogTable extends DataManager
 		{
 			$filter["=DATA_ID_COMPLEX"] = serialize($filter["=DATA_ID_COMPLEX"]);
 		}
-		return parent::getCount($filter);
+		return parent::getCount($filter, $cache);
 	}
 
 	public static function add(array $data)
