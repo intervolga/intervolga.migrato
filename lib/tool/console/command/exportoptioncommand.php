@@ -113,7 +113,9 @@ class ExportOptionCommand extends BaseCommand
 						}
 					}
 				}
-				ksort($options[$moduleId]);
+                if (array_key_exists($moduleId, $options)) {
+                    ksort($options[$moduleId]);
+                }
 			}
 		}
 
