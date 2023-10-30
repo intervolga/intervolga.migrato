@@ -99,9 +99,6 @@ class HighloadBlock extends BaseData
 	{
 		if ($hlBlockId > 0)
 		{
-			// Удаляем все предыдущие записи. Здесь ID не уникально, поэтому самый простой способ импорта
-			// - удалить вообще всё.
-			HighloadBlockLangTable::delete($hlBlockId);
 			$messagesKeys = "MESSAGES.";
 			$messagesKeysLength = mb_strlen($messagesKeys);
 			foreach ($arFields as $key => $value)
@@ -109,12 +106,11 @@ class HighloadBlock extends BaseData
 				if (mb_substr($key, 0, $messagesKeysLength) == $messagesKeys)
 				{
 					$lid = mb_substr($key, $messagesKeysLength);
-					HighloadBlockLangTable::add(array(
-						'ID' => $hlBlockId,
-						'LID' => $lid,
-						'NAME' => $value,
-					));
-				}
+                    HighloadBlockLangTable::update(
+                        ['ID' => $hlBlockId, 'LID' => $lid],
+                        ['NAME' => $value]
+                    );
+                }
 			}
 		}
 	}
