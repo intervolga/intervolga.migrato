@@ -58,7 +58,7 @@ class Group extends BaseData
 	{
 		$getElement = \CGroup::GetByID($record->getId()->getValue(), "N");
 		$groupElement = $getElement->Fetch();
-		$arSecurityPolicy = unserialize($groupElement['SECURITY_POLICY']);
+        $arSecurityPolicy = unserialize($groupElement['SECURITY_POLICY'] ?: []);
 
 		if ($arSecurityPolicy)
 		{
@@ -71,7 +71,7 @@ class Group extends BaseData
 	{
 		$groupObject = new \CGroup();
 		$fields = $record->getFieldsRaw(array("SECURITY_POLICY"));
-		$fields["SECURITY_POLICY"] = serialize($fields["SECURITY_POLICY"]);
+        $fields["SECURITY_POLICY"] = serialize($fields["SECURITY_POLICY"] ?: []);
 		$isUpdated = $groupObject->update($record->getId()->getValue(), $fields);
 		if (!$isUpdated)
 		{
