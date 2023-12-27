@@ -556,10 +556,6 @@ class Logger
 		}
 		else
 		{
-            $temp = fopen($_SERVER['DOCUMENT_ROOT'] . '/log/__lancy_backtrace.log', 'a+');
-            fwrite($temp, print_r(debug_backtrace(), true));
-            fclose($temp);
-
 			$formattedName = Loc::getMessage(
 				'INTERVOLGA_MIGRATO.ERROR',
 				array(
