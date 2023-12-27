@@ -57,9 +57,9 @@ $fileMask = unserialize($fileMaskSerialized);
 if ($noUpload) {
   $fileMask = array_unique(array_merge($fileMask, ['/upload']));
 } else {
-  $fileMask = array_flip(is_array($fileMask) ? $fileMask : []);
+  $fileMask = array_flip($fileMask ?: []);
   unset($fileMask['/upload']);
-  $fileMask = array_flip(is_array($fileMask) ? $fileMask : []);
+  $fileMask = array_flip($fileMask ?: []);
 }
 $fileMaskSerialized = serialize($fileMask);
 COption::SetOptionString('main', 'skip_mask_array_auto', $fileMaskSerialized);
