@@ -106,11 +106,11 @@ class HighloadBlock extends BaseData
 				if (mb_substr($key, 0, $messagesKeysLength) == $messagesKeys)
 				{
 					$lid = mb_substr($key, $messagesKeysLength);
-                    HighloadBlockLangTable::update(
-                        ['ID' => $hlBlockId, 'LID' => $lid],
-                        ['NAME' => $value]
-                    );
-                }
+					HighloadBlockLangTable::update(
+						['ID' => $hlBlockId, 'LID' => $lid],
+						['NAME' => $value]
+					);
+				}
 			}
 		}
 	}
