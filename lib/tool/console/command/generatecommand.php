@@ -541,10 +541,10 @@ class GenerateCommand extends BaseCommand
 	 */
 	protected function createUserFieldEnum($module, $filter, $count = 1)
 	{
-        if (is_callable($filter) === false)
-        {
-            return;
-        }
+		if (is_callable($filter) === false)
+		{
+			return;
+		}
 
 		try
 		{
