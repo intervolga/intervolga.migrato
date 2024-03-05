@@ -58,7 +58,7 @@ class Group extends BaseData
 	{
 		$getElement = \CGroup::GetByID($record->getId()->getValue(), "N");
 		$groupElement = $getElement->Fetch();
-        $arSecurityPolicy = $groupElement['SECURITY_POLICY'] ?: [];
+		$arSecurityPolicy = $groupElement['SECURITY_POLICY'] ?: [];
 
 		if (is_string($arSecurityPolicy))
 		{
