@@ -75,12 +75,25 @@ class intervolga_migrato extends CModule
 
 	public function copyPublicFiles()
 	{
-		if(!Directory::isDirectoryExists(INTERVOLGA_MIGRATO_DIRECTORY))
-		{
-			Directory::createDirectory(INTERVOLGA_MIGRATO_DIRECTORY);
+        if (!Directory::isDirectoryExists(INTERVOLGA_MIGRATO_DIRECTORY))
+        {
+            Directory::createDirectory(INTERVOLGA_MIGRATO_DIRECTORY);
+        }
 
-			CopyDirFiles(__DIR__ . "/public", INTERVOLGA_MIGRATO_DIRECTORY);
-		}
+        $files = scandir(__DIR__ . '/public');
+        foreach ($files as $file)
+        {
+            if ($file === '.' || $file === '..')
+            {
+                continue;
+            }
+
+            $fileExist = file_exists(INTERVOLGA_MIGRATO_DIRECTORY . '/' . $file);
+            if ($fileExist === false)
+            {
+                copy(__DIR__ . '/public/' . $file, INTERVOLGA_MIGRATO_DIRECTORY . '/' . $file);
+            }
+        }
 	}
 
 	function installEvents()

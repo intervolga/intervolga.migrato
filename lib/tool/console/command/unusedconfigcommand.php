@@ -22,7 +22,7 @@ class UnusedConfigCommand extends BaseCommand
 		$dataClasses = DataList::getAll();
 		foreach ($dataClasses as $conf)
 		{
-			if (!in_array($conf->getEntityName(), $configDataClassesString[$conf->getModule()]))
+			if (!in_array($conf->getEntityName(), $configDataClassesString[$conf->getModule()] ?? []))
 			{
 				$this->logger->add(
 					Loc::getMessage(
