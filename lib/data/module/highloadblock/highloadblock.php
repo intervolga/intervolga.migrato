@@ -120,7 +120,6 @@ class HighloadBlock extends BaseData
 					));
 				}
 			}
-			echo "\n\t4";
 		}
 	}
 
