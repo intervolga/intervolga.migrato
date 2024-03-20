@@ -39,7 +39,7 @@ class Agent extends BaseData
 				}
 				catch (\Exception $exception)
 				{
-					$record->setXmlId('');
+					$record->registerValidateError($exception->getMessage());
 				}
 				$result[] = $record;
 			}
