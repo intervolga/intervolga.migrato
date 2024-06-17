@@ -1,6 +1,7 @@
 <?namespace Intervolga\Migrato\Tool;
 
 use Bitrix\Main\IO\File;
+use Bitrix\Main\Localization\Loc;
 
 class OptionFileViewXml
 {
@@ -33,6 +34,7 @@ class OptionFileViewXml
 	/**
 	 * @param string $path
 	 * @return array
+     * @throws \Exception
 	 */
 	public static function readFromFileSystem($path)
 	{
@@ -49,8 +51,16 @@ class OptionFileViewXml
 					'SITE_ID' => $optionArray['#']['site'][0]['#'],
 				);
 			}
-		}
 
-		return $options;
+            return $options;
+		}
+        else
+        {
+            throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INCORRECT_XML_CONFIG_FILE',
+                [
+                    '#PATH#' => $path,
+                ]
+            ));
+        }
 	}
 }
