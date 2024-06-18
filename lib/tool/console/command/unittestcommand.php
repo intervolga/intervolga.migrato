@@ -19,12 +19,12 @@ class UnitTestCommand extends BaseCommand
 	{
 		$this->runSubcommand('autofix');
 		$this->runSubcommand('exportdata');
-		$this->runSubcommand('exportoption');
+		$this->runSubcommand('exportoptions');
 		$this->copyData();
 		$this->runSubcommand('importdata');
-		$this->runSubcommand('importoption');
+		$this->runSubcommand('importoptionы');
 		$this->runSubcommand('exportdata');
-		$this->runSubcommand('exportoption');
+		$this->runSubcommand('exportoptions');
 		$this->compareDirectories();
 	}
 

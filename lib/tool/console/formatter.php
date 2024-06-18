@@ -40,7 +40,7 @@ class Formatter extends OutputFormatter
 		$this->isUnicodeCharset = $isUnicodeCharset;
 	}
 
-	public function format($message)
+	public function format($message): ?string
 	{
 		$result = $this->replace($message);
 		$result = parent::format($result);

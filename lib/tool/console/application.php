@@ -23,6 +23,7 @@ use Intervolga\Migrato\Tool\Console\Command\ValidateCommand;
 use Intervolga\Migrato\Tool\Console\Command\ValidateComplexCommand;
 use Intervolga\Migrato\Tool\Console\Command\WarnDeleteCommand;
 use Intervolga\Migrato\Tool\Console\Command\Backup;
+use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -97,7 +98,7 @@ class Application extends \Symfony\Component\Console\Application
 		$this->output->writeln("<fg=yellow>$text</>");
 	}
 
-	protected function getDefaultInputDefinition()
+    protected function getDefaultInputDefinition(): InputDefinition
 	{
 		$inputDefinition = parent::getDefaultInputDefinition();
 		$option = new InputOption(
