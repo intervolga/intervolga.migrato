@@ -22,7 +22,7 @@ class UnitTestCommand extends BaseCommand
 		$this->runSubcommand('exportoptions');
 		$this->copyData();
 		$this->runSubcommand('importdata');
-		$this->runSubcommand('importoptionы');
+		$this->runSubcommand('importoptions');
 		$this->runSubcommand('exportdata');
 		$this->runSubcommand('exportoptions');
 		$this->compareDirectories();
