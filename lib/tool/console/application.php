@@ -98,7 +98,7 @@ class Application extends \Symfony\Component\Console\Application
 		$this->output->writeln("<fg=yellow>$text</>");
 	}
 
-    protected function getDefaultInputDefinition(): InputDefinition
+	protected function getDefaultInputDefinition(): InputDefinition
 	{
 		$inputDefinition = parent::getDefaultInputDefinition();
 		$option = new InputOption(
@@ -137,7 +137,7 @@ class Application extends \Symfony\Component\Console\Application
 		return self::$instance;
 	}
 
-	/**
+/**
 	 * Выходной интерфейс для вывода ворнингов
 	 * @var OutputInterface
 	 */
