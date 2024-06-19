@@ -137,7 +137,7 @@ class Application extends \Symfony\Component\Console\Application
 		return self::$instance;
 	}
 
-/**
+	/**
 	 * Выходной интерфейс для вывода ворнингов
 	 * @var OutputInterface
 	 */
