@@ -172,7 +172,7 @@ class DataFileViewXml
 			{
 				if ($fileSystemEntry instanceof File && static::isCorrectFile($fileSystemEntry))
 				{
-                    $result[] = $fileSystemEntry;
+					$result[] = $fileSystemEntry;
 				}
 			}
 		}
@@ -191,52 +191,52 @@ class DataFileViewXml
 		$xmlParser = new \CDataXML();
 		$xmlParser->Load($file->getPath());
 		$xmlArray = $xmlParser->getArray();
-        if(is_array($xmlArray["data"]["#"]))
-        {
-            $record = new Record();
-            $record->setXmlId($xmlArray["data"]["#"]["xml_id"][0]["#"]);
-            if ($xmlArray["data"]["@"]["deleted"])
-            {
-                $record->setDeleteMark(true);
-            }
-            else
-            {
-                if ($xmlArray["data"]["#"]["field"])
-                {
-                    $fields = static::parseFields($xmlArray["data"]["#"]["field"]);
-                    $record->addFields($fields);
-                }
+		if(is_array($xmlArray["data"]["#"]))
+		{
+			$record = new Record();
+			$record->setXmlId($xmlArray["data"]["#"]["xml_id"][0]["#"]);
+			if ($xmlArray["data"]["@"]["deleted"])
+			{
+				$record->setDeleteMark(true);
+			}
+			else
+			{
+				if ($xmlArray["data"]["#"]["field"])
+				{
+					$fields = static::parseFields($xmlArray["data"]["#"]["field"]);
+					$record->addFields($fields);
+				}
 
-                if ($xmlArray["data"]["#"]["dependency"])
-                {
-                    $links = static::parseLinks($xmlArray["data"]["#"]["dependency"]);
-                    $record->setDependencies($links);
-                }
+				if ($xmlArray["data"]["#"]["dependency"])
+				{
+					$links = static::parseLinks($xmlArray["data"]["#"]["dependency"]);
+					$record->setDependencies($links);
+				}
 
-                if ($xmlArray["data"]["#"]["reference"])
-                {
-                    $links = static::parseLinks($xmlArray["data"]["#"]["reference"]);
-                    $record->setReferences($links);
-                }
+				if ($xmlArray["data"]["#"]["reference"])
+				{
+					$links = static::parseLinks($xmlArray["data"]["#"]["reference"]);
+					$record->setReferences($links);
+				}
 
-                if ($xmlArray["data"]["#"]["runtime"])
-                {
-                    $runtimes = static::parseRuntimes($xmlArray["data"]["#"]["runtime"]);
-                    $record->setRuntimes($runtimes);
-                }
-            }
+				if ($xmlArray["data"]["#"]["runtime"])
+				{
+					$runtimes = static::parseRuntimes($xmlArray["data"]["#"]["runtime"]);
+					$record->setRuntimes($runtimes);
+				}
+			}
 
-            return $record;
-        }
-        else
-        {
-            throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INCORRECT_XML_FILE',
-                [
-                    '#FILE_NAME#' => $file->getName(),
-                    '#FILE_CATALOG#' => $file->getDirectoryName(),
-                ]
-            ));
-        }
+			return $record;
+		}
+		else
+		{
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INCORRECT_XML_FILE',
+				[
+					'#FILE_NAME#' => $file->getName(),
+					'#FILE_CATALOG#' => $file->getDirectoryName(),
+				]
+			));
+		}
 	}
 
     /**
@@ -245,25 +245,25 @@ class DataFileViewXml
      * @return bool
      * @throws \Exception
      */
-    protected static function isCorrectFile($fileSystemEntry)
-    {
-        $name = strtolower($fileSystemEntry->getName());
-        $extension = strtolower($fileSystemEntry->getExtension());
-        $contentLength = strlen($fileSystemEntry->getContents());
-        if((strpos($name, static::FILE_PREFIX) === 0) && $extension == static::FILE_EXT && $contentLength !== 0)
-        {
-            return true;
-        }
-        else
-        {
-            throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INCORRECT_XML_FILE',
-                [
-                    '#FILE_NAME#' => $name,
-                    '#FILE_CATALOG#' => $fileSystemEntry->getDirectoryName(),
-                ]
-            ));
-        }
-    }
+	protected static function isCorrectFile($fileSystemEntry)
+	{
+		$name = mb_strtolower($fileSystemEntry->getName());
+		$extension = mb_strtolower($fileSystemEntry->getExtension());
+		$contentLength = mb_strlen($fileSystemEntry->getContents());
+		if((strpos($name, static::FILE_PREFIX) === 0) && $extension == static::FILE_EXT && $contentLength !== 0)
+		{
+			return true;
+		}
+		else
+		{
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INCORRECT_XML_FILE',
+				[
+					'#FILE_NAME#' => $name,
+					'#FILE_CATALOG#' => $fileSystemEntry->getDirectoryName(),
+				]
+			));
+		}
+	}
 
 	/**
 	 * @param array $fieldsNodes

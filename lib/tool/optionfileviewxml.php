@@ -52,15 +52,15 @@ class OptionFileViewXml
 				);
 			}
 
-            return $options;
+			return $options;
 		}
-        else
-        {
-            throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INCORRECT_XML_CONFIG_FILE',
-                [
-                    '#PATH#' => $path,
-                ]
-            ));
-        }
+		else
+		{
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INCORRECT_XML_CONFIG_FILE',
+				[
+					'#PATH#' => $path,
+				]
+			));
+		}
 	}
 }
