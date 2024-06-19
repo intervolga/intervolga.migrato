@@ -250,7 +250,7 @@ class DataFileViewXml
 		$name = mb_strtolower($fileSystemEntry->getName());
 		$extension = mb_strtolower($fileSystemEntry->getExtension());
 		$contentLength = mb_strlen($fileSystemEntry->getContents());
-		if((strpos($name, static::FILE_PREFIX) === 0) && $extension == static::FILE_EXT && $contentLength !== 0)
+		if((mb_strpos($name, static::FILE_PREFIX) === 0) && $extension == static::FILE_EXT && $contentLength !== 0)
 		{
 			return true;
 		}
