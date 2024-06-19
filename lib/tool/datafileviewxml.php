@@ -239,12 +239,12 @@ class DataFileViewXml
 		}
 	}
 
-    /**
-     * @param \Bitrix\Main\IO\File $fileSystemEntry
-     *
-     * @return bool
-     * @throws \Exception
-     */
+	/**
+	 * @param \Bitrix\Main\IO\File $fileSystemEntry
+	 *
+	 * @return bool
+	 * @throws \Exception
+	 */
 	protected static function isCorrectFile($fileSystemEntry)
 	{
 		$name = mb_strtolower($fileSystemEntry->getName());

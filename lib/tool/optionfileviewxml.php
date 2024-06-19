@@ -34,7 +34,7 @@ class OptionFileViewXml
 	/**
 	 * @param string $path
 	 * @return array
-     * @throws \Exception
+	 * @throws \Exception
 	 */
 	public static function readFromFileSystem($path)
 	{
