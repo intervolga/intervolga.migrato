@@ -194,7 +194,7 @@ class ImportList
 			foreach ($xmlIds as $xmlId => $dataRecord)
 			{
 				$configFilter = Config::getInstance()->getDataClassFilter($dataRecord->getData());
-				if (!$configFilter || in_array($xmlId, $xmlId))
+                if (!$configFilter || in_array($xmlId, $configFilter))
 				{
 					if ($this->createdXmlIds[$class][$xmlId] != "Y")
 					{
