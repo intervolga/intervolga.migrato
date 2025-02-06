@@ -1,4 +1,4 @@
-<?namespace Intervolga\Migrato\Tool\Console;
+<?php namespace Intervolga\Migrato\Tool\Console;
 
 use Bitrix\Main\Config\Option;
 use Bitrix\Main\Localization\Loc;
@@ -12,6 +12,7 @@ use Intervolga\Migrato\Tool\Console\Command\GenerateCommand;
 use Intervolga\Migrato\Tool\Console\Command\ImportCommand;
 use Intervolga\Migrato\Tool\Console\Command\ImportDataCommand;
 use Intervolga\Migrato\Tool\Console\Command\ImportOptionCommand;
+use Intervolga\Migrato\Tool\Console\Command\ImportOrmCommand;
 use Intervolga\Migrato\Tool\Console\Command\ImportXmlIdCommand;
 use Intervolga\Migrato\Tool\Console\Command\LogCommand;
 use Intervolga\Migrato\Tool\Console\Command\ReIndexCommand;
@@ -54,6 +55,7 @@ class Application extends \Symfony\Component\Console\Application
 			new ImportOptionCommand(),
 			new ExportDataCommand(),
 			new ImportDataCommand(),
+			new ImportOrmCommand(),
 			new UnitTestCommand(),
 			new ExportCommand(),
 			new ImportCommand(),
