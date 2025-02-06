@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
+    <orm>
+        <module>intervolga.custom</module>
+    </orm>
     <options>
         <exclude>^~</exclude>
         <exclude>^wizard_</exclude>
