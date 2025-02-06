@@ -78,9 +78,12 @@ class OrmTableMigration
 	 * @return $this
 	 * @throws \ReflectionException
 	 */
-	public function loadFromDir(string $dir = '/local/modules/intervolga.custom/lib/orm'): static
+	public function loadFromDir(string $dir): static
 	{
-		$dir = $_SERVER['DOCUMENT_ROOT'].$dir;
+		if (!str_starts_with($dir, $_SERVER['DOCUMENT_ROOT']))
+		{
+			$dir = $_SERVER['DOCUMENT_ROOT'] . $dir;
+		}
 		foreach (
 			$iterator = new \RecursiveIteratorIterator(
 				new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS | \RecursiveDirectoryIterator::FOLLOW_SYMLINKS),
@@ -89,7 +92,12 @@ class OrmTableMigration
 		{
 			/** @var $iterator \RecursiveDirectoryIterator */
 			/** @var $item \SplFileInfo */
-			if ($item->isFile() && $item->isReadable() && mb_substr($item->getFilename(), -4) == '.php')
+			if (
+				$item->isFile()
+				&& $item->isReadable()
+				&& mb_substr($item->getFilename(), -4) == '.php'
+				&& !str_contains($item->getPathname(), 'vendor')
+			)
 			{
 				$classes = $this->getClassNamesFromFilePath($item->getPathname());
 

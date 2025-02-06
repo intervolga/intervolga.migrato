@@ -2,6 +2,8 @@
 
 namespace Intervolga\Migrato\Tool\Console\Command;
 
+use Bitrix\Main\Loader;
+use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Utils\OrmTableMigration;
 use Intervolga\Migrato\Tool\Console\Logger;
 use Symfony\Component\Console\Input\InputDefinition;
@@ -31,13 +33,15 @@ class ImportOrmCommand extends BaseCommand
 
 	protected function init()
 	{
-		$this->migrator = new OrmTableMigration([
-			//table classes here...
-		], $this->logger);
+		$this->migrator = new OrmTableMigration(Config::getInstance()->getOrmEntities(), $this->logger);
 
-		$this->migrator
-			->loadFromDir()
-			->setSafeDeleteMode((bool)$this->input->getOption('safe-delete'));
+		$modules = Config::getInstance()->getOrmModules();
+		foreach ($modules as $module)
+		{
+			$moduleDirPath = Loader::getLocal("modules/$module/");
+			$this->migrator->loadFromDir($moduleDirPath);
+		}
+		$this->migrator->setSafeDeleteMode((bool)$this->input->getOption('safe-delete'));
 	}
 
 	public function executeInner()
