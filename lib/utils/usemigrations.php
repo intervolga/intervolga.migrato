@@ -1,6 +1,6 @@
 <?php
 
-namespace Intervolga\Custom\Utils\Orm;
+namespace Intervolga\Migrato\Utils;
 
 #[\Attribute(\Attribute::TARGET_CLASS)]
 class UseMigrations

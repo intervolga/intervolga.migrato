@@ -1,18 +1,18 @@
 <?php
 
-namespace Intervolga\Custom\Utils\Orm;
+namespace Intervolga\Migrato\Utils;
 
 use Bitrix\Main\Application;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\Loader;
+use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\ORM\Entity;
 use Bitrix\Main\ORM\Fields\Relations\ManyToMany;
 use Bitrix\Main\SystemException;
 use Bitrix\Perfmon\Sql\Column;
 use Bitrix\Perfmon\Sql\Table;
 use Bitrix\Perfmon\Sql\Tokenizer;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use Intervolga\Migrato\Tool\Console\Logger;
 
 /**
  * Класс для миграции таблиц ORM-сущностей
@@ -26,9 +26,9 @@ class OrmTableMigration
 	/** @var bool Режим без удаления данных */
 	protected $isSafeDeleteMode = false;
 
-	protected LoggerInterface $logger;
+	protected Logger $logger;
 
-	public function __construct(array $classes, ?LoggerInterface $logger = null)
+	public function __construct(array $classes, ?Logger $logger = null)
 	{
 		if (!Loader::includeModule('perfmon'))
 		{
@@ -38,7 +38,7 @@ class OrmTableMigration
 		{
 			$this->addClass($class);
 		}
-		$this->logger = $logger ?? new NullLogger();
+		$this->logger = $logger;
 	}
 
 	/**
@@ -91,36 +91,79 @@ class OrmTableMigration
 			/** @var $item \SplFileInfo */
 			if ($item->isFile() && $item->isReadable() && mb_substr($item->getFilename(), -4) == '.php')
 			{
-				$file = $item->getPathname();
-				$class = '\\';
-				$content = file_get_contents($file);
-				if (preg_match('/namespace\s([^\s;]+);?\s/', $content, $matches)) {
-					$class .= $matches[1] . '\\';
-				}
-				if (preg_match('/\s?class\s([^\s]+)?\s/', $content, $matches)) {
-					$class .= $matches[1];
-				}
+				$classes = $this->getClassNamesFromFilePath($item->getPathname());
 
-				if (!class_exists($class)) {
-					continue;
-				}
-
-				$rClass = new \ReflectionClass($class);
-				$migrationAttr = $rClass->getAttributes(\Intervolga\Custom\Utils\Orm\UseMigrations::class)[0]?->newInstance();
-				if (
-					!is_subclass_of($class, \Bitrix\Main\ORM\Data\DataManager::class)
-					|| !$migrationAttr
-					|| $rClass->isAbstract()
-					|| in_array($class, $this->ormClasses)
-				)
+				foreach ($classes as $class)
 				{
-					continue;
+					if (!class_exists($class))
+					{
+						continue;
+					}
+
+					$rClass = new \ReflectionClass($class);
+					$migrationAttr = $rClass->getAttributes(\Intervolga\Migrato\Utils\UseMigrations::class)[0]?->newInstance();
+					if (
+						!is_subclass_of($class, \Bitrix\Main\ORM\Data\DataManager::class)
+						|| !$migrationAttr
+						|| $rClass->isAbstract()
+						|| in_array($class, $this->ormClasses)
+					)
+					{
+						continue;
+					}
+					$this->ormClasses[] = $class;
 				}
-				$this->ormClasses[] = $class;
 			}
 		}
 
 		return $this;
+	}
+
+	public function getClassNamesFromFilePath($filePath) {
+		$classNames = [];
+		$tokens = token_get_all(file_get_contents($filePath));
+		$count = count($tokens);
+		$namespace = '';
+		$inNamespace = false;
+		$inClass = false;
+
+		for ($i = 0; $i < $count; $i++) {
+			$token = $tokens[$i];
+
+			if (is_array($token)) {
+				list($id, $text) = $token;
+
+				// Обработка объявления namespace
+				if (T_NAMESPACE === $id) {
+					$inNamespace = true;
+					continue;
+				}
+
+				if ($inNamespace && T_NAME_QUALIFIED === $id) {
+					$namespace = $text;
+					$inNamespace = false;
+				}
+
+				// Обработка объявления class или interface
+				if ((T_CLASS === $id || T_INTERFACE === $id) && !$inClass) {
+					$inClass = true;
+					continue;
+				}
+
+				if ($inClass && T_STRING === $id) {
+					$className = $text;
+					$fullClassName = ltrim($namespace . '\\' . $className, '\\');
+					$classNames[] = $fullClassName;
+					$inClass = false;
+				}
+			} else {
+				if ('{' === $token) {
+					$inClass = false;
+				}
+			}
+		}
+
+		return $classNames;
 	}
 
 	/**
@@ -130,10 +173,40 @@ class OrmTableMigration
 	 */
 	public function run(): void
 	{
+		$this->logger->addDb([
+			'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.MIGRATE_ORM_IN_PROGRESS',
+				['#COUNT#' => count($this->ormClasses)]),
+			'RESULT' => implode(', ', $this->ormClasses),
+		],
+			Logger::TYPE_INFO
+		);
 		$this->findMediatorEntities();
 		foreach ($this->ormClasses as $class)
 		{
-			$this->processClass($class);
+			try
+			{
+				$this->logger->add(
+					Loc::getMessage('INTERVOLGA_MIGRATO.START_MIGRATE_ORM', ['#CLASS#' => $class]),
+					Logger::LEVEL_NORMAL,
+					Logger::TYPE_INFO
+				);
+				$this->processClass($class);
+				$this->logger->add(
+					Loc::getMessage('INTERVOLGA_MIGRATO.FINISH_MIGRATE_ORM', ['#CLASS#' => $class]),
+					Logger::LEVEL_NORMAL,
+					Logger::TYPE_OK
+				);
+			}
+			catch (\Exception $exception)
+			{
+				$this->logger->addDb(
+					array(
+						'EXCEPTION' => $exception,
+						'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.START_MIGRATE_ORM', ['#CLASS#' => $class]),
+					),
+					Logger::TYPE_FAIL
+				);
+			}
 		}
 	}
 
@@ -163,7 +236,11 @@ class OrmTableMigration
 				$ormCreateTableSql = $entity->compileDbTableStructureDump()[0];
 			}
 			$connection->executeSqlBatch($ormCreateTableSql);
-			$this->logger->info('Создана таблица {table}', ['table' => $tableName]);
+			$this->logger->add(
+				Loc::getMessage('INTERVOLGA_MIGRATO.MIGRATE_ORM_TABLE_CREATED', ['#TABLE#' => $tableName]),
+				Logger::LEVEL_SHORT,
+				Logger::TYPE_OK
+			);
 		}
 		else
 		{
@@ -226,13 +303,23 @@ class OrmTableMigration
 				if (!$this->isSafeDeleteMode)
 				{
 					$queries[] = $existsColumn->getDropDdl($connectionType);
-					$this->logger->info('Удалена колонка {column} в {table}', ['table' => $existTable->name, 'column' => $existsColumn->name]);
+					$this->logger->add(
+						Loc::getMessage('INTERVOLGA_MIGRATO.MIGRATE_ORM_COLUMN_DELETED',
+							['#COLUMN#' => $existsColumn->name, '#TABLE#' => $existTable->name]),
+						Logger::LEVEL_SHORT,
+						Logger::TYPE_OK
+					);
 				}
 			}
 			elseif (!($existsColumn instanceof Column))
 			{
 				$queries[] = $ormColumn->getCreateDdl($connectionType);
-				$this->logger->info('Добавлена колонка {column} в {table}', ['table' => $existTable->name, 'column' => $existsColumn->name]);
+				$this->logger->add(
+					Loc::getMessage('INTERVOLGA_MIGRATO.MIGRATE_ORM_COLUMN_CREATED',
+						['#COLUMN#' => $existsColumn->name, '#TABLE#' => $existTable->name]),
+					Logger::LEVEL_SHORT,
+					Logger::TYPE_OK
+				);
 			}
 			else
 			{
@@ -247,7 +334,12 @@ class OrmTableMigration
 				)
 				{
 					$queries[] = $existsColumn->getModifyDdl($ormColumn, $connectionType);
-					$this->logger->info('Изменена колонка {column} в {table}', ['table' => $existTable->name, 'column' => $existsColumn->name]);
+					$this->logger->add(
+						Loc::getMessage('INTERVOLGA_MIGRATO.MIGRATE_ORM_COLUMN_CHANGED',
+							['#COLUMN#' => $existsColumn->name, '#TABLE#' => $existTable->name]),
+						Logger::LEVEL_SHORT,
+						Logger::TYPE_OK
+					);
 				}
 			}
 		}
