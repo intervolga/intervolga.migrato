@@ -38,6 +38,29 @@ class DataFileViewXml
 	}
 
 	/**
+	 * @param string $path
+	 *
+	 * @return \Bitrix\Main\IO\File[]
+	 */
+	public static function getFilesMarkedAsDeletedRecursively(string $path): array
+	{
+		$files = static::getFilesRecursive($path);
+		$filesDeleted = array();
+		foreach ($files as $file)
+		{
+			$content = $file->getContents();
+			$xmlParser = new \CDataXML();
+			$xmlParser->LoadString($content);
+			$xmlArray = $xmlParser->getArray();
+			if ($xmlArray["data"]["@"]["deleted"])
+			{
+				$filesDeleted[] = $file;
+			}
+		}
+		return $filesDeleted;
+	}
+
+	/**
 	 * @param \Intervolga\Migrato\Data\Record $record
 	 * @param string $path
 	 */
@@ -176,6 +199,38 @@ class DataFileViewXml
 					{
 						$result[] = $fileSystemEntry;
 					}
+				}
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * @param string $path
+	 *
+	 * @return \Bitrix\Main\IO\File[]
+	 */
+	protected static function getFilesRecursive($path): array
+	{
+		$result = array();
+		$directory = new Directory($path);
+		if ($directory->isExists())
+		{
+			foreach ($directory->getChildren() as $fileSystemEntry)
+			{
+				if ($fileSystemEntry instanceof File)
+				{
+					$name = strtolower($fileSystemEntry->getName());
+					$extension = strtolower($fileSystemEntry->getExtension());
+					if ((strpos($name, static::FILE_PREFIX) === 0) && $extension == static::FILE_EXT)
+					{
+						$result[] = $fileSystemEntry;
+					}
+				}
+				if ($fileSystemEntry instanceof Directory)
+				{
+					$result = array_merge($result, static::getFilesRecursive($fileSystemEntry->getPath()));
 				}
 			}
 		}

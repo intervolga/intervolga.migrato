@@ -4,6 +4,7 @@ use Bitrix\Main\Config\Option;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Console\Command\AutofixCommand;
 use Intervolga\Migrato\Tool\Console\Command\CheckExecCommand;
+use Intervolga\Migrato\Tool\Console\Command\CleanDeletedXml;
 use Intervolga\Migrato\Tool\Console\Command\ClearCacheCommand;
 use Intervolga\Migrato\Tool\Console\Command\ExportCommand;
 use Intervolga\Migrato\Tool\Console\Command\ExportDataCommand;
@@ -61,7 +62,8 @@ class Application extends \Symfony\Component\Console\Application
 			new LogCommand(),
 			new CheckExecCommand(),
 			new ReIndexFacetCommand(),
-			new Backup()
+			new Backup(),
+			new CleanDeletedXml()
 		));
 	}
 
