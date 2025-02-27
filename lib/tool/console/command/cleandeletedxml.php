@@ -2,6 +2,7 @@
 
 namespace Intervolga\Migrato\Tool\Console\Command;
 
+use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Config;
@@ -22,11 +23,20 @@ class CleanDeletedXml extends BaseCommand
 			InputOption::VALUE_NONE,
 			'Удалить все файлы, помеченные как удаленные'
 		);
+		$this->addOption(
+			'backup',
+			null,
+			InputOption::VALUE_NONE,
+			'Создать резервную копию папки migrato перед удалением файлов'
+		);
 	}
 
 	public function executeInner()
 	{
-
+		if ($this->input->getOption('backup'))
+		{
+			$this->copyData();
+		}
 		$result = $this->input->getOption('all') ? $this->cleanAll() : $this->clean();
 		$count = count(array_merge(...array_values($result)));
 		if ($count)
@@ -96,5 +106,13 @@ class CleanDeletedXml extends BaseCommand
 		{
 			$this->logger->add("Модуль {$module}: " .  $file->getName(), $this->logger::LEVEL_DETAIL, $this->logger::TYPE_FAIL);
 		}
+	}
+
+	protected function copyData()
+	{
+		$copyDir = preg_replace('/\/$/', '_backup/', INTERVOLGA_MIGRATO_DIRECTORY);
+		Directory::deleteDirectory($copyDir);
+
+		CopyDirFiles(INTERVOLGA_MIGRATO_DIRECTORY, $copyDir, false, true);
 	}
 }
