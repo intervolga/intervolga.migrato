@@ -219,7 +219,7 @@ class OrmTableMigration
 	}
 
 	/**
-	 * @param $class
+	 * @param class-string<\Bitrix\Main\ORM\Data\DataManager> $class
 	 * @throws SystemException
 	 * @throws \Bitrix\Main\DB\SqlQueryException
 	 * @throws \Bitrix\Main\NotSupportedException

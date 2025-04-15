@@ -3,12 +3,13 @@
 namespace Intervolga\Migrato\Tool\Console\Command;
 
 use Bitrix\Main\Loader;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Config;
-use Intervolga\Migrato\Utils\OrmTableMigration;
 use Intervolga\Migrato\Tool\Console\Logger;
+use Intervolga\Migrato\Utils\OrmTableMigration;
+use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Exception\RuntimeException;
 
 class ImportOrmCommand extends BaseCommand
 {
@@ -18,7 +19,7 @@ class ImportOrmCommand extends BaseCommand
 	{
 		$this
 			->setName('import-orm')
-			->setDescription('Актуализирует структуру таблиц в соответствии с их ORM-классами')
+			->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.IMPORT_ORM_DESCRIPTION'))
 			->setDefinition(
 				new InputDefinition([
 					new InputOption(
@@ -53,7 +54,7 @@ class ImportOrmCommand extends BaseCommand
 			$this->logger->addDb(
 				[
 					'EXCEPTION' => $e,
-					'OPERATION' => 'Migration process',
+					'OPERATION' => Loc::getMessage('INTERVOLGA_MIGRATO.IMPORT_ORM'),
 				],
 				Logger::TYPE_FAIL
 			);
