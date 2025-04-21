@@ -42,6 +42,7 @@ class intervolga_migrato extends CModule
 			try
 			{
 				$this->installDb();
+                $this->copyAdminFiles();
 				$this->copyPublicFiles();
 				Main\ModuleManager::registerModule($this->MODULE_ID);
 				$this->installEvents();
@@ -96,6 +97,50 @@ class intervolga_migrato extends CModule
         }
 	}
 
+    public function copyAdminFiles()
+    {
+        if (!Directory::isDirectoryExists(INTERVOLGA_MIGRATO_ADMIN_DIRECTORY)) {
+            Directory::createDirectory(INTERVOLGA_MIGRATO_ADMIN_DIRECTORY);
+        }
+
+
+        $files = scandir(__DIR__ . '/admin');
+        foreach ($files as $file)
+        {
+            if ($file === '.' || $file === '..')
+            {
+                continue;
+            }
+
+            $fileExist = file_exists(INTERVOLGA_MIGRATO_ADMIN_DIRECTORY . '/' . $file);
+            if ($fileExist === false)
+            {
+                copy(__DIR__ . '/admin/' . $file, INTERVOLGA_MIGRATO_ADMIN_DIRECTORY . '/' . $file);
+            }
+        }
+
+    }
+
+    public function removeAdminFiles()
+    {
+        if (Directory::isDirectoryExists(INTERVOLGA_MIGRATO_ADMIN_DIRECTORY)) {
+            $files = scandir(__DIR__ . '/admin');
+            foreach ($files as $file)
+            {
+                if ($file === '.' || $file === '..')
+                {
+                    continue;
+                }
+
+                $fileExist = file_exists(INTERVOLGA_MIGRATO_ADMIN_DIRECTORY . '/' . $file);
+                if ($fileExist !== false)
+                {
+                    unlink(INTERVOLGA_MIGRATO_ADMIN_DIRECTORY . '/' . $file);
+                }
+            }
+        }
+    }
+
 	function installEvents()
 	{
 		/**
@@ -141,7 +186,8 @@ class intervolga_migrato extends CModule
 			$this->unInstallDb();
 			Main\ModuleManager::unRegisterModule($this->MODULE_ID);
 			$this->unInstallEvents();
-		}
+            $this->removeAdminFiles();
+        }
 		catch (\Exception $e)
 		{
 			global $APPLICATION;
