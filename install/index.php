@@ -53,6 +53,17 @@ class intervolga_migrato extends CModule
 				return false;
 			}
 
+			if(!class_exists("\Symfony\Component\Console\Application"))
+			{
+				CAdminNotify::Add(
+					[
+						"MESSAGE" => Loc::getMessage('INTERVOLGA_MIGRATO_NOT_FIND_SYMFONY'),
+						"TAG" => 'intervolga.migrato.notification',
+						"MODULE_ID" => $this->MODULE_ID,
+						"ENABLE_CLOSE" => "Y"
+					]
+				);
+			}
 			return true;
 		}
 		else
