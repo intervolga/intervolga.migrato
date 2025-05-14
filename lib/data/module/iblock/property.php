@@ -139,9 +139,9 @@ class Property extends BaseData
 		if ($property = $sectionPropertyGetList->fetch())
 		{
 			$result["IS_ROOT_SMART_FILTER"] = "Y";
-			$result["SMART_FILTER"] = $property["SMART_FILTER"];
+			$result["SMART_FILTER"] = $property["SMART_FILTER"] == 'Y' ? 'Y' : 'N';
 			$result["DISPLAY_TYPE"] = $property["DISPLAY_TYPE"];
-			$result["DISPLAY_EXPANDED"] = $property["DISPLAY_EXPANDED"];
+			$result["DISPLAY_EXPANDED"] = $property["DISPLAY_EXPANDED"] == 'Y' ? 'Y' : 'N';
 			$result["FILTER_HINT"] = $property["FILTER_HINT"];
 		}
 
@@ -277,12 +277,16 @@ class Property extends BaseData
 					'IBLOCK_ID' => $iblockId,
 					'PROPERTY_ID' => $propertyId,
 					'SECTION_ID' => 0,
-					'SMART_FILTER' => $property['SMART_FILTER'],
+					'SMART_FILTER' => $property['SMART_FILTER'] == 'Y' ? 'Y' : 'N',
 					'DISPLAY_TYPE' => $property['DISPLAY_TYPE'],
-					'DISPLAY_EXPANDED' => $property['DISPLAY_EXPANDED'],
+					'DISPLAY_EXPANDED' => $property['DISPLAY_EXPANDED'] == 'Y' ? 'Y' : 'N',
 					'FILTER_HINT' => $property['FILTER_HINT'],
 				);
-				SectionPropertyTable::add($fields);
+				$result = SectionPropertyTable::add($fields);
+				if (!$result->isSuccess())
+				{
+					throw new \Exception(implode(';' . PHP_EOL, $result->getErrorMessages));
+				}
 			}
 		}
 	}
