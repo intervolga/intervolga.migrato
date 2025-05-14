@@ -56,6 +56,7 @@ class Event extends BaseData
 				"PRIORITY" => $message["PRIORITY"],
 				"ADDITIONAL_FIELD" => serialize($message["ADDITIONAL_FIELD"]),
 				"SITE_TEMPLATE_ID" => $message["SITE_TEMPLATE_ID"],
+				"LANGUAGE_ID" => $message["LANGUAGE_ID"],
 			));
 
 			$dependency = clone $this->getDependency('EVENT_NAME');
@@ -106,6 +107,7 @@ class Event extends BaseData
 		$XmlId = $message["EVENT_NAME"] . '-' . mb_substr(md5(serialize(array(
 			$message["EMAIL_FROM"],
 			$message["EMAIL_TO"],
+			$message["LANGUAGE_ID"],
 			$sites,
 		))), 0, 10);
 
