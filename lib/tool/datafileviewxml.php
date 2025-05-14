@@ -2,6 +2,7 @@
 
 use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\File;
+use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\Runtime;
@@ -182,6 +183,7 @@ class DataFileViewXml
 	 * @param string $path
 	 *
 	 * @return \Bitrix\Main\IO\File[]
+     * @throws \Exception
 	 */
 	protected static function getFiles($path)
 	{
@@ -191,14 +193,9 @@ class DataFileViewXml
 		{
 			foreach ($directory->getChildren() as $fileSystemEntry)
 			{
-				if ($fileSystemEntry instanceof File)
+				if ($fileSystemEntry instanceof File && static::isCorrectFile($fileSystemEntry))
 				{
-					$name = strtolower($fileSystemEntry->getName());
-					$extension = strtolower($fileSystemEntry->getExtension());
-					if ((strpos($name, static::FILE_PREFIX) === 0) && $extension == static::FILE_EXT)
-					{
-						$result[] = $fileSystemEntry;
-					}
+					$result[] = $fileSystemEntry;
 				}
 			}
 		}
@@ -242,46 +239,85 @@ class DataFileViewXml
 	 * @param \Bitrix\Main\IO\File $file
 	 *
 	 * @return \Intervolga\Migrato\Data\Record
+     * @throws \Exception
 	 */
 	public static function parseFile(File $file)
 	{
 		$xmlParser = new \CDataXML();
 		$xmlParser->Load($file->getPath());
 		$xmlArray = $xmlParser->getArray();
-		$record = new Record();
-		$record->setXmlId($xmlArray["data"]["#"]["xml_id"][0]["#"]);
-		if ($xmlArray["data"]["@"]["deleted"])
+		if(is_array($xmlArray["data"]["#"]))
 		{
-			$record->setDeleteMark(true);
+			$record = new Record();
+			$record->setXmlId($xmlArray["data"]["#"]["xml_id"][0]["#"]);
+			if ($xmlArray["data"]["@"]["deleted"])
+			{
+				$record->setDeleteMark(true);
+			}
+			else
+			{
+				if ($xmlArray["data"]["#"]["field"])
+				{
+					$fields = static::parseFields($xmlArray["data"]["#"]["field"]);
+					$record->addFields($fields);
+				}
+
+				if ($xmlArray["data"]["#"]["dependency"])
+				{
+					$links = static::parseLinks($xmlArray["data"]["#"]["dependency"]);
+					$record->setDependencies($links);
+				}
+
+				if ($xmlArray["data"]["#"]["reference"])
+				{
+					$links = static::parseLinks($xmlArray["data"]["#"]["reference"]);
+					$record->setReferences($links);
+				}
+
+				if ($xmlArray["data"]["#"]["runtime"])
+				{
+					$runtimes = static::parseRuntimes($xmlArray["data"]["#"]["runtime"]);
+					$record->setRuntimes($runtimes);
+				}
+			}
+
+			return $record;
 		}
 		else
 		{
-			if ($xmlArray["data"]["#"]["field"])
-			{
-				$fields = static::parseFields($xmlArray["data"]["#"]["field"]);
-				$record->addFields($fields);
-			}
-
-			if ($xmlArray["data"]["#"]["dependency"])
-			{
-				$links = static::parseLinks($xmlArray["data"]["#"]["dependency"]);
-				$record->setDependencies($links);
-			}
-
-			if ($xmlArray["data"]["#"]["reference"])
-			{
-				$links = static::parseLinks($xmlArray["data"]["#"]["reference"]);
-				$record->setReferences($links);
-			}
-
-			if ($xmlArray["data"]["#"]["runtime"])
-			{
-				$runtimes = static::parseRuntimes($xmlArray["data"]["#"]["runtime"]);
-				$record->setRuntimes($runtimes);
-			}
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INCORRECT_XML_FILE',
+				[
+					'#FILE_NAME#' => $file->getName(),
+					'#FILE_CATALOG#' => $file->getDirectoryName(),
+				]
+			));
 		}
+	}
 
-		return $record;
+	/**
+	 * @param \Bitrix\Main\IO\File $fileSystemEntry
+	 *
+	 * @return bool
+	 * @throws \Exception
+	 */
+	protected static function isCorrectFile($fileSystemEntry)
+	{
+		$name = mb_strtolower($fileSystemEntry->getName());
+		$extension = mb_strtolower($fileSystemEntry->getExtension());
+		$contentLength = mb_strlen($fileSystemEntry->getContents());
+		if((mb_strpos($name, static::FILE_PREFIX) === 0) && $extension == static::FILE_EXT && $contentLength !== 0)
+		{
+			return true;
+		}
+		else
+		{
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INCORRECT_XML_FILE',
+				[
+					'#FILE_NAME#' => $name,
+					'#FILE_CATALOG#' => $fileSystemEntry->getDirectoryName(),
+				]
+			));
+		}
 	}
 
 	/**
