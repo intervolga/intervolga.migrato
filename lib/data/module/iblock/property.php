@@ -285,7 +285,7 @@ class Property extends BaseData
 				$result = SectionPropertyTable::add($fields);
 				if (!$result->isSuccess())
 				{
-					throw new \Exception(implode(';' . PHP_EOL, $result->getErrorMessages));
+					throw new \Exception(implode(';' . PHP_EOL, $result->getErrorMessages()));
 				}
 			}
 		}
