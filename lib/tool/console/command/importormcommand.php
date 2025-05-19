@@ -11,6 +11,8 @@ use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputOption;
 
+Loc::loadMessages(__FILE__);
+
 class ImportOrmCommand extends BaseCommand
 {
 	protected OrmTableMigration $migrator;
@@ -39,8 +41,17 @@ class ImportOrmCommand extends BaseCommand
 		$modules = Config::getInstance()->getOrmModules();
 		foreach ($modules as $module)
 		{
-			$moduleDirPath = Loader::getLocal("modules/$module/");
-			$this->migrator->loadFromDir($moduleDirPath);
+			if (IsModuleInstalled($module))
+			{
+				$moduleDirPath = Loader::getLocal("modules/$module/");
+				$this->migrator->loadFromDir($moduleDirPath);
+			}
+			else
+			{
+				$this->logger->add(Loc::getMessage('INTERVOLGA_MIGRATO.IMPORT_ORM_MODULE_NOT_FOUND',
+					[ '#MODULE_ID#' => $module, ]
+				), 0, Logger::TYPE_FAIL);
+			}
 		}
 		$this->migrator->setSafeDeleteMode((bool)$this->input->getOption('safe-delete'));
 	}

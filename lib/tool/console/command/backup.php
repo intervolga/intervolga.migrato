@@ -1,9 +1,10 @@
-<?
+<?php
 namespace Intervolga\Migrato\Tool\Console\Command;
 
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Web\HttpClient;
 use Intervolga\Migrato\Data\Module;
+use Intervolga\Migrato\Tool\Console\Logger;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Question\Question;
 
@@ -87,7 +88,7 @@ class Backup extends BaseCommand
 			$site = $arSite;
 			if (!$site['SERVER_NAME'])
 			{
-				$site['SERVER_NAME'] = basename($_SERVER['DOCUMENT_ROOT']);
+				$this->logger->add(Loc::getMessage('INTERVOLGA_MIGRATO.BACKUP_SERVER_NAME'), 0, Logger::TYPE_FAIL);
 			}
 		}
 		return $site;

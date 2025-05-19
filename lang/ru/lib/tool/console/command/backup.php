@@ -1,4 +1,4 @@
-<?
+<?php
 $MESS['INTERVOLGA_MIGRATO.BACKUP_DESCRIPTION'] = 'Создать резервную копию сайта';
 
 $MESS['INTERVOLGA_MIGRATO.BACKUP_ARGS_NOKERNEL'] = 'Не добавлять ядро сайта';
@@ -10,3 +10,4 @@ $MESS['INTERVOLGA_MIGRATO.BACKUP_ARGS_FILESIZE'] = 'Максимальный р�
 $MESS['INTERVOLGA_MIGRATO.BACKUP_PROGRESS'] = 'Прогресс: ';
 $MESS['INTERVOLGA_MIGRATO.BACKUP_SPENT_TIME'] = 'Прошло времени: ';
 $MESS['INTERVOLGA_MIGRATO.BACKUP_100PRC'] = 'Прогресс: 100%   Завершено.';
+$MESS['INTERVOLGA_MIGRATO.BACKUP_SERVER_NAME'] = 'Необходимо заполнить URL сервера в настройках модуля.';
