@@ -59,7 +59,7 @@ class LogTable extends DataManager
 		return parent::getList($parameters);
 	}
 
-	public static function getCount(array $filter = array())
+	public static function getCount($filter = array(), array $cache = array())
 	{
 		if ($filter["DATA_ID_COMPLEX"])
 		{

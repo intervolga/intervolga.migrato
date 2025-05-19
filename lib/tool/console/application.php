@@ -1,9 +1,10 @@
-<?namespace Intervolga\Migrato\Tool\Console;
+<?php namespace Intervolga\Migrato\Tool\Console;
 
 use Bitrix\Main\Config\Option;
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Tool\Console\Command\AutofixCommand;
 use Intervolga\Migrato\Tool\Console\Command\CheckExecCommand;
+use Intervolga\Migrato\Tool\Console\Command\CleanDeletedXml;
 use Intervolga\Migrato\Tool\Console\Command\ClearCacheCommand;
 use Intervolga\Migrato\Tool\Console\Command\ExportCommand;
 use Intervolga\Migrato\Tool\Console\Command\ExportDataCommand;
@@ -12,6 +13,7 @@ use Intervolga\Migrato\Tool\Console\Command\GenerateCommand;
 use Intervolga\Migrato\Tool\Console\Command\ImportCommand;
 use Intervolga\Migrato\Tool\Console\Command\ImportDataCommand;
 use Intervolga\Migrato\Tool\Console\Command\ImportOptionCommand;
+use Intervolga\Migrato\Tool\Console\Command\ImportOrmCommand;
 use Intervolga\Migrato\Tool\Console\Command\ImportXmlIdCommand;
 use Intervolga\Migrato\Tool\Console\Command\LogCommand;
 use Intervolga\Migrato\Tool\Console\Command\ReIndexCommand;
@@ -23,6 +25,7 @@ use Intervolga\Migrato\Tool\Console\Command\ValidateCommand;
 use Intervolga\Migrato\Tool\Console\Command\ValidateComplexCommand;
 use Intervolga\Migrato\Tool\Console\Command\WarnDeleteCommand;
 use Intervolga\Migrato\Tool\Console\Command\Backup;
+use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -54,6 +57,7 @@ class Application extends \Symfony\Component\Console\Application
 			new ImportOptionCommand(),
 			new ExportDataCommand(),
 			new ImportDataCommand(),
+			new ImportOrmCommand(),
 			new UnitTestCommand(),
 			new ExportCommand(),
 			new ImportCommand(),
@@ -61,7 +65,8 @@ class Application extends \Symfony\Component\Console\Application
 			new LogCommand(),
 			new CheckExecCommand(),
 			new ReIndexFacetCommand(),
-			new Backup()
+			new Backup(),
+			new CleanDeletedXml()
 		));
 	}
 
@@ -97,7 +102,7 @@ class Application extends \Symfony\Component\Console\Application
 		$this->output->writeln("<fg=yellow>$text</>");
 	}
 
-	protected function getDefaultInputDefinition()
+	protected function getDefaultInputDefinition(): InputDefinition
 	{
 		$inputDefinition = parent::getDefaultInputDefinition();
 		$option = new InputOption(

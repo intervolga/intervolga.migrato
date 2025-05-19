@@ -1,4 +1,4 @@
-<?namespace Intervolga\Migrato\Tool\Console\Command;
+<?php namespace Intervolga\Migrato\Tool\Console\Command;
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;

@@ -1,4 +1,4 @@
-<? namespace Intervolga\Migrato\Tool\Console\Command;
+<?php namespace Intervolga\Migrato\Tool\Console\Command;
 
 use Bitrix\Main\Application;
 use Bitrix\Main\Config\Option;
@@ -57,10 +57,12 @@ class ImportCommand extends BaseCommand
 			{
 				$args['--safe-delete'] = true;
 				$this->runSubcommand('importdata', array('--safe-delete' => true));
+				$this->runSubcommand('import-orm', array('--safe-delete' => true));
 			}
 			else
 			{
 				$this->runSubcommand('importdata');
+				$this->runSubcommand('import-orm');
 			}
 			$this->runSubcommand('importoptions');
 			if (!$this->input->getOption('quick'))

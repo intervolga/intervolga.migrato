@@ -1,6 +1,7 @@
 <?namespace Intervolga\Migrato\Tool;
 
 use Bitrix\Main\IO\File;
+use Bitrix\Main\Localization\Loc;
 
 class OptionFileViewXml
 {
@@ -33,6 +34,7 @@ class OptionFileViewXml
 	/**
 	 * @param string $path
 	 * @return array
+	 * @throws \Exception
 	 */
 	public static function readFromFileSystem($path)
 	{
@@ -40,15 +42,25 @@ class OptionFileViewXml
 		$xmlParser = new \CDataXML();
 		$xmlParser->Load($path);
 		$xmlArray = $xmlParser->getArray();
-		foreach ($xmlArray['options']['#']['option'] as $optionArray)
-		{
-			$options[] = array(
-				'NAME' => $optionArray['#']['name'][0]['#'],
-				'VALUE' => $optionArray['#']['value'][0]['#'],
-				'SITE_ID' => $optionArray['#']['site'][0]['#'],
-			);
-		}
 
-		return $options;
+		if (is_array($xmlArray['options']) && is_array($xmlArray['options']['#']) && is_array($xmlArray['options']['#']['option'])) {
+			foreach ($xmlArray['options']['#']['option'] as $optionArray) {
+				$options[] = array(
+					'NAME' => $optionArray['#']['name'][0]['#'],
+					'VALUE' => $optionArray['#']['value'][0]['#'],
+					'SITE_ID' => $optionArray['#']['site'][0]['#'],
+				);
+			}
+
+			return $options;
+		}
+		else
+		{
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INCORRECT_XML_CONFIG_FILE',
+				[
+					'#PATH#' => $path,
+				]
+			));
+		}
 	}
 }

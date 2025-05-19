@@ -1,4 +1,4 @@
-<? namespace Intervolga\Migrato\Tool;
+<?php namespace Intervolga\Migrato\Tool;
 
 use Bitrix\Main\IO\File;
 use Bitrix\Main\Loader;
@@ -110,7 +110,7 @@ class Config
 	 *
 	 * @return bool
 	 */
-	protected function isOptionMatchesRule($module, $name, $rule)
+	protected static function isOptionMatchesRule($module, $name, $rule)
 	{
 		$result = false;
 		$ruleModule = $rule['module'] ? $rule['module'] : '.*';
@@ -177,6 +177,43 @@ class Config
 
 		return $entities;
 	}
+
+	/**
+	 * Получение ORM сущностей для миграции
+	 * @return array
+	 */
+	public function getOrmEntities(): array
+	{
+		$configEntities = $this->configArray['config']['#']['orm'];
+		if (!$configEntities)
+			return [];
+
+		$ormEntities = [];
+		foreach (current($configEntities)['#']['entity'] as $ormEntity) {
+			$ormEntities[] = $ormEntity['#'];
+		}
+
+		return $ormEntities;
+	}
+
+	/**
+	 * Получение модулей ORM сущностей для миграции
+	 * @return array
+	 */
+	public function getOrmModules(): array
+	{
+		$configModules = $this->configArray['config']['#']['orm'];
+		if (!$configModules)
+			return [];
+
+		$modules = [];
+		foreach (current($configModules)['#']['module'] as $moduleName) {
+			$modules[] = $moduleName['#'];
+		}
+
+		return $modules;
+	}
+
 
 	/**
 	 * @param BaseData $dataObject
