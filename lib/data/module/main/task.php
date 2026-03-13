@@ -57,6 +57,7 @@ class Task extends BaseData
 					'TITLE' => $task['TITLE'],
 					'DESC' => $task['DESC'],
 					'OPERATION' => $operations,
+					'BINDING' => $task['BINDING'],
 				));
 				$result[] = $record;
 			}
