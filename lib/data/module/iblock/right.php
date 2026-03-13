@@ -201,6 +201,12 @@ class Right extends BaseData
 
 		if (!static::$iblockRights[$iblockId]){
 			static::$iblockRights[$iblockId] = (new \CIBlockRights($iblockId))->getRights();
+
+			if (static::$iblockRights[$iblockId]){
+				foreach (static::$iblockRights[$iblockId] as $i => $right){
+					static::$iblockRights[$iblockId][$i]["IBLOCK_ID"] = $iblockId;
+				}
+			}
 		}
 	}
 }
