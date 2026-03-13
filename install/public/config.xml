@@ -205,6 +205,9 @@
         <entity>
             <name>adminlistoption</name>
         </entity>
+        <entity>
+            <name>right</name>
+        </entity>
     </module>
     <module>
         <name>highloadblock</name>

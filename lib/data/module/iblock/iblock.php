@@ -81,6 +81,7 @@ class Iblock extends BaseData
 				"EDIT_FILE_AFTER" => $iblock["EDIT_FILE_AFTER"],
 				"SECTION_PROPERTY" => $iblock["SECTION_PROPERTY"],
 				"WF_TYPE" => $wfMode,
+				"RIGHTS_MODE" => $iblock["RIGHTS_MODE"],
 			));
 			$this->addLanguageStrings($record);
 			$this->addFieldsSettings($record);
