@@ -68,20 +68,14 @@ class Right extends BaseData
 		]);
 
 		while ($iblock = $iblockIterator->fetch()){
-			$obRights = new \CIBlockRights($iblock['ID']);
-			$rights = $obRights->GetRights();
+			$this->initIblockRights($iblock['ID']);
 
-			if (!static::$iblockRights[$iblock['ID']]){
-				static::$iblockRights[$iblock['ID']] = $rights;
-			}
-
-			foreach ($rights as $right){
-				$record = new \Intervolga\Migrato\Data\Record($this);
+			foreach (static::$iblockRights[$iblock['ID']] as $right){
+				$record = new Record($this);
 				$id = $this->createId($right);
 
 				$record->setId($id);
 				$record->setXmlId($this->getXmlId($id));
-				$record->addFieldsRaw($right);
 
 				foreach ([
 					'IBLOCK' => [
@@ -131,13 +125,10 @@ class Right extends BaseData
 			return;
 		}
 
+		$this->initIblockRights($iblockId);
+
 		$obIBlockRights = new \CIBlockRights($iblockId);
-
-		if (!static::$iblockRights[$iblockId]){
-			static::$iblockRights[$iblockId] = $obIBlockRights->GetRights();
-		}
-
-		$obIBlockRights->SetRights(static::$iblockRights[$iblockId]);
+		$obIBlockRights->setRights(static::$iblockRights[$iblockId]);
 	}
 
 	protected function setRights(Record $record)
@@ -162,18 +153,7 @@ class Right extends BaseData
 		$taskId = $taskLinkId->getValue();
 		$iblockId = $iblockLinkId->getValue();
 
-		$xmlId = $this->getXmlId($this->createId([
-			'IBLOCK_ID' => $iblockId,
-			'TASK_ID' => $taskId,
-			'GROUP_CODE' => static::PREFIX_GROUP_CODE.$groupId,
-			'ENTITY_ID' => $iblockId,
-		]));
-
-		$obIBlockRights = new \CIBlockRights($iblockId);
-
-		if (!static::$iblockRights[$iblockId]){
-			static::$iblockRights[$iblockId] = $obIBlockRights->GetRights();
-		}
+		$this->initIblockRights($iblockId);
 
 		$issetRight = false;
 
@@ -187,7 +167,6 @@ class Right extends BaseData
 					$right,
 					[
 						'TASK_ID' => $taskId,
-						'XML_ID' => $xmlId,
 					]
 				);
 
@@ -197,14 +176,14 @@ class Right extends BaseData
 		}
 
 		if (!$issetRight){
-			static::$iblockRights[$iblockId]['n0'] = [
+			static::$iblockRights[$iblockId]['n'.count(static::$iblockRights[$iblockId])] = [
 				'TASK_ID' => $taskId,
 				'GROUP_CODE' => static::PREFIX_GROUP_CODE.$groupId,
-				'XML_ID' => $xmlId,
 			];
 		}
 
-		$obIBlockRights->SetRights(static::$iblockRights[$iblockId]);
+		$obIBlockRights = new \CIBlockRights($iblockId);
+		$obIBlockRights->setRights(static::$iblockRights[$iblockId]);
 
 		return $this->createId([
 			'IBLOCK_ID' => $iblockId,
@@ -212,5 +191,16 @@ class Right extends BaseData
 			'GROUP_CODE' => static::PREFIX_GROUP_CODE.$groupId,
 			'ENTITY_ID' => $iblockId,
 		]);
+	}
+
+	protected function initIblockRights($iblockId): void
+	{
+		if (!is_numeric($iblockId) || $iblockId <= 0){
+			throw new \Exception(Loc::getMessage('INTERVOLGA_MIGRATO.INVALID_IBLOCK_ID'));
+		}
+
+		if (!static::$iblockRights[$iblockId]){
+			static::$iblockRights[$iblockId] = (new \CIBlockRights($iblockId))->getRights();
+		}
 	}
 }
