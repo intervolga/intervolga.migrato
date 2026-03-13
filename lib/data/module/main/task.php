@@ -20,7 +20,7 @@ class Task extends BaseData
 
 	public function getList(array $filter = array())
 	{
-		$dbRes = \CTask::GetList(array(), array("BINDING" => "module"));
+		$dbRes = \CTask::GetList(array(), array("BINDING" => ["module", "iblock"]));
 
 		$result = array();
 		while ($task = $dbRes->fetch())
@@ -57,6 +57,7 @@ class Task extends BaseData
 					'TITLE' => $task['TITLE'],
 					'DESC' => $task['DESC'],
 					'OPERATION' => $operations,
+					'BINDING' => $task['BINDING'],
 				));
 				$result[] = $record;
 			}
