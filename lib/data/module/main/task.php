@@ -73,7 +73,11 @@ class Task extends BaseData
 	public static function createXmlId($fields)
 	{
 		$fields['MODULE_ID'] = str_replace(".", "_", $fields['MODULE_ID']);
-		return strtolower($fields['MODULE_ID']) . static::XML_ID_SEPARATOR . $fields['LETTER'];
+		return strtolower($fields['MODULE_ID'])
+            . static::XML_ID_SEPARATOR
+            . $fields['LETTER']
+            . static::XML_ID_SEPARATOR
+            . $fields['SYS'];
 	}
 
 	/**
@@ -86,6 +90,7 @@ class Task extends BaseData
 		$fields = array(
 			'MODULE_ID' => trim(str_replace('_', '.', $explode[0])),
 			'LETTER' => trim($explode[1]),
+            'SYS' => trim($explode[2]),
 		);
 
 		return $fields;
