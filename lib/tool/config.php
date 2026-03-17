@@ -36,6 +36,14 @@ class Config
 		$this->readFile();
 	}
 
+	/**
+	 * @return array
+	 */
+	public function getRawConfig(): array
+	{
+		return $this->configArray;
+	}
+
 	protected function readFile()
 	{
 		$xmlParser = new \CDataXML();
