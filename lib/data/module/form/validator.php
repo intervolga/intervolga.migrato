@@ -5,8 +5,8 @@ namespace Intervolga\Migrato\Data\Module\Form;
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
-use Intervolga\Custom\Orm\FormFieldTable;
-use Intervolga\Custom\Orm\FormFieldValidatorTable;
+use Intervolga\Migrato\Orm\Form\FormFieldTable;
+use Intervolga\Migrato\Orm\Form\FormFieldValidatorTable;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Link;
 use Intervolga\Migrato\Data\Record;
@@ -20,10 +20,13 @@ class Validator extends BaseData
 	const XML_ID_SEPARATOR = '.';
 	protected $enabled = false;
 
+	/**
+	 * @return void
+	 * @throws \Bitrix\Main\LoaderException
+	 */
 	protected function configure()
 	{
-		// Без intervolga.custom деактивируем класс, чтобы не падать при его отсутствии
-		if (!Loader::includeModule('form') || !Loader::includeModule('intervolga.custom')) {
+		if (!Loader::includeModule('form')) {
 			$this->enabled = false;
 			return;
 		}
@@ -37,6 +40,13 @@ class Validator extends BaseData
 		));
 	}
 
+	/**
+	 * @param array $filter
+	 * @return array|Record[]
+	 * @throws \Bitrix\Main\ArgumentException
+	 * @throws \Bitrix\Main\ObjectPropertyException
+	 * @throws \Bitrix\Main\SystemException
+	 */
 	public function getList(array $filter = array())
 	{
 		if (!$this->enabled) {
@@ -107,6 +117,13 @@ class Validator extends BaseData
 		return $result;
 	}
 
+	/**
+	 * @param $id
+	 * @return string|null
+	 * @throws \Bitrix\Main\ArgumentException
+	 * @throws \Bitrix\Main\ObjectPropertyException
+	 * @throws \Bitrix\Main\SystemException
+	 */
 	public function getXmlId($id)
 	{
 		if (!$this->enabled) {
@@ -131,6 +148,11 @@ class Validator extends BaseData
 		return $form['SID'] . static::XML_ID_SEPARATOR . $field['SID'] . static::XML_ID_SEPARATOR . $validator['VALIDATOR_SID'];
 	}
 
+	/**
+	 * @param Record $record
+	 * @return void
+	 * @throws \Exception
+	 */
 	public function update(Record $record)
 	{
 		if (!$this->enabled) {
@@ -144,6 +166,11 @@ class Validator extends BaseData
 		}
 	}
 
+	/**
+	 * @param Record $record
+	 * @return array
+	 * @throws \Exception
+	 */
 	protected function recordToArray(Record $record)
 	{
 		if (!$this->enabled) {
@@ -170,6 +197,11 @@ class Validator extends BaseData
 		return $array;
 	}
 
+	/**
+	 * @param Record $record
+	 * @return RecordId
+	 * @throws \Exception
+	 */
 	protected function createInner(Record $record)
 	{
 		if (!$this->enabled) {
@@ -184,6 +216,11 @@ class Validator extends BaseData
 		}
 	}
 
+	/**
+	 * @param RecordId $id
+	 * @return void
+	 * @throws \Exception
+	 */
 	protected function deleteInner(RecordId $id)
 	{
 		if (!$this->enabled) {
