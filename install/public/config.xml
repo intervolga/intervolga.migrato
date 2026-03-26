@@ -247,6 +247,9 @@
         <entity>
             <name>answer</name>
         </entity>
+        <entity>
+            <name>validator</name>
+        </entity>
     </module>
     <module>
         <name>perfmon</name>
