@@ -9,6 +9,7 @@ Loc::loadMessages(__FILE__);
 
 class intervolga_migrato extends CModule
 {
+    //55
 	const MINIMAL_VERSION_PHP = '5.5.9';
 	const MINIMAL_VERSION_BITRIX = '15.0.15';
 	/**
