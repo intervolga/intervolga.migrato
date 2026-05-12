@@ -300,27 +300,34 @@ class Agent extends BaseData
 	/**
 	 * @return array
 	 */
-	protected function getAgentsWithoutActive(): array
-	{
-		$configArray = Config::getInstance()->getRawConfig();
+    protected function getAgentsWithoutActive(): array
+    {
+        static $cache = null;
 
-		$modules = $configArray["config"]["#"]["module"] ?? [];
+        if ($cache !== null) {
+            return $cache;
+        }
 
-		$result = [];
+        $entities = Config::getInstance()->getEntityConfig(
+            $this->getModule(),
+            $this->getEntityName()
+        );
 
-		foreach ($modules as $module) {
-			$entities = $module["#"]["entity"] ?? [];
+        $result = [];
 
-			$agentEntities = array_filter($entities, fn($e) => ($e["#"]["name"][0]["#"] ?? '') === 'agent');
+        foreach ($entities as $entityGroup) {
+            foreach ($entityGroup as $entity) {
+                $agents = $entity["#"]["ignore_active"][0]["#"]["agent"] ?? [];
 
-			foreach ($agentEntities as $entity) {
-				$ignoreList = $entity["#"]["ignore_active"][0]["#"]["agent"] ?? [];
-				$result = array_merge($result, array_map(fn($a) => $a["#"], $ignoreList));
-			}
-		}
+                $result = array_merge(
+                    $result,
+                    array_column($agents, "#")
+                );
+            }
+        }
 
-		return $result;
-	}
+        return $cache = array_unique($result);
+    }
 
 	/**
 	 * @param string $agentName

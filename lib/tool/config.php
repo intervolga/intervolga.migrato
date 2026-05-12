@@ -66,6 +66,24 @@ class Config
 		return $result;
 	}
 
+    /**
+     * @return array()
+     */
+    public function getEntityConfig(string $moduleName, string $entityName): array
+    {
+        $config = [];
+        foreach ($this->configArray["config"]["#"]["module"] as $module)
+        {
+            if($module["#"]["name"][0]["#"] != $moduleName)
+            {
+                continue;
+            }
+            $entities = $module["#"]["entity"] ?? [];
+            $config[] = array_filter($entities, fn($entity) => $entity["#"]["name"][0]["#"] == $entityName);
+        }
+        return $config;
+    }
+
 	/**
 	 * @return array()
 	 */
