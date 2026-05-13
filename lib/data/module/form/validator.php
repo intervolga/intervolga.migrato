@@ -26,8 +26,7 @@ class Validator extends BaseData
 	 */
 	protected function configure()
 	{
-        // Без intervolga.custom деактивируем класс, чтобы не падать при его отсутствии
-		if (!Loader::includeModule('form') || !Loader::includeModule('intervolga.custom')) {
+        if (!Loader::includeModule('form')) {
 			$this->enabled = false;
 			return;
 		}
