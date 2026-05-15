@@ -78,13 +78,22 @@ class Form extends BaseData
 	{
 		$dependency = clone $this->getDependency('LANGUAGE');
 		$languages = array();
+        $menuLanguages = array();
 		$languagesGetList = \CForm::GetMenuList(array("FORM_ID" => $record->getId()->getValue()), "N");
-		while ($language = $languagesGetList->Fetch())
-		{
-			$languages[] = Language::getInstance()->getXmlId(
-				Language::getInstance()->createId($language['LID'])
-			);
-		}
+        while ($language = $languagesGetList->Fetch())
+        {
+            $menuLanguages[] = $language['LID'];
+        }
+
+        if ($menuLanguages)
+        {
+            $languageRecords = Language::getInstance()->getList(array('=LID' => $menuLanguages));
+            foreach ($languageRecords as $languageRecord)
+            {
+                $languages[] = $languageRecord->getXmlId();
+            }
+        }
+
 		if ($languages)
 		{
 			$dependency->setValues($languages);

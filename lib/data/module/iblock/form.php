@@ -141,6 +141,10 @@ class Form extends BaseData
 					'select' => array(
 						'ID',
 					),
+                    'order' => [
+                        'SORT' => 'ASC',
+                        'XML_ID' => 'ASC',
+                    ],
 				)
 			);
 			while ($property = $propertiesGetList->fetch())

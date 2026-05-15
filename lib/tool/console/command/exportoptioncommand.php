@@ -75,6 +75,10 @@ class ExportOptionCommand extends BaseCommand
 					'VALUE',
 					'SITE_ID',
 				),
+                'order' => [
+                    'MODULE_ID' => 'ASC',
+                    'NAME' => 'ASC',
+                ],
 			));
 			while ($option = $getList->fetch())
 			{
