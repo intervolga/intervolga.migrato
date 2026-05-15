@@ -25,7 +25,12 @@ class Language extends BaseData
 	public function getList(array $filter = array())
 	{
 		$result = array();
-		$getList = LanguageTable::getList();
+        $getList = LanguageTable::getList([
+            'filter'=> $filter,
+            'order' => [
+                'SORT' => 'ASC',
+            ]
+        ]);
 		while ($language = $getList->fetch())
 		{
 			$record = new Record($this);

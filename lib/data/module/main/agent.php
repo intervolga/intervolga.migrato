@@ -5,6 +5,7 @@ use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
 use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Data\RecordId;
+use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\ExceptionText;
 
 Loc::loadMessages(__FILE__);
@@ -69,14 +70,15 @@ class Agent extends BaseData
 			{
 				$admin = 'Y';
 			}
-			$record->addFieldsRaw(array(
+			$fields = [
 				'MODULE_ID' => $agent['MODULE_ID'],
 				'NAME' => $agent['NAME'],
-				'ACTIVE' => $agent['ACTIVE'],
+				...(!$this->isActiveIgnored($agent['NAME']) ? ['ACTIVE' => $agent['ACTIVE']] : []),
 				'AGENT_INTERVAL' => $agent['AGENT_INTERVAL'],
 				'IS_PERIOD' => $agent['IS_PERIOD'],
 				'ADMIN' => $admin,
-			));
+			];
+			$record->addFieldsRaw($fields);
 			$record->setId(static::createId($agent['ID']));
 
 			return $record;
@@ -293,5 +295,56 @@ class Agent extends BaseData
 		{
 			throw new \Exception(ExceptionText::getFromApplication());
 		}
+	}
+
+	/**
+	 * @return array
+	 */
+    protected function getAgentsWithoutActive(): array
+    {
+        static $cache = null;
+
+        if ($cache !== null) {
+            return $cache;
+        }
+
+        $entities = Config::getInstance()->getEntityConfig(
+            $this->getModule(),
+            $this->getEntityName()
+        );
+
+        $result = [];
+
+        foreach ($entities as $entityGroup) {
+            foreach ($entityGroup as $entity) {
+                $agents = $entity["#"]["ignore_active"][0]["#"]["agent"] ?? [];
+
+                $result = array_merge(
+                    $result,
+                    array_column($agents, "#")
+                );
+            }
+        }
+
+        return $cache = array_unique($result);
+    }
+
+	/**
+	 * @param string $agentName
+	 * @return bool
+	 */
+	protected function isActiveIgnored(string $agentName): bool
+	{
+		$agents = $this->getAgentsWithoutActive();
+
+		foreach ($agents as $ignored)
+		{
+			if (strcasecmp($ignored, $agentName) === 0)
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
