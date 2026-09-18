@@ -146,9 +146,11 @@ $tabControl = new CAdminTabControl(
 		),
 	)
 );
-$tabControl->Begin(array(
-	'FORM_ACTION' => Helper::getUrl(Helper::PAGE_CONFIG),
-));
+?>
+<form method="POST" name="migrato_config_form"
+	action="<?= htmlspecialcharsbx(Helper::getUrl(Helper::PAGE_CONFIG)) ?>">
+<?php
+$tabControl->Begin();
 $tabControl->BeginNextTab();
 ?>
 <tr>
@@ -184,5 +186,8 @@ if (Helper::canWrite())
 	onclick="window.location='<?= CUtil::JSEscape(Helper::getUrl(Helper::PAGE_INDEX)) ?>';">
 <?php
 $tabControl->End();
+?>
+</form>
+<?php
 
 require_once($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/epilog_admin.php');

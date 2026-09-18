@@ -163,9 +163,11 @@ $tabControl = new CAdminTabControl(
 		),
 	)
 );
-$tabControl->Begin(array(
-	'FORM_ACTION' => Helper::getUrl(Helper::PAGE_RUN, array('command' => $commandName)),
-));
+?>
+<form method="POST" name="migrato_run_form"
+	action="<?= htmlspecialcharsbx(Helper::getUrl(Helper::PAGE_RUN, array('command' => $commandName))) ?>">
+<?php
+$tabControl->Begin();
 $tabControl->BeginNextTab();
 ?>
 <tr>
@@ -247,6 +249,9 @@ $tabControl->Buttons(false);
 	onclick="window.location='<?= CUtil::JSEscape(Helper::getUrl(Helper::PAGE_INDEX)) ?>';">
 <?php
 $tabControl->End();
+?>
+</form>
+<?php
 
 if ($isStarted)
 {
