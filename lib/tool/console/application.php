@@ -70,7 +70,7 @@ class Application extends \Symfony\Component\Console\Application
 		));
 	}
 
-	protected function configureIO(InputInterface $input, OutputInterface $output)
+	protected function configureIO(InputInterface $input, OutputInterface $output): void
 	{
 		$this->output = $output;
 		$output->setDecorated(true);
