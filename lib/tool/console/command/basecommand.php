@@ -59,12 +59,14 @@ abstract class BaseCommand extends Command
 		catch (\Throwable $throwable)
 		{
 			$this->logger->handle($throwable);
-			die($this->logger->getReturnCode());
+
+			return $this->logger->getReturnCode();
 		}
 		catch (\Exception $exception)
 		{
 			$this->logger->handle($exception);
-            die($this->logger->getReturnCode());
+
+			return $this->logger->getReturnCode();
 		}
 		$this->logger->addShortSummary();
 		if ($this->isMainCommand())

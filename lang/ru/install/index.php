@@ -5,3 +5,6 @@ $MESS["INTERVOLGA_MIGRATO_PARTNER_NAME"] = "ИНТЕРВОЛГА";
 $MESS["INTERVOLGA_MIGRATO_PARTNER_URI"] = "http://www.intervolga.ru";
 $MESS["INTERVOLGA_MIGRATO_SMALL_VERSION"] = "Версия #OBJECT# должна быть больше #MINIMAL_VERSION# (Текущая версия #CURRENT_VERSION#)";
 $MESS["INTERVOLGA_MIGRATO_NOT_FIND_SYMFONY"] = "Отсутствует обязательный класс \Symfony\Component\Console\Application, требуется установка класса через composer";
+$MESS["INTERVOLGA_MIGRATO_RIGHT_D"] = "Доступ закрыт";
+$MESS["INTERVOLGA_MIGRATO_RIGHT_R"] = "Просмотр команд и журнала";
+$MESS["INTERVOLGA_MIGRATO_RIGHT_W"] = "Запуск команд и изменение настроек";

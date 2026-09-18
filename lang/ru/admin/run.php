@@ -1,0 +1,16 @@
+<?
+$MESS['INTERVOLGA_MIGRATO.WEB_MODULE_NOT_INSTALLED'] = 'Модуль миграций (intervolga.migrato) не установлен';
+$MESS['INTERVOLGA_MIGRATO.WEB_RUN_TITLE'] = 'Миграции: запуск команды "#COMMAND#"';
+$MESS['INTERVOLGA_MIGRATO.WEB_BACK_TO_LIST'] = 'К списку команд';
+$MESS['INTERVOLGA_MIGRATO.WEB_MENU_LOG'] = 'Журнал';
+$MESS['INTERVOLGA_MIGRATO.WEB_RUN_ERROR'] = 'Команда не запущена';
+$MESS['INTERVOLGA_MIGRATO.WEB_TAB_PARAMS'] = 'Параметры';
+$MESS['INTERVOLGA_MIGRATO.WEB_COLUMN_COMMAND'] = 'Команда';
+$MESS['INTERVOLGA_MIGRATO.WEB_NO_CONFIG'] = 'Не найден файл настроек миграции config.xml';
+$MESS['INTERVOLGA_MIGRATO.WEB_OPTION_FAILS'] = 'Вывести журнал ошибок после выполнения команды';
+$MESS['INTERVOLGA_MIGRATO.WEB_VERBOSITY'] = 'Подробность вывода';
+$MESS['INTERVOLGA_MIGRATO.WEB_CONFIRM'] = 'Подтверждение';
+$MESS['INTERVOLGA_MIGRATO.WEB_CONFIRM_HINT'] = 'Команда изменяет данные сайта. Убедитесь, что у вас есть актуальная резервная копия';
+$MESS['INTERVOLGA_MIGRATO.WEB_CONFIRM_REQUIRED'] = 'Для запуска этой команды требуется подтверждение';
+$MESS['INTERVOLGA_MIGRATO.WEB_EXECUTE'] = 'Выполнить';
+$MESS['INTERVOLGA_MIGRATO.WEB_OPEN_IN_NEW_WINDOW'] = 'открыть вывод в новом окне';

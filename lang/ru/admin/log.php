@@ -1,0 +1,19 @@
+<?
+$MESS['INTERVOLGA_MIGRATO.WEB_MODULE_NOT_INSTALLED'] = 'Модуль миграций (intervolga.migrato) не установлен';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_TITLE'] = 'Миграции: журнал';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_NAV'] = 'Записи журнала';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_TIME'] = 'Время';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_COMMAND'] = 'Команда';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_DATA'] = 'Сущность';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_MODULE'] = 'Модуль';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_ENTITY'] = 'Тип данных';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_XML_ID'] = 'Внешний код';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_ID'] = 'ID записи';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_OPERATION'] = 'Операция';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_RESULT'] = 'Результат';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_COMMENT'] = 'Комментарий';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_ANY'] = '(все)';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_CLEAR'] = 'Очистить журнал';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_CLEAR_CONFIRM'] = 'Очистить журнал миграций?';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_CLEARED'] = 'Журнал очищен';
+$MESS['INTERVOLGA_MIGRATO.WEB_LOG_TOO_MANY'] = 'В журнале #TOTAL# записей, показаны первые #SHOWN#. Уточните фильтр, чтобы увидеть остальные';
