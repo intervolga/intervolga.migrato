@@ -34,7 +34,7 @@ abstract class BaseCommand extends Command
 
 	abstract public function executeInner();
 
-	public function execute(InputInterface $input, OutputInterface $output)
+	public function execute(InputInterface $input, OutputInterface $output): int
 	{
 		$this->input = $input;
 		$this->output = $output;

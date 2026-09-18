@@ -3,7 +3,7 @@
     "description": "bitrix database migration module",
     "type": "bitrix-d7-module",
 	"require": {
-		"symfony/console": "^6.0",
+		"symfony/console": "^6.0 || ^7.0",
 		"composer/installers": "~1.0"
 	}
 }
