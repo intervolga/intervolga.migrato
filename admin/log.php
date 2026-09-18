@@ -22,6 +22,11 @@ if (!Loader::includeModule('intervolga.migrato'))
 Helper::checkReadRights();
 
 /**
+ * Выгрузка списка в Excel штатными средствами CAdminList
+ */
+$isExcelMode = (($_REQUEST['mode'] ?? '') === 'excel');
+
+/**
  * Максимальное число записей, выбираемых из журнала за один раз
  */
 const INTERVOLGA_MIGRATO_LOG_MAX_ROWS = 10000;
@@ -154,7 +159,14 @@ $rows = LogTable::getList(array(
 $dbResult = new CDBResult();
 $dbResult->InitFromArray($rows);
 $rsData = new CAdminResult($dbResult, $sTableID);
-$rsData->NavStart();
+if ($isExcelMode)
+{
+	$rsData->NavStart(max(count($rows), 1), false, 1);
+}
+else
+{
+	$rsData->NavStart();
+}
 $lAdmin->NavText($rsData->GetNavPrint(Loc::getMessage('INTERVOLGA_MIGRATO.WEB_LOG_NAV')));
 
 while ($log = $rsData->NavNext(false))
@@ -190,7 +202,7 @@ while ($log = $rsData->NavNext(false))
 	}
 	$row->AddViewField('RECORD_ID', htmlspecialcharsbx($recordId));
 
-	if ($log['RESULT'] === LogTable::RESULT_FAIL)
+	if ($log['RESULT'] === LogTable::RESULT_FAIL && !$isExcelMode)
 	{
 		$row->AddViewField(
 			'RESULT',
@@ -205,7 +217,11 @@ while ($log = $rsData->NavNext(false))
 	$comment = (string)$log['COMMENT'];
 	$shortComment = explode(PHP_EOL . PHP_EOL, $comment);
 	$shortComment = $shortComment[0];
-	if ($shortComment !== $comment)
+	if ($isExcelMode)
+	{
+		$row->AddViewField('COMMENT', htmlspecialcharsbx($comment));
+	}
+	elseif ($shortComment !== $comment)
 	{
 		$row->AddViewField(
 			'COMMENT',
@@ -233,7 +249,19 @@ if (Helper::canWrite())
 		'ICON' => 'btn_delete',
 	);
 }
-$lAdmin->AddAdminContextMenu($contextMenu, false);
+if ($isExcelMode && $totalCount > INTERVOLGA_MIGRATO_LOG_MAX_ROWS)
+{
+	$row = &$lAdmin->AddRow('limit', array());
+	$row->AddViewField('COMMENT', htmlspecialcharsbx(Loc::getMessage(
+		'INTERVOLGA_MIGRATO.WEB_LOG_TOO_MANY',
+		array(
+			'#TOTAL#' => $totalCount,
+			'#SHOWN#' => INTERVOLGA_MIGRATO_LOG_MAX_ROWS,
+		)
+	)));
+}
+
+$lAdmin->AddAdminContextMenu($contextMenu, true);
 
 $lAdmin->CheckListMode();
 
