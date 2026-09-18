@@ -5,5 +5,5 @@ $MESS['INTERVOLGA_MIGRATO.WEB_MENU_COMMANDS'] = 'Команды';
 $MESS['INTERVOLGA_MIGRATO.WEB_MENU_COMMANDS_TITLE'] = 'Запуск команд модуля миграций';
 $MESS['INTERVOLGA_MIGRATO.WEB_MENU_LOG'] = 'Журнал';
 $MESS['INTERVOLGA_MIGRATO.WEB_MENU_LOG_TITLE'] = 'Журнал последней миграции';
-$MESS['INTERVOLGA_MIGRATO.WEB_MENU_CONFIG'] = 'Настройки миграции';
-$MESS['INTERVOLGA_MIGRATO.WEB_MENU_CONFIG_TITLE'] = 'Редактирование config.xml';
+$MESS['INTERVOLGA_MIGRATO.WEB_MENU_SETTINGS'] = 'Настройки миграции';
+$MESS['INTERVOLGA_MIGRATO.WEB_MENU_SETTINGS_TITLE'] = 'Сущности, опции и права доступа модуля';

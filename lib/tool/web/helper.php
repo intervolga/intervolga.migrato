@@ -16,6 +16,7 @@ class Helper
 	const PAGE_EXECUTE = 'intervolga_migrato_execute.php';
 	const PAGE_LOG = 'intervolga_migrato_log.php';
 	const PAGE_CONFIG = 'intervolga_migrato_config.php';
+	const PAGE_SETTINGS = 'settings.php';
 
 	/**
 	 * Уровень доступа текущего пользователя к модулю
@@ -83,22 +84,43 @@ class Helper
 	public static function getPagesMenu($current = '')
 	{
 		$pages = array(
-			static::PAGE_INDEX => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_COMMANDS'),
-			static::PAGE_LOG => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_LOG'),
-			static::PAGE_CONFIG => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_CONFIG'),
+			static::PAGE_INDEX => array(
+				'TEXT' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_COMMANDS'),
+				'LINK' => static::getUrl(static::PAGE_INDEX),
+			),
+			static::PAGE_LOG => array(
+				'TEXT' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_LOG'),
+				'LINK' => static::getUrl(static::PAGE_LOG),
+			),
+			static::PAGE_SETTINGS => array(
+				'TEXT' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_SETTINGS'),
+				'LINK' => static::getSettingsUrl(),
+			),
+			static::PAGE_CONFIG => array(
+				'TEXT' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_CONFIG'),
+				'LINK' => static::getUrl(static::PAGE_CONFIG),
+			),
 		);
 		$result = array();
-		foreach ($pages as $page => $text)
+		foreach ($pages as $page => $item)
 		{
-			$result[] = array(
-				'TEXT' => $text,
-				'LINK' => static::getUrl($page),
-				'ICON' => 'btn',
-				'DEFAULT' => ($page === $current),
-			);
+			$item['ICON'] = 'btn';
+			$item['DEFAULT'] = ($page === $current);
+			$result[] = $item;
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Адрес страницы настроек модуля в стандартном разделе Битрикс
+	 *
+	 * @return string
+	 */
+	public static function getSettingsUrl()
+	{
+		return static::PAGE_SETTINGS . '?lang=' . LANGUAGE_ID
+			. '&mid=' . urlencode(static::MODULE_ID) . '&mid_menu=1';
 	}
 
 	/**
