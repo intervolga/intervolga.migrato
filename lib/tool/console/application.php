@@ -18,6 +18,7 @@ use Intervolga\Migrato\Tool\Console\Command\ImportXmlIdCommand;
 use Intervolga\Migrato\Tool\Console\Command\LogCommand;
 use Intervolga\Migrato\Tool\Console\Command\ReIndexCommand;
 use Intervolga\Migrato\Tool\Console\Command\ReIndexFacetCommand;
+use Intervolga\Migrato\Tool\Console\Command\SnapshotCommand;
 use Intervolga\Migrato\Tool\Console\Command\UnitTestCommand;
 use Intervolga\Migrato\Tool\Console\Command\UnusedConfigCommand;
 use Intervolga\Migrato\Tool\Console\Command\UrlRewriteCommand;
@@ -66,6 +67,7 @@ class Application extends \Symfony\Component\Console\Application
 			new CheckExecCommand(),
 			new ReIndexFacetCommand(),
 			new Backup(),
+			new SnapshotCommand(),
 			new CleanDeletedXml()
 		));
 	}

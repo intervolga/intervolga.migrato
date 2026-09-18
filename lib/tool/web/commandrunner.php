@@ -46,6 +46,7 @@ class CommandRunner
 		'export',
 		'import',
 		'validate',
+		'snapshot',
 		'log',
 	);
 
