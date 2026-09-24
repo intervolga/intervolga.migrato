@@ -183,32 +183,32 @@ class Overview
 				}
 			}
 			$rows[] = array(
-				'NAME' => $module,
+				'CODE' => $module,
+				'NAME' => static::getModuleNameLoc($module),
 				'PATH' => '/' . $module,
 				'TYPE' => static::TYPE_MODULE,
-				'TYPE_NAME' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_TYPE_MODULE'),
 				'ENTITIES' => count($entities),
 				'RECORDS' => $hasError ? '' : $records,
-				'DESCRIPTION' => static::getModuleNameLoc($module),
 				'IS_ERROR' => $hasError,
+				'ERROR' => '',
 			);
 		}
 
 		$options = static::getIncludedOptions();
 		$total = 0;
-		foreach ($options as $names)
+		foreach ($options as $moduleOptions)
 		{
-			$total += count($names);
+			$total += count($moduleOptions);
 		}
 		$rows[] = array(
+			'CODE' => '',
 			'NAME' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_OPTIONS'),
 			'PATH' => static::OPTIONS_PATH,
 			'TYPE' => static::TYPE_OPTIONS,
-			'TYPE_NAME' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_TYPE_OPTIONS'),
 			'ENTITIES' => count($options),
 			'RECORDS' => $total,
-			'DESCRIPTION' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_OPTIONS_NOTE'),
 			'IS_ERROR' => false,
+			'ERROR' => '',
 		);
 
 		return $rows;
@@ -229,14 +229,14 @@ class Overview
 		{
 			$count = static::getRecordsCount($dataClass);
 			$rows[] = array(
-				'NAME' => $entity,
+				'CODE' => $entity,
+				'NAME' => $dataClass->getEntityNameLoc(),
 				'PATH' => '/' . $module . '/' . $entity,
 				'TYPE' => static::TYPE_ENTITY,
-				'TYPE_NAME' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_TYPE_ENTITY'),
 				'ENTITIES' => '',
 				'RECORDS' => $count['count'] === null ? '' : $count['count'],
-				'DESCRIPTION' => $count['error'] ? $count['error'] : $dataClass->getEntityNameLoc(),
 				'IS_ERROR' => (bool)$count['error'],
+				'ERROR' => $count['error'],
 			);
 		}
 
@@ -253,23 +253,51 @@ class Overview
 	 */
 	protected static function getRecordRows($module, $entity)
 	{
+		$dataClass = static::getDataClass($module, $entity);
 		$rows = array();
 		foreach (static::getRecords($module, $entity) as $record)
 		{
+			$file = $dataClass ? static::getFileInfo($dataClass, $record->getXmlId()) : array('EXISTS' => false);
 			$rows[] = array(
-				'NAME' => $record->getXmlId(),
+				'CODE' => static::getIdString($record->getId()),
+				'NAME' => static::getRecordName($record),
+				'XML_ID' => $record->getXmlId(),
+				'ATTRIBUTES' => static::getAttributesCount($record),
+				'HAS_FILE' => $file['EXISTS'],
+				'FILE_PATH' => $file['EXISTS'] ? $file['RELATIVE_PATH'] : '',
 				'PATH' => '',
 				'TYPE' => static::TYPE_RECORD,
-				'TYPE_NAME' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_TYPE_RECORD'),
-				'XML_ID' => $record->getXmlId(),
-				'RECORD_ID' => static::getIdString($record->getId()),
-				'ATTRIBUTES' => static::getAttributesCount($record),
-				'DESCRIPTION' => '',
 				'IS_ERROR' => false,
+				'ERROR' => '',
 			);
 		}
 
 		return $rows;
+	}
+
+	/**
+	 * Человекочитаемое название записи, если его удается определить по полям
+	 *
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return string
+	 */
+	public static function getRecordName(Record $record)
+	{
+		foreach (array('NAME', 'TITLE', 'CODE', 'LID', 'SORT') as $name)
+		{
+			$field = $record->getField($name);
+			if ($field instanceof Value && !$field->isMultiple())
+			{
+				$value = trim((string)$field->getValue());
+				if ($value !== '')
+				{
+					return $value;
+				}
+			}
+		}
+
+		return '';
 	}
 
 	/**
@@ -280,17 +308,17 @@ class Overview
 	protected static function getOptionModuleRows()
 	{
 		$rows = array();
-		foreach (static::getIncludedOptions() as $module => $names)
+		foreach (static::getIncludedOptions() as $module => $options)
 		{
 			$rows[] = array(
-				'NAME' => $module,
+				'CODE' => $module,
+				'NAME' => static::getModuleNameLoc($module),
 				'PATH' => static::OPTIONS_PATH . '/' . $module,
 				'TYPE' => static::TYPE_MODULE,
-				'TYPE_NAME' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_TYPE_MODULE'),
 				'ENTITIES' => '',
-				'RECORDS' => count($names),
-				'DESCRIPTION' => static::getModuleNameLoc($module),
+				'RECORDS' => count($options),
 				'IS_ERROR' => false,
+				'ERROR' => '',
 			);
 		}
 
@@ -308,18 +336,21 @@ class Overview
 	{
 		$options = static::getIncludedOptions();
 		$rows = array();
-		foreach ($options[$module] ?? array() as $name)
+		foreach ($options[$module] ?? array() as $option)
 		{
+			$code = $option['NAME'];
+			if ($option['SITE_ID'])
+			{
+				$code .= ' [' . $option['SITE_ID'] . ']';
+			}
 			$rows[] = array(
-				'NAME' => $name,
+				'CODE' => $code,
+				'NAME' => '',
+				'VALUE' => $option['VALUE'],
 				'PATH' => '',
 				'TYPE' => static::TYPE_OPTION,
-				'TYPE_NAME' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_TYPE_OPTION'),
-				'XML_ID' => $name,
-				'RECORD_ID' => '',
-				'ATTRIBUTES' => '',
-				'DESCRIPTION' => '',
 				'IS_ERROR' => false,
+				'ERROR' => '',
 			);
 		}
 
@@ -494,6 +525,82 @@ class Overview
 		}
 
 		return array((string)$value->getValue());
+	}
+
+	/**
+	 * Ссылка на запись в "родном" разделе админки, если он известен.
+	 * Единого API для этого в Битриксе нет, поэтому используется таблица
+	 * соответствий: ключ - "модуль:сущность", значение - шаблон адреса.
+	 *
+	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
+	 * @param \Intervolga\Migrato\Data\Record $record
+	 *
+	 * @return string пустая строка, если раздел неизвестен
+	 */
+	public static function getNativeUrl(BaseData $dataClass, Record $record)
+	{
+		$id = $record->getId();
+		if (!($id instanceof RecordId) || is_array($id->getValue()))
+		{
+			return '';
+		}
+		$value = (string)$id->getValue();
+		$key = $dataClass->getModule() . ':' . $dataClass->getEntityName();
+
+		if ($key === 'iblock:iblock')
+		{
+			return static::getIblockUrl($value);
+		}
+
+		$map = array(
+			'main:group' => 'group_edit.php?ID=#ID#',
+			'main:site' => 'site_edit.php?LID=#ID#',
+			'main:language' => 'lang_edit.php?LID=#ID#',
+			'main:culture' => 'culture_edit.php?ID=#ID#',
+			'main:sitetemplate' => 'template_edit.php?ID=#ID#',
+			'main:agent' => 'agent_edit.php?ID=#ID#',
+			'main:task' => 'task_edit.php?ID=#ID#',
+			'main:event' => 'event_message_edit.php?ID=#ID#',
+			'main:eventtype' => 'event_type_edit.php?ID=#ID#',
+			'iblock:type' => 'iblock_type_edit.php?ID=#ID#',
+			'catalog:store' => 'cat_store_edit.php?ID=#ID#',
+			'catalog:pricetype' => 'cat_group_edit.php?ID=#ID#',
+			'highloadblock:highloadblock' => 'highloadblock_entity_edit.php?ID=#ID#',
+			'sale:status' => 'sale_status_edit.php?ID=#ID#',
+			'sale:persontype' => 'sale_person_type_edit.php?ID=#ID#',
+			'form:form' => 'form_edit.php?ID=#ID#',
+		);
+		if (!isset($map[$key]))
+		{
+			return '';
+		}
+
+		return '/bitrix/admin/' . str_replace('#ID#', urlencode($value), $map[$key])
+			. '&lang=' . LANGUAGE_ID;
+	}
+
+	/**
+	 * Страница редактирования инфоблока требует еще и тип инфоблока
+	 *
+	 * @param string $iblockId
+	 *
+	 * @return string
+	 */
+	protected static function getIblockUrl($iblockId)
+	{
+		if (!\Bitrix\Main\Loader::includeModule('iblock'))
+		{
+			return '';
+		}
+		$type = \CIBlock::GetArrayByID($iblockId, 'IBLOCK_TYPE_ID');
+		if (!$type)
+		{
+			return '';
+		}
+
+		return '/bitrix/admin/iblock_edit.php?ID=' . urlencode($iblockId)
+			. '&type=' . urlencode($type)
+			. '&admin=Y&lang=' . LANGUAGE_ID;
 	}
 
 	/**
@@ -688,7 +795,7 @@ class Overview
 	/**
 	 * Имена опций по модулям с учетом правил исключения
 	 *
-	 * @return array[] array('main' => array('option_name'))
+	 * @return array[] array('main' => array(array('NAME' =>, 'VALUE' =>, 'SITE_ID' =>)))
 	 */
 	protected static function getIncludedOptions()
 	{
@@ -697,10 +804,11 @@ class Overview
 		{
 			$result = array();
 			$getList = OptionTable::getList(array(
-				'select' => array('MODULE_ID', 'NAME'),
+				'select' => array('MODULE_ID', 'NAME', 'VALUE', 'SITE_ID'),
 				'order' => array(
 					'MODULE_ID' => 'ASC',
 					'NAME' => 'ASC',
+					'SITE_ID' => 'ASC',
 				),
 			));
 			while ($option = $getList->fetch())
@@ -713,11 +821,11 @@ class Overview
 				{
 					continue;
 				}
-				$result[$option['MODULE_ID']][$option['NAME']] = $option['NAME'];
-			}
-			foreach ($result as $module => $names)
-			{
-				$result[$module] = array_values($names);
+				$result[$option['MODULE_ID']][] = array(
+					'NAME' => $option['NAME'],
+					'VALUE' => (string)$option['VALUE'],
+					'SITE_ID' => (string)$option['SITE_ID'],
+				);
 			}
 			ksort($result);
 		}
