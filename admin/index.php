@@ -47,30 +47,15 @@ $lAdmin->AddHeaders(array(
 		'content' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_COLUMN_DESCRIPTION'),
 		'default' => true,
 	),
-	array(
-		'id' => 'PARAMETERS',
-		'content' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_COLUMN_PARAMETERS'),
-		'default' => true,
-	),
 ));
 
 $commands = CommandRunner::getCommands();
 $rows = array();
 foreach ($commands as $name => $command)
 {
-	$parameters = array();
-	foreach ($command->getDefinition()->getArguments() as $argument)
-	{
-		$parameters[] = $argument->getName();
-	}
-	foreach ($command->getDefinition()->getOptions() as $option)
-	{
-		$parameters[] = '--' . $option->getName();
-	}
 	$rows[] = array(
 		'NAME' => $name,
 		'DESCRIPTION' => $command->getDescription(),
-		'PARAMETERS' => implode(', ', $parameters),
 	);
 }
 
@@ -105,10 +90,6 @@ while ($command = $rsData->NavNext(false))
 	}
 	$row->AddViewField('NAME', $name);
 	$row->AddViewField('DESCRIPTION', htmlspecialcharsbx($command['DESCRIPTION']));
-	$row->AddViewField(
-		'PARAMETERS',
-		'<span class="migrato-command-parameters">' . htmlspecialcharsbx($command['PARAMETERS']) . '</span>'
-	);
 
 	if (Helper::canWrite())
 	{
@@ -164,12 +145,6 @@ if (!Helper::canWrite())
 	{
 		color: #c0392b;
 		font-size: 11px;
-	}
-	.migrato-command-parameters
-	{
-		font-family: "Courier New", Consolas, monospace;
-		font-size: 11px;
-		color: #6a6a6a;
 	}
 </style>
 <?php if (Helper::canWrite()): ?>

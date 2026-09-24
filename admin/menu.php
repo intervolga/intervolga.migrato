@@ -34,6 +34,11 @@ $aMenu = array(
 			'title' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_COMMANDS_TITLE'),
 		),
 		array(
+			'text' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_OVERVIEW'),
+			'url' => 'intervolga_migrato_overview.php?lang=' . LANGUAGE_ID,
+			'title' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_OVERVIEW_TITLE'),
+		),
+		array(
 			'text' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_LOG'),
 			'url' => 'intervolga_migrato_log.php?lang=' . LANGUAGE_ID,
 			'title' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_LOG_TITLE'),

@@ -16,6 +16,7 @@ class intervolga_migrato extends CModule
 	 */
 	const ADMIN_PAGES = array(
 		'index',
+		'overview',
 		'run',
 		'execute',
 		'log',

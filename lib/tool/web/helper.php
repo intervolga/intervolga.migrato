@@ -15,6 +15,7 @@ class Helper
 	const PAGE_RUN = 'intervolga_migrato_run.php';
 	const PAGE_EXECUTE = 'intervolga_migrato_execute.php';
 	const PAGE_LOG = 'intervolga_migrato_log.php';
+	const PAGE_OVERVIEW = 'intervolga_migrato_overview.php';
 	const PAGE_CONFIG = 'intervolga_migrato_config.php';
 	const PAGE_SETTINGS = 'settings.php';
 
@@ -87,6 +88,10 @@ class Helper
 			static::PAGE_INDEX => array(
 				'TEXT' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_COMMANDS'),
 				'LINK' => static::getUrl(static::PAGE_INDEX),
+			),
+			static::PAGE_OVERVIEW => array(
+				'TEXT' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_OVERVIEW'),
+				'LINK' => static::getUrl(static::PAGE_OVERVIEW),
 			),
 			static::PAGE_LOG => array(
 				'TEXT' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_LOG'),
