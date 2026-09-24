@@ -197,15 +197,70 @@ class Helper
 	 */
 	public static function getFileManUrl()
 	{
-		if (!\Bitrix\Main\ModuleManager::isModuleInstalled('fileman'))
+		if (!static::isFileManAvailable())
 		{
 			return static::getUrl(static::PAGE_CONFIG);
 		}
 
-		return '/bitrix/admin/fileman_file_edit.php?lang=' . LANGUAGE_ID
+		return static::getFileManEditUrl(static::getConfigRelativePath(), static::getSettingsUrl());
+	}
+
+	/**
+	 * @return bool
+	 */
+	public static function isFileManAvailable()
+	{
+		return \Bitrix\Main\ModuleManager::isModuleInstalled('fileman');
+	}
+
+	/**
+	 * Редактирование файла в разделе "Файлы и папки"
+	 *
+	 * @param string $relativePath путь от корня сайта
+	 * @param string $backUrl
+	 *
+	 * @return string
+	 */
+	public static function getFileManEditUrl($relativePath, $backUrl = '')
+	{
+		return static::getFileManPageUrl('fileman_file_edit.php', $relativePath, $backUrl);
+	}
+
+	/**
+	 * Просмотр файла в разделе "Файлы и папки"
+	 *
+	 * @param string $relativePath путь от корня сайта
+	 * @param string $backUrl
+	 *
+	 * @return string
+	 */
+	public static function getFileManViewUrl($relativePath, $backUrl = '')
+	{
+		return static::getFileManPageUrl('fileman_file_view.php', $relativePath, $backUrl);
+	}
+
+	/**
+	 * @param string $page
+	 * @param string $relativePath
+	 * @param string $backUrl
+	 *
+	 * @return string
+	 */
+	protected static function getFileManPageUrl($page, $relativePath, $backUrl = '')
+	{
+		if (!static::isFileManAvailable())
+		{
+			return $relativePath;
+		}
+		$url = '/bitrix/admin/' . $page . '?lang=' . LANGUAGE_ID
 			. '&site=' . urlencode(static::getSiteId())
-			. '&path=' . urlencode(static::getConfigRelativePath())
-			. '&back_url=' . urlencode(static::getSettingsUrl());
+			. '&path=' . urlencode($relativePath);
+		if ($backUrl)
+		{
+			$url .= '&back_url=' . urlencode($backUrl);
+		}
+
+		return $url;
 	}
 
 	/**
