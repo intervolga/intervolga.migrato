@@ -23,6 +23,20 @@ Helper::checkReadRights();
 
 @set_time_limit(0);
 
+/**
+ * Значение ячейки или прочерк
+ *
+ * @param string $value
+ *
+ * @return string
+ */
+function migratoCell($value)
+{
+	$value = (string)$value;
+
+	return $value === '' ? '&mdash;' : htmlspecialcharsbx($value);
+}
+
 $path = Overview::normalizePath($_REQUEST['path'] ?? '');
 if (!Overview::isPathExists($path))
 {
@@ -30,9 +44,8 @@ if (!Overview::isPathExists($path))
 }
 $level = Overview::getLevel($path);
 $xmlId = (string)($_REQUEST['xml_id'] ?? '');
-$isDetail = ($level === 'records' && $xmlId !== '');
 
-if ($isDetail)
+if ($level === 'records' && $xmlId !== '')
 {
 	require(__DIR__ . '/overview_detail.php');
 
@@ -45,54 +58,37 @@ $APPLICATION->SetTitle(Loc::getMessage(
 ));
 
 $sTableID = 'tbl_intervolga_migrato_overview';
-$oSort = new CAdminSorting($sTableID, 'NAME', 'asc');
+$oSort = new CAdminSorting($sTableID, 'CODE', 'asc');
 $lAdmin = new CAdminList($sTableID, $oSort);
 
-$headers = array(
-	array(
-		'id' => 'NAME',
-		'content' => $level === 'records'
-			? Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_XML_ID')
-			: Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_NAME'),
-		'default' => true,
-	),
+$columns = array(
+	'modules' => array('CODE', 'NAME', 'ENTITIES', 'RECORDS'),
+	'entities' => array('CODE', 'NAME', 'RECORDS'),
+	'records' => array('CODE', 'NAME', 'XML_ID', 'ATTRIBUTES', 'FILE'),
+	'option-modules' => array('CODE', 'NAME', 'RECORDS'),
+	'option-names' => array('CODE', 'VALUE'),
 );
-if ($level === 'modules')
+$titles = array(
+	'CODE' => $level === 'records'
+		? Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_ID')
+		: Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_CODE'),
+	'NAME' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_NAME'),
+	'ENTITIES' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_ENTITIES'),
+	'RECORDS' => $level === 'option-modules'
+		? Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_OPTIONS')
+		: Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_RECORDS'),
+	'XML_ID' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_XML_ID'),
+	'ATTRIBUTES' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_ATTRIBUTES'),
+	'FILE' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_FILE'),
+	'VALUE' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_VALUE'),
+);
+$headers = array();
+foreach ($columns[$level] as $column)
 {
 	$headers[] = array(
-		'id' => 'ENTITIES',
-		'content' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_ENTITIES'),
-		'align' => 'right',
-		'default' => true,
-	);
-}
-if ($level === 'records')
-{
-	$headers[] = array(
-		'id' => 'RECORD_ID',
-		'content' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_ID'),
-		'default' => true,
-	);
-	$headers[] = array(
-		'id' => 'ATTRIBUTES',
-		'content' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_ATTRIBUTES'),
-		'align' => 'right',
-		'default' => true,
-	);
-}
-else
-{
-	$headers[] = array(
-		'id' => 'RECORDS',
-		'content' => $level === 'option-modules'
-			? Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_OPTIONS')
-			: Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_RECORDS'),
-		'align' => 'right',
-		'default' => true,
-	);
-	$headers[] = array(
-		'id' => 'DESCRIPTION',
-		'content' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_DESCRIPTION'),
+		'id' => $column,
+		'content' => $titles[$column],
+		'align' => in_array($column, array('ENTITIES', 'RECORDS', 'ATTRIBUTES'), true) ? 'right' : 'left',
 		'default' => true,
 	);
 }
@@ -102,16 +98,12 @@ $rows = Helper::isConfigExists() ? Overview::getRows($path) : array();
 if ($path !== '')
 {
 	array_unshift($rows, array(
-		'NAME' => '..',
+		'CODE' => '..',
+		'NAME' => '',
 		'PATH' => Overview::getParentPath($path),
 		'TYPE' => Overview::TYPE_UP,
-		'TYPE_NAME' => '',
-		'ENTITIES' => '',
-		'RECORDS' => '',
-		'RECORD_ID' => '',
-		'ATTRIBUTES' => '',
-		'DESCRIPTION' => '',
 		'IS_ERROR' => false,
+		'ERROR' => '',
 	));
 }
 
@@ -133,8 +125,8 @@ while ($item = $rsData->NavNext(false))
 {
 	$row = &$lAdmin->AddRow('row_' . $index++, $item);
 
-	$isFolder = ($item['PATH'] !== '');
 	$isUp = ($item['TYPE'] === Overview::TYPE_UP);
+	$isFolder = (!$isUp && (string)$item['PATH'] !== '');
 	$url = '';
 	if ($isFolder || $isUp)
 	{
@@ -144,51 +136,74 @@ while ($item = $rsData->NavNext(false))
 	{
 		$url = Helper::getUrl(
 			Helper::PAGE_OVERVIEW,
-			array('path' => $path, 'xml_id' => $item['NAME'])
+			array('path' => $path, 'xml_id' => $item['XML_ID'])
 		);
 	}
 
-	$name = '';
+	$code = '';
 	if ($isUp)
 	{
-		$name = '<span class="fileman_icon_folder_up"></span> ';
+		$code = '<span class="adm-submenu-item-link-icon fileman_icon_folder_up"></span> ';
 	}
 	elseif ($isFolder)
 	{
-		$name = '<span class="fileman_icon_folder"></span> ';
+		$code = '<span class="adm-submenu-item-link-icon fileman_icon_folder"></span> ';
 	}
 	if ($url)
 	{
-		$name .= '<a href="' . htmlspecialcharsbx($url) . '">'
+		$code .= '<a href="' . htmlspecialcharsbx($url) . '">'
 			. ($isFolder || $isUp ? '<b>' : '')
-			. htmlspecialcharsbx($item['NAME'])
+			. migratoCell($item['CODE'])
 			. ($isFolder || $isUp ? '</b>' : '')
 			. '</a>';
 	}
 	else
 	{
-		$name .= htmlspecialcharsbx($item['NAME']);
+		$code .= migratoCell($item['CODE']);
 	}
-	$row->AddViewField('NAME', $name);
+	if ($item['IS_ERROR'] && $item['ERROR'])
+	{
+		$code .= '<div class="migrato-overview-error">' . htmlspecialcharsbx($item['ERROR']) . '</div>';
+	}
+	$row->AddViewField('CODE', $code);
 
-	if ($level === 'modules')
+	foreach ($columns[$level] as $column)
 	{
-		$row->AddViewField('ENTITIES', htmlspecialcharsbx((string)$item['ENTITIES']));
-	}
-	if ($level === 'records')
-	{
-		$row->AddViewField('RECORD_ID', htmlspecialcharsbx((string)$item['RECORD_ID']));
-		$row->AddViewField('ATTRIBUTES', htmlspecialcharsbx((string)$item['ATTRIBUTES']));
-	}
-	else
-	{
-		$row->AddViewField('RECORDS', htmlspecialcharsbx((string)$item['RECORDS']));
-		$row->AddViewField(
-			'DESCRIPTION',
-			$item['IS_ERROR']
-				? '<span class="migrato-overview-error">' . htmlspecialcharsbx($item['DESCRIPTION']) . '</span>'
-				: htmlspecialcharsbx($item['DESCRIPTION'])
-		);
+		if ($column === 'CODE')
+		{
+			continue;
+		}
+		if ($column === 'FILE')
+		{
+			if ($item['HAS_FILE'])
+			{
+				$row->AddViewField(
+					'FILE',
+					'<a href="' . htmlspecialcharsbx(Helper::getFileManViewUrl($item['FILE_PATH'])) . '">'
+					. Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_FILE_YES') . '</a>'
+				);
+			}
+			else
+			{
+				$row->AddViewField(
+					'FILE',
+					'<span class="migrato-overview-empty">'
+					. Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_FILE_NO') . '</span>'
+				);
+			}
+			continue;
+		}
+		if ($column === 'VALUE')
+		{
+			$value = (string)$item['VALUE'];
+			$short = mb_strlen($value) > 200 ? mb_substr($value, 0, 200) . '…' : $value;
+			$row->AddViewField(
+				'VALUE',
+				'<span title="' . htmlspecialcharsbx($value) . '">' . migratoCell($short) . '</span>'
+			);
+			continue;
+		}
+		$row->AddViewField($column, migratoCell($item[$column] ?? ''));
 	}
 
 	if ($url)
@@ -223,6 +238,11 @@ if (!Helper::isConfigExists())
 	.migrato-overview-error
 	{
 		color: #c0392b;
+		font-size: 11px;
+	}
+	.migrato-overview-empty
+	{
+		color: #8b8b8b;
 	}
 	.migrato-overview-hint
 	{

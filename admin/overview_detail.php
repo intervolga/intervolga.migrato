@@ -68,7 +68,7 @@ elseif ($comparison['STATUS'] === Overview::FILE_DIFFERS)
 else
 {
 	CAdminMessage::ShowMessage(array(
-		'TYPE' => 'PROGRESS',
+		'TYPE' => 'ERROR',
 		'MESSAGE' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_FILE_ABSENT'),
 	));
 }
@@ -143,7 +143,23 @@ $tabControl->BeginNextTab();
 </tr>
 <tr>
 	<td><?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_ID') ?>:</td>
-	<td><span class="migrato-detail-name"><?= htmlspecialcharsbx(Overview::getIdString($record->getId())) ?></span></td>
+	<td>
+		<span class="migrato-detail-name"><?= htmlspecialcharsbx(Overview::getIdString($record->getId())) ?></span>
+		<?php $nativeUrl = Overview::getNativeUrl($dataClass, $record); ?>
+		<?php if ($nativeUrl): ?>
+			<span class="migrato-detail-hint">
+				<a href="<?= htmlspecialcharsbx($nativeUrl) ?>">
+					<?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_NATIVE_LINK') ?>
+				</a>
+			</span>
+		<?php endif; ?>
+	</td>
+</tr>
+<tr>
+	<td><?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_NAME') ?>:</td>
+	<td><?= Overview::getRecordName($record) === ''
+		? '&mdash;'
+		: htmlspecialcharsbx(Overview::getRecordName($record)) ?></td>
 </tr>
 <tr>
 	<td><?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_ATTRIBUTES') ?>:</td>
