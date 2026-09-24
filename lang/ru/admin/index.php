@@ -7,7 +7,6 @@ $MESS['INTERVOLGA_MIGRATO.WEB_READ_ONLY'] = 'У вас есть доступ т�
 $MESS['INTERVOLGA_MIGRATO.WEB_QUICK_START'] = 'Часто используемые команды';
 $MESS['INTERVOLGA_MIGRATO.WEB_COLUMN_COMMAND'] = 'Команда';
 $MESS['INTERVOLGA_MIGRATO.WEB_COLUMN_DESCRIPTION'] = 'Описание';
-$MESS['INTERVOLGA_MIGRATO.WEB_COLUMN_PARAMETERS'] = 'Параметры';
 $MESS['INTERVOLGA_MIGRATO.WEB_COMMAND_DANGEROUS'] = 'Изменяет данные сайта';
 $MESS['INTERVOLGA_MIGRATO.WEB_RUN'] = 'Запустить';
 $MESS['INTERVOLGA_MIGRATO.WEB_NO_SYMFONY'] = 'Не установлен пакет symfony/console, запуск команд невозможен. Выполните composer install в каталоге модуля';
