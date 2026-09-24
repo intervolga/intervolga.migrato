@@ -114,7 +114,7 @@ if ($errors)
 <style>
 	.migrato-console-wrap
 	{
-		margin: 15px 0;
+		margin: 0;
 		border: 1px solid #c6cdd3;
 		border-radius: 2px;
 		background: #1f2529;
@@ -153,13 +153,27 @@ if ($errors)
 	}
 </style>
 <?php
+$tabControlName = 'migratoRunTabControl';
+if ($isStarted)
+{
+	/**
+	 * После запуска открываем вкладку с выводом команды.
+	 * CAdminTabControl берет активную вкладку из этого параметра запроса.
+	 */
+	$_REQUEST[$tabControlName . '_active_tab'] = 'migrato_output';
+}
 $tabControl = new CAdminTabControl(
-	'migratoRunTabControl',
+	$tabControlName,
 	array(
 		array(
 			'DIV' => 'params',
 			'TAB' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_TAB_PARAMS'),
 			'TITLE' => htmlspecialcharsbx($command->getDescription()),
+		),
+		array(
+			'DIV' => 'migrato_output',
+			'TAB' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_TAB_OUTPUT'),
+			'TITLE' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_TAB_OUTPUT_TITLE'),
 		),
 	)
 );
@@ -239,6 +253,30 @@ $tabControl->BeginNextTab();
 	</tr>
 <?php endif; ?>
 <?php
+$tabControl->BeginNextTab();
+?>
+<tr>
+	<td colspan="2">
+		<?php if ($isStarted): ?>
+			<div class="migrato-console-wrap" id="migrato-console-wrap">
+				<div class="migrato-console-panel">
+					<span class="migrato-console-string"><?= htmlspecialcharsbx(
+						CommandRunner::getConsoleString($commandName, $parameters, $verbosity)
+					) ?></span>
+					&mdash;
+					<a href="<?= htmlspecialcharsbx($executeUrl) ?>" target="_blank">
+						<?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OPEN_IN_NEW_WINDOW') ?>
+					</a>
+				</div>
+				<iframe class="migrato-console-frame" name="migrato-console" id="migrato-console"
+					src="<?= htmlspecialcharsbx($executeUrl) ?>"></iframe>
+			</div>
+		<?php else: ?>
+			<span class="migrato-hint"><?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OUTPUT_EMPTY') ?></span>
+		<?php endif; ?>
+	</td>
+</tr>
+<?php
 $tabControl->Buttons(false);
 ?>
 <input type="hidden" name="command" value="<?= htmlspecialcharsbx($commandName) ?>">
@@ -252,29 +290,14 @@ $tabControl->End();
 ?>
 </form>
 <?php
-
 if ($isStarted)
 {
 	?>
-	<div class="migrato-console-wrap" id="migrato-console-wrap">
-		<div class="migrato-console-panel">
-			<span class="migrato-console-string"><?= htmlspecialcharsbx(
-				CommandRunner::getConsoleString($commandName, $parameters, $verbosity)
-			) ?></span>
-			&mdash;
-			<a href="<?= htmlspecialcharsbx($executeUrl) ?>" target="_blank">
-				<?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OPEN_IN_NEW_WINDOW') ?>
-			</a>
-		</div>
-		<iframe class="migrato-console-frame" name="migrato-console" id="migrato-console"
-			src="<?= htmlspecialcharsbx($executeUrl) ?>"></iframe>
-	</div>
 	<script>
 		BX.ready(function () {
-			var wrap = document.getElementById('migrato-console-wrap');
-			if (wrap)
+			if (window.<?= CUtil::JSEscape($tabControlName) ?>)
 			{
-				BX.scrollToNode(wrap);
+				window.<?= CUtil::JSEscape($tabControlName) ?>.SelectTab('migrato_output');
 			}
 		});
 	</script>
