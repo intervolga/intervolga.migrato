@@ -31,20 +31,102 @@ if (!Helper::isConsoleAvailable())
 	die();
 }
 
+$sTableID = 'tbl_intervolga_migrato_commands';
+$oSort = new CAdminSorting($sTableID, 'NAME', 'asc');
+$lAdmin = new CAdminList($sTableID, $oSort);
+
+$lAdmin->AddHeaders(array(
+	array(
+		'id' => 'NAME',
+		'content' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_COLUMN_COMMAND'),
+		'sort' => 'NAME',
+		'default' => true,
+	),
+	array(
+		'id' => 'DESCRIPTION',
+		'content' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_COLUMN_DESCRIPTION'),
+		'default' => true,
+	),
+	array(
+		'id' => 'PARAMETERS',
+		'content' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_COLUMN_PARAMETERS'),
+		'default' => true,
+	),
+));
+
 $commands = CommandRunner::getCommands();
-$mainCommands = array();
-foreach (CommandRunner::MAIN_COMMANDS as $mainCommand)
+$rows = array();
+foreach ($commands as $name => $command)
 {
-	if (isset($commands[$mainCommand]))
+	$parameters = array();
+	foreach ($command->getDefinition()->getArguments() as $argument)
 	{
-		$mainCommands[$mainCommand] = $commands[$mainCommand];
+		$parameters[] = $argument->getName();
+	}
+	foreach ($command->getDefinition()->getOptions() as $option)
+	{
+		$parameters[] = '--' . $option->getName();
+	}
+	$rows[] = array(
+		'NAME' => $name,
+		'DESCRIPTION' => $command->getDescription(),
+		'PARAMETERS' => implode(', ', $parameters),
+	);
+}
+
+$order = method_exists($oSort, 'getOrder') ? $oSort->getOrder() : ($_REQUEST['order'] ?? 'asc');
+$isDesc = (strtoupper((string)$order) === 'DESC');
+usort(
+	$rows,
+	function(array $first, array $second) use ($isDesc)
+	{
+		$result = strcmp($first['NAME'], $second['NAME']);
+
+		return $isDesc ? -$result : $result;
+	}
+);
+
+$dbResult = new CDBResult();
+$dbResult->InitFromArray($rows);
+$rsData = new CAdminResult($dbResult, $sTableID);
+$rsData->NavStart(max(count($rows), 1), false, 1);
+
+while ($command = $rsData->NavNext(false))
+{
+	$runUrl = Helper::getUrl(Helper::PAGE_RUN, array('command' => $command['NAME']));
+	$row = &$lAdmin->AddRow($command['NAME'], $command);
+
+	$name = '<a href="' . htmlspecialcharsbx($runUrl) . '"><b>'
+		. htmlspecialcharsbx($command['NAME']) . '</b></a>';
+	if (CommandRunner::isDangerous($command['NAME']))
+	{
+		$name .= '<div class="migrato-command-danger">'
+			. Loc::getMessage('INTERVOLGA_MIGRATO.WEB_COMMAND_DANGEROUS') . '</div>';
+	}
+	$row->AddViewField('NAME', $name);
+	$row->AddViewField('DESCRIPTION', htmlspecialcharsbx($command['DESCRIPTION']));
+	$row->AddViewField(
+		'PARAMETERS',
+		'<span class="migrato-command-parameters">' . htmlspecialcharsbx($command['PARAMETERS']) . '</span>'
+	);
+
+	if (Helper::canWrite())
+	{
+		$row->AddActions(array(
+			array(
+				'ICON' => 'edit',
+				'TEXT' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_RUN'),
+				'ACTION' => $lAdmin->ActionRedirect($runUrl),
+				'DEFAULT' => true,
+			),
+		));
 	}
 }
 
-require_once($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_admin_after.php');
+$lAdmin->AddAdminContextMenu(Helper::getPagesMenu(Helper::PAGE_INDEX), false, false);
+$lAdmin->CheckListMode();
 
-$contextMenu = new CAdminContextMenu(Helper::getPagesMenu(Helper::PAGE_INDEX));
-$contextMenu->Show();
+require_once($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_admin_after.php');
 
 if (!Helper::isConfigExists())
 {
@@ -72,85 +154,36 @@ if (!Helper::canWrite())
 <style>
 	.migrato-quick-start
 	{
-		margin: 0 0 20px;
+		margin: 0 0 12px;
 	}
 	.migrato-quick-start .adm-btn
 	{
 		margin: 0 8px 8px 0;
 	}
-	.migrato-command-name
-	{
-		font-family: "Courier New", monospace;
-		font-weight: bold;
-		white-space: nowrap;
-	}
-	.migrato-command-note
-	{
-		color: #8b8b8b;
-		font-size: 11px;
-	}
 	.migrato-command-danger
 	{
 		color: #c0392b;
+		font-size: 11px;
+	}
+	.migrato-command-parameters
+	{
+		font-family: "Courier New", Consolas, monospace;
+		font-size: 11px;
+		color: #6a6a6a;
 	}
 </style>
+<?php if (Helper::canWrite()): ?>
 <div class="migrato-quick-start">
-	<h4><?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_QUICK_START') ?></h4>
-	<?php foreach ($mainCommands as $name => $command): ?>
-		<a class="adm-btn<?= (CommandRunner::isDangerous($name) ? '' : ' adm-btn-save') ?>"
-			href="<?= htmlspecialcharsbx(Helper::getUrl(Helper::PAGE_RUN, array('command' => $name))) ?>"
-			title="<?= htmlspecialcharsbx($command->getDescription()) ?>"><?= htmlspecialcharsbx($name) ?></a>
+	<?php foreach (CommandRunner::MAIN_COMMANDS as $name): ?>
+		<?php if (isset($commands[$name])): ?>
+			<a class="adm-btn<?= (CommandRunner::isDangerous($name) ? '' : ' adm-btn-save') ?>"
+				href="<?= htmlspecialcharsbx(Helper::getUrl(Helper::PAGE_RUN, array('command' => $name))) ?>"
+				title="<?= htmlspecialcharsbx($commands[$name]->getDescription()) ?>"><?= htmlspecialcharsbx($name) ?></a>
+		<?php endif; ?>
 	<?php endforeach; ?>
 </div>
-<table class="adm-list-table">
-	<thead>
-	<tr class="adm-list-table-header">
-		<td class="adm-list-table-cell"><?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_COLUMN_COMMAND') ?></td>
-		<td class="adm-list-table-cell"><?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_COLUMN_DESCRIPTION') ?></td>
-		<td class="adm-list-table-cell"><?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_COLUMN_ACTIONS') ?></td>
-	</tr>
-	</thead>
-	<tbody>
-	<?php foreach ($commands as $name => $command): ?>
-		<tr class="adm-list-table-row">
-			<td class="adm-list-table-cell">
-				<span class="migrato-command-name"><?= htmlspecialcharsbx($name) ?></span>
-				<?php if (CommandRunner::isDangerous($name)): ?>
-					<div class="migrato-command-note migrato-command-danger">
-						<?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_COMMAND_DANGEROUS') ?>
-					</div>
-				<?php endif; ?>
-			</td>
-			<td class="adm-list-table-cell">
-				<?= htmlspecialcharsbx($command->getDescription()) ?>
-				<?php
-				$parameters = array();
-				foreach ($command->getDefinition()->getArguments() as $argument)
-				{
-					$parameters[] = $argument->getName();
-				}
-				foreach ($command->getDefinition()->getOptions() as $option)
-				{
-					$parameters[] = '--' . $option->getName();
-				}
-				?>
-				<?php if ($parameters): ?>
-					<div class="migrato-command-note"><?= htmlspecialcharsbx(implode(', ', $parameters)) ?></div>
-				<?php endif; ?>
-			</td>
-			<td class="adm-list-table-cell">
-				<?php if (Helper::canWrite()): ?>
-					<a class="adm-btn"
-						href="<?= htmlspecialcharsbx(Helper::getUrl(Helper::PAGE_RUN, array('command' => $name))) ?>">
-						<?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_RUN') ?>
-					</a>
-				<?php else: ?>
-					&nbsp;
-				<?php endif; ?>
-			</td>
-		</tr>
-	<?php endforeach; ?>
-	</tbody>
-</table>
+<?php endif; ?>
 <?php
+$lAdmin->DisplayList();
+
 require_once($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/epilog_admin.php');

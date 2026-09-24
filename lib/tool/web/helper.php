@@ -98,7 +98,7 @@ class Helper
 			),
 			static::PAGE_CONFIG => array(
 				'TEXT' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_MENU_CONFIG'),
-				'LINK' => static::getUrl(static::PAGE_CONFIG),
+				'LINK' => static::getFileManUrl(),
 			),
 		);
 		$result = array();
@@ -181,6 +181,41 @@ class Helper
 		$documentRoot = str_replace('\\', '/', $documentRoot);
 
 		return str_replace($documentRoot, '', $path);
+	}
+
+	/**
+	 * Ссылка на config.xml в стандартном разделе "Файлы и папки".
+	 * Если модуль fileman недоступен, возвращает адрес страницы модуля
+	 * с ручным редактором.
+	 *
+	 * @return string
+	 */
+	public static function getFileManUrl()
+	{
+		if (!\Bitrix\Main\ModuleManager::isModuleInstalled('fileman'))
+		{
+			return static::getUrl(static::PAGE_CONFIG);
+		}
+
+		return '/bitrix/admin/fileman_file_edit.php?lang=' . LANGUAGE_ID
+			. '&site=' . urlencode(static::getSiteId())
+			. '&path=' . urlencode(static::getConfigRelativePath())
+			. '&back_url=' . urlencode(static::getSettingsUrl());
+	}
+
+	/**
+	 * Сайт, от корня которого отсчитываются пути в разделе "Файлы и папки"
+	 *
+	 * @return string
+	 */
+	protected static function getSiteId()
+	{
+		if (defined('SITE_ID') && SITE_ID)
+		{
+			return SITE_ID;
+		}
+
+		return (string)\CSite::GetDefSite();
 	}
 
 	/**

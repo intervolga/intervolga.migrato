@@ -275,7 +275,7 @@ $tabControl->BeginNextTab();
 	<td width="60%">
 		<span class="migrato-options-entity"><?= htmlspecialcharsbx(Helper::getConfigRelativePath()) ?></span>
 		<span class="migrato-options-hint">
-			<a href="<?= htmlspecialcharsbx(Helper::getUrl(Helper::PAGE_CONFIG)) ?>">
+			<a href="<?= htmlspecialcharsbx(Helper::getFileManUrl()) ?>">
 				<?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OPTIONS_RAW_EDITOR') ?>
 			</a>
 		</span>
