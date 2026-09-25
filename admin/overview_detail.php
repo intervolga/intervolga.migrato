@@ -14,10 +14,13 @@ use Intervolga\Migrato\Tool\Web\Overview;
  * @global CMain $APPLICATION
  * @var string $path
  * @var string $xmlId
+ * @var string $recordId
  */
 $parts = Overview::getPathParts($path);
 $dataClass = Overview::getDataClass($parts[0], $parts[1]);
-$record = $dataClass ? Overview::getRecord($parts[0], $parts[1], $xmlId) : null;
+$record = $dataClass
+	? Overview::getRecordByKey($parts[0], $parts[1], $xmlId, $recordId)
+	: null;
 
 $listUrl = Helper::getUrl(Helper::PAGE_OVERVIEW, array('path' => $path));
 
@@ -25,7 +28,7 @@ $APPLICATION->SetTitle(Loc::getMessage(
 	'INTERVOLGA_MIGRATO.WEB_OVERVIEW_RECORD_TITLE',
 	array(
 		'#PATH#' => $path,
-		'#XML_ID#' => $xmlId,
+		'#XML_ID#' => $xmlId !== '' ? $xmlId : $recordId,
 	)
 ));
 
@@ -47,7 +50,7 @@ if (!$record)
 	die();
 }
 
-$file = Overview::getFileInfo($dataClass, $xmlId);
+$file = Overview::getFileInfo($dataClass, $record->getXmlId());
 $comparison = Overview::compareWithFile($record, $dataClass);
 $fields = Overview::getFieldsInfo($record);
 $links = Overview::getLinksInfo($record);
@@ -96,6 +99,11 @@ else
 	{
 		color: #8b8b8b;
 	}
+	.migrato-fail
+	{
+		color: #c0392b;
+		font-weight: bold;
+	}
 </style>
 <?php
 $tabControl = new CAdminTabControl(
@@ -139,20 +147,18 @@ $tabControl->BeginNextTab();
 </tr>
 <tr>
 	<td><?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_XML_ID') ?>:</td>
-	<td><span class="migrato-detail-name"><?= htmlspecialcharsbx($record->getXmlId()) ?></span></td>
+	<td>
+		<?php if ((string)$record->getXmlId() === ''): ?>
+			<span class="migrato-fail"><?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_NO_XML_ID') ?></span>
+		<?php else: ?>
+			<span class="migrato-detail-name"><?= htmlspecialcharsbx($record->getXmlId()) ?></span>
+		<?php endif; ?>
+	</td>
 </tr>
 <tr>
 	<td><?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_COLUMN_ID') ?>:</td>
 	<td>
 		<span class="migrato-detail-name"><?= htmlspecialcharsbx(Overview::getIdString($record->getId())) ?></span>
-		<?php $nativeUrl = Overview::getNativeUrl($dataClass, $record); ?>
-		<?php if ($nativeUrl): ?>
-			<span class="migrato-detail-hint">
-				<a href="<?= htmlspecialcharsbx($nativeUrl) ?>">
-					<?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_NATIVE_LINK') ?>
-				</a>
-			</span>
-		<?php endif; ?>
 	</td>
 </tr>
 <tr>

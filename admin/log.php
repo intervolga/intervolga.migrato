@@ -206,7 +206,7 @@ while ($log = $rsData->NavNext(false))
 	{
 		$row->AddViewField(
 			'RESULT',
-			'<span style="color:#c0392b;font-weight:bold;">' . htmlspecialcharsbx($log['RESULT']) . '</span>'
+			'<span class="migrato-fail">' . htmlspecialcharsbx($log['RESULT']) . '</span>'
 		);
 	}
 	else
@@ -287,6 +287,15 @@ if ($totalCount > INTERVOLGA_MIGRATO_LOG_MAX_ROWS)
 	));
 }
 
+?>
+<style>
+	.migrato-fail
+	{
+		color: #c0392b;
+		font-weight: bold;
+	}
+</style>
+<?php
 $oFilter = new CAdminFilter(
 	$sTableID . '_filter',
 	array(

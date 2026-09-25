@@ -44,8 +44,9 @@ if (!Overview::isPathExists($path))
 }
 $level = Overview::getLevel($path);
 $xmlId = (string)($_REQUEST['xml_id'] ?? '');
+$recordId = (string)($_REQUEST['id'] ?? '');
 
-if ($level === 'records' && $xmlId !== '')
+if ($level === 'records' && ($xmlId !== '' || $recordId !== ''))
 {
 	require(__DIR__ . '/overview_detail.php');
 
@@ -132,11 +133,13 @@ while ($item = $rsData->NavNext(false))
 	{
 		$url = Helper::getUrl(Helper::PAGE_OVERVIEW, array('path' => $item['PATH']));
 	}
-	elseif ($item['TYPE'] === Overview::TYPE_RECORD)
+	elseif ($item['TYPE'] === Overview::TYPE_RECORD && ($item['XML_ID'] !== '' || $item['CODE'] !== ''))
 	{
 		$url = Helper::getUrl(
 			Helper::PAGE_OVERVIEW,
-			array('path' => $path, 'xml_id' => $item['XML_ID'])
+			$item['XML_ID'] !== ''
+				? array('path' => $path, 'xml_id' => $item['XML_ID'])
+				: array('path' => $path, 'id' => $item['CODE'])
 		);
 	}
 
@@ -171,6 +174,22 @@ while ($item = $rsData->NavNext(false))
 	{
 		if ($column === 'CODE')
 		{
+			continue;
+		}
+		if ($isUp)
+		{
+			$row->AddViewField($column, '');
+			continue;
+		}
+		if ($column === 'XML_ID')
+		{
+			$row->AddViewField(
+				'XML_ID',
+				(string)$item['XML_ID'] === ''
+					? '<span class="migrato-fail">'
+						. Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_NO_XML_ID') . '</span>'
+					: htmlspecialcharsbx($item['XML_ID'])
+			);
 			continue;
 		}
 		if ($column === 'FILE')
@@ -243,6 +262,11 @@ if (!Helper::isConfigExists())
 	.migrato-overview-empty
 	{
 		color: #8b8b8b;
+	}
+	.migrato-fail
+	{
+		color: #c0392b;
+		font-weight: bold;
 	}
 	.migrato-overview-hint
 	{
