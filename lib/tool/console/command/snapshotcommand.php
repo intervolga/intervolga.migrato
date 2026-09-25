@@ -2,12 +2,12 @@
 
 use Bitrix\Main\Localization\Loc;
 use Intervolga\Migrato\Data\BaseData;
-use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Console\Logger;
 use Intervolga\Migrato\Tool\DataList;
 use Intervolga\Migrato\Tool\Orm\OptionTable;
 use Intervolga\Migrato\Tool\Web\Helper;
+use Intervolga\Migrato\Tool\Web\Overview;
 use Intervolga\Migrato\Tool\XmlHelper;
 use Symfony\Component\Console\Input\InputOption;
 
@@ -98,7 +98,7 @@ class SnapshotCommand extends BaseCommand
 			{
 				$rows[] = array(
 					'xml_id' => (string)$record->getXmlId(),
-					'id' => $this->getIdString($record),
+					'name' => Overview::getRecordName($record),
 				);
 			}
 		}
@@ -123,7 +123,7 @@ class SnapshotCommand extends BaseCommand
 			$rows,
 			function(array $first, array $second)
 			{
-				return strcmp($first['xml_id'] . $first['id'], $second['xml_id'] . $second['id']);
+				return strcmp($first['xml_id'] . $first['name'], $second['xml_id'] . $second['name']);
 			}
 		);
 		$this->totalRecords += count($rows);
@@ -143,7 +143,7 @@ class SnapshotCommand extends BaseCommand
 		foreach ($rows as $row)
 		{
 			$content .= "\t\t\t\t<record xml_id=\"" . $this->escape($row['xml_id']) . "\""
-				. " id=\"" . $this->escape($row['id']) . "\"/>\n";
+				. " name=\"" . $this->escape($row['name']) . "\"/>\n";
 		}
 		$content .= "\t\t\t</entity>\n";
 
@@ -232,37 +232,6 @@ class SnapshotCommand extends BaseCommand
 		ksort($modules);
 
 		return $modules;
-	}
-
-	/**
-	 * Идентификатор записи в виде строки. Составной идентификатор
-	 * сортируется по ключам, чтобы слепки двух систем совпадали.
-	 *
-	 * @param \Intervolga\Migrato\Data\Record $record
-	 *
-	 * @return string
-	 */
-	protected function getIdString(Record $record)
-	{
-		$id = $record->getId();
-		if (!$id)
-		{
-			return '';
-		}
-		$value = $id->getValue();
-		if (is_array($value))
-		{
-			ksort($value);
-			$parts = array();
-			foreach ($value as $key => $item)
-			{
-				$parts[] = $key . '=' . $item;
-			}
-
-			return implode(',', $parts);
-		}
-
-		return (string)$value;
 	}
 
 	/**
