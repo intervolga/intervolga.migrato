@@ -284,7 +284,7 @@ class Overview
 	 */
 	public static function getRecordName(Record $record)
 	{
-		foreach (array('NAME', 'TITLE', 'CODE', 'LID', 'SORT') as $name)
+		foreach (array('NAME', 'TITLE', 'CODE') as $name)
 		{
 			$field = $record->getField($name);
 			if ($field instanceof Value && !$field->isMultiple())
@@ -424,6 +424,41 @@ class Overview
 	}
 
 	/**
+	 * Запись по внешнему коду либо по идентификатору в БД.
+	 * По идентификатору запись ищется, когда внешний код не вычислен.
+	 *
+	 * @param string $module
+	 * @param string $entity
+	 * @param string $xmlId
+	 * @param string $idString
+	 *
+	 * @return \Intervolga\Migrato\Data\Record|null
+	 */
+	public static function getRecordByKey($module, $entity, $xmlId, $idString = '')
+	{
+		if ($xmlId !== '')
+		{
+			$record = static::getRecord($module, $entity, $xmlId);
+			if ($record)
+			{
+				return $record;
+			}
+		}
+		if ($idString !== '')
+		{
+			foreach (static::getRecords($module, $entity) as $record)
+			{
+				if (static::getIdString($record->getId()) === $idString)
+				{
+					return $record;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * Количество известных о записи атрибутов: поля, зависимости и ссылки
 	 *
 	 * @param \Intervolga\Migrato\Data\Record $record
@@ -528,82 +563,6 @@ class Overview
 	}
 
 	/**
-	 * Ссылка на запись в "родном" разделе админки, если он известен.
-	 * Единого API для этого в Битриксе нет, поэтому используется таблица
-	 * соответствий: ключ - "модуль:сущность", значение - шаблон адреса.
-	 *
-	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
-	 * @param \Intervolga\Migrato\Data\Record $record
-	 *
-	 * @return string пустая строка, если раздел неизвестен
-	 */
-	public static function getNativeUrl(BaseData $dataClass, Record $record)
-	{
-		$id = $record->getId();
-		if (!($id instanceof RecordId) || is_array($id->getValue()))
-		{
-			return '';
-		}
-		$value = (string)$id->getValue();
-		$key = $dataClass->getModule() . ':' . $dataClass->getEntityName();
-
-		if ($key === 'iblock:iblock')
-		{
-			return static::getIblockUrl($value);
-		}
-
-		$map = array(
-			'main:group' => 'group_edit.php?ID=#ID#',
-			'main:site' => 'site_edit.php?LID=#ID#',
-			'main:language' => 'lang_edit.php?LID=#ID#',
-			'main:culture' => 'culture_edit.php?ID=#ID#',
-			'main:sitetemplate' => 'template_edit.php?ID=#ID#',
-			'main:agent' => 'agent_edit.php?ID=#ID#',
-			'main:task' => 'task_edit.php?ID=#ID#',
-			'main:event' => 'event_message_edit.php?ID=#ID#',
-			'main:eventtype' => 'event_type_edit.php?ID=#ID#',
-			'iblock:type' => 'iblock_type_edit.php?ID=#ID#',
-			'catalog:store' => 'cat_store_edit.php?ID=#ID#',
-			'catalog:pricetype' => 'cat_group_edit.php?ID=#ID#',
-			'highloadblock:highloadblock' => 'highloadblock_entity_edit.php?ID=#ID#',
-			'sale:status' => 'sale_status_edit.php?ID=#ID#',
-			'sale:persontype' => 'sale_person_type_edit.php?ID=#ID#',
-			'form:form' => 'form_edit.php?ID=#ID#',
-		);
-		if (!isset($map[$key]))
-		{
-			return '';
-		}
-
-		return '/bitrix/admin/' . str_replace('#ID#', urlencode($value), $map[$key])
-			. '&lang=' . LANGUAGE_ID;
-	}
-
-	/**
-	 * Страница редактирования инфоблока требует еще и тип инфоблока
-	 *
-	 * @param string $iblockId
-	 *
-	 * @return string
-	 */
-	protected static function getIblockUrl($iblockId)
-	{
-		if (!\Bitrix\Main\Loader::includeModule('iblock'))
-		{
-			return '';
-		}
-		$type = \CIBlock::GetArrayByID($iblockId, 'IBLOCK_TYPE_ID');
-		if (!$type)
-		{
-			return '';
-		}
-
-		return '/bitrix/admin/iblock_edit.php?ID=' . urlencode($iblockId)
-			. '&type=' . urlencode($type)
-			. '&admin=Y&lang=' . LANGUAGE_ID;
-	}
-
-	/**
 	 * Информация о выгруженном XML-файле записи
 	 *
 	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
@@ -613,6 +572,14 @@ class Overview
 	 */
 	public static function getFileInfo(BaseData $dataClass, $xmlId)
 	{
+		if ((string)$xmlId === '')
+		{
+			return array(
+				'EXISTS' => false,
+				'PATH' => '',
+				'RELATIVE_PATH' => '',
+			);
+		}
 		$path = INTERVOLGA_MIGRATO_DIRECTORY
 			. $dataClass->getModule()
 			. $dataClass->getFilesSubdir()
@@ -638,6 +605,13 @@ class Overview
 	 */
 	public static function compareWithFile(Record $record, BaseData $dataClass)
 	{
+		if ((string)$record->getXmlId() === '')
+		{
+			return array(
+				'STATUS' => static::FILE_ABSENT,
+				'DIFFERENCES' => array(),
+			);
+		}
 		$file = static::getFileInfo($dataClass, $record->getXmlId());
 		if (!$file['EXISTS'])
 		{
