@@ -181,11 +181,51 @@ class Helper
 	 */
 	public static function getConfigRelativePath()
 	{
-		$documentRoot = \Bitrix\Main\Application::getDocumentRoot();
-		$path = str_replace('\\', '/', static::getConfigPath());
-		$documentRoot = str_replace('\\', '/', $documentRoot);
+		return static::getRelativePath(static::getConfigPath());
+	}
+
+	/**
+	 * Путь относительно корня сайта
+	 *
+	 * @param string $path
+	 *
+	 * @return string
+	 */
+	public static function getRelativePath($path)
+	{
+		$documentRoot = str_replace('\\', '/', \Bitrix\Main\Application::getDocumentRoot());
+		$path = str_replace('\\', '/', $path);
 
 		return str_replace($documentRoot, '', $path);
+	}
+
+	/**
+	 * Файл слепка структуры БД, который создает команда snapshot
+	 *
+	 * @return string
+	 */
+	public static function getSnapshotPath()
+	{
+		return INTERVOLGA_MIGRATO_DIRECTORY . 'snapshot.xml';
+	}
+
+	/**
+	 * Сведения о файле слепка
+	 *
+	 * @return array array('EXISTS' =>, 'PATH' =>, 'RELATIVE_PATH' =>, 'TIME' =>, 'SIZE' =>)
+	 */
+	public static function getSnapshotInfo()
+	{
+		$path = static::getSnapshotPath();
+		$exists = file_exists($path);
+
+		return array(
+			'EXISTS' => $exists,
+			'PATH' => $path,
+			'RELATIVE_PATH' => static::getRelativePath($path),
+			'TIME' => $exists ? (int)filemtime($path) : 0,
+			'SIZE' => $exists ? (int)filesize($path) : 0,
+		);
 	}
 
 	/**

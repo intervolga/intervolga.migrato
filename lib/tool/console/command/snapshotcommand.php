@@ -6,47 +6,37 @@ use Intervolga\Migrato\Data\Record;
 use Intervolga\Migrato\Tool\Config;
 use Intervolga\Migrato\Tool\Console\Logger;
 use Intervolga\Migrato\Tool\DataList;
+use Intervolga\Migrato\Tool\Orm\OptionTable;
+use Intervolga\Migrato\Tool\Web\Helper;
+use Intervolga\Migrato\Tool\XmlHelper;
 use Symfony\Component\Console\Input\InputOption;
 
 Loc::loadMessages(__FILE__);
 
 /**
- * Слепок структуры БД: перечень записей с ID и внешними кодами.
+ * Слепок структуры БД: перечень записей с ID и внешними кодами плюс опции.
  * Нужен, чтобы сравнивать две системы обычным файловым diff,
  * даже когда экспорт недоступен.
  */
 class SnapshotCommand extends BaseCommand
 {
-	const FORMAT_TXT = 'txt';
-	const FORMAT_CSV = 'csv';
-	const FORMAT_JSON = 'json';
-
-	const CSV_DELIMITER = ';';
+	protected $totalRecords = 0;
+	protected $totalOptions = 0;
 
 	/**
-	 * Колонки слепка
+	 * Файл слепка
+	 *
+	 * @return string
 	 */
-	const COLUMNS = array('module', 'entity', 'id', 'xml_id');
-
-	protected $totalRecords = 0;
+	public static function getFilePath()
+	{
+		return Helper::getSnapshotPath();
+	}
 
 	protected function configure()
 	{
 		$this->setName('snapshot');
 		$this->setDescription(Loc::getMessage('INTERVOLGA_MIGRATO.SNAPSHOT_DESCRIPTION'));
-		$this->addOption(
-			'file',
-			null,
-			InputOption::VALUE_REQUIRED,
-			Loc::getMessage('INTERVOLGA_MIGRATO.SNAPSHOT_OPTION_FILE')
-		);
-		$this->addOption(
-			'format',
-			null,
-			InputOption::VALUE_REQUIRED,
-			Loc::getMessage('INTERVOLGA_MIGRATO.SNAPSHOT_OPTION_FORMAT'),
-			static::FORMAT_TXT
-		);
 		$this->addOption(
 			'all',
 			null,
@@ -57,91 +47,47 @@ class SnapshotCommand extends BaseCommand
 
 	public function executeInner()
 	{
-		$format = $this->getFormat();
-		$rows = $this->collectRows($this->getDataClasses());
-		$path = $this->getFilePath($format);
-		$this->writeFile($path, $format, $rows);
-		$this->addResult($path);
+		$content = XmlHelper::xmlHeader();
+		$content .= "<snapshot>\n";
+		$content .= $this->getDataXml();
+		$content .= $this->getOptionsXml();
+		$content .= "</snapshot>\n";
+
+		$this->writeFile($content);
+		$this->addResult();
 	}
 
 	/**
-	 * @return string
-	 * @throws \Exception
-	 */
-	protected function getFormat()
-	{
-		$format = strtolower(trim((string)$this->input->getOption('format')));
-		if (!$format)
-		{
-			$format = static::FORMAT_TXT;
-		}
-		$allowed = array(static::FORMAT_TXT, static::FORMAT_CSV, static::FORMAT_JSON);
-		if (!in_array($format, $allowed, true))
-		{
-			throw new \Exception(Loc::getMessage(
-				'INTERVOLGA_MIGRATO.SNAPSHOT_UNKNOWN_FORMAT',
-				array(
-					'#FORMAT#' => $format,
-					'#ALLOWED#' => implode(', ', $allowed),
-				)
-			));
-		}
-
-		return $format;
-	}
-
-	/**
-	 * @return \Intervolga\Migrato\Data\BaseData[]
-	 */
-	protected function getDataClasses()
-	{
-		if ($this->input->getOption('all'))
-		{
-			$dataClasses = DataList::getAll();
-		}
-		else
-		{
-			$dataClasses = Config::getInstance()->getDataClasses();
-		}
-
-		usort(
-			$dataClasses,
-			function(BaseData $first, BaseData $second)
-			{
-				return strcmp(
-					$first->getModule() . ':' . $first->getEntityName(),
-					$second->getModule() . ':' . $second->getEntityName()
-				);
-			}
-		);
-
-		return $dataClasses;
-	}
-
-	/**
-	 * @param \Intervolga\Migrato\Data\BaseData[] $dataClasses
+	 * Записи всех сущностей
 	 *
-	 * @return array[] строки слепка
+	 * @return string
 	 */
-	protected function collectRows(array $dataClasses)
+	protected function getDataXml()
 	{
-		$rows = array();
-		foreach ($dataClasses as $dataClass)
+		$content = "\t<data>\n";
+		foreach ($this->getModules() as $module => $dataClasses)
 		{
-			$this->logger->startStep($dataClass->getModule() . ':' . $dataClass->getEntityName());
-			$rows = array_merge($rows, $this->collectDataRows($dataClass));
+			$content .= "\t\t<module name=\"" . $this->escape($module) . "\">\n";
+			foreach ($dataClasses as $entity => $dataClass)
+			{
+				$content .= $this->getEntityXml($entity, $dataClass);
+			}
+			$content .= "\t\t</module>\n";
 		}
+		$content .= "\t</data>\n";
 
-		return $rows;
+		return $content;
 	}
 
 	/**
+	 * @param string $entity
 	 * @param \Intervolga\Migrato\Data\BaseData $dataClass
 	 *
-	 * @return array[]
+	 * @return string
 	 */
-	protected function collectDataRows(BaseData $dataClass)
+	protected function getEntityXml($entity, BaseData $dataClass)
 	{
+		$this->logger->startStep($dataClass->getModule() . ':' . $entity);
 		$rows = array();
 		try
 		{
@@ -151,10 +97,8 @@ class SnapshotCommand extends BaseCommand
 			foreach ($dataClass->getList($filter) as $record)
 			{
 				$rows[] = array(
-					'module' => $dataClass->getModule(),
-					'entity' => $dataClass->getEntityName(),
-					'id' => $this->getIdString($record),
 					'xml_id' => (string)$record->getXmlId(),
+					'id' => $this->getIdString($record),
 				);
 			}
 		}
@@ -164,7 +108,7 @@ class SnapshotCommand extends BaseCommand
 				Loc::getMessage(
 					'INTERVOLGA_MIGRATO.SNAPSHOT_ENTITY_FAIL',
 					array(
-						'#ENTITY#' => $dataClass->getModule() . ':' . $dataClass->getEntityName(),
+						'#ENTITY#' => $dataClass->getModule() . ':' . $entity,
 						'#MESSAGE#' => $throwable->getMessage(),
 					)
 				),
@@ -172,7 +116,7 @@ class SnapshotCommand extends BaseCommand
 				Logger::TYPE_FAIL
 			);
 
-			return array();
+			return "\t\t\t<entity name=\"" . $this->escape($entity) . "\" error=\"true\"/>\n";
 		}
 
 		usort(
@@ -187,7 +131,7 @@ class SnapshotCommand extends BaseCommand
 			Loc::getMessage(
 				'INTERVOLGA_MIGRATO.SNAPSHOT_ENTITY_COUNT',
 				array(
-					'#ENTITY#' => $dataClass->getModule() . ':' . $dataClass->getEntityName(),
+					'#ENTITY#' => $dataClass->getModule() . ':' . $entity,
 					'#COUNT#' => count($rows),
 				)
 			),
@@ -195,7 +139,99 @@ class SnapshotCommand extends BaseCommand
 			Logger::TYPE_OK
 		);
 
-		return $rows;
+		$content = "\t\t\t<entity name=\"" . $this->escape($entity) . "\">\n";
+		foreach ($rows as $row)
+		{
+			$content .= "\t\t\t\t<record xml_id=\"" . $this->escape($row['xml_id']) . "\""
+				. " id=\"" . $this->escape($row['id']) . "\"/>\n";
+		}
+		$content .= "\t\t\t</entity>\n";
+
+		return $content;
+	}
+
+	/**
+	 * Опции, которые попадают в миграцию
+	 *
+	 * @return string
+	 */
+	protected function getOptionsXml()
+	{
+		$options = array();
+		$getList = OptionTable::getList(array(
+			'select' => array('MODULE_ID', 'NAME', 'VALUE', 'SITE_ID'),
+			'order' => array(
+				'MODULE_ID' => 'ASC',
+				'NAME' => 'ASC',
+				'SITE_ID' => 'ASC',
+			),
+		));
+		while ($option = $getList->fetch())
+		{
+			if (!$option['NAME'])
+			{
+				continue;
+			}
+			if (!Config::isOptionIncluded($option['MODULE_ID'], $option['NAME']))
+			{
+				continue;
+			}
+			$options[$option['MODULE_ID']][] = $option;
+			$this->totalOptions++;
+		}
+		ksort($options);
+
+		$content = "\t<options>\n";
+		foreach ($options as $module => $moduleOptions)
+		{
+			$content .= "\t\t<module name=\"" . $this->escape($module) . "\">\n";
+			foreach ($moduleOptions as $option)
+			{
+				$site = (string)$option['SITE_ID'];
+				$content .= "\t\t\t<option name=\"" . $this->escape($option['NAME']) . "\""
+					. ($site === '' ? '' : ' site="' . $this->escape($site) . '"')
+					. '>' . $this->escape((string)$option['VALUE']) . "</option>\n";
+			}
+			$content .= "\t\t</module>\n";
+		}
+		$content .= "\t</options>\n";
+
+		$this->logger->add(
+			Loc::getMessage(
+				'INTERVOLGA_MIGRATO.SNAPSHOT_OPTIONS_COUNT',
+				array('#COUNT#' => $this->totalOptions)
+			),
+			Logger::LEVEL_SHORT,
+			Logger::TYPE_OK
+		);
+
+		return $content;
+	}
+
+	/**
+	 * Сущности, попадающие в слепок, сгруппированные по модулям
+	 *
+	 * @return \Intervolga\Migrato\Data\BaseData[][]
+	 */
+	protected function getModules()
+	{
+		$dataClasses = $this->input->getOption('all')
+			? DataList::getAll()
+			: Config::getInstance()->getDataClasses();
+
+		$modules = array();
+		foreach ($dataClasses as $dataClass)
+		{
+			$modules[$dataClass->getModule()][$dataClass->getEntityName()] = $dataClass;
+		}
+		foreach ($modules as $module => $entities)
+		{
+			ksort($entities);
+			$modules[$module] = $entities;
+		}
+		ksort($modules);
+
+		return $modules;
 	}
 
 	/**
@@ -230,34 +266,25 @@ class SnapshotCommand extends BaseCommand
 	}
 
 	/**
-	 * @param string $format
+	 * @param string $value
 	 *
 	 * @return string
 	 */
-	protected function getFilePath($format)
+	protected function escape($value)
 	{
-		$file = trim((string)$this->input->getOption('file'));
-		if (!$file)
-		{
-			return INTERVOLGA_MIGRATO_DIRECTORY . 'snapshot.' . $format;
-		}
-		$file = str_replace('\\', '/', $file);
-		$isAbsolute = (substr($file, 0, 1) === '/' || preg_match('/^[a-zA-Z]:\//', $file));
-
-		return $isAbsolute ? $file : INTERVOLGA_MIGRATO_DIRECTORY . $file;
+		return htmlspecialcharsbx((string)$value);
 	}
 
 	/**
-	 * @param string $path
-	 * @param string $format
-	 * @param array[] $rows
+	 * @param string $content
 	 *
 	 * @throws \Exception
 	 */
-	protected function writeFile($path, $format, array $rows)
+	protected function writeFile($content)
 	{
+		$path = static::getFilePath();
 		CheckDirPath($path);
-		if (file_put_contents($path, $this->render($format, $rows)) === false)
+		if (file_put_contents($path, $content) === false)
 		{
 			throw new \Exception(Loc::getMessage(
 				'INTERVOLGA_MIGRATO.SNAPSHOT_WRITE_FAIL',
@@ -266,113 +293,16 @@ class SnapshotCommand extends BaseCommand
 		}
 	}
 
-	/**
-	 * @param string $format
-	 * @param array[] $rows
-	 *
-	 * @return string
-	 */
-	protected function render($format, array $rows)
-	{
-		if ($format === static::FORMAT_JSON)
-		{
-			return $this->renderJson($rows);
-		}
-		if ($format === static::FORMAT_CSV)
-		{
-			return $this->renderCsv($rows);
-		}
-
-		return $this->renderTxt($rows);
-	}
-
-	/**
-	 * @param array[] $rows
-	 *
-	 * @return string
-	 */
-	protected function renderTxt(array $rows)
-	{
-		$lines = array('# ' . implode("\t", static::COLUMNS));
-		foreach ($rows as $row)
-		{
-			$lines[] = $row['module'] . "\t" . $row['entity'] . "\t" . $row['id'] . "\t" . $row['xml_id'];
-		}
-
-		return implode("\n", $lines) . "\n";
-	}
-
-	/**
-	 * @param array[] $rows
-	 *
-	 * @return string
-	 */
-	protected function renderCsv(array $rows)
-	{
-		$lines = array(implode(static::CSV_DELIMITER, static::COLUMNS));
-		foreach ($rows as $row)
-		{
-			$cells = array();
-			foreach (static::COLUMNS as $column)
-			{
-				$cells[] = $this->escapeCsv($row[$column]);
-			}
-			$lines[] = implode(static::CSV_DELIMITER, $cells);
-		}
-
-		return implode("\n", $lines) . "\n";
-	}
-
-	/**
-	 * @param string $value
-	 *
-	 * @return string
-	 */
-	protected function escapeCsv($value)
-	{
-		$value = (string)$value;
-		if (strpbrk($value, static::CSV_DELIMITER . "\"\n\r") !== false)
-		{
-			$value = '"' . str_replace('"', '""', $value) . '"';
-		}
-
-		return $value;
-	}
-
-	/**
-	 * @param array[] $rows
-	 *
-	 * @return string
-	 */
-	protected function renderJson(array $rows)
-	{
-		$tree = array();
-		foreach ($rows as $row)
-		{
-			$tree[$row['module']][$row['entity']][] = array(
-				'id' => $row['id'],
-				'xml_id' => $row['xml_id'],
-			);
-		}
-
-		return json_encode(
-			$tree,
-			JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-		) . "\n";
-	}
-
-	/**
-	 * @param string $path
-	 */
-	protected function addResult($path)
+	protected function addResult()
 	{
 		$this->logger->separate();
 		$this->logger->add(
 			Loc::getMessage(
 				'INTERVOLGA_MIGRATO.SNAPSHOT_DONE',
 				array(
-					'#PATH#' => $path,
+					'#PATH#' => static::getFilePath(),
 					'#COUNT#' => $this->totalRecords,
+					'#OPTIONS#' => $this->totalOptions,
 				)
 			),
 			Logger::LEVEL_NORMAL,

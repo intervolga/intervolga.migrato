@@ -190,6 +190,34 @@ $tabControl->BeginNextTab();
 		<span class="migrato-hint"><?= htmlspecialcharsbx($command->getDescription()) ?></span>
 	</td>
 </tr>
+<?php if ($commandName === 'snapshot'): ?>
+	<?php $snapshot = Helper::getSnapshotInfo(); ?>
+	<tr>
+		<td><?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_SNAPSHOT_FILE') ?>:</td>
+		<td>
+			<?php if ($snapshot['EXISTS']): ?>
+				<a href="<?= htmlspecialcharsbx($snapshot['RELATIVE_PATH']) ?>" download>
+					<?= htmlspecialcharsbx($snapshot['RELATIVE_PATH']) ?>
+				</a>
+				<span class="migrato-hint">
+					<?= Loc::getMessage(
+						'INTERVOLGA_MIGRATO.WEB_SNAPSHOT_CREATED',
+						array(
+							'#DATE#' => date('d.m.Y H:i:s', $snapshot['TIME']),
+							'#SIZE#' => CFile::FormatSize($snapshot['SIZE']),
+						)
+					) ?>
+					&mdash;
+					<a href="<?= htmlspecialcharsbx(Helper::getFileManViewUrl($snapshot['RELATIVE_PATH'])) ?>">
+						<?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_SNAPSHOT_VIEW') ?>
+					</a>
+				</span>
+			<?php else: ?>
+				<span class="migrato-hint"><?= Loc::getMessage('INTERVOLGA_MIGRATO.WEB_SNAPSHOT_ABSENT') ?></span>
+			<?php endif; ?>
+		</td>
+	</tr>
+<?php endif; ?>
 <?php foreach ($command->getDefinition()->getArguments() as $argument): ?>
 	<tr>
 		<td><?php if ($argument->isRequired()): ?><span class="required">*</span><?php endif; ?>

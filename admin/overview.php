@@ -238,7 +238,29 @@ while ($item = $rsData->NavNext(false))
 	}
 }
 
-$lAdmin->AddAdminContextMenu(Helper::getPagesMenu(Helper::PAGE_OVERVIEW), false, false);
+$contextMenu = Helper::getPagesMenu(Helper::PAGE_OVERVIEW);
+$snapshot = Helper::getSnapshotInfo();
+if (Helper::canWrite())
+{
+	$contextMenu[] = array(
+		'TEXT' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_SNAPSHOT_RUN'),
+		'LINK' => Helper::getUrl(Helper::PAGE_RUN, array('command' => 'snapshot')),
+		'ICON' => 'btn_new',
+	);
+}
+if ($snapshot['EXISTS'])
+{
+	$contextMenu[] = array(
+		'TEXT' => Loc::getMessage('INTERVOLGA_MIGRATO.WEB_OVERVIEW_SNAPSHOT_FILE'),
+		'LINK' => Helper::getFileManViewUrl($snapshot['RELATIVE_PATH']),
+		'ICON' => 'btn',
+		'TITLE' => Loc::getMessage(
+			'INTERVOLGA_MIGRATO.WEB_OVERVIEW_SNAPSHOT_FILE_TITLE',
+			array('#DATE#' => date('d.m.Y H:i:s', $snapshot['TIME']))
+		),
+	);
+}
+$lAdmin->AddAdminContextMenu($contextMenu, false, false);
 $lAdmin->CheckListMode();
 
 require_once($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_admin_after.php');

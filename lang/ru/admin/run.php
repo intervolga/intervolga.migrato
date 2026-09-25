@@ -17,3 +17,7 @@ $MESS['INTERVOLGA_MIGRATO.WEB_CONFIRM_HINT'] = 'Команда изменяет 
 $MESS['INTERVOLGA_MIGRATO.WEB_CONFIRM_REQUIRED'] = 'Для запуска этой команды требуется подтверждение';
 $MESS['INTERVOLGA_MIGRATO.WEB_EXECUTE'] = 'Выполнить';
 $MESS['INTERVOLGA_MIGRATO.WEB_OPEN_IN_NEW_WINDOW'] = 'открыть вывод в новом окне';
+$MESS['INTERVOLGA_MIGRATO.WEB_SNAPSHOT_FILE'] = 'Файл слепка';
+$MESS['INTERVOLGA_MIGRATO.WEB_SNAPSHOT_CREATED'] = 'создан #DATE#, размер #SIZE#';
+$MESS['INTERVOLGA_MIGRATO.WEB_SNAPSHOT_VIEW'] = 'посмотреть в разделе "Файлы и папки"';
+$MESS['INTERVOLGA_MIGRATO.WEB_SNAPSHOT_ABSENT'] = 'Файл слепка еще не создан';
